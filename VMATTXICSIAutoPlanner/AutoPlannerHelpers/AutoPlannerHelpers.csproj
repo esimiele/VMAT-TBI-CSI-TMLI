@@ -42,5 +42,8 @@
 			<HintPath>..\..\..\VMS_TPS_resources\15.6\VMS.TPS.Common.Model.Types.dll</HintPath>
 		</Reference>
 	</ItemGroup>
+	<ItemGroup>
+	  <PackageReference Include="Prism.Core" Version="9.0.537" />
+	</ItemGroup>
 
 </Project>

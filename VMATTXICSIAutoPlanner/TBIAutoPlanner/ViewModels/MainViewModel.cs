@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Windows;
 using AutoPlannerHelpers.Enums;
-using AutoPlannerHelpers.Models;
+using AutoPlannerHelpers.ViewModels;
+using AutoPlannerHelpers.Views;
 using AutoPlannerHelpers.PlanTemplateModels;
 using Prism.Mvvm;
+using Prism.Commands;
 
 namespace TBIAutoPlanner.ViewModels
 {
@@ -22,6 +21,10 @@ namespace TBIAutoPlanner.ViewModels
         private int _numberOfFractions;
         private double _planTotalDose;
         private TBIAutoPlanTemplate _selectedTemplate;
+        private bool _useFlash;
+        private Visibility _flashMarginVisible;
+        private double _flashMargin;
+        private double _ptvMarginFromBody;
 
         public string PatientMRN
         {
@@ -59,9 +62,87 @@ namespace TBIAutoPlanner.ViewModels
             set { SetProperty(ref _selectedTemplate, value); UpdateUIWithSelectedPlanTemplate(); }
         }
 
+        public bool UseFlash
+        {
+            get { return _useFlash; }
+            set { SetProperty(ref _useFlash, value); UpdateUseFlash(); }
+        }
+
+        public Visibility FlashMarginVisible
+        {
+            get { return _flashMarginVisible; }
+            set { SetProperty(ref _flashMarginVisible, value); }
+        }
+
+        public double FlashMargin
+        {
+            get { return _flashMargin; }
+            set { SetProperty(ref _flashMargin, value); }
+        }
+
+        public double PTVMarginFromBody
+        {
+            get { return _ptvMarginFromBody; }
+            set { SetProperty(ref _ptvMarginFromBody, value); }
+        }
+        #endregion
+
+        #region view objects
+        private object _specifyTargets;
+        private object _tsGeneration;
+        private object _tsManipulation;
+        private object _optimizationSetup;
+        private object _planPreparation;
+        private object _scriptConfiguration;
+        private object _beamPlacement;
+
+        public object SpecifyTargets
+        {
+            get { return _specifyTargets; }
+            set { SetProperty(ref _specifyTargets, value); }
+        }
+
+        public object TSGeneration
+        {
+            get { return _tsGeneration; }
+            set { SetProperty(ref _tsGeneration, value); }
+        }
+
+        public object TSManipulation
+        {
+            get { return _tsManipulation; }
+            set { SetProperty(ref _tsManipulation, value); }
+        }
+
+        public object OptimizationSetup
+        {
+            get { return _optimizationSetup; }
+            set { SetProperty(ref _optimizationSetup, value); }
+        }
+
+        public object PlanPreparation
+        {
+            get { return _planPreparation; }
+            set { SetProperty(ref _planPreparation, value); }
+        }
+
+        public object ScriptConfiguration
+        {
+            get { return _scriptConfiguration; }
+            set { SetProperty(ref _scriptConfiguration, value); }
+        }
+
+        public object BeamPlacement
+        {
+            get { return _beamPlacement; }
+            set { SetProperty(ref _beamPlacement, value); }
+        }
         #endregion
 
         #region commands
+        public DelegateCommand QuickStartGuideCommand { get; set; }
+        public DelegateCommand HelpGuideCommand { get; set; }
+        public DelegateCommand PTVMarginInfoCommand { get; set; }
         #endregion
 
         public MainViewModel(List<string> args)
@@ -73,6 +154,32 @@ namespace TBIAutoPlanner.ViewModels
         public void Initialize()
         {
             PlanTemplates.Clear();
+            FlashMarginVisible = Visibility.Hidden;
+            SpecifyTargets = new SpecifyTargetsView { DataContext = new SetTargetsViewModel() };
+            TSGeneration = new TSGenerationView { DataContext = new TSGenerationView() };
+            TSManipulation = new TSManipulationView { DataContext = new TSManipulationView() };
+            BeamPlacement = new BeamPlacementView { DataContext = new BeamPlacementViewModel(PlanType.VMAT_TBI) };
+            OptimizationSetup = new OptimizationSetupView { DataContext = new OptimizationSetupViewModel() };
+            PlanPreparation = new PlanPreparationView { DataContext = new PlanPreparationViewModel() };
+            ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel() };
+            QuickStartGuideCommand = new DelegateCommand(LaunchQuickStartGuide);
+            HelpGuideCommand = new DelegateCommand(LaunchHelpGuide);
+            PTVMarginInfoCommand = new DelegateCommand(ShowPTVMarginInfo);
+        }
+
+        private void LaunchQuickStartGuide()
+        {
+            MessageBox.Show("test");
+        }
+
+        private void LaunchHelpGuide()
+        {
+            MessageBox.Show("test");
+        }
+
+        private void ShowPTVMarginInfo()
+        {
+            MessageBox.Show("test");
         }
 
         private void ResetRxDose()
@@ -107,9 +214,8 @@ namespace TBIAutoPlanner.ViewModels
         {
             if (ReferenceEquals(SelectedTemplate, null)) return;
 
-            TBIAutoPlanTemplate template = SelectedTemplate as TBIAutoPlanTemplate;
-            DosePerFraction = template.InitialRxDosePerFx;
-            NumberOfFractions = template.InitialRxNumberOfFractions;
+            DosePerFraction = SelectedTemplate.InitialRxDosePerFx;
+            NumberOfFractions = SelectedTemplate.InitialRxNumberOfFractions;
             //PlanObjectives.Clear();
             //foreach (PlanObjectiveModel itr in template.PlanObjectives)
             //{
@@ -120,6 +226,12 @@ namespace TBIAutoPlanner.ViewModels
             //{
             //    OptimizationConstraints.Add(new OptimizationConstraintModel(itr));
             //}
+        }
+
+        private void UpdateUseFlash()
+        {
+            if (UseFlash) FlashMarginVisible = Visibility.Visible;
+            else FlashMarginVisible = Visibility.Hidden;
         }
     }
 }

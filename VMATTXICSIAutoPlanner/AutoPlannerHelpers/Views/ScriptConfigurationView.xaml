@@ -1,0 +1,19 @@
+﻿<UserControl x:Class="AutoPlannerHelpers.Views.ScriptConfigurationView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:AutoPlannerHelpers.Views"
+             mc:Ignorable="d">
+    <Grid>
+        <Border BorderBrush="Black" BorderThickness="1,0,0,0">
+            <StackPanel Name="configuration">
+                <Label Content="Current Script Configuration Parameters" FontSize="20" FontStyle="Normal" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,0,0,0"></Label>
+                <ScrollViewer x:Name ="configScroller" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="565" Height="420" Margin="5" BorderBrush="Black">
+                    <TextBlock x:Name="configTB" FontSize="12" FontFamily="Courier New" Width="550" Background="White" TextWrapping="Wrap"></TextBlock>
+                </ScrollViewer>
+                <Button x:Name="loadNewConfigFile" Content="Load new configuration file" Width="160" HorizontalAlignment="Center"></Button>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

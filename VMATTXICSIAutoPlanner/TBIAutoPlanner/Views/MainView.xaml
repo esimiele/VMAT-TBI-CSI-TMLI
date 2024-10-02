@@ -51,8 +51,8 @@
         <StackPanel>
             <Grid>
                 <Label Content="VMAT TBI auto planning" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Top"/>
-                <Button Content="Help" HorizontalAlignment="Right" Margin="0,10,30,0" VerticalAlignment="Top" Width="75"/>
-                <Button Content="Quick Start" HorizontalAlignment="Left" Margin="30,10,0,0" VerticalAlignment="Top" Width="75"/>
+                <Button Content="Help" HorizontalAlignment="Right" Margin="0,10,30,0" VerticalAlignment="Top" Width="75" Command="{Binding HelpGuideCommand}"/>
+                <Button Content="Quick Start" HorizontalAlignment="Left" Margin="30,10,0,0" VerticalAlignment="Top" Width="75" Command="{Binding QuickStartGuideCommand}"/>
             </Grid>
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -85,16 +85,16 @@
                     <ComboBox ItemsSource="{Binding SructureSetIds}" Grid.Column="1" Grid.Row="1" HorizontalContentAlignment="Center" HorizontalAlignment="Center" Width="140"/>
                 </Grid>
 
-                <Grid Grid.Column="0" Grid.Row="2" Grid.RowSpan="4">
+                <Grid Grid.Column="0" Grid.Row="1" Grid.RowSpan="4">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="3*"/>
                     </Grid.RowDefinitions>
                     <Label Content="Plan Templates" Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,10,0"></Label>
-                    <ListBox x:Name="templateList" ItemsSource="{Binding PlanTemplates}" SelectedItem="{Binding SelectedTemplate}" Grid.Row="1" Width="320" HorizontalContentAlignment="Center" DisplayMemberPath="TemplateName"/>
+                    <ListBox ItemsSource="{Binding PlanTemplates}" SelectedItem="{Binding SelectedTemplate}" Grid.Row="1" Width="320" HorizontalContentAlignment="Center" DisplayMemberPath="TemplateName"/>
                 </Grid>
 
-                <Grid Grid.Column="1" Grid.Row="2" Grid.RowSpan="4">
+                <Grid Grid.Column="1" Grid.Row="1" Grid.RowSpan="4">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="*"/>
@@ -116,42 +116,52 @@
                     <TextBox Text="{Binding PlanTotalDose}" Grid.Row="3" Grid.Column="1" TextAlignment="Center" HorizontalAlignment="Left" VerticalAlignment="Center" Width="75" IsReadOnly="True"></TextBox>
                 </Grid>
 
-                <Grid Grid.Row="6" Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="5" Width="600">
+                <Grid Grid.Row="5" Grid.Column="0" HorizontalAlignment="Center" Margin="0,5,0,5">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="0.5*"/>
-                        <ColumnDefinition Width="2*"/>
-                        <ColumnDefinition Width="1.5*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <Label Content="Add flash:" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                    <CheckBox IsChecked="{Binding UseFlash}" HorizontalContentAlignment="Center" Grid.Column="1" VerticalAlignment="Center"/>
-                    <ComboBox HorizontalContentAlignment="Center" Grid.Column="2" VerticalAlignment="Center" Width="100" Visibility="Hidden" />
-                    <Label Content="Margin (cm):" Grid.Column="3" HorizontalAlignment="Right" VerticalAlignment="Center" Visibility="Hidden"/>
-                    <TextBox TextAlignment="Center" Grid.Column="4" VerticalAlignment="Center" Width="50" Height="21" Visibility="Hidden"></TextBox>
-                    <Label Content="Volume:" Grid.Column="5" HorizontalAlignment="Right" VerticalAlignment="Center" Visibility="Hidden"/>
-                    <ComboBox HorizontalContentAlignment="Center" Grid.Column="6" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" Visibility="Hidden"/>
+                    <CheckBox IsChecked="{Binding UseFlash}" HorizontalContentAlignment="Center" Grid.Column="1" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <Label Content="Margin (cm):" Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center" Visibility="{Binding FlashMarginVisible}"/>
+                    <TextBox Text="{Binding FlashMargin}" TextAlignment="Center" VerticalContentAlignment="Center" Grid.Column="3" VerticalAlignment="Center" Width="50" Height="21" Visibility="{Binding FlashMarginVisible}"></TextBox>
                 </Grid>
 
+                <Grid Margin="5" Grid.Row="5" Grid.Column="1" HorizontalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Content="PTV inner margin from body (cm):" FontSize="13" FontStyle="Normal" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Margin="0"></Label>
+                    <TextBox Text="{Binding PTVMarginFromBody}" FontSize="12" TextAlignment="Center" HorizontalAlignment="Left" VerticalAlignment="Center" Width="75" Grid.Column="1" Margin="0"></TextBox>
+                    <Button Content="?" HorizontalAlignment="Center" VerticalAlignment="Center" Width="20" Grid.Column="2" Height="20" Margin="5,0,11,0" Command="{Binding PTVMarginInfoCommand}"></Button>
+                </Grid>
             </Grid>
 
             <Grid Background="DarkGray">
                 <TabControl Background="DarkGray" TabStripPlacement="Left" HorizontalAlignment="Left" Height="500" Margin="-2,0,0,0" VerticalAlignment="Bottom">
-                    <TabItem Header="Specify Targets" BorderThickness="0,1,1,0" x:Name="targetsTabItem">
+                    <TabItem Header="Specify Targets" Content="{Binding SpecifyTargets}" BorderThickness="0,1,1,0">
                     </TabItem>
-                    <TabItem Header="Structure Tuning" BorderThickness="0,1,1,0" Height="29" x:Name="structureTuningTabItem" VerticalAlignment="Top">
+                    <TabItem Header="Structure Tuning" BorderThickness="0,1,1,0" Height="29" VerticalAlignment="Top">
+                        <TabControl TabStripPlacement="Top" Background="DarkGray">
+                            <TabItem Header="Tuning Structure Generation" Content="{Binding TSGeneration}" BorderThickness="1,1,1,1" Width="290">
+                            </TabItem>
+                            <TabItem Header="Tuning Structure Manipulation" Content="{Binding TSManipulation}" BorderThickness="0,1,1,1" Width="290" x:Name="TSManipulationTabItem">
+                            </TabItem>
+                        </TabControl>
                     </TabItem>
-                    <TabItem Header="Beam Placement" BorderThickness="0,1,1,0" x:Name="beamPlacementTabItem">
+                    <TabItem Header="Beam Placement" Content="{Binding BeamPlacement}" BorderThickness="0,1,1,0">
                     </TabItem>
-                    <TabItem Header="Optimization Setup" BorderThickness="0,1,1,0" x:Name="optimizationSetupTabItem">
+                    <TabItem Header="Optimization Setup" Content="{Binding OptimizationSetup}" BorderThickness="0,1,1,0">
                     </TabItem>
-                    <TabItem Header="Plan Preparation" BorderThickness="0,1,1,1" x:Name="planPreparationTabItem">
+                    <TabItem Header="Plan Preparation" Content="{Binding PlanPreparation}" BorderThickness="0,1,1,1">
                     </TabItem>
                     <TabItem Header="Template Builder" VerticalAlignment="Bottom" BorderThickness="0,1,1,0" Margin="0,0,0,-162">
                     </TabItem>
-                    <TabItem Header="Script Configuration" HorizontalContentAlignment="Center" VerticalAlignment="Bottom" BorderThickness="0,1,1,1" Margin="0,0,0,-95">
+                    <TabItem Header="Script Configuration" Content="{Binding ScriptConfiguration}" HorizontalContentAlignment="Center" VerticalAlignment="Bottom" BorderThickness="0,1,1,1" Margin="0,0,0,-95">
                     </TabItem>
                 </TabControl>
             </Grid>
