@@ -13,10 +13,12 @@ namespace AutoPlannerHelpers.ViewModels
     public class SetTargetsViewModel : BindableBase
     {
         public ObservableCollectionPropertyNotify<UnstructuredTargetModel> Targets { get; set; }
+        public List<PlanTargetsModel> PlanTargets { get => _planTargets; }
 
         #region properties
         private List<string> _targetIds;
         private List<string> _planIds;
+        private List<PlanTargetsModel> _planTargets;
 
         public List<string> TargetIds
         {
@@ -38,10 +40,12 @@ namespace AutoPlannerHelpers.ViewModels
         public DelegateCommand RemoveAllTargetsCommand { get; set; }
         public DelegateCommand<UnstructuredTargetModel> ClearRowCommand { get; set; }
         public DelegateCommand SetTargetsCommand { get; set; }
+        private DelegateCommand _notifyMainVMExecuted;
         #endregion
 
-        public SetTargetsViewModel()
+        public SetTargetsViewModel(DelegateCommand NotifyMainVMExecuted)
         {
+            _notifyMainVMExecuted = NotifyMainVMExecuted;
             TargetIds = new List<string> { "red", "green", "blue" };
             PlanIds = new List<string> { "1", "2", "3" };
             Targets = new ObservableCollectionPropertyNotify<UnstructuredTargetModel>
@@ -78,7 +82,18 @@ namespace AutoPlannerHelpers.ViewModels
 
         public void SetTargets()
         {
+            _notifyMainVMExecuted.Execute();
+        }
 
+        /// <summary>
+        /// Helper method to take an ungrouped, unordered list of plan target models and first group them by plan Id, then order the targets by target prescription dose
+        /// </summary>
+        /// <param name="ungrouped"></param>
+        /// <returns></returns>
+        public static List<PlanTargetsModel> GroupTargetsByPlanIdAndOrderByTargetRx()
+        {
+            //return Targets.ToList().GroupBy(x => x.PlanId, (planId, groupedTargets) => new PlanTargetsModel(planId, groupedTargets.SelectMany(x => x.Targets).OrderBy(y => y.TargetRxDose))).ToList();
+            return new List<PlanTargetsModel> { };
         }
     }
 }

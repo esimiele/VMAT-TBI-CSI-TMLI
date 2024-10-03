@@ -143,6 +143,7 @@ namespace TBIAutoPlanner.ViewModels
         public DelegateCommand QuickStartGuideCommand { get; set; }
         public DelegateCommand HelpGuideCommand { get; set; }
         public DelegateCommand PTVMarginInfoCommand { get; set; }
+        private DelegateCommand NotifySetTargets;
         #endregion
 
         public MainViewModel(List<string> args)
@@ -155,7 +156,8 @@ namespace TBIAutoPlanner.ViewModels
         {
             PlanTemplates.Clear();
             FlashMarginVisible = Visibility.Hidden;
-            SpecifyTargets = new SpecifyTargetsView { DataContext = new SetTargetsViewModel() };
+            NotifySetTargets = new DelegateCommand(TestExecute);
+            SpecifyTargets = new SpecifyTargetsView { DataContext = new SetTargetsViewModel(NotifySetTargets) };
             TSGeneration = new TSGenerationView { DataContext = new TSGenerationView() };
             TSManipulation = new TSManipulationView { DataContext = new TSManipulationView() };
             BeamPlacement = new BeamPlacementView { DataContext = new BeamPlacementViewModel(PlanType.VMAT_TBI) };
@@ -165,6 +167,11 @@ namespace TBIAutoPlanner.ViewModels
             QuickStartGuideCommand = new DelegateCommand(LaunchQuickStartGuide);
             HelpGuideCommand = new DelegateCommand(LaunchHelpGuide);
             PTVMarginInfoCommand = new DelegateCommand(ShowPTVMarginInfo);
+        }
+
+        private void TestExecute()
+        {
+            MessageBox.Show("messaging works");
         }
 
         private void LaunchQuickStartGuide()
