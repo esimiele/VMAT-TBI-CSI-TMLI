@@ -82,6 +82,7 @@ namespace AutoPlannerHelpers.ViewModels
 
         public void SetTargets()
         {
+            _planTargets = GroupTargetsByPlanIdAndOrderByTargetRx(Targets.ToList());
             _notifyMainVMExecuted.Execute();
         }
 
@@ -90,10 +91,19 @@ namespace AutoPlannerHelpers.ViewModels
         /// </summary>
         /// <param name="ungrouped"></param>
         /// <returns></returns>
-        public static List<PlanTargetsModel> GroupTargetsByPlanIdAndOrderByTargetRx()
+        public List<PlanTargetsModel> GroupTargetsByPlanIdAndOrderByTargetRx(List<UnstructuredTargetModel> targets)
         {
-            //return Targets.ToList().GroupBy(x => x.PlanId, (planId, groupedTargets) => new PlanTargetsModel(planId, groupedTargets.SelectMany(x => x.Targets).OrderBy(y => y.TargetRxDose))).ToList();
-            return new List<PlanTargetsModel> { };
+            return targets.GroupBy(x => x.PlanId, (planId, groupedTargets) => new PlanTargetsModel(planId, ConvertUnstructuredTargetListToTargetModelList(groupedTargets))).ToList();
+        }
+
+        public List<TargetModel> ConvertUnstructuredTargetListToTargetModelList(IEnumerable<UnstructuredTargetModel> targets)
+        {
+            List<TargetModel> targetList = new List<TargetModel>();
+            foreach(UnstructuredTargetModel target in targets)
+            {
+                targetList.Add(new TargetModel(target.TargetId, target.TargetRxDose));
+            }
+            return targetList;
         }
     }
 }
