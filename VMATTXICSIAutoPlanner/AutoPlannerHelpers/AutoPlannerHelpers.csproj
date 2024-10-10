@@ -43,7 +43,17 @@
 		</Reference>
 	</ItemGroup>
 	<ItemGroup>
+	  <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
 	  <PackageReference Include="Prism.Core" Version="9.0.537" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Reference Include="System.Windows.Forms" />
+	</ItemGroup>
+	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+	  <Exec Command="if NOT EXIST &quot;$(ProjectDir)$(OutDir)\configuration\&quot; (&#xD;&#xA;mkdir &quot;$(ProjectDir)$(OutDir)\configuration\&quot;&#xD;&#xA;)&#xD;&#xA;if NOT EXIST &quot;$(ProjectDir)$(OutDir)\logs\&quot; (&#xD;&#xA;mkdir &quot;$(ProjectDir)$(OutDir)\logs\&quot;&#xD;&#xA;)&#xD;&#xA;if NOT EXIST &quot;$(ProjectDir)$(OutDir)\documentation\&quot; (&#xD;&#xA;mkdir &quot;$(ProjectDir)$(OutDir)\documentation\&quot;&#xD;&#xA;)" />
+	</Target>
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+	  <Exec Command="copy &quot;$(SolutionDir)Documentation\*&quot; &quot;$(ProjectDir)$(OutDir)\documentation&quot;" />
+	</Target>
 
 </Project>

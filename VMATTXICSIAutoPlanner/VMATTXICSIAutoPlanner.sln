@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TMLIAutoPlanner", "TMLIAuto
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoPlannerHelpers", "AutoPlannerHelpers\AutoPlannerHelpers.csproj", "{73A53BBF-24FD-4214-990F-A16A323C1A65}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{376864BB-FB08-45BF-90D6-86DB0902F6F1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

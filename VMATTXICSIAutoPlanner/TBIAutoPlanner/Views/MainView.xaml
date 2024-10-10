@@ -143,13 +143,13 @@
 
             <Grid Background="DarkGray">
                 <TabControl Background="DarkGray" TabStripPlacement="Left" HorizontalAlignment="Left" Height="500" Margin="-2,0,0,0" VerticalAlignment="Bottom">
-                    <TabItem Header="Specify Targets" Content="{Binding SpecifyTargets}" BorderThickness="0,1,1,0">
+                    <TabItem Header="Specify Targets" Content="{Binding SpecifyTargets}" Background="{Binding SpecifyTargetsTabBackground, FallbackValue=LightGray}" BorderThickness="0,1,1,0">
                     </TabItem>
-                    <TabItem Header="Structure Tuning" BorderThickness="0,1,1,0" Height="29" VerticalAlignment="Top">
+                    <TabItem Header="Structure Tuning" Background="{Binding StructureTuningTabBackground, FallbackValue=LightGray}" BorderThickness="0,1,1,0" Height="29" VerticalAlignment="Top">
                         <TabControl TabStripPlacement="Top" Background="DarkGray">
                             <TabItem Header="Tuning Structure Generation" Content="{Binding TSGeneration}" BorderThickness="1,1,1,1" Width="290">
                             </TabItem>
-                            <TabItem Header="Tuning Structure Manipulation" Content="{Binding TSManipulation}" BorderThickness="0,1,1,1" Width="290" x:Name="TSManipulationTabItem">
+                            <TabItem Header="Tuning Structure Manipulation" Content="{Binding TSManipulation}" Background="{Binding TSManipulationTabBackground, FallbackValue=LightGray}"  BorderThickness="0,1,1,1" Width="290" x:Name="TSManipulationTabItem">
                             </TabItem>
                         </TabControl>
                     </TabItem>

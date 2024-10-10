@@ -7,12 +7,19 @@ using AutoPlannerHelpers.Views;
 using AutoPlannerHelpers.PlanTemplateModels;
 using Prism.Mvvm;
 using Prism.Commands;
+using AutoPlannerHelpers.Models;
+using System.IO;
+using System.Reflection;
+using System;
+using System.Linq;
+using AutoPlannerHelpers.Logging;
+using AutoPlannerHelpers.Helpers;
 
 namespace TBIAutoPlanner.ViewModels
 {
     public class MainViewModel : BindableBase
     {
-        private ObservableCollection<TBIAutoPlanTemplate> PlanTemplates { get; set; }
+        public ObservableCollection<TBIAutoPlanTemplate> PlanTemplates { get; set; }
 
         #region properties
         private string _patientMRN;
@@ -85,10 +92,37 @@ namespace TBIAutoPlanner.ViewModels
             get { return _ptvMarginFromBody; }
             set { SetProperty(ref _ptvMarginFromBody, value); }
         }
+
+        private System.Windows.Media.SolidColorBrush _specifyTargetsTabBackground;
+
+        public System.Windows.Media.SolidColorBrush SpecifyTargetsTabBackground
+        {
+            get { return _specifyTargetsTabBackground; }
+            set { SetProperty(ref _specifyTargetsTabBackground, value); }
+        }
+
+        private System.Windows.Media.SolidColorBrush _structureTuningTabBackground;
+
+        public System.Windows.Media.SolidColorBrush StructureTuningTabBackground
+        {
+            get { return _structureTuningTabBackground; }
+            set { SetProperty(ref _structureTuningTabBackground, value); }
+        }
+
+        private System.Windows.Media.SolidColorBrush _tsManipulationTabBackground;
+
+        public System.Windows.Media.SolidColorBrush TSManipulationTabBackground
+        {
+            get { return _tsManipulationTabBackground; }
+            set { SetProperty(ref _tsManipulationTabBackground, value); }
+        }
+
         #endregion
 
         #region view objects
+        private SetTargetsViewModel _setTargetsVM;
         private object _specifyTargets;
+        private TSGenerationViewModel _tsGenerationVM;
         private object _tsGeneration;
         private object _tsManipulation;
         private object _optimizationSetup;
@@ -143,23 +177,32 @@ namespace TBIAutoPlanner.ViewModels
         public DelegateCommand QuickStartGuideCommand { get; set; }
         public DelegateCommand HelpGuideCommand { get; set; }
         public DelegateCommand PTVMarginInfoCommand { get; set; }
-        private DelegateCommand NotifySetTargets;
+        private DelegateCommand NotifySetTargetsCommand;
+        private DelegateCommand NotifyGenerateTuningStructuresCommand;
+        #endregion
+
+        #region fields
+        private List<PlanTargetsModel> _planTargets = new List<PlanTargetsModel> { };
+        List<PrescriptionModel> _prescriptions = new List<PrescriptionModel> { };
         #endregion
 
         public MainViewModel(List<string> args)
         {
-            PlanTemplates = new ObservableCollection<TBIAutoPlanTemplate> { };
             Initialize();
         }
 
         public void Initialize()
         {
-            PlanTemplates.Clear();
             FlashMarginVisible = Visibility.Hidden;
-            NotifySetTargets = new DelegateCommand(TestExecute);
-            SpecifyTargets = new SpecifyTargetsView { DataContext = new SetTargetsViewModel(NotifySetTargets) };
-            TSGeneration = new TSGenerationView { DataContext = new TSGenerationView() };
+            NotifySetTargetsCommand = new DelegateCommand(SetTargets);
+            _setTargetsVM = new SetTargetsViewModel(NotifySetTargetsCommand);
+            SpecifyTargets = new SpecifyTargetsView { DataContext = _setTargetsVM };
+            SpecifyTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
+            _tsGenerationVM = new TSGenerationViewModel();
+            TSGeneration = new TSGenerationView { DataContext = _tsGenerationVM };
+            StructureTuningTabBackground = System.Windows.Media.Brushes.LightGray;
             TSManipulation = new TSManipulationView { DataContext = new TSManipulationView() };
+            TSManipulationTabBackground = System.Windows.Media.Brushes.LightGray;
             BeamPlacement = new BeamPlacementView { DataContext = new BeamPlacementViewModel(PlanType.VMAT_TBI) };
             OptimizationSetup = new OptimizationSetupView { DataContext = new OptimizationSetupViewModel() };
             PlanPreparation = new PlanPreparationView { DataContext = new PlanPreparationViewModel() };
@@ -167,11 +210,31 @@ namespace TBIAutoPlanner.ViewModels
             QuickStartGuideCommand = new DelegateCommand(LaunchQuickStartGuide);
             HelpGuideCommand = new DelegateCommand(LaunchHelpGuide);
             PTVMarginInfoCommand = new DelegateCommand(ShowPTVMarginInfo);
+            PlanTemplates = new ObservableCollection<TBIAutoPlanTemplate>() { new TBIAutoPlanTemplate("--select--") };
+            LoadPlanTemplates();
         }
 
-        private void TestExecute()
+        private void SetTargets()
         {
-            MessageBox.Show("messaging works");
+            if(VerifyTargetsIntegrity(_setTargetsVM.PlanTargets)) return;
+            _prescriptions = TargetsHelper.BuildPrescriptionList(_setTargetsVM.PlanTargets, _dosePerFraction, _numberOfFractions, _planTotalDose);
+            if(!_prescriptions.Any()) return;
+            SpecifyTargetsTabBackground = System.Windows.Media.Brushes.ForestGreen;
+            StructureTuningTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
+            TSManipulationTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
+        }
+
+        private bool VerifyTargetsIntegrity(List<PlanTargetsModel> parsedTargets)
+        {
+            //verify selected targets are APPROVED
+            //for tbi, we only want to make there is one plan (not configured for sequential boosts)
+            if (!parsedTargets.Any()) return true;
+            if (parsedTargets.Select(x => x.PlanId).Distinct().Count() > 1)
+            {
+                Logger.GetInstance().LogError($"Error! Multiple plan Ids entered! This script is only configured to auto-plan one TBI plan!");
+                return true;
+            }
+            return false;
         }
 
         private void LaunchQuickStartGuide()
@@ -219,10 +282,12 @@ namespace TBIAutoPlanner.ViewModels
 
         private void UpdateUIWithSelectedPlanTemplate()
         {
-            if (ReferenceEquals(SelectedTemplate, null)) return;
+            if (ReferenceEquals(_selectedTemplate, null)) return;
 
             DosePerFraction = SelectedTemplate.InitialRxDosePerFx;
             NumberOfFractions = SelectedTemplate.InitialRxNumberOfFractions;
+            _setTargetsVM.AutoPlanTemplateSelectionChaged(_selectedTemplate);
+            _tsGenerationVM.AutoPlanTemplateSelectionChaged(_selectedTemplate);
             //PlanObjectives.Clear();
             //foreach (PlanObjectiveModel itr in template.PlanObjectives)
             //{
@@ -239,6 +304,26 @@ namespace TBIAutoPlanner.ViewModels
         {
             if (UseFlash) FlashMarginVisible = Visibility.Visible;
             else FlashMarginVisible = Visibility.Hidden;
+        }
+
+        private bool LoadPlanTemplates()
+        {
+            int count = 1;
+            try
+            {
+                foreach (string itr in Directory.GetFiles(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\templates\\TBI\\", "*.ini").OrderBy(x => x))
+                {
+                    PlanTemplates.Add(ConfigurationHelper.ReadTBITemplatePlan(itr, count++));
+                }
+
+            }
+            catch (Exception e)
+            {
+                Logger.GetInstance().LogError($"Error could not load plan template file because: {e.Message}");
+                Logger.GetInstance().LogError(e.StackTrace, true);
+                return true;
+            }
+            return false;
         }
     }
 }

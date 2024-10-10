@@ -1,4 +1,6 @@
-﻿namespace AutoPlannerHelpers.Models
+﻿using System.Linq;
+
+namespace AutoPlannerHelpers.Models
 {
     public class UnstructuredTargetModel
     {
@@ -11,6 +13,13 @@
             PlanId = planId;
             TargetId = target;
             TargetRxDose = dose;
+        }
+
+        public UnstructuredTargetModel(PlanTargetsModel model)
+        {
+            PlanId = model.PlanId;
+            TargetId = model.Targets.First().TargetId;
+            TargetRxDose = model.Targets.First().TargetRxDose;
         }
     }
 }

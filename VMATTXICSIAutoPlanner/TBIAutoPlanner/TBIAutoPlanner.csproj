@@ -50,5 +50,15 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\AutoPlannerHelpers\AutoPlannerHelpers.csproj" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Configuration\" />
+	  <Folder Include="PlanTemplates\" />
+	</ItemGroup>
+	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+	  <Exec Command="if NOT EXIST &quot;$(ProjectDir)$(OutDir)\templates\TBI\&quot; (&#xD;&#xA;mkdir &quot;$(ProjectDir)$(OutDir)\templates\TBI\&quot;&#xD;&#xA;)&#xD;&#xA;" />
+	</Target>
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+	  <Exec Command="copy &quot;$(ProjectDir)Configuration\*&quot; &quot;$(ProjectDir)$(OutDir)\configuration&quot;&#xD;&#xA;copy &quot;$(ProjectDir)PlanTemplates\*&quot; &quot;$(ProjectDir)$(OutDir)\templates\TBI&quot;" />
+	</Target>
 
 </Project>
