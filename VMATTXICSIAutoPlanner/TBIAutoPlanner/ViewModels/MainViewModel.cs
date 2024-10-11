@@ -14,6 +14,9 @@ using System;
 using System.Linq;
 using AutoPlannerHelpers.Logging;
 using AutoPlannerHelpers.Helpers;
+using TBIAutoPlanner.Core;
+using AutoPlannerHelpers.Context;
+using static System.Net.WebRequestMethods;
 
 namespace TBIAutoPlanner.ViewModels
 {
@@ -23,7 +26,7 @@ namespace TBIAutoPlanner.ViewModels
 
         #region properties
         private string _patientMRN;
-        private List<string> _structureSetIds;
+        private string _structureSetId;
         private double _dosePerFraction;
         private int _numberOfFractions;
         private double _planTotalDose;
@@ -39,10 +42,10 @@ namespace TBIAutoPlanner.ViewModels
             set { SetProperty(ref _patientMRN, value); }
         }
 
-        public List<string> StructureSetIds
+        public string StructureSetId
         {
-            get { return _structureSetIds; }
-            set { SetProperty(ref _structureSetIds, value); }
+            get { return _structureSetId; }
+            set { _structureSetId = value; }
         }
 
         public double DosePerFraction
@@ -124,11 +127,13 @@ namespace TBIAutoPlanner.ViewModels
         private object _specifyTargets;
         private TSGenerationViewModel _tsGenerationVM;
         private object _tsGeneration;
+        private TSManipulationViewModel _tsManipulationVM;
         private object _tsManipulation;
+        private BeamPlacementViewModel _beamPlacementVM;
+        private object _beamPlacement;
         private object _optimizationSetup;
         private object _planPreparation;
         private object _scriptConfiguration;
-        private object _beamPlacement;
 
         public object SpecifyTargets
         {
@@ -178,12 +183,13 @@ namespace TBIAutoPlanner.ViewModels
         public DelegateCommand HelpGuideCommand { get; set; }
         public DelegateCommand PTVMarginInfoCommand { get; set; }
         private DelegateCommand NotifySetTargetsCommand;
-        private DelegateCommand NotifyGenerateTuningStructuresCommand;
+        private DelegateCommand NotifyGenerateManipulateTuningStructuresCommand;
+        private DelegateCommand NotifyBeamsPlacedCommand;
         #endregion
 
         #region fields
-        private List<PlanTargetsModel> _planTargets = new List<PlanTargetsModel> { };
         List<PrescriptionModel> _prescriptions = new List<PrescriptionModel> { };
+        List<PlanIsocenterModel> _planIsocenters = new List<PlanIsocenterModel> { };
         #endregion
 
         public MainViewModel(List<string> args)
@@ -194,26 +200,61 @@ namespace TBIAutoPlanner.ViewModels
         public void Initialize()
         {
             FlashMarginVisible = Visibility.Hidden;
+
             NotifySetTargetsCommand = new DelegateCommand(SetTargets);
             _setTargetsVM = new SetTargetsViewModel(NotifySetTargetsCommand);
             SpecifyTargets = new SpecifyTargetsView { DataContext = _setTargetsVM };
             SpecifyTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
+
             _tsGenerationVM = new TSGenerationViewModel();
             TSGeneration = new TSGenerationView { DataContext = _tsGenerationVM };
             StructureTuningTabBackground = System.Windows.Media.Brushes.LightGray;
-            TSManipulation = new TSManipulationView { DataContext = new TSManipulationView() };
+
+            NotifyGenerateManipulateTuningStructuresCommand = new DelegateCommand(PerformTSStructureGenerationManipulation);
+            _tsManipulationVM = new TSManipulationViewModel(NotifyGenerateManipulateTuningStructuresCommand, new List<string> { "Lungs", "Liver", "Kidneys"});
+            TSManipulation = new TSManipulationView { DataContext = _tsManipulationVM };
             TSManipulationTabBackground = System.Windows.Media.Brushes.LightGray;
-            BeamPlacement = new BeamPlacementView { DataContext = new BeamPlacementViewModel(PlanType.VMAT_TBI) };
+
+            NotifyBeamsPlacedCommand = new DelegateCommand(GeneratePlansAndPlaceBeams);
+            _beamPlacementVM = new BeamPlacementViewModel(NotifyBeamsPlacedCommand, PlanType.VMAT_TBI, new List<string> { "LA16"}, new List<string> { "6X", "10X"});
+            BeamPlacement = new BeamPlacementView { DataContext = _beamPlacementVM };
+
             OptimizationSetup = new OptimizationSetupView { DataContext = new OptimizationSetupViewModel() };
+
             PlanPreparation = new PlanPreparationView { DataContext = new PlanPreparationViewModel() };
+
             ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel() };
+
             QuickStartGuideCommand = new DelegateCommand(LaunchQuickStartGuide);
             HelpGuideCommand = new DelegateCommand(LaunchHelpGuide);
             PTVMarginInfoCommand = new DelegateCommand(ShowPTVMarginInfo);
+
             PlanTemplates = new ObservableCollection<TBIAutoPlanTemplate>() { new TBIAutoPlanTemplate("--select--") };
             LoadPlanTemplates();
+
+            _planIsocenters.Add(new PlanIsocenterModel("test", new List<IsocenterModel> { new IsocenterModel("1", 2, BeamType.VMAT), new IsocenterModel("2", 3, BeamType.VMAT), new IsocenterModel("3", 4, BeamType.VMAT) }));
+            _planIsocenters.Add(new PlanIsocenterModel("doubleTest", new List<IsocenterModel> { new IsocenterModel("4", 2, BeamType.APPA) }));
+            _beamPlacementVM.PopulatePlanIsocenterList(_planIsocenters);
         }
 
+        #region information and help guides
+        private void LaunchQuickStartGuide()
+        {
+            MessageBox.Show("test");
+        }
+
+        private void LaunchHelpGuide()
+        {
+            MessageBox.Show("test");
+        }
+
+        private void ShowPTVMarginInfo()
+        {
+            MessageBox.Show("test");
+        }
+        #endregion
+
+        #region specify targets
         private void SetTargets()
         {
             if(VerifyTargetsIntegrity(_setTargetsVM.PlanTargets)) return;
@@ -236,21 +277,49 @@ namespace TBIAutoPlanner.ViewModels
             }
             return false;
         }
+        #endregion
 
-        private void LaunchQuickStartGuide()
+        #region TS generation and manipulation
+        private void PerformTSStructureGenerationManipulation()
         {
-            MessageBox.Show("test");
-        }
+            List<RequestedTSStructureModel> tsGeneration = _tsGenerationVM.RequestedTuningStructures.ToList();
+            List<RequestedTSManipulationModel> tsManipulations = _tsManipulationVM.RequestedTSManipulations.ToList();
+            TSGenerationManipulation_TBI generateTS = new TSGenerationManipulation_TBI(tsGeneration, 
+                                                                                       tsManipulations, 
+                                                                                       _prescriptions, 
+                                                                                       EclipseContext.GetInstance().StructureSet, 
+                                                                                       PTVMarginFromBody,
+                                                                                       _useFlash, 
+                                                                                       true);
 
-        private void LaunchHelpGuide()
-        {
-            MessageBox.Show("test");
-        }
+            EclipseContext.GetInstance().Patient.BeginModifications();
+            bool failed = generateTS.Execute();
+            Logger.GetInstance().AppendLogOutput("TS Generation and manipulation output:", generateTS.GetLogOutput());
 
-        private void ShowPTVMarginInfo()
-        {
-            MessageBox.Show("test");
+            if (failed) return;
+            Logger.GetInstance().AddedStructures = generateTS.AddedStructureIds;
+            Logger.GetInstance().StructureManipulations = tsManipulations;
+            Logger.GetInstance().TSTargets = generateTS.PlanTargets.SelectMany(x => x.Targets).ToDictionary(x => x.TargetId, x => x.TsTargetId);
+            Logger.GetInstance().NormalizationVolumes = generateTS.NormalizationVolumes;
+            Logger.GetInstance().PlanIsocenters = generateTS.PlanIsocentersList;
+
+            _planIsocenters.Add(new PlanIsocenterModel("test", new List<IsocenterModel> { new IsocenterModel("1", 2, BeamType.VMAT), new IsocenterModel("2", 3, BeamType.VMAT), new IsocenterModel("3", 4, BeamType.VMAT) }));
+            _planIsocenters.Add(new PlanIsocenterModel("doubleTest", new List<IsocenterModel> { new IsocenterModel("4", 2, BeamType.APPA) }));
+            _beamPlacementVM.PopulatePlanIsocenterList(_planIsocenters);
         }
+        #endregion
+
+        #region beam placement
+        private void GeneratePlansAndPlaceBeams()
+        {
+            _planIsocenters = _beamPlacementVM.PlanIsocenterList.ToList();
+            GeneratePlansAndPlaceBeams_TBI placeBeams = new GeneratePlansAndPlaceBeams_TBI();
+            bool failed = placeBeams.Execute();
+            Logger.GetInstance().AppendLogOutput("Generate plans and place beams output:", placeBeams.GetLogOutput());
+            if (failed) return;
+
+        }
+        #endregion
 
         private void ResetRxDose()
         {
@@ -288,16 +357,7 @@ namespace TBIAutoPlanner.ViewModels
             NumberOfFractions = SelectedTemplate.InitialRxNumberOfFractions;
             _setTargetsVM.AutoPlanTemplateSelectionChaged(_selectedTemplate);
             _tsGenerationVM.AutoPlanTemplateSelectionChaged(_selectedTemplate);
-            //PlanObjectives.Clear();
-            //foreach (PlanObjectiveModel itr in template.PlanObjectives)
-            //{
-            //    PlanObjectives.Add(new PlanObjectiveModel(itr));
-            //}
-            //OptimizationConstraints.Clear();
-            //foreach (OptimizationConstraintModel itr in template.InitialOptimizationConstraints)
-            //{
-            //    OptimizationConstraints.Add(new OptimizationConstraintModel(itr));
-            //}
+            _tsManipulationVM.AutoPlanTemplateSelectionChaged(_selectedTemplate);
         }
 
         private void UpdateUseFlash()
@@ -306,6 +366,7 @@ namespace TBIAutoPlanner.ViewModels
             else FlashMarginVisible = Visibility.Hidden;
         }
 
+        #region script configuration
         private bool LoadPlanTemplates()
         {
             int count = 1;
@@ -325,5 +386,6 @@ namespace TBIAutoPlanner.ViewModels
             }
             return false;
         }
+        #endregion
     }
 }

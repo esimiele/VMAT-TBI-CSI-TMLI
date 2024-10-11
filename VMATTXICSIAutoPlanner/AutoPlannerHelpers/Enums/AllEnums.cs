@@ -94,4 +94,24 @@
         Equal,
         None
     };
+
+    /// <summary>
+    /// Decode key for de-serializing the eclipse context from a string to a custom Eclipse context
+    /// </summary>
+    public enum EclipseDecodeKey
+    {
+        Patient = 0,
+        StructureSet = 1,
+        Image = 2,
+        Plan = 3,
+        Course = 4,
+        None = 99
+    };
+
+    public enum BeamType
+    {
+        VMAT,
+        APPA,
+        None = 99
+    };
 }

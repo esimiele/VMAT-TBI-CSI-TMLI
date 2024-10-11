@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:AutoPlannerHelpers.Views"
+             xmlns:enum="clr-namespace:AutoPlannerHelpers.Enums"
              mc:Ignorable="d">
     <UserControl.Resources>
         <Style TargetType="TextBox">
@@ -144,15 +145,31 @@
             <StackPanel HorizontalAlignment="Center" Margin="0">
                 <Label Content="Structure Manipulation" FontSize="20" FontStyle="Normal" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,0,0,0"></Label>
                 <Grid Height="25" Width ="560" HorizontalAlignment="Center" Margin="0,5,0,0">
-                    <Button x:Name="addSpareStructureBtn" Content="Add Structure" Width="100" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                    <Button Content="Add Defaults" Width="100" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-                    <Button x:Name="ClearStructureManipulationsBtn" Content="Clear List" Width="100" HorizontalAlignment="Right" VerticalAlignment="Top"/>
+                    <Button Content="Add Structure" Width="100" HorizontalAlignment="Left" VerticalAlignment="Top" Command="{Binding AddTSManipulationCommand}"/>
+                    <Button Content="Add Defaults" Width="100" HorizontalAlignment="Center" VerticalAlignment="Top" Command="{Binding AddDefaultTSManipulationsCommand}"/>
+                    <Button Content="Clear List" Width="100" HorizontalAlignment="Right" VerticalAlignment="Top" Command="{Binding RemoveAllTSManipulationsCommand}"/>
                 </Grid>
-                <ScrollViewer x:Name="spareStructScroller" Height="330" Width="585" Margin="0,5,0,0" HorizontalAlignment="Center" VerticalAlignment="Bottom" Style="{StaticResource ScrollViewerStyle}">
-                    <StackPanel Name="structureManipulationSP" Margin="5">
-                    </StackPanel>
+                <ScrollViewer Height="350" Width="570" Margin="0,5,0,0" HorizontalAlignment="Center" VerticalAlignment="Bottom" Style="{StaticResource ScrollViewerStyle}">
+                    <ItemsControl x:Name="TSManipulationSP" ItemsSource="{Binding RequestedTSManipulations}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="1.25*"/>
+                                        <ColumnDefinition Width="0.75*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ComboBox Grid.Column="0" HorizontalContentAlignment="Center" ItemsSource="{Binding Path=DataContext.StructureIds, ElementName=TSManipulationSP}" SelectedItem="{Binding StructureId}" Margin="1"/>
+                                    <ComboBox Grid.Column="1" HorizontalContentAlignment="Center" SelectedItem="{Binding ManipulationType}" ItemsSource="{Binding Source={local:EnumBindingSource {x:Type enum:TSManipulationType}}}" Margin="1"/>
+                                    <TextBox Grid.Column="2" HorizontalContentAlignment="Center" Text="{Binding MarginInCM}" Margin="1"/>
+                                    <Button Content="Clear" Grid.Column="3" Command="{Binding Path=DataContext.ClearRowCommand, ElementName=TSManipulationSP}" CommandParameter="{Binding}" Width="90" Margin="1"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </ScrollViewer>
-                <Button Content="Perform TS Generation &amp; Manipulation" FontWeight="Bold" Width="240" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,7,0,0"></Button>
+                <Button Content="Perform TS Generation &amp; Manipulation" FontWeight="Bold" Width="240" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,5,0,0" Command="{Binding PerformTSGenerationManipulationCommand}"/>
             </StackPanel>
         </Border>
     </Grid>

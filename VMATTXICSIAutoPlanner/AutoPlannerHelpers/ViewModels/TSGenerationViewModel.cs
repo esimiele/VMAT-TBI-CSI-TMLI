@@ -14,50 +14,25 @@ namespace AutoPlannerHelpers.ViewModels
     public class TSGenerationViewModel : BindableBase
     {
         public ObservableCollectionPropertyNotify<RequestedTSStructureModel> RequestedTuningStructures { get; set; }
-        public ObservableCollectionPropertyNotify<string> TSStructureIds { get; set; }
 
         #region properties
         private AutoPlanTemplateBase _selectedTemplate;
-        private List<string> _dicomTypes;
-        private List<string> _tsStructureIds;
-
-        public List<string> DicomTypes
-        {
-            get { return _dicomTypes; }
-            set { _dicomTypes = value; }
-        }
-
         #endregion
 
         #region commands
         public DelegateCommand DisplayInfoCommand { get; set; }
-        public DelegateCommand AddTSStructureCommand { get; set; } 
         public DelegateCommand AddDefaultTSStructuresCommand { get; set; }
         public DelegateCommand RemoveAllTSStructuresCommand { get; set; }
+        public DelegateCommand<RequestedTSStructureModel> ClearRowCommand { get; set; }
         #endregion
 
         public TSGenerationViewModel()
         {
-            DicomTypes = new List<string> { "AVOIDANCE",
-                                            "CAVITY",
-                                            "CONTRAST_AGENT",
-                                            "CTV",
-                                            "EXTERNAL",
-                                            "GTV",
-                                            "IRRAD_VOLUME",
-                                            "ORGAN",
-                                            "PTV",
-                                            "TREATED_VOLUME",
-                                            "SUPPORT",
-                                            "FIXATION",
-                                            "CONTROL",
-                                            "DOSE_REGION" };
-            TSStructureIds = new ObservableCollectionPropertyNotify<string> { };
             RequestedTuningStructures = new ObservableCollectionPropertyNotify<RequestedTSStructureModel> { };
             DisplayInfoCommand = new DelegateCommand(DisplayTSGenerationInfo);
-            AddTSStructureCommand = new DelegateCommand(AddTSStructure);
             AddDefaultTSStructuresCommand = new DelegateCommand(AddDefaultTSStructures);
             RemoveAllTSStructuresCommand = new DelegateCommand(RemoveAllTSStructures);
+            ClearRowCommand = new DelegateCommand<RequestedTSStructureModel>(ClearRow);
         }
 
         private void DisplayTSGenerationInfo()
@@ -74,11 +49,6 @@ namespace AutoPlannerHelpers.ViewModels
             MessageBox.Show(sb.ToString());
         }
 
-        public void AddTSStructure()
-        {
-            RequestedTuningStructures.Add(new RequestedTSStructureModel(_dicomTypes.First(), _tsStructureIds.First()));
-        }
-
         public void AutoPlanTemplateSelectionChaged(AutoPlanTemplateBase template)
         {
             if (ReferenceEquals(template, null)) return;
@@ -92,18 +62,15 @@ namespace AutoPlannerHelpers.ViewModels
             UpdateViewWithAutoPlanTemplateTSStructures();
         }
 
+        public void ClearRow(RequestedTSStructureModel o)
+        {
+            RequestedTuningStructures.Remove(o);
+        }
+
         public void UpdateViewWithAutoPlanTemplateTSStructures()
         {
-            TSStructureIds.Clear();
-            foreach(string itr in _selectedTemplate.CreateTSStructures.Select(x => x.StructureId)) TSStructureIds.Add(itr);
             RequestedTuningStructures.Clear();
             foreach (RequestedTSStructureModel itr in _selectedTemplate.CreateTSStructures) RequestedTuningStructures.Add(itr);
-            //TargetIds.Add("--Add New--");
-            //foreach (string itr in _selectedTemplate.PlanTargets.SelectMany(x => x.Targets).Select(x => x.TargetId)) TargetIds.Add(itr);
-            //PlanIds.Add("--Add New--");
-            //PlanIds.AddRange(_selectedTemplate.PlanTargets.Select(x => x.PlanId));
-            //Targets.Clear();
-            //foreach (PlanTargetsModel itr in _selectedTemplate.PlanTargets) Targets.Add(new UnstructuredTargetModel(itr));
         }
 
         private void RemoveAllTSStructures()

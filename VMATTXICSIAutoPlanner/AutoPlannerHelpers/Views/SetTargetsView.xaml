@@ -154,7 +154,7 @@
                     <Button Content="Add Defaults" Width="120" Grid.Column="1" VerticalAlignment="Top" Command="{Binding AddDefaultTargetsCommand}"/>
                     <Button Content="Clear List" Width="100" Grid.Column="3"  VerticalAlignment="Top" Command="{Binding RemoveAllTargetsCommand}"/>
                 </Grid>
-                <ScrollViewer x:Name="targetsScroller" Height="390" Width="570" Margin="0,5,0,0" HorizontalAlignment="Center" VerticalAlignment="Bottom" Style="{StaticResource ScrollViewerStyle}">
+                <ScrollViewer Height="390" Width="570" Margin="0,5,0,0" HorizontalAlignment="Center" VerticalAlignment="Bottom" Style="{StaticResource ScrollViewerStyle}">
                     <ItemsControl x:Name="TargetsSP" ItemsSource="{Binding Targets}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
@@ -165,7 +165,7 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <ComboBox x:Name="TargetIdCB" Grid.Column="0" HorizontalContentAlignment="Center" ItemsSource="{Binding Path=DataContext.TargetIds, ElementName=TargetsSP}" SelectedItem="{Binding TargetId}" Margin="1">
+                                    <ComboBox Grid.Column="0" HorizontalContentAlignment="Center" ItemsSource="{Binding Path=DataContext.TargetIds, ElementName=TargetsSP}" SelectedItem="{Binding TargetId}" Margin="1">
                                         <Behaviors:Interaction.Triggers>
                                             <Behaviors:EventTrigger EventName="SelectionChanged">
                                                 <Behaviors:InvokeCommandAction Command="{Binding Path=DataContext.SelectedTargetChangedCommand, ElementName=TargetsSP}" CommandParameter="{Binding}"/>

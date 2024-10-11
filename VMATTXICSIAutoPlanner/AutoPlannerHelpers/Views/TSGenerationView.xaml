@@ -142,7 +142,6 @@
     <Grid>
         <Border BorderBrush="Black" BorderThickness="1,0,0,0">
             <StackPanel HorizontalAlignment="Center">
-                
                 <Grid Width="490" HorizontalAlignment="Center">
                     <Label Grid.Column="0" Content="Create Tuning Structures" FontSize="20" FontStyle="Normal" HorizontalAlignment="Center" ></Label>
                     <Button Grid.Column="1" Content="?" Width="20" Height="24" HorizontalAlignment="Right" Command="{Binding DisplayInfoCommand}"/>
@@ -153,13 +152,26 @@
                         <ColumnDefinition Width="1.5*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <Button Grid.Column="0" Content="Add TS" Width="80" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding AddTSStructureCommand}"/>
-                    <Button Grid.Column="1" Content="Add Defaults" Width="120" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding AddDefaultTSStructuresCommand}"/>
+                    <Button Grid.Column="0" Content="Add Defaults" Width="120" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding AddDefaultTSStructuresCommand}"/>
                     <Button Grid.Column="2" Content="Clear List" Width="100" HorizontalAlignment="Center" VerticalAlignment="Top" Command="{Binding RemoveAllTSStructuresCommand}"/>
                 </Grid>
-                <ScrollViewer x:Name="TSGenerationScroller" Height="320" Width="580" Margin="5,5,0,0" HorizontalAlignment="Center" VerticalAlignment="Bottom" Style="{StaticResource ScrollViewerStyle}">
-                    <StackPanel x:Name="TSGenerationSP" Margin="5">
-                    </StackPanel>
+                <ScrollViewer Height="320" Width="580" Margin="5,5,0,0" HorizontalAlignment="Center" VerticalAlignment="Bottom" Style="{StaticResource ScrollViewerStyle}">
+                    <ItemsControl x:Name="TSStructureSP" ItemsSource="{Binding RequestedTuningStructures}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Label Grid.Column="0" HorizontalAlignment="Center" Content="{Binding DICOMType}"/>
+                                    <Label Grid.Column="1" HorizontalAlignment="Center" Content="{Binding StructureId}"/>
+                                    <Button Content="Clear" Grid.Column="3" Command="{Binding Path=DataContext.ClearRowCommand, ElementName=TSStructureSP}" CommandParameter="{Binding}" Width="90" Margin="1"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </ScrollViewer>
             </StackPanel>
         </Border>
