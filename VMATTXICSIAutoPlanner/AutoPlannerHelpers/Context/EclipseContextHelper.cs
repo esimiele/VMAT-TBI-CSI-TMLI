@@ -54,7 +54,7 @@ namespace AutoPlannerHelpers.Context
                         EclipseContext.ImageFOR = ImageFOR;
                         if (!string.IsNullOrEmpty(PlanUID))
                         {
-                            EclipseContext.Plan = EclipseContext.Patient.Courses.SelectMany(x => x.ExternalPlanSetups).FirstOrDefault(x => string.Equals(PlanUID, x.UID));
+                            //EclipseContext.Plans = EclipseContext.Patient.Courses.SelectMany(x => x.ExternalPlanSetups).FirstOrDefault(x => string.Equals(PlanUID, x.UID));
                             //if(!ReferenceEquals(EclipseContext.Plan, null))
                             //{
                             //    Logger.GetInstance().VMATPlanUID = EclipseContext.Plan.UID;

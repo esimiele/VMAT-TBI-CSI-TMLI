@@ -16,7 +16,7 @@ namespace AutoPlannerHelpers.Context
         public Application Application { get; set; } = null;
         public Patient Patient { get; set; } = null;
         public Course Course { get; set; } = null;
-        public ExternalPlanSetup Plan { get; set; } = null;
+        public List<ExternalPlanSetup> VMATPlans { get; set; } = new List<ExternalPlanSetup> { };
         public StructureSet StructureSet { get; set; } = null;
         public IEnumerable<Registration> Registrations { get; set; } = null;
         public IEnumerable<Image> CTImages { get; set; } = null;

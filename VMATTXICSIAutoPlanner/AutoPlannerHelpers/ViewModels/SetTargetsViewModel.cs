@@ -15,7 +15,6 @@ namespace AutoPlannerHelpers.ViewModels
         public List<PlanTargetsModel> PlanTargets { get => _planTargets; }
 
         #region properties
-        private List<string> _targetIds;
         private List<string> _planIds;
         private List<PlanTargetsModel> _planTargets;
         private AutoPlanTemplateBase _selectedTemplate;

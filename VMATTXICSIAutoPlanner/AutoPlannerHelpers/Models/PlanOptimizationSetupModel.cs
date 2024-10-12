@@ -12,5 +12,10 @@ namespace AutoPlannerHelpers.Models
             PlanId = id;
             OptimizationConstraints = new List<OptimizationConstraintModel>(constraints);
         }
+        public PlanOptimizationSetupModel(string id, OptimizationConstraintModel constraint)
+        {
+            PlanId = id;
+            OptimizationConstraints.Add(constraint);
+        }
     }
 }

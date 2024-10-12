@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:AutoPlannerHelpers.Views"
+             xmlns:enum="clr-namespace:AutoPlannerHelpers.Enums"
              mc:Ignorable="d">
     <UserControl.Resources>
         <Style TargetType="TextBox">
@@ -144,14 +145,44 @@
             <StackPanel Name="OPT" HorizontalAlignment="Center" Margin="0">
                 <Label Content="Optimization Parameters" FontSize="20" FontStyle="Normal" HorizontalAlignment="Center" VerticalAlignment="Top"></Label>
                 <Grid Height="25" Width ="560" HorizontalAlignment="Center" Margin="0,5,0,0">
-                    <Button Content="Add Constraint" Width="100" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                    <Button Content="Add Defaults" Width="120" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-                    <Button Content="Clear List" Width="100" HorizontalAlignment="Right" VerticalAlignment="Top"/>
+                    <Button Content="Add Constraint" Width="100" HorizontalAlignment="Left" VerticalAlignment="Top" Command="{Binding AddOptimizationConstraintCommand}"/>
+                    <Button Content="Add Defaults" Width="120" HorizontalAlignment="Center" VerticalAlignment="Top" Command="{Binding AddDefualtOptimizationConstraintsCommand}"/>
+                    <Button Content="Clear List" Width="100" HorizontalAlignment="Right" VerticalAlignment="Top" Command="{Binding ClearOptimizationConstraintListCommand}"/>
                 </Grid>
-                <ScrollViewer x:Name="optParamScroller" Height="357" Width="585" Margin="0,10,0,0" HorizontalAlignment="Center" VerticalAlignment="Bottom" Style="{StaticResource ScrollViewerStyle}">
-                    <StackPanel Name="optParametersSP" Margin="5"></StackPanel>
+                <ScrollViewer Height="380" Width="585" Margin="0,10,0,0" HorizontalAlignment="Center" VerticalAlignment="Bottom" Style="{StaticResource ScrollViewerStyle}">
+                    <ItemsControl x:Name="OptimizationConstraintsSP" ItemsSource="{Binding PlanOptimizationConstraints}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <Label Content="{Binding PlanId}" Margin="5" HorizontalAlignment="Center"/>
+                                    <ItemsControl ItemsSource="{Binding OptimizationConstraints}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="0.8*"/>
+                                                        <ColumnDefinition Width="0.6*"/>
+                                                        <ColumnDefinition Width="0.6*"/>
+                                                        <ColumnDefinition Width="0.7*"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <ComboBox Grid.Column="0" HorizontalContentAlignment="Center" ItemsSource="{Binding Path=DataContext.StructureIds, ElementName=OptimizationConstraintsSP}" SelectedItem="{Binding StructureId}" Margin="1"/>
+                                                    <ComboBox Grid.Column="1" HorizontalContentAlignment="Center" SelectedItem="{Binding ConstraintType}" ItemsSource="{Binding Source={local:EnumBindingSource {x:Type enum:OptimizationObjectiveType}}}" Margin="1"/>
+                                                    <TextBox Grid.Column="2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Text="{Binding QueryVolume}" Margin="1"/>
+                                                    <TextBox Grid.Column="3" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Text="{Binding QueryDose}" Margin="1"/>
+                                                    <TextBox Grid.Column="4" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Text="{Binding Priority}" Margin="1"/>
+                                                    <Button Content="Clear" Grid.Column="5" Command="{Binding Path=DataContext.ClearRowCommand, ElementName=OptimizationConstraintsSP}" CommandParameter="{Binding}" Width="90" Margin="1"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </ScrollViewer>
-                <Button Content="Set Optimization Constraints" FontWeight="Bold" Width="190" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,10,0,0"></Button>
+                <Button Content="Set Optimization Constraints" FontWeight="Bold" Width="190" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,10,0,0" Command="{Binding AssignOptimizationConstraintCommand}"></Button>
             </StackPanel>
         </Border>
     </Grid>

@@ -4,10 +4,16 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TBIAutoPlanner.Views"
+        xmlns:i="clr-namespace:Microsoft.Xaml.Behaviors;assembly=Microsoft.Xaml.Behaviors"
         mc:Ignorable="d"
         Title="VMAT TBI Autoplanning" 
         SizeToContent="WidthAndHeight"
         WindowStartupLocation="CenterScreen">
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Closing">
+            <i:InvokeCommandAction Command="{Binding WindowClosingCommand}" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
     <Window.Resources>
         <Style TargetType="TextBox">
             <Setter Property="Background" Value="White"/>
@@ -153,9 +159,9 @@
                             </TabItem>
                         </TabControl>
                     </TabItem>
-                    <TabItem Header="Beam Placement" Content="{Binding BeamPlacement}" BorderThickness="0,1,1,0">
+                    <TabItem Header="Beam Placement" Content="{Binding BeamPlacement}" Background="{Binding BeamPlacementTabBackground, FallbackValue=LightGray}" BorderThickness="0,1,1,0">
                     </TabItem>
-                    <TabItem Header="Optimization Setup" Content="{Binding OptimizationSetup}" BorderThickness="0,1,1,0">
+                    <TabItem Header="Optimization Setup" Content="{Binding OptimizationSetup}" Background="{Binding OptimizationSetupTabBackground, FallbackValue=LightGray}" BorderThickness="0,1,1,0">
                     </TabItem>
                     <TabItem Header="Plan Preparation" Content="{Binding PlanPreparation}" BorderThickness="0,1,1,1">
                     </TabItem>

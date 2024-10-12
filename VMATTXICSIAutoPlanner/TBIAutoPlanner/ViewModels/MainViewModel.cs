@@ -21,6 +21,7 @@ using AutoPlannerHelpers.UIHelpers;
 using VMS.TPS.Common.Model.Types;
 using TBIAutoPlanner.Settings;
 using PlanType = AutoPlannerHelpers.Enums.PlanType;
+using VMS.TPS.Common.Model.API;
 
 namespace TBIAutoPlanner.ViewModels
 {
@@ -39,6 +40,9 @@ namespace TBIAutoPlanner.ViewModels
         private Visibility _flashMarginVisible;
         private double _flashMargin;
         private double _ptvMarginFromBody;
+        private System.Windows.Media.SolidColorBrush _specifyTargetsTabBackground;
+        private System.Windows.Media.SolidColorBrush _structureTuningTabBackground;
+        private System.Windows.Media.SolidColorBrush _tsManipulationTabBackground;
 
         public string PatientMRN
         {
@@ -100,15 +104,11 @@ namespace TBIAutoPlanner.ViewModels
             set { SetProperty(ref _ptvMarginFromBody, value); }
         }
 
-        private System.Windows.Media.SolidColorBrush _specifyTargetsTabBackground;
-
         public System.Windows.Media.SolidColorBrush SpecifyTargetsTabBackground
         {
             get { return _specifyTargetsTabBackground; }
             set { SetProperty(ref _specifyTargetsTabBackground, value); }
         }
-
-        private System.Windows.Media.SolidColorBrush _structureTuningTabBackground;
 
         public System.Windows.Media.SolidColorBrush StructureTuningTabBackground
         {
@@ -116,12 +116,26 @@ namespace TBIAutoPlanner.ViewModels
             set { SetProperty(ref _structureTuningTabBackground, value); }
         }
 
-        private System.Windows.Media.SolidColorBrush _tsManipulationTabBackground;
-
         public System.Windows.Media.SolidColorBrush TSManipulationTabBackground
         {
             get { return _tsManipulationTabBackground; }
             set { SetProperty(ref _tsManipulationTabBackground, value); }
+        }
+
+        private System.Windows.Media.SolidColorBrush _beamPlacementTabBackground;
+
+        public System.Windows.Media.SolidColorBrush BeamPlacementTabBackground
+        {
+            get { return _beamPlacementTabBackground; }
+            set { SetProperty(ref _beamPlacementTabBackground, value); }
+        }
+
+        private System.Windows.Media.SolidColorBrush _optimizationSetupTabBackground;
+
+        public System.Windows.Media.SolidColorBrush OptimizationSetupTabBackground
+        {
+            get { return _optimizationSetupTabBackground; }
+            set { SetProperty(ref _optimizationSetupTabBackground, value); }
         }
 
         #endregion
@@ -135,6 +149,7 @@ namespace TBIAutoPlanner.ViewModels
         private object _tsManipulation;
         private BeamPlacementViewModel _beamPlacementVM;
         private object _beamPlacement;
+        private OptimizationSetupViewModel _optimizationSetupVM;
         private object _optimizationSetup;
         private object _planPreparation;
         private object _scriptConfiguration;
@@ -189,6 +204,8 @@ namespace TBIAutoPlanner.ViewModels
         private DelegateCommand NotifySetTargetsCommand;
         private DelegateCommand NotifyGenerateManipulateTuningStructuresCommand;
         private DelegateCommand NotifyBeamsPlacedCommand;
+        private DelegateCommand NotifyAssignOptimizationConstraintsCommand;
+        public DelegateCommand WindowClosingCommand { get; set; }
         #endregion
 
         #region fields
@@ -223,8 +240,12 @@ namespace TBIAutoPlanner.ViewModels
             NotifyBeamsPlacedCommand = new DelegateCommand(GeneratePlansAndPlaceBeams);
             _beamPlacementVM = new BeamPlacementViewModel(NotifyBeamsPlacedCommand, PlanType.VMAT_TBI, new List<string> { "LA16"}, new List<string> { "6X", "10X"});
             BeamPlacement = new BeamPlacementView { DataContext = _beamPlacementVM };
+            BeamPlacementTabBackground = System.Windows.Media.Brushes.LightGray;
 
-            OptimizationSetup = new OptimizationSetupView { DataContext = new OptimizationSetupViewModel() };
+            NotifyAssignOptimizationConstraintsCommand = new DelegateCommand(AssignOptimizationConstraints);
+            _optimizationSetupVM = new OptimizationSetupViewModel(new List<string> { "Lungs", "Liver", "Kidneys" }, NotifyAssignOptimizationConstraintsCommand);
+            OptimizationSetup = new OptimizationSetupView { DataContext = _optimizationSetupVM };
+            OptimizationSetupTabBackground = System.Windows.Media.Brushes.LightGray;
 
             PlanPreparation = new PlanPreparationView { DataContext = new PlanPreparationViewModel() };
 
@@ -237,7 +258,7 @@ namespace TBIAutoPlanner.ViewModels
             LoadPlanTemplates();
 
             ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
-
+            WindowClosingCommand = new DelegateCommand(WindowClosing);
 
             _planIsocenters.Add(new PlanIsocenterModel("test", new List<IsocenterModel> { new IsocenterModel("1", 2, BeamType.VMAT), new IsocenterModel("2", 3, BeamType.VMAT), new IsocenterModel("3", 4, BeamType.VMAT) }));
             _planIsocenters.Add(new PlanIsocenterModel("doubleTest", new List<IsocenterModel> { new IsocenterModel("4", 2, BeamType.APPA) }));
@@ -267,6 +288,8 @@ namespace TBIAutoPlanner.ViewModels
             if(VerifyTargetsIntegrity(_setTargetsVM.PlanTargets)) return;
             _prescriptions = TargetsHelper.BuildPrescriptionList(_setTargetsVM.PlanTargets, _dosePerFraction, _numberOfFractions, _planTotalDose);
             if(!_prescriptions.Any()) return;
+            _optimizationSetupVM.UpdatePrescriptionList(_prescriptions);
+            if(!ReferenceEquals(_selectedTemplate, null)) _optimizationSetupVM.UpdateUIWithSelectedPlanTemplate(_selectedTemplate);
             SpecifyTargetsTabBackground = System.Windows.Media.Brushes.ForestGreen;
             StructureTuningTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
             TSManipulationTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
@@ -304,6 +327,10 @@ namespace TBIAutoPlanner.ViewModels
             Logger.GetInstance().AppendLogOutput("TS Generation and manipulation output:", generateTS.GetLogOutput());
 
             if (failed) return;
+            StructureTuningTabBackground = System.Windows.Media.Brushes.ForestGreen;
+            TSManipulationTabBackground = System.Windows.Media.Brushes.ForestGreen;
+            BeamPlacementTabBackground = System.Windows.Media.Brushes.ForestGreen;
+
             Logger.GetInstance().AddedStructures = generateTS.AddedStructureIds;
             Logger.GetInstance().StructureManipulations = tsManipulations;
             Logger.GetInstance().TSTargets = generateTS.PlanTargets.SelectMany(x => x.Targets).ToDictionary(x => x.TargetId, x => x.TsTargetId);
@@ -325,7 +352,16 @@ namespace TBIAutoPlanner.ViewModels
             bool failed = placeBeams.Execute();
             Logger.GetInstance().AppendLogOutput("Generate plans and place beams output:", placeBeams.GetLogOutput());
             if (failed) return;
+            if (placeBeams.VMATPlans.Any()) EclipseContext.GetInstance().VMATPlans = placeBeams.VMATPlans;
+            BeamPlacementTabBackground = System.Windows.Media.Brushes.ForestGreen;
+            OptimizationSetupTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
+        }
+        #endregion
 
+        #region opimization parameters
+        public void AssignOptimizationConstraints()
+        {
+            OptimizationSetupTabBackground = System.Windows.Media.Brushes.ForestGreen;
         }
         #endregion
 
@@ -366,6 +402,7 @@ namespace TBIAutoPlanner.ViewModels
             _setTargetsVM.AutoPlanTemplateSelectionChaged(_selectedTemplate);
             _tsGenerationVM.AutoPlanTemplateSelectionChaged(_selectedTemplate);
             _tsManipulationVM.AutoPlanTemplateSelectionChaged(_selectedTemplate);
+            _optimizationSetupVM.UpdateUIWithSelectedPlanTemplate(_selectedTemplate);
         }
 
         private void UpdateUseFlash()
@@ -445,5 +482,13 @@ namespace TBIAutoPlanner.ViewModels
             return sb;
         }
         #endregion
+
+        public void WindowClosing()
+        {
+            if(EclipseContext.GetInstance().IsInitialized)
+            {
+                ScriptClosingHelper.CloseApplication(false);
+            }
+        }
     }
 }

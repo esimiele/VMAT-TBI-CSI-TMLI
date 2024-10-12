@@ -30,6 +30,7 @@ namespace AutoPlannerHelpers.ViewModels
         public DelegateCommand AddDefaultTSManipulationsCommand { get; set; }
         public DelegateCommand RemoveAllTSManipulationsCommand { get; set; }
         public DelegateCommand PerformTSGenerationManipulationCommand { get; set; }
+        public DelegateCommand<RequestedTSManipulationModel> ClearRowCommand { get; set; } 
         #endregion
 
         public TSManipulationViewModel(DelegateCommand NotifyMainVMExecuted, List<string> structureIds)
@@ -39,6 +40,7 @@ namespace AutoPlannerHelpers.ViewModels
             AddDefaultTSManipulationsCommand = new DelegateCommand(AddDefaultTSManipulations);
             PerformTSGenerationManipulationCommand = new DelegateCommand(PerformTSGenerationManipulation);
             RemoveAllTSManipulationsCommand = new DelegateCommand(RemoveAllTSManipulations);
+            ClearRowCommand = new DelegateCommand<RequestedTSManipulationModel>(ClearRow);
             StructureIdsPostUnion = new List<string>(structureIds);
             RequestedTSManipulations = new ObservableCollectionPropertyNotify<RequestedTSManipulationModel> { };
         }
@@ -78,6 +80,11 @@ namespace AutoPlannerHelpers.ViewModels
         private void RemoveAllTSManipulations()
         {
             RequestedTSManipulations.Clear();
+        }
+
+        private void ClearRow(RequestedTSManipulationModel item)
+        {
+            RequestedTSManipulations.Remove(item);
         }
 
         public void PerformTSGenerationManipulation()
