@@ -123,11 +123,11 @@ namespace AutoPlannerHelpers.ViewModels
                 Logger.GetInstance().LogError("Requested number of isocenters is not valid! Please fix and try again");
                 return;
             }
-            if(_requestedNumberOfVMATIsos != PlanIsocenterList.First().Isocenters.Count(x => x.BeamType == BeamType.VMAT))
+            if(_requestedNumberOfVMATIsos != PlanIsocenterList.SelectMany(x => x.Isocenters).Count(x => x.BeamType == BeamType.VMAT))
             {
                 //do something
                 string planId = PlanIsocenterList.First().PlanId;
-                int totalNumIsos = _requestedNumberOfVMATIsos + PlanIsocenterList.Last().Isocenters.Count(x => x.BeamType == BeamType.APPA);
+                int totalNumIsos = _requestedNumberOfVMATIsos + PlanIsocenterList.SelectMany(x => x.Isocenters).Count(x => x.BeamType == BeamType.APPA);
                 PlanIsocenterList.Clear();
                 PlanIsocenterList.Add(new PlanIsocenterModel(planId, IsoNameHelper.GetTBIVMATIsoNames(_requestedNumberOfVMATIsos, totalNumIsos)));
                 if(totalNumIsos > _requestedNumberOfVMATIsos)

@@ -9,10 +9,9 @@
         <Border BorderBrush="Black" BorderThickness="1,0,0,0">
             <StackPanel Name="configuration">
                 <Label Content="Current Script Configuration Parameters" FontSize="20" FontStyle="Normal" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,0,0,0"></Label>
-                <ScrollViewer x:Name ="configScroller" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="565" Height="420" Margin="5" BorderBrush="Black">
-                    <TextBlock x:Name="configTB" FontSize="12" FontFamily="Courier New" Width="550" Background="White" TextWrapping="Wrap"></TextBlock>
+                <ScrollViewer VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="565" Height="440" Margin="5" BorderBrush="Black">
+                    <TextBlock FontSize="12" FontFamily="Courier New" Width="550" Background="White" TextWrapping="Wrap" Padding="1" Text="{Binding ScriptConfig}"></TextBlock>
                 </ScrollViewer>
-                <Button x:Name="loadNewConfigFile" Content="Load new configuration file" Width="160" HorizontalAlignment="Center"></Button>
             </StackPanel>
         </Border>
     </Grid>

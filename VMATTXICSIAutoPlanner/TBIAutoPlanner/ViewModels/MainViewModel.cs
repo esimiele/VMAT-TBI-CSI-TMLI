@@ -16,7 +16,11 @@ using AutoPlannerHelpers.Logging;
 using AutoPlannerHelpers.Helpers;
 using TBIAutoPlanner.Core;
 using AutoPlannerHelpers.Context;
-using static System.Net.WebRequestMethods;
+using System.Text;
+using AutoPlannerHelpers.UIHelpers;
+using VMS.TPS.Common.Model.Types;
+using TBIAutoPlanner.Settings;
+using PlanType = AutoPlannerHelpers.Enums.PlanType;
 
 namespace TBIAutoPlanner.ViewModels
 {
@@ -188,8 +192,9 @@ namespace TBIAutoPlanner.ViewModels
         #endregion
 
         #region fields
-        List<PrescriptionModel> _prescriptions = new List<PrescriptionModel> { };
-        List<PlanIsocenterModel> _planIsocenters = new List<PlanIsocenterModel> { };
+        private List<PrescriptionModel> _prescriptions = new List<PrescriptionModel> { };
+        private List<PlanIsocenterModel> _planIsocenters = new List<PlanIsocenterModel> { };
+        private string _generalConfigurationFile = string.Empty;
         #endregion
 
         public MainViewModel(List<string> args)
@@ -223,7 +228,6 @@ namespace TBIAutoPlanner.ViewModels
 
             PlanPreparation = new PlanPreparationView { DataContext = new PlanPreparationViewModel() };
 
-            ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel() };
 
             QuickStartGuideCommand = new DelegateCommand(LaunchQuickStartGuide);
             HelpGuideCommand = new DelegateCommand(LaunchHelpGuide);
@@ -231,6 +235,9 @@ namespace TBIAutoPlanner.ViewModels
 
             PlanTemplates = new ObservableCollection<TBIAutoPlanTemplate>() { new TBIAutoPlanTemplate("--select--") };
             LoadPlanTemplates();
+
+            ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
+
 
             _planIsocenters.Add(new PlanIsocenterModel("test", new List<IsocenterModel> { new IsocenterModel("1", 2, BeamType.VMAT), new IsocenterModel("2", 3, BeamType.VMAT), new IsocenterModel("3", 4, BeamType.VMAT) }));
             _planIsocenters.Add(new PlanIsocenterModel("doubleTest", new List<IsocenterModel> { new IsocenterModel("4", 2, BeamType.APPA) }));
@@ -313,6 +320,7 @@ namespace TBIAutoPlanner.ViewModels
         private void GeneratePlansAndPlaceBeams()
         {
             _planIsocenters = _beamPlacementVM.PlanIsocenterList.ToList();
+            return;
             GeneratePlansAndPlaceBeams_TBI placeBeams = new GeneratePlansAndPlaceBeams_TBI();
             bool failed = placeBeams.Execute();
             Logger.GetInstance().AppendLogOutput("Generate plans and place beams output:", placeBeams.GetLogOutput());
@@ -385,6 +393,56 @@ namespace TBIAutoPlanner.ViewModels
                 return true;
             }
             return false;
+        }
+
+        private StringBuilder BuildScriptConfigurationInfo()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine($"{DateTime.Now}");
+            if (!string.IsNullOrEmpty(_generalConfigurationFile)) sb.AppendLine($"Configuration file: {_generalConfigurationFile}");
+            else sb.AppendLine("Configuration file: none");
+            sb.AppendLine($"Documentation path: {Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\documentation\\"}");
+            sb.AppendLine($"Log file path: {Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\logs\\"}");
+            sb.AppendLine($"Close progress windows on finish: {TBIAutoPlannerSettings.CloseProgressWindowOnFinish}");
+            sb.AppendLine("Default parameters:");
+            sb.AppendLine($"Course Id: {TBIAutoPlannerSettings.CourseId}");
+            sb.AppendLine($"Check for potential couch collision: {TBIAutoPlannerSettings.CheckTTCollision}");
+            sb.AppendLine($"Contour field ovelap: {TBIAutoPlannerSettings.ContourFieldOverlap}");
+            sb.AppendLine($"Contour field overlap margin: {TBIAutoPlannerSettings.ContourFieldOverlapMarginInCM} cm");
+            sb.AppendLine("Available linacs:");
+            foreach (string l in TBIAutoPlannerSettings.AvailableLinacs) sb.AppendLine($"    {l}");
+            sb.AppendLine("Available photon energies:");
+            foreach (string e in TBIAutoPlannerSettings.AvailableEnergies) sb.AppendLine($"    {e}");
+            sb.AppendLine($"Beams per isocenter: ");
+            for (int i = 0; i < TBIAutoPlannerSettings.BeamsPerIsocenter.Length; i++)
+            {
+                sb.Append($"{TBIAutoPlannerSettings.BeamsPerIsocenter.ElementAt(i)}");
+                if (i != TBIAutoPlannerSettings.BeamsPerIsocenter.Length - 1) sb.Append(", ");
+            }
+            sb.AppendLine("");
+            sb.AppendLine("Collimator rotation (deg) order: ");
+            for (int i = 0; i < TBIAutoPlannerSettings.CollimatorRotations.Length; i++)
+            {
+                sb.Append($"{TBIAutoPlannerSettings.CollimatorRotations.ElementAt(i):0.0}");
+                if (i != TBIAutoPlannerSettings.CollimatorRotations.Length - 1) sb.Append(", ");
+            }
+            sb.AppendLine("");
+            sb.AppendLine($"Include flash by default: {TBIAutoPlannerSettings.UseFlash}");
+            sb.AppendLine($"Flash margin: {TBIAutoPlannerSettings.FlashMarginInCM} cm");
+            sb.AppendLine($"Target inner margin: {TBIAutoPlannerSettings.PTVInnerMarginFromBodyInCM} cm");
+
+            sb.AppendLine("");
+            sb.AppendLine("Field jaw position (cm) order: ");
+            sb.AppendLine(" (x1,y1,x2,y2)");
+            foreach (VRect<double> j in TBIAutoPlannerSettings.JawPositions) sb.AppendLine($"({j.X1 / 10:0.0},{j.Y1 / 10:0.0},{j.X2 / 10:0.0},{j.Y2 / 10:0.0})");
+            sb.AppendLine($"Photon dose calculation model: {TBIAutoPlannerSettings.DoseCalculationAlgorithm}");
+            sb.AppendLine($"Use GPU for dose calculation: {TBIAutoPlannerSettings.UseGPUForDosecalculation}");
+            sb.AppendLine($"Photon optimization model: {TBIAutoPlannerSettings.OptimizationAlorithm}");
+            sb.AppendLine($"Use GPU for optimization: {TBIAutoPlannerSettings.UseGPUForOptimization}");
+            sb.AppendLine($"MR level restart at: {TBIAutoPlannerSettings.MRLevelRestart}");
+
+            if (PlanTemplates.Any()) sb.Append(ConfigurationUIHelper.PrintTBIPlanTemplateConfigurationParameters(PlanTemplates.ToList()));
+            return sb;
         }
         #endregion
     }
