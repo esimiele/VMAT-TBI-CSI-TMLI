@@ -50,6 +50,7 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\AutoPlannerHelpers\AutoPlannerHelpers.csproj" />
+	  <ProjectReference Include="..\CTStitcher\CTStitcher.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Folder Include="Configuration\" />

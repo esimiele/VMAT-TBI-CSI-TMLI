@@ -61,6 +61,7 @@
         General,
         ExportCT,
         ImportSS,
+        StitchCT,
         GeneratePrelimTargets,
         PlanPrep,
         AutoConvertHighToDefaultRes

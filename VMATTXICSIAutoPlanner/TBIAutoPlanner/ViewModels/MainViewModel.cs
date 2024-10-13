@@ -20,8 +20,9 @@ using System.Text;
 using AutoPlannerHelpers.UIHelpers;
 using VMS.TPS.Common.Model.Types;
 using TBIAutoPlanner.Settings;
+using CTStitcher.Views;
+using CTStitcher.ViewModels;
 using PlanType = AutoPlannerHelpers.Enums.PlanType;
-using VMS.TPS.Common.Model.API;
 
 namespace TBIAutoPlanner.ViewModels
 {
@@ -141,6 +142,8 @@ namespace TBIAutoPlanner.ViewModels
         #endregion
 
         #region view objects
+        private CTStitcherViewModel _stitcherViewModel;
+        private object _stitchCT;
         private SetTargetsViewModel _setTargetsVM;
         private object _specifyTargets;
         private TSGenerationViewModel _tsGenerationVM;
@@ -153,6 +156,12 @@ namespace TBIAutoPlanner.ViewModels
         private object _optimizationSetup;
         private object _planPreparation;
         private object _scriptConfiguration;
+
+        public object StitchCT
+        {
+            get { return _stitchCT; }
+            set { SetProperty(ref _stitchCT, value); }
+        }
 
         public object SpecifyTargets
         {
@@ -223,6 +232,9 @@ namespace TBIAutoPlanner.ViewModels
         {
             FlashMarginVisible = Visibility.Hidden;
 
+            _stitcherViewModel = new CTStitcherViewModel();
+            StitchCT = new CTStitcherView { DataContext = _stitcherViewModel };
+
             NotifySetTargetsCommand = new DelegateCommand(SetTargets);
             _setTargetsVM = new SetTargetsViewModel(NotifySetTargetsCommand);
             SpecifyTargets = new SpecifyTargetsView { DataContext = _setTargetsVM };
@@ -248,7 +260,6 @@ namespace TBIAutoPlanner.ViewModels
             OptimizationSetupTabBackground = System.Windows.Media.Brushes.LightGray;
 
             PlanPreparation = new PlanPreparationView { DataContext = new PlanPreparationViewModel() };
-
 
             QuickStartGuideCommand = new DelegateCommand(LaunchQuickStartGuide);
             HelpGuideCommand = new DelegateCommand(LaunchHelpGuide);
@@ -316,11 +327,7 @@ namespace TBIAutoPlanner.ViewModels
             List<RequestedTSManipulationModel> tsManipulations = _tsManipulationVM.RequestedTSManipulations.ToList();
             TSGenerationManipulation_TBI generateTS = new TSGenerationManipulation_TBI(tsGeneration, 
                                                                                        tsManipulations, 
-                                                                                       _prescriptions, 
-                                                                                       EclipseContext.GetInstance().StructureSet, 
-                                                                                       PTVMarginFromBody,
-                                                                                       _useFlash, 
-                                                                                       true);
+                                                                                       _prescriptions);
 
             EclipseContext.GetInstance().Patient.BeginModifications();
             bool failed = generateTS.Execute();
