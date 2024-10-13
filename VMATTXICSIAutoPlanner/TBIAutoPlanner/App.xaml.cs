@@ -12,10 +12,7 @@ namespace TBIAutoPlanner
     {
         private void Application_Startup(object sender, StartupEventArgs e)
         {
-            List<string> theArguments = new List<string> { };
-            for (int i = 0; i < e.Args.Length; i++) theArguments.Add(e.Args[i]);
-
-            MainView mv = new MainView { DataContext = new MainViewModel(theArguments) };
+            MainView mv = new MainView { DataContext = new MainViewModel(e.Args) };
             mv.ShowDialog();
         }
     }

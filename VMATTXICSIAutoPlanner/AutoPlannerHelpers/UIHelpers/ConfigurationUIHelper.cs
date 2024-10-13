@@ -115,6 +115,38 @@ namespace AutoPlannerHelpers.UIHelpers
         }
 
         /// <summary>
+        /// Helper method to print the TBI plan template parameters
+        /// </summary>
+        /// <param name="templates"></param>
+        /// <returns></returns>
+        public static StringBuilder PrintTMLIPlanTemplateConfigurationParameters(List<TMLIAutoPlanTemplate> templates)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (TMLIAutoPlanTemplate itr in templates.Where(x => !string.Equals(x.TemplateName, "--select--")))
+            {
+                sb.AppendLine("----------------------------------------------------------------------------");
+
+                sb.AppendLine($" Template ID: {itr.TemplateName}");
+                sb.AppendLine($" Initial Dose per fraction: {itr.InitialRxDosePerFx} cGy");
+                sb.AppendLine($" Initial number of fractions: {itr.InitialRxNumberOfFractions}");
+
+                sb.Append(PrintTargetsTSParameters(itr));
+
+                if (itr.InitialOptimizationConstraints.Any())
+                {
+                    sb.AppendLine($" {itr.TemplateName} template initial plan optimization parameters:");
+                    sb.AppendLine(String.Format("  {0, -15} | {1, -16} | {2, -10} | {3, -10} | {4, -8} |", "structure Id", "constraint type", "dose (cGy)", "volume (%)", "priority"));
+                    foreach (OptimizationConstraintModel opt in itr.InitialOptimizationConstraints) sb.AppendLine(String.Format("  {0, -15} | {1, -16} | {2,-10:N1} | {3,-10:N1} | {4,-8} |", opt.StructureId, opt.ConstraintType, opt.QueryDose, opt.QueryVolume, opt.Priority));
+                    sb.AppendLine(Environment.NewLine);
+                }
+                else sb.AppendLine($" No iniital plan optimization constraints for template: {itr.TemplateName}");
+
+                sb.Append(PrintPlanObjRequestedInfo(itr));
+            }
+            return sb;
+        }
+
+        /// <summary>
         /// Helper method to print the targets and tuning structure information
         /// </summary>
         /// <param name="itr"></param>

@@ -1,36 +1,36 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Windows;
-using AutoPlannerHelpers.Enums;
+﻿using AutoPlannerHelpers.Context;
+using AutoPlannerHelpers.Helpers;
+using AutoPlannerHelpers.Logging;
+using AutoPlannerHelpers.Models;
+using AutoPlannerHelpers.PlanTemplateModels;
+using AutoPlannerHelpers.Prompts;
 using AutoPlannerHelpers.ViewModels;
 using AutoPlannerHelpers.Views;
-using AutoPlannerHelpers.PlanTemplateModels;
-using Prism.Mvvm;
-using Prism.Commands;
-using AutoPlannerHelpers.Models;
-using System.IO;
-using System.Reflection;
-using System;
-using System.Linq;
-using AutoPlannerHelpers.Logging;
-using AutoPlannerHelpers.Helpers;
-using TBIAutoPlanner.Core;
-using AutoPlannerHelpers.Context;
-using System.Text;
-using AutoPlannerHelpers.UIHelpers;
-using VMS.TPS.Common.Model.Types;
-using TBIAutoPlanner.Settings;
-using CTStitcher.Views;
 using CTStitcher.ViewModels;
-using PlanType = AutoPlannerHelpers.Enums.PlanType;
+using CTStitcher.Views;
+using TMLIAutoPlanner.Settings;
+using Prism.Commands;
+using Prism.Mvvm;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Windows;
 using VMS.TPS.Common.Model.API;
-using AutoPlannerHelpers.Prompts;
+using VMS.TPS.Common.Model.Types;
+using PlanType = AutoPlannerHelpers.Enums.PlanType;
+using AutoPlannerHelpers.UIHelpers;
+using System.Reflection;
+using AutoPlannerHelpers.Enums;
+using TMLIAutoPlanner.Core;
 
-namespace TBIAutoPlanner.ViewModels
+namespace TMLIAutoPlanner.ViewModels
 {
     public class MainViewModel : BindableBase
     {
-        public ObservableCollection<TBIAutoPlanTemplate> PlanTemplates { get; set; }
+        public ObservableCollection<TMLIAutoPlanTemplate> PlanTemplates { get; set; }
 
         #region properties
         private string _patientMRN;
@@ -38,11 +38,7 @@ namespace TBIAutoPlanner.ViewModels
         private double _dosePerFraction;
         private int _numberOfFractions;
         private double _planTotalDose;
-        private TBIAutoPlanTemplate _selectedTemplate;
-        private bool _useFlash;
-        private Visibility _flashMarginVisible;
-        private double _flashMargin;
-        private double _ptvMarginFromBody;
+        private TMLIAutoPlanTemplate _selectedTemplate;
         private System.Windows.Media.SolidColorBrush _specifyTargetsTabBackground;
         private System.Windows.Media.SolidColorBrush _structureTuningTabBackground;
         private System.Windows.Media.SolidColorBrush _tsManipulationTabBackground;
@@ -77,34 +73,10 @@ namespace TBIAutoPlanner.ViewModels
             set { SetProperty(ref _planTotalDose, value); }
         }
 
-        public TBIAutoPlanTemplate SelectedTemplate
+        public TMLIAutoPlanTemplate SelectedTemplate
         {
             get { return _selectedTemplate; }
             set { SetProperty(ref _selectedTemplate, value); UpdateUIWithSelectedPlanTemplate(); }
-        }
-
-        public bool UseFlash
-        {
-            get { return _useFlash; }
-            set { SetProperty(ref _useFlash, value); UpdateUseFlash(); }
-        }
-
-        public Visibility FlashMarginVisible
-        {
-            get { return _flashMarginVisible; }
-            set { SetProperty(ref _flashMarginVisible, value); }
-        }
-
-        public double FlashMargin
-        {
-            get { return _flashMargin; }
-            set { SetProperty(ref _flashMargin, value); }
-        }
-
-        public double PTVMarginFromBody
-        {
-            get { return _ptvMarginFromBody; }
-            set { SetProperty(ref _ptvMarginFromBody, value); }
         }
 
         public System.Windows.Media.SolidColorBrush SpecifyTargetsTabBackground
@@ -150,6 +122,8 @@ namespace TBIAutoPlanner.ViewModels
         private object _specifyTargets;
         private TSGenerationViewModel _tsGenerationVM;
         private object _tsGeneration;
+        private RingGenerationViewModel _ringGenerationVM;
+        private object _ringGeneration;
         private TSManipulationViewModel _tsManipulationVM;
         private object _tsManipulation;
         private BeamPlacementViewModel _beamPlacementVM;
@@ -176,6 +150,12 @@ namespace TBIAutoPlanner.ViewModels
         {
             get { return _tsGeneration; }
             set { SetProperty(ref _tsGeneration, value); }
+        }
+
+        public object RingGeneration
+        {
+            get { return _ringGeneration; }
+            set { SetProperty(ref _ringGeneration, value); }
         }
 
         public object TSManipulation
@@ -231,12 +211,11 @@ namespace TBIAutoPlanner.ViewModels
         public MainViewModel(string[] args)
         {
             if (args.Any()) EclipseContextHelper.GenerateEclipseContext(args.ToList());
-            Initialize();
+            InitializeUI();
         }
 
-        public void Initialize()
+        public void InitializeUI()
         {
-            FlashMarginVisible = Visibility.Hidden;
             _structureIdsPostUnion = StructureTuningHelper.GenerateStructureIdListPostUnion();
 
             _stitcherViewModel = new CTStitcherViewModel();
@@ -251,13 +230,16 @@ namespace TBIAutoPlanner.ViewModels
             TSGeneration = new TSGenerationView { DataContext = _tsGenerationVM };
             StructureTuningTabBackground = System.Windows.Media.Brushes.LightGray;
 
+            _ringGenerationVM = new RingGenerationViewModel();
+            RingGeneration = new RingGenerationView { DataContext = _ringGenerationVM };
+
             NotifyGenerateManipulateTuningStructuresCommand = new DelegateCommand(PerformTSStructureGenerationManipulation);
             _tsManipulationVM = new TSManipulationViewModel(NotifyGenerateManipulateTuningStructuresCommand, _structureIdsPostUnion);
             TSManipulation = new TSManipulationView { DataContext = _tsManipulationVM };
             TSManipulationTabBackground = System.Windows.Media.Brushes.LightGray;
 
             NotifyBeamsPlacedCommand = new DelegateCommand(GeneratePlansAndPlaceBeams);
-            _beamPlacementVM = new BeamPlacementViewModel(NotifyBeamsPlacedCommand, PlanType.VMAT_TBI, TBIAutoPlannerSettings.AvailableLinacs, TBIAutoPlannerSettings.AvailableEnergies);
+            _beamPlacementVM = new BeamPlacementViewModel(NotifyBeamsPlacedCommand, PlanType.VMAT_TMLI, TMLIAutoPlannerSettings.AvailableLinacs, TMLIAutoPlannerSettings.AvailableEnergies);
             BeamPlacement = new BeamPlacementView { DataContext = _beamPlacementVM };
             BeamPlacementTabBackground = System.Windows.Media.Brushes.LightGray;
 
@@ -274,7 +256,7 @@ namespace TBIAutoPlanner.ViewModels
             HelpGuideCommand = new DelegateCommand(LaunchHelpGuide);
             PTVMarginInfoCommand = new DelegateCommand(ShowPTVMarginInfo);
 
-            PlanTemplates = new ObservableCollection<TBIAutoPlanTemplate>() { new TBIAutoPlanTemplate("--select--") };
+            PlanTemplates = new ObservableCollection<TMLIAutoPlanTemplate>() { new TMLIAutoPlanTemplate("--select--") };
             LoadPlanTemplates();
 
             ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
@@ -301,11 +283,11 @@ namespace TBIAutoPlanner.ViewModels
         #region specify targets
         private void SetTargets()
         {
-            if(VerifyTargetsIntegrity(_setTargetsVM.PlanTargets)) return;
+            if (VerifyTargetsIntegrity(_setTargetsVM.PlanTargets)) return;
             _prescriptions = TargetsHelper.BuildPrescriptionList(_setTargetsVM.PlanTargets, _dosePerFraction, _numberOfFractions, _planTotalDose);
-            if(!_prescriptions.Any()) return;
+            if (!_prescriptions.Any()) return;
             _optimizationSetupVM.UpdatePrescriptionList(_prescriptions);
-            if(!ReferenceEquals(_selectedTemplate, null)) _optimizationSetupVM.UpdateUIWithSelectedPlanTemplate(_selectedTemplate);
+            if (!ReferenceEquals(_selectedTemplate, null)) _optimizationSetupVM.UpdateUIWithSelectedPlanTemplate(_selectedTemplate);
             SpecifyTargetsTabBackground = System.Windows.Media.Brushes.ForestGreen;
             StructureTuningTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
             TSManipulationTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
@@ -330,8 +312,8 @@ namespace TBIAutoPlanner.ViewModels
         {
             List<RequestedTSStructureModel> tsGeneration = _tsGenerationVM.RequestedTuningStructures.ToList();
             List<RequestedTSManipulationModel> tsManipulations = _tsManipulationVM.RequestedTSManipulations.ToList();
-            TSGenerationManipulation_TBI generateTS = new TSGenerationManipulation_TBI(tsGeneration, 
-                                                                                       tsManipulations, 
+            TSGenerationManipulation_TMLI generateTS = new TSGenerationManipulation_TMLI(tsGeneration,
+                                                                                       tsManipulations,
                                                                                        _prescriptions);
 
             EclipseContext.GetInstance().Patient.BeginModifications();
@@ -390,13 +372,13 @@ namespace TBIAutoPlanner.ViewModels
         private void GeneratePlansAndPlaceBeams()
         {
             _planIsocenters = _beamPlacementVM.PlanIsocenterList.ToList();
-            GeneratePlansAndPlaceBeams_TBI placeBeams = new GeneratePlansAndPlaceBeams_TBI();
+            GeneratePlansAndPlaceBeams_TMLI placeBeams = new GeneratePlansAndPlaceBeams_TMLI();
             bool failed = placeBeams.Execute();
             Logger.GetInstance().AppendLogOutput("Generate plans and place beams output:", placeBeams.GetLogOutput());
             if (failed) return;
             if (placeBeams.VMATPlans.Any()) EclipseContext.GetInstance().VMATPlans = placeBeams.VMATPlans;
             UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions);
-            if(!ReferenceEquals(_selectedTemplate, null)) _optimizationSetupVM.UpdateUIWithSelectedPlanTemplate(_selectedTemplate);
+            if (!ReferenceEquals(_selectedTemplate, null)) _optimizationSetupVM.UpdateUIWithSelectedPlanTemplate(_selectedTemplate);
             BeamPlacementTabBackground = System.Windows.Media.Brushes.ForestGreen;
             OptimizationSetupTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
         }
@@ -411,8 +393,8 @@ namespace TBIAutoPlanner.ViewModels
                     double dose = _prescriptions.Last().CumulativeDoseToTarget;
                     foreach (FieldJunctionModel jnx in itr.FieldJunctions)
                     {
-                        _selectedTemplate.InitialOptimizationConstraints.Insert(0,new OptimizationConstraintModel(jnx.JunctionStructure.Id, OptimizationObjectiveType.Lower, dose, Units.cGy, 100.0, 100));
-                        _selectedTemplate.InitialOptimizationConstraints.Insert(1,new OptimizationConstraintModel(jnx.JunctionStructure.Id, OptimizationObjectiveType.Upper, 1.02*dose, Units.cGy, 0.0, 100));
+                        _selectedTemplate.InitialOptimizationConstraints.Insert(0, new OptimizationConstraintModel(jnx.JunctionStructure.Id, OptimizationObjectiveType.Lower, dose, Units.cGy, 100.0, 100));
+                        _selectedTemplate.InitialOptimizationConstraints.Insert(1, new OptimizationConstraintModel(jnx.JunctionStructure.Id, OptimizationObjectiveType.Upper, 1.02 * dose, Units.cGy, 0.0, 100));
                     }
                 }
             }
@@ -429,12 +411,12 @@ namespace TBIAutoPlanner.ViewModels
         #region prepare for treatment
         public void PreparePlanForTreatment()
         {
-            ExternalPlanSetup thePlan = PlanPrepHelper.RetrieveVMATPlan(EclipseContext.GetInstance().Patient, Logger.GetInstance().LogPath, TBIAutoPlannerSettings.CourseId);
+            ExternalPlanSetup thePlan = PlanPrepHelper.RetrieveVMATPlan(EclipseContext.GetInstance().Patient, Logger.GetInstance().LogPath, TMLIAutoPlannerSettings.CourseId);
             if (ReferenceEquals(thePlan, null)) return;
             EclipseContext.GetInstance().VMATPlans = new List<ExternalPlanSetup> { thePlan };
 
             if (GenerateShiftNote()) return;
-            if(SeparatePlans()) return;
+            if (SeparatePlans()) return;
             Logger.GetInstance().OpType = ScriptOperationType.PlanPrep;
             _planPrepVM.UpdateUIAllPrepItemsCompleted();
         }
@@ -475,28 +457,15 @@ namespace TBIAutoPlanner.ViewModels
                 if (!CUI.GetSelection()) return true;
             }
 
-            bool removeFlash = false;
-            StringBuilder sb = new StringBuilder();
-            //check if flash was used in the plan. If so, ask the user if they want to remove these structures as part of cleanup
-            if (PlanPrepHelper.CheckForFlash(thePlan.StructureSet))
-            {
-                sb.AppendLine("I found some structures in the structure set for generating flash.");
-                sb.AppendLine("Should I remove them?");
-                sb.AppendLine("(NOTE: this will require dose recalculation for all plans using this structure set!)");
-                ConfirmPrompt CP = new ConfirmPrompt(sb.ToString(), "YES", "NO");
-                CP.ShowDialog();
-                if (CP.GetSelection()) removeFlash = true;
-            }
-
             //separate the plans
             EclipseContext.GetInstance().Patient.BeginModifications();
-            PreparePlansForTreatment_TBI planPrep = new PreparePlansForTreatment_TBI(removeFlash);
+            PreparePlansForTreatment_TMLI planPrep = new PreparePlansForTreatment_TMLI();
             bool result = planPrep.Execute();
             Logger.GetInstance().AppendLogOutput("Plan preparation:", planPrep.GetLogOutput());
             if (result) return true;
 
             //inform the user it's done
-            sb.Clear();
+            StringBuilder sb = new StringBuilder();
             sb.AppendLine("Original plan(s) have been separated!");
             sb.AppendLine("Be sure to set the target volume and primary reference point!");
             if (thePlan.Beams.Any(x => x.IsSetupField))
@@ -551,18 +520,12 @@ namespace TBIAutoPlanner.ViewModels
             _tsManipulationVM.AutoPlanTemplateSelectionChaged(_selectedTemplate);
         }
 
-        private void UpdateUseFlash()
-        {
-            if (UseFlash) FlashMarginVisible = Visibility.Visible;
-            else FlashMarginVisible = Visibility.Hidden;
-        }
-
         #region script configuration
         private void LoadScriptConfigurationSettings()
         {
 
         }
-        
+
         private bool LoadPlanTemplates()
         {
             int count = 1;
@@ -570,7 +533,7 @@ namespace TBIAutoPlanner.ViewModels
             {
                 foreach (string itr in Directory.GetFiles(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\templates\\TBI\\", "*.ini").OrderBy(x => x))
                 {
-                    PlanTemplates.Add(ConfigurationHelper.ReadTBITemplatePlan(itr, count++));
+                    PlanTemplates.Add(ConfigurationHelper.ReadTMLITemplatePlan(itr, count++));
                 }
 
             }
@@ -591,52 +554,52 @@ namespace TBIAutoPlanner.ViewModels
             else sb.AppendLine("Configuration file: none");
             sb.AppendLine($"Documentation path: {Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\documentation\\"}");
             sb.AppendLine($"Log file path: {Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\logs\\"}");
-            sb.AppendLine($"Close progress windows on finish: {TBIAutoPlannerSettings.CloseProgressWindowOnFinish}");
+            sb.AppendLine($"Close progress windows on finish: {TMLIAutoPlannerSettings.CloseProgressWindowOnFinish}");
             sb.AppendLine("Default parameters:");
-            sb.AppendLine($"Course Id: {TBIAutoPlannerSettings.CourseId}");
-            sb.AppendLine($"Check for potential couch collision: {TBIAutoPlannerSettings.CheckTTCollision}");
-            sb.AppendLine($"Contour field ovelap: {TBIAutoPlannerSettings.ContourFieldOverlap}");
-            sb.AppendLine($"Contour field overlap margin: {TBIAutoPlannerSettings.ContourFieldOverlapMarginInCM} cm");
+            sb.AppendLine($"Course Id: {TMLIAutoPlannerSettings.CourseId}");
+            sb.AppendLine($"Check for potential couch collision: {TMLIAutoPlannerSettings.CheckTTCollision}");
+            sb.AppendLine($"Contour field ovelap: {TMLIAutoPlannerSettings.ContourFieldOverlap}");
+            sb.AppendLine($"Contour field overlap margin: {TMLIAutoPlannerSettings.ContourFieldOverlapMarginInCM} cm");
             sb.AppendLine("Available linacs:");
-            foreach (string l in TBIAutoPlannerSettings.AvailableLinacs) sb.AppendLine($"    {l}");
+            foreach (string l in TMLIAutoPlannerSettings.AvailableLinacs) sb.AppendLine($"    {l}");
             sb.AppendLine("Available photon energies:");
-            foreach (string e in TBIAutoPlannerSettings.AvailableEnergies) sb.AppendLine($"    {e}");
+            foreach (string e in TMLIAutoPlannerSettings.AvailableEnergies) sb.AppendLine($"    {e}");
             sb.AppendLine($"Beams per isocenter: ");
-            for (int i = 0; i < TBIAutoPlannerSettings.BeamsPerIsocenter.Length; i++)
+            for (int i = 0; i < TMLIAutoPlannerSettings.BeamsPerIsocenter.Length; i++)
             {
-                sb.Append($"{TBIAutoPlannerSettings.BeamsPerIsocenter.ElementAt(i)}");
-                if (i != TBIAutoPlannerSettings.BeamsPerIsocenter.Length - 1) sb.Append(", ");
+                sb.Append($"{TMLIAutoPlannerSettings.BeamsPerIsocenter.ElementAt(i)}");
+                if (i != TMLIAutoPlannerSettings.BeamsPerIsocenter.Length - 1) sb.Append(", ");
             }
             sb.AppendLine("");
             sb.AppendLine("Collimator rotation (deg) order: ");
-            for (int i = 0; i < TBIAutoPlannerSettings.CollimatorRotations.Length; i++)
+            for (int i = 0; i < TMLIAutoPlannerSettings.CollimatorRotations.Length; i++)
             {
-                sb.Append($"{TBIAutoPlannerSettings.CollimatorRotations.ElementAt(i):0.0}");
-                if (i != TBIAutoPlannerSettings.CollimatorRotations.Length - 1) sb.Append(", ");
+                sb.Append($"{TMLIAutoPlannerSettings.CollimatorRotations.ElementAt(i):0.0}");
+                if (i != TMLIAutoPlannerSettings.CollimatorRotations.Length - 1) sb.Append(", ");
             }
             sb.AppendLine("");
-            sb.AppendLine($"Include flash by default: {TBIAutoPlannerSettings.UseFlash}");
-            sb.AppendLine($"Flash margin: {TBIAutoPlannerSettings.FlashMarginInCM} cm");
-            sb.AppendLine($"Target inner margin: {TBIAutoPlannerSettings.PTVInnerMarginFromBodyInCM} cm");
+            sb.AppendLine($"Include flash by default: {TMLIAutoPlannerSettings.UseFlash}");
+            sb.AppendLine($"Flash margin: {TMLIAutoPlannerSettings.FlashMarginInCM} cm");
+            sb.AppendLine($"Target inner margin: {TMLIAutoPlannerSettings.PTVInnerMarginFromBodyInCM} cm");
 
             sb.AppendLine("");
             sb.AppendLine("Field jaw position (cm) order: ");
             sb.AppendLine(" (x1,y1,x2,y2)");
-            foreach (VRect<double> j in TBIAutoPlannerSettings.JawPositions) sb.AppendLine($"({j.X1 / 10:0.0},{j.Y1 / 10:0.0},{j.X2 / 10:0.0},{j.Y2 / 10:0.0})");
-            sb.AppendLine($"Photon dose calculation model: {TBIAutoPlannerSettings.DoseCalculationAlgorithm}");
-            sb.AppendLine($"Use GPU for dose calculation: {TBIAutoPlannerSettings.UseGPUForDosecalculation}");
-            sb.AppendLine($"Photon optimization model: {TBIAutoPlannerSettings.OptimizationAlorithm}");
-            sb.AppendLine($"Use GPU for optimization: {TBIAutoPlannerSettings.UseGPUForOptimization}");
-            sb.AppendLine($"MR level restart at: {TBIAutoPlannerSettings.MRLevelRestart}");
+            foreach (VRect<double> j in TMLIAutoPlannerSettings.JawPositions) sb.AppendLine($"({j.X1 / 10:0.0},{j.Y1 / 10:0.0},{j.X2 / 10:0.0},{j.Y2 / 10:0.0})");
+            sb.AppendLine($"Photon dose calculation model: {TMLIAutoPlannerSettings.DoseCalculationAlgorithm}");
+            sb.AppendLine($"Use GPU for dose calculation: {TMLIAutoPlannerSettings.UseGPUForDosecalculation}");
+            sb.AppendLine($"Photon optimization model: {TMLIAutoPlannerSettings.OptimizationAlorithm}");
+            sb.AppendLine($"Use GPU for optimization: {TMLIAutoPlannerSettings.UseGPUForOptimization}");
+            sb.AppendLine($"MR level restart at: {TMLIAutoPlannerSettings.MRLevelRestart}");
 
-            if (PlanTemplates.Any()) sb.Append(ConfigurationUIHelper.PrintTBIPlanTemplateConfigurationParameters(PlanTemplates.ToList()));
+            if (PlanTemplates.Any()) sb.Append(ConfigurationUIHelper.PrintTMLIPlanTemplateConfigurationParameters(PlanTemplates.ToList()));
             return sb;
         }
         #endregion
 
         public void WindowClosing()
         {
-            if(EclipseContext.GetInstance().IsInitialized)
+            if (EclipseContext.GetInstance().IsInitialized)
             {
                 ScriptClosingHelper.CloseApplication(false);
             }

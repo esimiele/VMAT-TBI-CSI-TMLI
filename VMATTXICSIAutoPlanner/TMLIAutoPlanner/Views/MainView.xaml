@@ -1,9 +1,9 @@
-﻿<Window x:Class="TBIAutoPlanner.Views.MainView"
+﻿<Window x:Class="TMLIAutoPlanner.Views.MainView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:TBIAutoPlanner.Views"
+        xmlns:local="clr-namespace:TMLIAutoPlanner.Views"
         xmlns:i="clr-namespace:Microsoft.Xaml.Behaviors;assembly=Microsoft.Xaml.Behaviors"
         mc:Ignorable="d"
         Title="VMAT TBI Autoplanning" 
@@ -56,17 +56,16 @@
     <Grid Width="auto">
         <StackPanel>
             <Grid>
-                <Label Content="VMAT TBI Auto Planning" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Top"/>
+                <Label Content="VMAT TMLI Auto Planning" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Top"/>
                 <Button Content="Help" HorizontalAlignment="Right" Margin="0,10,30,0" VerticalAlignment="Top" Width="75" Command="{Binding HelpGuideCommand}"/>
                 <Button Content="Quick Start" HorizontalAlignment="Left" Margin="30,10,0,0" VerticalAlignment="Top" Width="75" Command="{Binding QuickStartGuideCommand}"/>
             </Grid>
-            <Grid>
+            <Grid Margin="5">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1.2*"></ColumnDefinition>
+                    <ColumnDefinition Width="*"></ColumnDefinition>
                     <ColumnDefinition Width="*"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="*"></RowDefinition>
                     <RowDefinition Height="*"></RowDefinition>
                     <RowDefinition Height="*"></RowDefinition>
                     <RowDefinition Height="*"></RowDefinition>
@@ -111,7 +110,7 @@
                         <ColumnDefinition Width="1.8*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <Label Content="TBI Plan Rx" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center"></Label>
+                    <Label Content="TMLI Plan Rx" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center"></Label>
 
                     <Label Content="Dose per fraction (cGy/fx):" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center"></Label>
                     <Label Content="Number of fractions:" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center"></Label>
@@ -121,44 +120,22 @@
                     <TextBox Text="{Binding NumberOfFractions}" Grid.Row="2" Grid.Column="1" TextAlignment="Center" HorizontalAlignment="Left" VerticalAlignment="Center" Width="75"></TextBox>
                     <TextBox Text="{Binding PlanTotalDose}" Grid.Row="3" Grid.Column="1" TextAlignment="Center" HorizontalAlignment="Left" VerticalAlignment="Center" Width="75" IsReadOnly="True"></TextBox>
                 </Grid>
-
-                <Grid Grid.Row="5" Grid.Column="0" HorizontalAlignment="Center" Margin="0,5,0,5">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <Label Content="Add flash:" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                    <CheckBox IsChecked="{Binding UseFlash}" HorizontalContentAlignment="Center" Grid.Column="1" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                    <Label Content="Margin (cm):" Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center" Visibility="{Binding FlashMarginVisible}"/>
-                    <TextBox Text="{Binding FlashMargin}" TextAlignment="Center" VerticalContentAlignment="Center" Grid.Column="3" VerticalAlignment="Center" Width="50" Height="21" Visibility="{Binding FlashMarginVisible}"></TextBox>
-                </Grid>
-
-                <Grid Margin="5" Grid.Row="5" Grid.Column="1" HorizontalAlignment="Center">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <Label Content="PTV inner margin from body (cm):" FontSize="13" FontStyle="Normal" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Margin="0"></Label>
-                    <TextBox Text="{Binding PTVMarginFromBody}" FontSize="12" TextAlignment="Center" HorizontalAlignment="Left" VerticalAlignment="Center" Width="75" Grid.Column="1" Margin="0"></TextBox>
-                    <Button Content="?" HorizontalAlignment="Center" VerticalAlignment="Center" Width="20" Grid.Column="2" Height="20" Margin="5,0,11,0" Command="{Binding PTVMarginInfoCommand}"></Button>
-                </Grid>
             </Grid>
 
             <Grid Background="DarkGray">
                 <TabControl Background="DarkGray" TabStripPlacement="Left" HorizontalAlignment="Left" Height="Auto" Margin="-2,0,0,0" VerticalAlignment="Bottom">
                     <TabItem Header="Stitch CT" Content="{Binding StitchCT}" Background="{Binding StitchCTTabBackground,FallbackValue=LightGray}" BorderThickness="0,1,1,0">
-                        
+
                     </TabItem>
                     <TabItem Header="Specify Targets" Content="{Binding SpecifyTargets}" Background="{Binding SpecifyTargetsTabBackground, FallbackValue=LightGray}" BorderThickness="0,1,1,0">
                     </TabItem>
                     <TabItem Header="Structure Tuning" Background="{Binding StructureTuningTabBackground, FallbackValue=LightGray}" BorderThickness="0,1,1,0" Height="29" VerticalAlignment="Top">
                         <TabControl TabStripPlacement="Top" Background="DarkGray">
-                            <TabItem Header="Tuning Structure Generation" Content="{Binding TSGeneration}" BorderThickness="1,1,1,1" Width="290">
+                            <TabItem Header="Tuning Structure Generation" Content="{Binding TSGeneration}" BorderThickness="1,1,1,1" Width="193">
                             </TabItem>
-                            <TabItem Header="Tuning Structure Manipulation" Content="{Binding TSManipulation}" Background="{Binding TSManipulationTabBackground, FallbackValue=LightGray}"  BorderThickness="0,1,1,1" Width="290" x:Name="TSManipulationTabItem">
+                            <TabItem Header="Ring Generation" Content="{Binding RingGeneration}" BorderThickness="0,1,1,1" Width="193">
+                            </TabItem>
+                            <TabItem Header="Tuning Structure Manipulation" Content="{Binding TSManipulation}" Background="{Binding TSManipulationTabBackground, FallbackValue=LightGray}"  BorderThickness="0,1,1,1" Width="193" x:Name="TSManipulationTabItem">
                             </TabItem>
                         </TabControl>
                     </TabItem>

@@ -8,6 +8,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSIAutoPlanner", "CSIAutoPlanner\CSIAutoPlanner.csproj", "{24D14628-138B-4FBB-B93C-C1A0C8DEB665}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TMLIAutoPlanner", "TMLIAutoPlanner\TMLIAutoPlanner.csproj", "{C5790F3A-1B38-4A1E-B0D5-8BE24E136245}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D100D8F6-9756-4F74-ADCE-13581A048F33} = {D100D8F6-9756-4F74-ADCE-13581A048F33}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoPlannerHelpers", "AutoPlannerHelpers\AutoPlannerHelpers.csproj", "{73A53BBF-24FD-4214-990F-A16A323C1A65}"
 EndProject

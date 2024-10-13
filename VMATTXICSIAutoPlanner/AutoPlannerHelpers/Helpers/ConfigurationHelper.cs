@@ -240,6 +240,77 @@ namespace AutoPlannerHelpers.Helpers
         }
 
         /// <summary>
+        /// Helper function to parse a template .ini file and create a new instance of TBIAutoPlanTemplate
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public static TMLIAutoPlanTemplate ReadTMLITemplatePlan(string file, int count)
+        {
+            TMLIAutoPlanTemplate tempTemplate = new TMLIAutoPlanTemplate(count);
+            using (StreamReader reader = new StreamReader(file))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    if (!string.IsNullOrEmpty(line) && line.Substring(0, 1) != "%")
+                    {
+                        if (line.Equals(":begin template case configuration:"))
+                        {
+                            //preparation
+                            List<RequestedTSManipulationModel> TSManipulation_temp = new List<RequestedTSManipulationModel> { };
+                            List<RequestedTSStructureModel> TSstructures_temp = new List<RequestedTSStructureModel> { };
+                            List<OptimizationConstraintModel> initOptConst_temp = new List<OptimizationConstraintModel> { };
+                            List<PlanTargetsModel> targets_temp = new List<PlanTargetsModel> { };
+                            //optimization loop
+                            List<PlanObjectiveModel> planObj_temp = new List<PlanObjectiveModel> { };
+                            List<RequestedPlanMetricModel> planDoseInfo_temp = new List<RequestedPlanMetricModel> { };
+                            List<RequestedOptimizationTSStructureModel> requestedTSstructures_temp = new List<RequestedOptimizationTSStructureModel> { };
+                            //parse the data specific to the myeloablative case setup
+                            while (!(line = reader.ReadLine()).Equals(":end template case configuration:"))
+                            {
+                                if (line.Substring(0, 1) != "%")
+                                {
+                                    if (line.Contains("="))
+                                    {
+                                        string parameter = line.Substring(0, line.IndexOf("="));
+                                        string value = line.Substring(line.IndexOf("=") + 1, line.Length - line.IndexOf("=") - 1);
+                                        if (parameter == "template name") tempTemplate.TemplateName = value;
+                                        else if (parameter == "dose per fraction")
+                                        {
+                                            if (double.TryParse(value, out double initDPF)) tempTemplate.InitialRxDosePerFx = initDPF;
+                                        }
+                                        else if (parameter == "num fx")
+                                        {
+                                            if (int.TryParse(value, out int initFx)) tempTemplate.InitialRxNumberOfFractions = initFx;
+                                        }
+                                    }
+                                    else if (line.Contains("add TS manipulation")) TSManipulation_temp.Add(ParseTSManipulation(line));
+                                    else if (line.Contains("add opt constraint")) initOptConst_temp.Add(ParseOptimizationConstraint(line));
+                                    else if (line.Contains("create TS")) TSstructures_temp.Add(ParseCreateTS(line));
+                                    else if (line.Contains("add target")) targets_temp.Add(ParseTargets(line));
+                                    else if (line.Contains("add optimization TS structure")) requestedTSstructures_temp.Add(ParseOptimizationTSstructure(line));
+                                    else if (line.Contains("add plan objective")) planObj_temp.Add(ParsePlanObjective(line));
+                                    else if (line.Contains("add requested plan metric")) planDoseInfo_temp.Add(ParseRequestedPlanDoseInfo(line));
+                                }
+                            }
+
+                            if (TSManipulation_temp.Any()) tempTemplate.TSManipulations = new List<RequestedTSManipulationModel>(TSManipulation_temp);
+                            if (TSstructures_temp.Any()) tempTemplate.CreateTSStructures = TSstructures_temp;
+                            if (initOptConst_temp.Any()) tempTemplate.InitialOptimizationConstraints = new List<OptimizationConstraintModel>(initOptConst_temp);
+                            if (targets_temp.Any()) tempTemplate.PlanTargets = new List<PlanTargetsModel>(TargetsHelper.GroupTargetsByPlanIdAndOrderByTargetRx(targets_temp));
+                            if (planObj_temp.Any()) tempTemplate.PlanObjectives = new List<PlanObjectiveModel>(planObj_temp);
+                            if (requestedTSstructures_temp.Any()) tempTemplate.RequestedOptimizationTSStructures = new List<RequestedOptimizationTSStructureModel>(requestedTSstructures_temp);
+                            if (planDoseInfo_temp.Any()) tempTemplate.RequestedPlanMetrics = new List<RequestedPlanMetricModel>(planDoseInfo_temp);
+                        }
+                    }
+                }
+                reader.Close();
+            }
+            return tempTemplate;
+        }
+
+        /// <summary>
         /// Helper function to crop a string using a specified cropping character. All characters in the supplied string will be removed up to the first instance of the
         /// supplied character and the remainder will be returned
         /// </summary>

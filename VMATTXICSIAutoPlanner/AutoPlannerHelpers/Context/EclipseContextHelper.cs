@@ -7,78 +7,68 @@ using VMS.TPS.Common.Model.API;
 
 namespace AutoPlannerHelpers.Context
 {
-    public class EclipseContextHelper
+    public static class EclipseContextHelper
     {
-        //get methods
-        public EclipseContext EclipseContext { get; private set; }
-        public string ErrorMessage { get; private set; }
-        public string StackTraceMessage { get; private set; }
         //data members
-        private string PatientId = "";
-        private string StructureSetUID = "";
-        private string ImageFOR = "";
-        private string PlanUID = "";
-        private string CourseID = "";
+        private static string PatientId = "";
+        private static string StructureSetUID = "";
+        private static string ImageFOR = "";
+        private static string PlanUID = "";
+        private static string CourseID = "";
 
         /// <summary>
         /// Helper method to de-serialize the list of arguments passed from Eclipse to generate a fake Eclipse context
         /// </summary>
         /// <param name="args"></param>
         /// <returns></returns>
-        public bool GenerateEclipseContext(List<string> args) 
+        public static bool GenerateEclipseContext(List<string> args) 
         {
             try
             {
                 DecodeStringContext(args);
-                EclipseContext = EclipseContext.GetInstance();
-                EclipseContext.Application = Application.CreateApplication();
-                EclipseContext.UserName = EclipseContext.Application.CurrentUser.Name;
-                EclipseContext.UserId = EclipseContext.Application.CurrentUser.Id;
+                EclipseContext.GetInstance().Application = Application.CreateApplication();
+                EclipseContext.GetInstance().UserName = EclipseContext.GetInstance().Application.CurrentUser.Name;
+                EclipseContext.GetInstance().UserId = EclipseContext.GetInstance().Application.CurrentUser.Id;
                 if (!string.IsNullOrEmpty(PatientId))
                 {
-                    EclipseContext.Patient = EclipseContext.Application.OpenPatientById(PatientId);
-                    if (!ReferenceEquals(EclipseContext.Patient, null))
+                    EclipseContext.GetInstance().Patient = EclipseContext.GetInstance().Application.OpenPatientById(PatientId);
+                    if (!ReferenceEquals(EclipseContext.GetInstance().Patient, null))
                     {
-                        Logger.GetInstance().MRN = EclipseContext.Patient.Id;
-
-                        EclipseContext.Registrations = EclipseContext.Patient.Registrations;
-                        EclipseContext.CTImages = EclipseContext.Patient.Studies.SelectMany(x => x.Series).Where(x => x.Modality == VMS.TPS.Common.Model.Types.SeriesModality.CT).SelectMany(x => x.Images).Where(x => !double.IsNaN(x.Origin.x));
-                        if (!EclipseContext.CTImages.Any())
+                        Logger.GetInstance().MRN = EclipseContext.GetInstance().Patient.Id;
+                        EclipseContext.GetInstance().Registrations = EclipseContext.GetInstance().Patient.Registrations;
+                        EclipseContext.GetInstance().CTImages = EclipseContext.GetInstance().Patient.Studies.SelectMany(x => x.Series).Where(x => x.Modality == VMS.TPS.Common.Model.Types.SeriesModality.CT).SelectMany(x => x.Images).Where(x => !double.IsNaN(x.Origin.x));
+                        if (!EclipseContext.GetInstance().CTImages.Any())
                         {
-                            Logger.GetInstance().LogError($"Patient (${EclipseContext.Patient.Id}) has NO CT images!");
+                            Logger.GetInstance().LogError($"Patient (${EclipseContext.GetInstance().Patient.Id}) has NO CT images!");
                         }
                         if (!string.IsNullOrEmpty(StructureSetUID))
                         {
-                            EclipseContext.StructureSet = EclipseContext.Patient.StructureSets.FirstOrDefault(x => string.Equals(StructureSetUID, x.UID));
+                            EclipseContext.GetInstance().StructureSet = EclipseContext.GetInstance().Patient.StructureSets.FirstOrDefault(x => string.Equals(StructureSetUID, x.UID));
                         }
-                        EclipseContext.ImageFOR = ImageFOR;
+                        EclipseContext.GetInstance().ImageFOR = ImageFOR;
                         if (!string.IsNullOrEmpty(PlanUID))
                         {
-                            //EclipseContext.Plans = EclipseContext.Patient.Courses.SelectMany(x => x.ExternalPlanSetups).FirstOrDefault(x => string.Equals(PlanUID, x.UID));
-                            //if(!ReferenceEquals(EclipseContext.Plan, null))
-                            //{
-                            //    Logger.GetInstance().VMATPlanUID = EclipseContext.Plan.UID;
-                            //    Logger.GetInstance().VMATPlanId = EclipseContext.Plan.Id;
-                            //}
+                            EclipseContext.GetInstance().VMATPlans = new List<ExternalPlanSetup> { EclipseContext.GetInstance().Patient.Courses.SelectMany(x => x.ExternalPlanSetups).FirstOrDefault(x => string.Equals(PlanUID, x.UID)) };
+                            if (EclipseContext.GetInstance().VMATPlans.Any()) Logger.GetInstance().PlanUIDs = new List<string> { EclipseContext.GetInstance().VMATPlans.First().UID };
                         }
                         if (!string.IsNullOrEmpty(CourseID))
                         {
-                            EclipseContext.Course = EclipseContext.Patient.Courses.FirstOrDefault(x => string.Equals(CourseID, x.Id));
+                            EclipseContext.GetInstance().Course = EclipseContext.GetInstance().Patient.Courses.FirstOrDefault(x => string.Equals(CourseID, x.Id));
                             //if (!ReferenceEquals(EclipseContext.Course, null)) Logger.GetInstance().CourseId = EclipseContext.Course.Id;
                         }
                     }
                 }
                 else
                 {
-                    ErrorMessage = $"Error! Patient Id ({PatientId}) not found! Exiting!";
+                    Logger.GetInstance().LogError($"Error! Patient Id ({PatientId}) not found! Exiting!");
                     return true;
                 }
                 return false;
             }
             catch (Exception e)
             {
-                ErrorMessage = $"Error! Unable to generate Eclipse Context instance because: {e.Message}";
-                StackTraceMessage = e.StackTrace;
+                Logger.GetInstance().LogError($"Error! Unable to generate Eclipse Context instance because: {e.Message}");
+                Logger.GetInstance().LogError(e.StackTrace, true);
                 return true;
             }
         }
@@ -87,7 +77,7 @@ namespace AutoPlannerHelpers.Context
         /// Helper method to parse the meaning of each of the string arguments from Eclipse
         /// </summary>
         /// <param name="contextArgs"></param>
-        private void DecodeStringContext(List<string> contextArgs)
+        private static void DecodeStringContext(List<string> contextArgs)
         {
             //assumes there will be an even number of arguments that are "paired"
             for (int i = 0; i < contextArgs.Count(); i += 2)

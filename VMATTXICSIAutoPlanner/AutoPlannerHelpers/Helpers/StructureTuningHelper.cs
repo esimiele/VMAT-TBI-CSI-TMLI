@@ -1,4 +1,5 @@
-﻿using AutoPlannerHelpers.Models;
+﻿using AutoPlannerHelpers.Context;
+using AutoPlannerHelpers.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,6 +31,16 @@ namespace AutoPlannerHelpers.Helpers
                 else manipulationListToUpdate.Add(s);
             }
             return manipulationListToUpdate;
+        }
+
+        public static List<string> GenerateStructureIdListPostUnion()
+        {
+            if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null)) return new List<string> { };
+            //check if structures need to be unioned before adding defaults
+            List<string> ids = EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id).ToList();
+            List<UnionStructureModel> structuresToUnion = new List<UnionStructureModel>(CheckStructuresToUnion(EclipseContext.GetInstance().StructureSet));
+            ids.AddRange(structuresToUnion.Select(x => x.ProposedUnionStructureId));
+            return ids;
         }
 
         /// <summary>

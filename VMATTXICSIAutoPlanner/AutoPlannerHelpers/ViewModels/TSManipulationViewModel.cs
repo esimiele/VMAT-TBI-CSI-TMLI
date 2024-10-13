@@ -45,6 +45,14 @@ namespace AutoPlannerHelpers.ViewModels
             RequestedTSManipulations = new ObservableCollectionPropertyNotify<RequestedTSManipulationModel> { };
         }
 
+        public void UpdateTSManipulationList(IEnumerable<string> newStructureIds, List<RequestedTSManipulationModel> tsManipulations)
+        {
+            RequestedTSManipulations.Clear();
+            StructureIdsPostUnion.Clear();
+            StructureIdsPostUnion.AddRange(newStructureIds);
+            foreach(RequestedTSManipulationModel itr in tsManipulations) RequestedTSManipulations.Add(itr);
+        }
+
         public void AutoPlanTemplateSelectionChaged(AutoPlanTemplateBase template)
         {
             if (ReferenceEquals(template, null)) return;
