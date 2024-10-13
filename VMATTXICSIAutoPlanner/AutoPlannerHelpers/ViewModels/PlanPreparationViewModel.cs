@@ -1,71 +1,145 @@
-﻿using Prism.Commands;
+﻿using AutoPlannerHelpers.Context;
+using AutoPlannerHelpers.Enums;
+using AutoPlannerHelpers.Helpers;
+using AutoPlannerHelpers.Logging;
+using AutoPlannerHelpers.Prompts;
+using Prism.Commands;
 using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using VMS.TPS.Common.Model.API;
+using VMS.TPS.Common.Model.Types;
 
 namespace AutoPlannerHelpers.ViewModels
 {
     public class PlanPreparationViewModel : BindableBase
     {
         #region properties
-        private string _shiftNoteText;
-        private string _separatePlansText;
-        private System.Windows.Media.SolidColorBrush _shiftNoteTBBackground;
-        private System.Windows.Media.SolidColorBrush _separatePlansTBBackground;
+        private string _planId;
+        private string _planIdPrefix;
+        private bool _createBackupPlans;
+        private string _fieldNaming;
+        private string _separateIsos;
+        private string _refPoints;
+        private string _setupFields;
+        private string _planSumCreated;
+        private string _muQA;
+        private string _backupPlan;
+        private bool _allItemsCompleted;
 
-        public string ShiftNoteText
+        public string PlanId
         {
-            get { return _shiftNoteText; }
-            set { SetProperty(ref _shiftNoteText, value); }
+            get { return _planId; }
+            set { SetProperty(ref _planId, value); }
         }
 
-        public string SeparatePlansText
+        public string PlanIdPrefix
         {
-            get { return _separatePlansText; }
-            set { SetProperty(ref _separatePlansText, value); }
+            get { return _planIdPrefix; }
+            set { SetProperty(ref _planIdPrefix, value); }
         }
 
-        public System.Windows.Media.SolidColorBrush ShiftNoteTBBackground
+        public bool CreateBackupPlans
         {
-            get { return _shiftNoteTBBackground; }
-            set { SetProperty(ref _shiftNoteTBBackground, value); }
+            get { return _createBackupPlans; }
+            set { SetProperty(ref _createBackupPlans, value); }
         }
 
-        public System.Windows.Media.SolidColorBrush SeparatePlansTBBackground
+        public string FieldNaming
         {
-            get { return _separatePlansTBBackground; }
-            set { SetProperty(ref _separatePlansTBBackground, value); }
+            get { return _fieldNaming; }
+            set { SetProperty(ref _fieldNaming, value); }
+        }
+
+        public string SeparateIsos
+        {
+            get { return _separateIsos; }
+            set { SetProperty(ref _separateIsos, value); }
+        }
+
+        public string RefPoints
+        {
+            get { return _refPoints; }
+            set { SetProperty(ref _refPoints, value); }
+        }
+
+        public string SetupFields
+        {
+            get { return _setupFields; }
+            set { SetProperty(ref _setupFields, value); }
+        }
+
+        public string PlanSumCreated
+        {
+            get { return _planSumCreated; }
+            set { SetProperty(ref _planSumCreated, value); }
+        }
+
+        public string MUQA
+        {
+            get { return _muQA; }
+            set { SetProperty(ref _muQA, value); }
+        }
+
+        public string BackupPlan
+        {
+            get { return _backupPlan; }
+            set { SetProperty(ref _backupPlan, value); }
+        }
+
+        public bool AllItemsCompleted
+        {
+            get { return _allItemsCompleted; }
+            set { SetProperty(ref _allItemsCompleted, value); }
         }
         #endregion
 
         #region commands
-        public DelegateCommand GenerateShiftNoteCommand { get; set; }
-        public DelegateCommand SeparatePlansCommand { get; set; }
+        private DelegateCommand _notifyMainVMExecuted;
+        public DelegateCommand RunCommand { get; set; }
         #endregion
 
-        public PlanPreparationViewModel()
+        public PlanPreparationViewModel(DelegateCommand notifyMainVM)
         {
-            ShiftNoteText = "NO";
-            SeparatePlansText = "NO";
-
-            ShiftNoteTBBackground = System.Windows.Media.Brushes.Red;
-            SeparatePlansTBBackground = System.Windows.Media.Brushes.Red;
-
-            GenerateShiftNoteCommand = new DelegateCommand(GenerateShiftNote);
-            SeparatePlansCommand = new DelegateCommand(SeparatePlans);
+            _notifyMainVMExecuted = notifyMainVM;
+            FieldNaming = "NO";
+            SeparateIsos = "NO";
+            RefPoints = "NO";
+            SetupFields = "NO";
+            PlanSumCreated = "NO";
+            MUQA = "NO";
+            BackupPlan = "NO";
+            RunCommand = new DelegateCommand(PreparePlanForTreatment);
         }
 
-        public void GenerateShiftNote()
+        private void PreparePlanForTreatment()
         {
-
+            //logic needs to be handled by specific plan type classes
+            _notifyMainVMExecuted.Execute();
         }
 
-        public void SeparatePlans()
+        public void UpdateUIAllPrepItemsCompleted()
         {
+            FieldNaming = "YES";
+            SeparateIsos = "YES";
+            RefPoints = "YES";
+            SetupFields = "YES";
+            PlanSumCreated = "YES";
+            MUQA = "YES";
+            AllItemsCompleted = true;
 
+            if (CreateBackupPlans)
+            {
+                BackupPlan = "YES";
+            }
+            else
+            {
+                BackupPlan = "N/A";
+            }
         }
     }
 }

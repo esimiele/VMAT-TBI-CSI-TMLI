@@ -23,6 +23,8 @@ using TBIAutoPlanner.Settings;
 using CTStitcher.Views;
 using CTStitcher.ViewModels;
 using PlanType = AutoPlannerHelpers.Enums.PlanType;
+using VMS.TPS.Common.Model.API;
+using AutoPlannerHelpers.Prompts;
 
 namespace TBIAutoPlanner.ViewModels
 {
@@ -154,6 +156,7 @@ namespace TBIAutoPlanner.ViewModels
         private object _beamPlacement;
         private OptimizationSetupViewModel _optimizationSetupVM;
         private object _optimizationSetup;
+        private PlanPreparationViewModel _planPrepVM;
         private object _planPreparation;
         private object _scriptConfiguration;
 
@@ -214,6 +217,7 @@ namespace TBIAutoPlanner.ViewModels
         private DelegateCommand NotifyGenerateManipulateTuningStructuresCommand;
         private DelegateCommand NotifyBeamsPlacedCommand;
         private DelegateCommand NotifyAssignOptimizationConstraintsCommand;
+        private DelegateCommand NotifyPreparePlanForTreatmentCommand;
         public DelegateCommand WindowClosingCommand { get; set; }
         #endregion
 
@@ -259,7 +263,9 @@ namespace TBIAutoPlanner.ViewModels
             OptimizationSetup = new OptimizationSetupView { DataContext = _optimizationSetupVM };
             OptimizationSetupTabBackground = System.Windows.Media.Brushes.LightGray;
 
-            PlanPreparation = new PlanPreparationView { DataContext = new PlanPreparationViewModel() };
+            NotifyPreparePlanForTreatmentCommand = new DelegateCommand(PreparePlanForTreatment);
+            _planPrepVM = new PlanPreparationViewModel(NotifyPreparePlanForTreatmentCommand);
+            PlanPreparation = new PlanPreparationView { DataContext = _planPrepVM };
 
             QuickStartGuideCommand = new DelegateCommand(LaunchQuickStartGuide);
             HelpGuideCommand = new DelegateCommand(LaunchHelpGuide);
@@ -369,6 +375,92 @@ namespace TBIAutoPlanner.ViewModels
         public void AssignOptimizationConstraints()
         {
             OptimizationSetupTabBackground = System.Windows.Media.Brushes.ForestGreen;
+        }
+        #endregion
+
+        #region prepare for treatment
+        public void PreparePlanForTreatment()
+        {
+            ExternalPlanSetup thePlan = PlanPrepHelper.RetrieveVMATPlan(EclipseContext.GetInstance().Patient, Logger.GetInstance().LogPath, TBIAutoPlannerSettings.CourseId);
+            if (ReferenceEquals(thePlan, null)) return;
+            EclipseContext.GetInstance().VMATPlans = new List<ExternalPlanSetup> { thePlan };
+
+            if (GenerateShiftNote()) return;
+            if(SeparatePlans()) return;
+            Logger.GetInstance().OpType = ScriptOperationType.PlanPrep;
+            _planPrepVM.UpdateUIAllPrepItemsCompleted();
+        }
+
+        public bool GenerateShiftNote()
+        {
+            List<ExternalPlanSetup> appaPlans = new List<ExternalPlanSetup> { };
+            if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Any(x => x.Id.ToLower().Contains("legs")))
+            {
+                appaPlans = EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("legs")).ToList();
+                if (appaPlans.Any(x => x.TreatmentOrientation != PatientOrientation.FeetFirstSupine))
+                {
+                    StringBuilder sb = new StringBuilder();
+                    sb.AppendLine($"The AP/PA plan {appaPlans.First(x => x.TreatmentOrientation != PatientOrientation.FeetFirstSupine).Id} is NOT in the FFS orientation!");
+                    sb.AppendLine("THE COUCH SHIFTS FOR THESE PLANS WILL NOT BE ACCURATE! Please fix and try again!");
+                    Logger.GetInstance().LogError(sb.ToString());
+                    return true;
+                }
+            }
+
+            Clipboard.SetText(PlanPrepHelper.GetTBIShiftNote(EclipseContext.GetInstance().VMATPlans.First(), appaPlans).ToString());
+            return false;
+        }
+        public bool SeparatePlans()
+        {
+            //The shift note has to be retrieved first! Otherwise, we don't have instances of the plan objects
+            if (!EclipseContext.GetInstance().VMATPlans.Any() || EclipseContext.GetInstance().VMATPlans.Count > 1)
+            {
+                Logger.GetInstance().LogError("Please generate the shift note before separating the plans!");
+                return true;
+            }
+            ExternalPlanSetup thePlan = EclipseContext.GetInstance().VMATPlans.First();
+
+            if (!thePlan.Beams.Any(x => x.IsSetupField))
+            {
+                ConfirmPrompt CUI = new ConfirmPrompt($"I didn't find any setup fields in the {thePlan.Id}." + Environment.NewLine + Environment.NewLine + "Are you sure you want to continue?!");
+                CUI.ShowDialog();
+                if (!CUI.GetSelection()) return true;
+            }
+
+            bool removeFlash = false;
+            StringBuilder sb = new StringBuilder();
+            //check if flash was used in the plan. If so, ask the user if they want to remove these structures as part of cleanup
+            if (PlanPrepHelper.CheckForFlash(thePlan.StructureSet))
+            {
+                sb.AppendLine("I found some structures in the structure set for generating flash.");
+                sb.AppendLine("Should I remove them?");
+                sb.AppendLine("(NOTE: this will require dose recalculation for all plans using this structure set!)");
+                ConfirmPrompt CP = new ConfirmPrompt(sb.ToString(), "YES", "NO");
+                CP.ShowDialog();
+                if (CP.GetSelection()) removeFlash = true;
+            }
+
+            //separate the plans
+            EclipseContext.GetInstance().Patient.BeginModifications();
+            PreparePlansForTreatment_TBI planPrep = new PreparePlansForTreatment_TBI(removeFlash);
+            bool result = planPrep.Execute();
+            Logger.GetInstance().AppendLogOutput("Plan preparation:", planPrep.GetLogOutput());
+            if (result) return true;
+
+            //inform the user it's done
+            sb.Clear();
+            sb.AppendLine("Original plan(s) have been separated!");
+            sb.AppendLine("Be sure to set the target volume and primary reference point!");
+            if (thePlan.Beams.Any(x => x.IsSetupField))
+            {
+                sb.AppendLine("Also reset the isocenter position of the setup fields!");
+            }
+            sb.AppendLine("");
+            sb.AppendLine("Isocenter shifts have been copied to the clipboard!");
+            sb.AppendLine("Paste them into the journal note!");
+            MessageBox.Show(sb.ToString());
+
+            return false;
         }
         #endregion
 

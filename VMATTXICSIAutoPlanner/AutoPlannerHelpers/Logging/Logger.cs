@@ -24,21 +24,23 @@ namespace AutoPlannerHelpers.Logging
             if (_instance != null) return _instance;
             else return _instance = new Logger();
         }
-        #region Set methods
+        #region properties
         //general patient info
         public string MRN { set => mrn = value; }
         public string Template { set => template = value; }
         public string StructureSet { set => selectedSS = value; }
         public bool ChangesSaved { set => changesSaved = value; }
         public string User { set => userId = value; }
-        public string LogPath { set => logPath = value; }
-        //plan ID, target Id, numFx, dosePerFx, cumulative dose
+        public string LogPath
+        {
+            get { return _logPath; }
+            set { _logPath = value; }
+        }
         public List<PrescriptionModel> Prescriptions { set => prescriptions = new List<PrescriptionModel>(value); }
         public List<string> AddedPrelimTargetsStructures { set => addedPrelimTargets = new List<string>(value); }
         //ts generation and manipulation
         public List<string> AddedStructures { set => addedStructures = new List<string>(value); }
         public List<RequestedTSManipulationModel> StructureManipulations { get; set; } = new List<RequestedTSManipulationModel>();
-
         //plan id, list<original target id, ts target id>
         public Dictionary<string, string> TSTargets { set => tsTargets = new Dictionary<string, string>(value); }
         //plan id, normalization volume for plan
@@ -48,7 +50,6 @@ namespace AutoPlannerHelpers.Logging
         //plan generation and beam placement
         public List<string> PlanUIDs { set => planUIDs = new List<string>(value); }
         //optimization setup
-        //plan ID, <structure, constraint type, dose cGy, volume %, priority>
         public List<PlanOptimizationSetupModel> OptimizationConstraints { get; set; } = new List<PlanOptimizationSetupModel>();
         public ScriptOperationType OpType { set => opType = value; }
         public PlanType PlanType { set => planType = value; }
@@ -56,7 +57,7 @@ namespace AutoPlannerHelpers.Logging
 
         private static Logger _instance;
         //path to location to write log file
-        private string logPath = string.Empty;
+        private string _logPath;
         //stringbuilder object to log output from ts generation/manipulation and beam placement
         private StringBuilder _logFromOperations = new StringBuilder();
         private StringBuilder _logFromErrors = new StringBuilder();
@@ -142,7 +143,7 @@ namespace AutoPlannerHelpers.Logging
             if (planType == PlanType.VMAT_TBI) type = "TBI";
             else type = "CSI";
 
-            if (string.IsNullOrEmpty(logPath))
+            if (string.IsNullOrEmpty(_logPath))
             {
                 LogError("Log file path not set during script configuration! Please select a folder to write the log file!");
                 FolderBrowserDialog FBD = new FolderBrowserDialog
@@ -151,27 +152,27 @@ namespace AutoPlannerHelpers.Logging
                 };
                 if (FBD.ShowDialog() == DialogResult.OK)
                 {
-                    logPath = FBD.SelectedPath;
+                    _logPath = FBD.SelectedPath;
                 }
                 else return true;
             }
 
-            logPath += "\\preparation\\" + type + "\\" + mrn + "\\";
-            string fileName = logPath + mrn + ".txt";
+            _logPath += "\\preparation\\" + type + "\\" + mrn + "\\";
+            string fileName = _logPath + mrn + ".txt";
             if (!changesSaved && opType != ScriptOperationType.ExportCT)
             {
-                logPath += "unsaved" + "\\";
-                fileName = logPath + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".txt";
+                _logPath += "unsaved" + "\\";
+                fileName = _logPath + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".txt";
             }
             else if (opType != ScriptOperationType.General)
             {
-                logPath += "MISC" + "\\";
-                fileName = logPath + opType.ToString() + ".txt";
+                _logPath += "MISC" + "\\";
+                fileName = _logPath + opType.ToString() + ".txt";
             }
 
-            if (!Directory.Exists(logPath))
+            if (!Directory.Exists(_logPath))
             {
-                Directory.CreateDirectory(logPath);
+                Directory.CreateDirectory(_logPath);
             }
 
             StringBuilder sb = new StringBuilder();

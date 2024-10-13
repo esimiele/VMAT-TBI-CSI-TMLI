@@ -5,26 +5,138 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:AutoPlannerHelpers.Views"
              mc:Ignorable="d">
+    <UserControl.Resources>
+        <Style TargetType="{x:Type TextBox}">
+            <!-- Set the default value here (if any). 
+                    If you set it directly on the button that will override the trigger. -->
+            <Setter Property="Background" Value="Red" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding AllItemsCompleted}" Value="True">
+                    <Setter Property="Background" Value="ForestGreen" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
     <Grid>
         <Border BorderBrush="Black" BorderThickness="1,0,0,0">
-            <StackPanel Name="PREP" Width="570" Margin="10">
-                <Grid Height="40" Width ="400" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,10,0,0">
-                    <Label Content="Item" FontSize="20" FontStyle="Normal" HorizontalAlignment="Center" Margin="0,0,200,0"></Label>
-                    <Label Content="Completed?" FontSize="20" FontStyle="Normal" HorizontalAlignment="Center" Margin="200,0,0,0"></Label>
-                </Grid>
-                <Grid Height="40" Width ="400" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,0,0,0">
-                    <Button Content="Generate shift note" Width="120" Height="25" HorizontalAlignment="Center" Margin="0,0,200,0" Command="{Binding GenerateShiftNoteCommad}"></Button>
-                    <TextBox Text="{Binding ShiftNote, FallbackValue=NO}" IsReadOnly="True" FontWeight="Bold" TextAlignment="Center" Foreground="black" Background="{Binding ShiftNoteTBBackground, FallbackValue=Red}" Width="70" Height="20" Margin="200,0,0,0"></TextBox>
-                </Grid>
-                <Grid Height="40" Width ="400" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,0,0,0">
-                    <Button Content="Separate plans" Width="100" Height="25" HorizontalAlignment="Center" Margin="0,0,200,0" Command="{Binding SeparatePlansCommand}"></Button>
-                    <TextBox Text="{Binding SeparatePlans, FallbackValue=NO}" IsReadOnly="True" FontWeight="Bold" TextAlignment="Center" Foreground="black" Background="{Binding SeparatePlansTBBackground, FallbackValue=Red}" Width="70" Height="20" Margin="200,0,0,0"></TextBox>
-                </Grid>
-                <Grid Height="40" Width ="400" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,0,0,0">
-                    <Button x:Name="createPlanSum" Content="Create plan sum" Width="100" Height="25" HorizontalAlignment="Center" Margin="0,0,200,0" Visibility="Hidden"></Button>
-                    <TextBox x:Name="createPlanSumTB" Text="N/A" IsReadOnly="True" FontWeight="Bold" TextAlignment="Center" Foreground="black" Width="70" Height="20" Margin="200,0,0,0" Visibility="Hidden"></TextBox>
-                </Grid>
-            </StackPanel>
+            <StackPanel>
+    <Label Content="Prepare Plan For Treatment" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" FontWeight="Bold" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5"/>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Label Content="Plan:" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="14" FontWeight="Bold" Margin="5"/>
+        <Label x:Name="planIdLabel" Content="{Binding PlanId}" Grid.Column="1" FontWeight="Bold" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Center"/>
+    </Grid>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Label Content="Plan Id Prefix:" Grid.Column="0" HorizontalContentAlignment="Center" HorizontalAlignment="Right" FontSize="14" FontWeight="Bold" Margin="5,5,5,10"/>
+        <TextBox x:Name="planIdPrefixTB" Text="{Binding PlanIdPrefix}" Background="White" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Left" Height="24" Width="80" Margin="5,5,0,10"/>
+    </Grid>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1.4*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Label Content="Create backup plan:" Grid.Column="0" HorizontalAlignment="Right"  HorizontalContentAlignment="Center" FontSize="14" FontWeight="Bold" Margin="5,5,5,7"/>
+        <CheckBox IsChecked="{Binding CreateBackupPlans}" Grid.Column="1" VerticalAlignment="Center" Margin="5"/>
+    </Grid>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Label Content="Item" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" FontWeight="Bold" Margin="5"/>
+        <Label Content="Completed?" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" FontWeight="Bold" Margin="5"/>
+    </Grid>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Label Content="Rename Fields" Grid.Column="0" HorizontalContentAlignment="Center" HorizontalAlignment="Center" Margin="5"/>
+        <TextBox x:Name="fieldNameTB" Text="{Binding FieldNaming}" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Center" Height="24" Width="80" FontWeight="Bold" Margin="5">
+        </TextBox>
+    </Grid>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Label Content="Separate Isocenters" Grid.Column="0" HorizontalContentAlignment="Center" HorizontalAlignment="Center" Margin="5"/>
+        <TextBox x:Name="separateIsoTB" Text="{Binding SeparateIsos}" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Center" Height="24" Width="80" FontWeight="Bold" Margin="5"/>
+    </Grid>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Label Content="Set Reference Points" Grid.Column="0" HorizontalContentAlignment="Center" HorizontalAlignment="Center" Margin="5"/>
+        <TextBox x:Name="referencePointTB" Text="{Binding RefPoints}" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Center" Height="24" Width="80" FontWeight="Bold" Margin="5"/>
+    </Grid>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Label Content="Add Setup Fields" Grid.Column="0"  HorizontalContentAlignment="Center" HorizontalAlignment="Center" Margin="5"/>
+        <TextBox x:Name="setupFieldTB" Text="{Binding SetupFields}" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Center" Height="24" Width="80" FontWeight="Bold" Margin="5"/>
+    </Grid>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Label Content="Generate Plan Sum" Grid.Column="0" HorizontalContentAlignment="Center" HorizontalAlignment="Center" Margin="5"/>
+        <TextBox x:Name="planSumTB" Text="{Binding PlanSumCreated}" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Center" Height="24" Width="80" FontWeight="Bold" Margin="5"/>
+    </Grid>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Label Content="MU QA" Grid.Column="0" HorizontalContentAlignment="Center" HorizontalAlignment="Center" Margin="5"/>
+        <TextBox x:Name="muQATB" Text="{Binding MUQA}" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Center" Height="24" Width="80" FontWeight="Bold" Margin="5"/>
+
+    </Grid>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Label Content="Create backup plan" Grid.Column="0" HorizontalContentAlignment="Center" HorizontalAlignment="Center" Margin="5"/>
+        <TextBox x:Name="backupPlanTB" Text="{Binding BackupPlan}" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Center" Height="24" Width="80" FontWeight="Bold" Margin="5">
+            <TextBox.Style>
+                <Style TargetType="TextBox">
+                    <!-- Set the default value here (if any). 
+         If you set it directly on the button that will override the trigger. -->
+                    <Setter Property="Background" Value="Red"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding CreateBackupPlans}" Value="True">
+                            <Setter Property="Background" Value="Red" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding CreateBackupPlans}" Value="False">
+                            <Setter Property="Background" Value="LightGray" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding BackupPlan}" Value="YES">
+                            <Setter Property="Background" Value="ForestGreen"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding BackupPlan}" Value="N/A">
+                            <Setter Property="Background" Value="LightGray"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBox.Style>
+        </TextBox>
+    </Grid>
+    <Button Content="Run" Grid.ColumnSpan="2" Grid.Row="13" HorizontalContentAlignment="Center" HorizontalAlignment="Center" Height="24" Width="100" Margin="10" Command="{Binding RunCommand}"/>
+
+</StackPanel>
         </Border>
     </Grid>
 </UserControl>
