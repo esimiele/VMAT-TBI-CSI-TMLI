@@ -1,9 +1,5 @@
 ﻿using AutoPlannerHelpers.Models;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AutoPlannerHelpers.PlanTemplateModels
 {
@@ -14,6 +10,7 @@ namespace AutoPlannerHelpers.PlanTemplateModels
         public double InitialRxDosePerFx { get; set; } = 0.1;
         public int InitialRxNumberOfFractions { get; set; } = 1;
         public List<OptimizationConstraintModel> InitialOptimizationConstraints { get; set; } = new List<OptimizationConstraintModel>();
+        public List<TSRingStructureModel> Rings { get; set; } = new List<TSRingStructureModel>();
         #endregion
 
         /// <summary>

@@ -216,8 +216,9 @@ namespace TMLIAutoPlanner.ViewModels
 
         public void InitializeUI()
         {
-            _structureIdsPostUnion = StructureTuningHelper.GenerateStructureIdListPostUnion();
+            //_structureIdsPostUnion = StructureTuningHelper.GenerateStructureIdListPostUnion();
 
+            _structureIdsPostUnion = new List<string> { "PTV_Body", "PTV_TMLI"};
             _stitcherViewModel = new CTStitcherViewModel();
             StitchCT = new CTStitcherView { DataContext = _stitcherViewModel };
 
@@ -230,7 +231,7 @@ namespace TMLIAutoPlanner.ViewModels
             TSGeneration = new TSGenerationView { DataContext = _tsGenerationVM };
             StructureTuningTabBackground = System.Windows.Media.Brushes.LightGray;
 
-            _ringGenerationVM = new RingGenerationViewModel();
+            _ringGenerationVM = new RingGenerationViewModel(_structureIdsPostUnion);
             RingGeneration = new RingGenerationView { DataContext = _ringGenerationVM };
 
             NotifyGenerateManipulateTuningStructuresCommand = new DelegateCommand(PerformTSStructureGenerationManipulation);
@@ -312,14 +313,15 @@ namespace TMLIAutoPlanner.ViewModels
         {
             List<RequestedTSStructureModel> tsGeneration = _tsGenerationVM.RequestedTuningStructures.ToList();
             List<RequestedTSManipulationModel> tsManipulations = _tsManipulationVM.RequestedTSManipulations.ToList();
+            List<TSRingStructureModel> rings = _ringGenerationVM.RequestedRingStructures.ToList();
             TSGenerationManipulation_TMLI generateTS = new TSGenerationManipulation_TMLI(tsGeneration,
                                                                                        tsManipulations,
+                                                                                       rings,
                                                                                        _prescriptions);
 
             EclipseContext.GetInstance().Patient.BeginModifications();
             bool failed = generateTS.Execute();
             Logger.GetInstance().AppendLogOutput("TS Generation and manipulation output:", generateTS.GetLogOutput());
-
             if (failed) return;
 
             //does the structure sparing list need to be updated? This occurs when structures the user elected to spare with option of 'Mean Dose < Rx Dose' are high resolution. Since Eclipse can't perform
@@ -333,6 +335,7 @@ namespace TMLIAutoPlanner.ViewModels
             _planIsocenters = generateTS.PlanIsocentersList;
 
             _beamPlacementVM.PopulatePlanIsocenterList(_planIsocenters);
+            UpdateOptimizationConstraintsWithRings(rings);
             UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets);
 
             StructureTuningTabBackground = System.Windows.Media.Brushes.ForestGreen;
@@ -362,6 +365,20 @@ namespace TMLIAutoPlanner.ViewModels
                         {
                             _selectedTemplate.InitialOptimizationConstraints.First(x => string.Equals(x.StructureId, target.TargetId)).StructureId = target.TsTargetId;
                         }
+                    }
+                }
+            }
+        }
+
+        public void UpdateOptimizationConstraintsWithRings(List<TSRingStructureModel> rings)
+        {
+            if (!ReferenceEquals(_selectedTemplate, null))
+            {
+                foreach (TSRingStructureModel itr in rings)
+                {
+                    if (_prescriptions.Any(x => string.Equals(x.TargetId, itr.TargetId)))
+                    {
+                        _selectedTemplate.InitialOptimizationConstraints.Insert(0, new OptimizationConstraintModel(itr.RingId, OptimizationObjectiveType.Upper, itr.DoseLevel, Units.cGy, 0.0, 80));
                     }
                 }
             }
@@ -517,6 +534,7 @@ namespace TMLIAutoPlanner.ViewModels
             NumberOfFractions = SelectedTemplate.InitialRxNumberOfFractions;
             _setTargetsVM.AutoPlanTemplateSelectionChaged(_selectedTemplate);
             _tsGenerationVM.AutoPlanTemplateSelectionChaged(_selectedTemplate);
+            _ringGenerationVM.AutoPlanTemplateSelectionChaged(_selectedTemplate);
             _tsManipulationVM.AutoPlanTemplateSelectionChaged(_selectedTemplate);
         }
 
@@ -531,7 +549,7 @@ namespace TMLIAutoPlanner.ViewModels
             int count = 1;
             try
             {
-                foreach (string itr in Directory.GetFiles(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\templates\\TBI\\", "*.ini").OrderBy(x => x))
+                foreach (string itr in Directory.GetFiles(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\templates\\TMLI\\", "*.ini").OrderBy(x => x))
                 {
                     PlanTemplates.Add(ConfigurationHelper.ReadTMLITemplatePlan(itr, count++));
                 }
@@ -577,10 +595,6 @@ namespace TMLIAutoPlanner.ViewModels
                 sb.Append($"{TMLIAutoPlannerSettings.CollimatorRotations.ElementAt(i):0.0}");
                 if (i != TMLIAutoPlannerSettings.CollimatorRotations.Length - 1) sb.Append(", ");
             }
-            sb.AppendLine("");
-            sb.AppendLine($"Include flash by default: {TMLIAutoPlannerSettings.UseFlash}");
-            sb.AppendLine($"Flash margin: {TMLIAutoPlannerSettings.FlashMarginInCM} cm");
-            sb.AppendLine($"Target inner margin: {TMLIAutoPlannerSettings.PTVInnerMarginFromBodyInCM} cm");
 
             sb.AppendLine("");
             sb.AppendLine("Field jaw position (cm) order: ");

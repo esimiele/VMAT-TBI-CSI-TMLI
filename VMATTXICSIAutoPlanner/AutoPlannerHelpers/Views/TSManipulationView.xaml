@@ -160,7 +160,7 @@
                                         <ColumnDefinition Width="0.75*"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <ComboBox Grid.Column="0" HorizontalContentAlignment="Center" ItemsSource="{Binding Path=DataContext.StructureIds, ElementName=TSManipulationSP}" SelectedItem="{Binding StructureId}" Margin="1"/>
+                                    <ComboBox Grid.Column="0" HorizontalContentAlignment="Center" ItemsSource="{Binding Path=DataContext.StructureIdsPostUnion, ElementName=TSManipulationSP}" SelectedItem="{Binding StructureId}" Margin="1"/>
                                     <ComboBox Grid.Column="1" HorizontalContentAlignment="Center" SelectedItem="{Binding ManipulationType}" ItemsSource="{Binding Source={local:EnumBindingSource {x:Type enum:TSManipulationType}}}" Margin="1"/>
                                     <TextBox Grid.Column="2" HorizontalContentAlignment="Center" Text="{Binding MarginInCM}" Margin="1"/>
                                     <Button Content="Clear" Grid.Column="3" Command="{Binding Path=DataContext.ClearRowCommand, ElementName=TSManipulationSP}" CommandParameter="{Binding}" Width="90" Margin="1"/>

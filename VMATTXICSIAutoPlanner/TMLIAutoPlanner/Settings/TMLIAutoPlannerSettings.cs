@@ -6,10 +6,7 @@ namespace TMLIAutoPlanner.Settings
     internal class TMLIAutoPlannerSettings
     {
         internal static bool CloseProgressWindowOnFinish { get; set; } = true;
-        internal static string CourseId { get; set; } = "VMAT TBI";
-        internal static double PTVInnerMarginFromBodyInCM { get; set; } = 0.3;
-        internal static bool UseFlash { get; set; } = true;
-        internal static double FlashMarginInCM { get; set; } = 0.5;
+        internal static string CourseId { get; set; } = "VMAT TMLI";
         internal static bool CheckTTCollision { get; set; } = true;
         internal static bool ContourFieldOverlap { get; set; } = true;
         internal static double ContourFieldOverlapMarginInCM { get; set; } = 1.0;

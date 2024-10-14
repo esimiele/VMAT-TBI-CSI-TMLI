@@ -7,8 +7,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using VMS.TPS.Common.Model.Types;
 
@@ -260,6 +258,7 @@ namespace AutoPlannerHelpers.Helpers
                             //preparation
                             List<RequestedTSManipulationModel> TSManipulation_temp = new List<RequestedTSManipulationModel> { };
                             List<RequestedTSStructureModel> TSstructures_temp = new List<RequestedTSStructureModel> { };
+                            List<TSRingStructureModel> createRings_temp = new List<TSRingStructureModel> { };
                             List<OptimizationConstraintModel> initOptConst_temp = new List<OptimizationConstraintModel> { };
                             List<PlanTargetsModel> targets_temp = new List<PlanTargetsModel> { };
                             //optimization loop
@@ -287,6 +286,7 @@ namespace AutoPlannerHelpers.Helpers
                                     }
                                     else if (line.Contains("add TS manipulation")) TSManipulation_temp.Add(ParseTSManipulation(line));
                                     else if (line.Contains("add opt constraint")) initOptConst_temp.Add(ParseOptimizationConstraint(line));
+                                    else if (line.Contains("create ring")) createRings_temp.Add(ParseCreateRing(line));
                                     else if (line.Contains("create TS")) TSstructures_temp.Add(ParseCreateTS(line));
                                     else if (line.Contains("add target")) targets_temp.Add(ParseTargets(line));
                                     else if (line.Contains("add optimization TS structure")) requestedTSstructures_temp.Add(ParseOptimizationTSstructure(line));
@@ -297,6 +297,7 @@ namespace AutoPlannerHelpers.Helpers
 
                             if (TSManipulation_temp.Any()) tempTemplate.TSManipulations = new List<RequestedTSManipulationModel>(TSManipulation_temp);
                             if (TSstructures_temp.Any()) tempTemplate.CreateTSStructures = TSstructures_temp;
+                            if (createRings_temp.Any()) tempTemplate.Rings = new List<TSRingStructureModel>(createRings_temp);
                             if (initOptConst_temp.Any()) tempTemplate.InitialOptimizationConstraints = new List<OptimizationConstraintModel>(initOptConst_temp);
                             if (targets_temp.Any()) tempTemplate.PlanTargets = new List<PlanTargetsModel>(TargetsHelper.GroupTargetsByPlanIdAndOrderByTargetRx(targets_temp));
                             if (planObj_temp.Any()) tempTemplate.PlanObjectives = new List<PlanObjectiveModel>(planObj_temp);

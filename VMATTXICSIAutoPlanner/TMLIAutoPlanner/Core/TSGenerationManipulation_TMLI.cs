@@ -19,11 +19,16 @@ namespace TMLIAutoPlanner.Core
         //"ORGAN", "PTV", "TREATED_VOLUME", "SUPPORT", "FIXATION", "CONTROL", and "DOSE_REGION". 
         private List<PrescriptionModel> prescriptions;
         private List<RequestedTSStructureModel> TS_structures;
+        private List<TSRingStructureModel> _requestedRings;
         #endregion
 
-        internal TSGenerationManipulation_TMLI(List<RequestedTSStructureModel> ts, List<RequestedTSManipulationModel> manipulations, List<PrescriptionModel> presc)
+        internal TSGenerationManipulation_TMLI(List<RequestedTSStructureModel> ts, 
+                                               List<RequestedTSManipulationModel> manipulations, 
+                                               List<TSRingStructureModel> rings,
+                                               List<PrescriptionModel> presc)
         {
             TS_structures = new List<RequestedTSStructureModel>(ts);
+            _requestedRings = new List<TSRingStructureModel>(rings);
             prescriptions = new List<PrescriptionModel>(presc);
         }
     }
