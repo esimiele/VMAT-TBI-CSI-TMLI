@@ -192,7 +192,7 @@
                         <RowDefinition Height="3*"/>
                     </Grid.RowDefinitions>
                     <Label Content="Plan Templates" Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,10,0"></Label>
-                    <ListBox x:Name="templateList" ItemsSource="{Binding PlanTemplates}" Grid.Row="1" Width="300" HorizontalContentAlignment="Center" DisplayMemberPath="TemplateName"/>
+                    <ListBox ItemsSource="{Binding PlanTemplates}" SelectedItem="{Binding SelectedTemplate}" Grid.Row="1" Width="300" HorizontalContentAlignment="Center" DisplayMemberPath="TemplateName"/>
                 </Grid>
 
 
@@ -247,20 +247,7 @@
                     </TabItem>
                     <TabItem Header="Specify Targets" BorderThickness="0,1,1,0" x:Name="targetsTabItem">
                         <TabControl TabStripPlacement="Top" Background="DarkGray">
-                            <TabItem x:Name="PrelimTargetsTabItem" Header="Prep for Targets" Width="294" BorderThickness="1,1,1,1">
-                                <Border Margin="0" BorderThickness="1,0,0,0" BorderBrush="Black">
-                                    <StackPanel HorizontalAlignment="Center" Margin="0">
-                                        <Grid Width="575" HorizontalAlignment="Center" Margin="0">
-                                            <Label Content="Prepare Structure Set for Target Structures" FontSize="20" FontStyle="Normal" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,0,0,0"></Label>
-                                            <Button Content="?" Width="20" Height="24" HorizontalAlignment="Right"/>
-                                        </Grid>
-                                        <ScrollViewer x:Name="PrelimTargetGenerationScroller" Height="360" Width="585" Margin="0,5,0,0" HorizontalAlignment="Center" VerticalAlignment="Bottom" Style="{StaticResource ScrollViewerStyle}">
-                                            <StackPanel x:Name="PrelimTargetGenerationSP" Margin="5">
-                                            </StackPanel>
-                                        </ScrollViewer>
-                                        <Button Content="Run Prep" FontWeight="Bold" Width="120" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="10"></Button>
-                                    </StackPanel>
-                                </Border>
+                            <TabItem Content="{Binding PrepForTargets}" Background="{Binding PrepForTargetsBackground, FallbackValue=LightGray}" Header="Prep for Targets" Width="294" BorderThickness="1,1,1,1">
                             </TabItem>
                             <TabItem Header="Set Targets" Width="294" BorderThickness="0,1,1,1" Content="{Binding SpecifyTargets}">
                             </TabItem>

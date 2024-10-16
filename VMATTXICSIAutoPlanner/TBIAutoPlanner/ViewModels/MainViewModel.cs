@@ -591,9 +591,9 @@ namespace TBIAutoPlanner.ViewModels
 
             DosePerFraction = SelectedTemplate.InitialRxDosePerFx;
             NumberOfFractions = SelectedTemplate.InitialRxNumberOfFractions;
-            _setTargetsVM.AutoPlanTemplateSelectionChaged(_selectedTemplate);
-            _tsGenerationVM.AutoPlanTemplateSelectionChaged(_selectedTemplate);
-            _tsManipulationVM.AutoPlanTemplateSelectionChaged(_selectedTemplate);
+            _setTargetsVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
+            _tsGenerationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
+            _tsManipulationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
         }
 
         private void UpdateUseFlash()
@@ -605,7 +605,6 @@ namespace TBIAutoPlanner.ViewModels
         #region script configuration
         private void LoadScriptConfigurationSettings(string file)
         {
-            //encapsulate everything in a try-catch statment so I can be a bit lazier about data checking of the configuration settings (i.e., if a parameter or value is bad the script won't crash)
             try
             {
                 using (StreamReader reader = new StreamReader(file))
@@ -615,8 +614,6 @@ namespace TBIAutoPlanner.ViewModels
                     List<string> linac_temp = new List<string> { };
                     List<string> energy_temp = new List<string> { };
                     List<VRect<double>> jawPos_temp = new List<VRect<double>> { };
-                    List<RequestedTSManipulationModel> defaultTSManipulations_temp = new List<RequestedTSManipulationModel> { };
-                    List<RequestedTSStructureModel> defaultTSstructures_temp = new List<RequestedTSStructureModel> { };
 
                     while ((line = reader.ReadLine()) != null)
                     {
@@ -686,8 +683,6 @@ namespace TBIAutoPlanner.ViewModels
                                 else if (parameter == "contour field overlap") { if (value != "") TBIAutoPlannerSettings.ContourFieldOverlap = bool.Parse(value); }
                                 else if (parameter == "contour field overlap margin") { if (value != "") TBIAutoPlannerSettings.ContourFieldOverlapMarginInCM = double.Parse(value); }
                             }
-                            else if (line.Contains("add default TS manipulation")) defaultTSManipulations_temp.Add(ConfigurationHelper.ParseTSManipulation(line));
-                            else if (line.Contains("create default TS")) defaultTSstructures_temp.Add(ConfigurationHelper.ParseCreateTS(line));
                             else if (line.Contains("add linac"))
                             {
                                 //parse the linacs that should be added. One entry per line

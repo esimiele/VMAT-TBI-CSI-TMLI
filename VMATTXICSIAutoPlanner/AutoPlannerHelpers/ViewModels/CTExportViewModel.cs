@@ -11,17 +11,24 @@ namespace AutoPlannerHelpers.ViewModels
     {
         public ObservableCollectionPropertyNotify<ExportCTModel> CTImageList { get; set; }
         #region properties
+        public ExportCTModel SelectedCTImage { get; private set; } = null;
         #endregion
 
         #region commands
         public DelegateCommand ExportCTCommand { get; set; }
         public DelegateCommand ShowExportCTInfoCommand { get; set; }
+        public DelegateCommand KeyboardTestCommand { get; set; }
         public DelegateCommand<ExportCTModel> CTImageSelectionChangedCommand { get; set; }
         #endregion
 
-        public CTExportViewModel(List<ExportCTModel> ctImages)
+        #region fields
+        private DelegateCommand _notifyMainVMExportCT;
+        #endregion
+
+        public CTExportViewModel(List<ExportCTModel> ctImages, DelegateCommand notifyMainVM)
         {
             CTImageList = new ObservableCollectionPropertyNotify<ExportCTModel> { };
+            _notifyMainVMExportCT = notifyMainVM;
             foreach(ExportCTModel itr in ctImages) CTImageList.Add(itr);
             ShowExportCTInfoCommand = new DelegateCommand(ShowExportCTInfo);
             CTImageSelectionChangedCommand = new DelegateCommand<ExportCTModel>(CTImageSelectionChanged);
@@ -47,7 +54,9 @@ namespace AutoPlannerHelpers.ViewModels
 
         public void ExportCT()
         {
-
+            if (!CTImageList.Any(x => x.SelectedForExport)) return;
+            SelectedCTImage = CTImageList.FirstOrDefault(x => x.SelectedForExport);
+            _notifyMainVMExportCT.Execute();
         }
     }
 }

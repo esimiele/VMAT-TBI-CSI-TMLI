@@ -53,7 +53,7 @@ namespace AutoPlannerHelpers.ViewModels
             foreach(RequestedTSManipulationModel itr in tsManipulations) RequestedTSManipulations.Add(itr);
         }
 
-        public void AutoPlanTemplateSelectionChaged(AutoPlanTemplateBase template)
+        public void AutoPlanTemplateSelectionChanged(AutoPlanTemplateBase template)
         {
             if (ReferenceEquals(template, null)) return;
             _selectedTemplate = template;

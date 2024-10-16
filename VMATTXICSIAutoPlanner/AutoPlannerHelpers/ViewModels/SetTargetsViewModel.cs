@@ -93,7 +93,7 @@ namespace AutoPlannerHelpers.ViewModels
             }
         }
 
-        public void AutoPlanTemplateSelectionChaged(AutoPlanTemplateBase template)
+        public void AutoPlanTemplateSelectionChanged(AutoPlanTemplateBase template)
         {
             if(ReferenceEquals(template, null)) return;
             _selectedTemplate = template;

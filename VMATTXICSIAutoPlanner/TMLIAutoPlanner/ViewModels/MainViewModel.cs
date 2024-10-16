@@ -532,16 +532,15 @@ namespace TMLIAutoPlanner.ViewModels
 
             DosePerFraction = SelectedTemplate.InitialRxDosePerFx;
             NumberOfFractions = SelectedTemplate.InitialRxNumberOfFractions;
-            _setTargetsVM.AutoPlanTemplateSelectionChaged(_selectedTemplate);
-            _tsGenerationVM.AutoPlanTemplateSelectionChaged(_selectedTemplate);
-            _ringGenerationVM.AutoPlanTemplateSelectionChaged(_selectedTemplate);
-            _tsManipulationVM.AutoPlanTemplateSelectionChaged(_selectedTemplate);
+            _setTargetsVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
+            _tsGenerationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
+            _ringGenerationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
+            _tsManipulationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
         }
 
         #region script configuration
         private void LoadScriptConfigurationSettings(string file)
         {
-            //encapsulate everything in a try-catch statment so I can be a bit lazier about data checking of the configuration settings (i.e., if a parameter or value is bad the script won't crash)
             try
             {
                 using (StreamReader reader = new StreamReader(file))

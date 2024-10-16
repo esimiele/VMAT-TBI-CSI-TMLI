@@ -1,10 +1,6 @@
 ﻿using AutoPlannerHelpers.Models;
 using Prism.Commands;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using Prism.Mvvm;
 using AutoPlannerHelpers.PlanTemplateModels;
@@ -49,7 +45,7 @@ namespace AutoPlannerHelpers.ViewModels
             MessageBox.Show(sb.ToString());
         }
 
-        public void AutoPlanTemplateSelectionChaged(AutoPlanTemplateBase template)
+        public void AutoPlanTemplateSelectionChanged(AutoPlanTemplateBase template)
         {
             if (ReferenceEquals(template, null)) return;
             _selectedTemplate = template;
