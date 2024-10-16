@@ -46,6 +46,10 @@ namespace TBIAutoPlanner.ViewModels
         private System.Windows.Media.SolidColorBrush _specifyTargetsTabBackground;
         private System.Windows.Media.SolidColorBrush _structureTuningTabBackground;
         private System.Windows.Media.SolidColorBrush _tsManipulationTabBackground;
+        private System.Windows.Media.SolidColorBrush _beamPlacementTabBackground;
+        private System.Windows.Media.SolidColorBrush _optimizationSetupTabBackground;
+        private Visibility _stitchCTTabVisible;
+        private int _initialTabSelected;
 
         public string PatientMRN
         {
@@ -125,20 +129,28 @@ namespace TBIAutoPlanner.ViewModels
             set { SetProperty(ref _tsManipulationTabBackground, value); }
         }
 
-        private System.Windows.Media.SolidColorBrush _beamPlacementTabBackground;
-
         public System.Windows.Media.SolidColorBrush BeamPlacementTabBackground
         {
             get { return _beamPlacementTabBackground; }
             set { SetProperty(ref _beamPlacementTabBackground, value); }
         }
 
-        private System.Windows.Media.SolidColorBrush _optimizationSetupTabBackground;
-
         public System.Windows.Media.SolidColorBrush OptimizationSetupTabBackground
         {
             get { return _optimizationSetupTabBackground; }
             set { SetProperty(ref _optimizationSetupTabBackground, value); }
+        }
+
+        public Visibility StitchCTTabVisible
+        {
+            get { return _stitchCTTabVisible; }
+            set { SetProperty(ref _stitchCTTabVisible, value); }
+        }
+
+        public int InitialTabSelected
+        {
+            get { return _initialTabSelected; }
+            set { SetProperty(ref _initialTabSelected, value); }
         }
 
         #endregion
@@ -236,8 +248,9 @@ namespace TBIAutoPlanner.ViewModels
 
         public void Initialize()
         {
-            FlashMarginVisible = Visibility.Hidden;
-            _structureIdsPostUnion = StructureTuningHelper.GenerateStructureIdListPostUnion();
+            string configurationFile = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\configuration\\VMAT_TBI_config.ini";
+            LoadScriptConfigurationSettings(configurationFile);
+            InitializeUIWithConfigurationSettings();
 
             _stitcherViewModel = new CTStitcherViewModel();
             StitchCT = new CTStitcherView { DataContext = _stitcherViewModel };
@@ -245,26 +258,21 @@ namespace TBIAutoPlanner.ViewModels
             NotifySetTargetsCommand = new DelegateCommand(SetTargets);
             _setTargetsVM = new SetTargetsViewModel(NotifySetTargetsCommand);
             SpecifyTargets = new SpecifyTargetsView { DataContext = _setTargetsVM };
-            SpecifyTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
 
             _tsGenerationVM = new TSGenerationViewModel();
             TSGeneration = new TSGenerationView { DataContext = _tsGenerationVM };
-            StructureTuningTabBackground = System.Windows.Media.Brushes.LightGray;
 
             NotifyGenerateManipulateTuningStructuresCommand = new DelegateCommand(PerformTSStructureGenerationManipulation);
             _tsManipulationVM = new TSManipulationViewModel(NotifyGenerateManipulateTuningStructuresCommand, _structureIdsPostUnion);
             TSManipulation = new TSManipulationView { DataContext = _tsManipulationVM };
-            TSManipulationTabBackground = System.Windows.Media.Brushes.LightGray;
 
             NotifyBeamsPlacedCommand = new DelegateCommand(GeneratePlansAndPlaceBeams);
             _beamPlacementVM = new BeamPlacementViewModel(NotifyBeamsPlacedCommand, PlanType.VMAT_TBI, TBIAutoPlannerSettings.AvailableLinacs, TBIAutoPlannerSettings.AvailableEnergies);
             BeamPlacement = new BeamPlacementView { DataContext = _beamPlacementVM };
-            BeamPlacementTabBackground = System.Windows.Media.Brushes.LightGray;
 
             NotifyAssignOptimizationConstraintsCommand = new DelegateCommand(AssignOptimizationConstraints);
             _optimizationSetupVM = new OptimizationSetupViewModel(_structureIdsPostUnion, NotifyAssignOptimizationConstraintsCommand);
             OptimizationSetup = new OptimizationSetupView { DataContext = _optimizationSetupVM };
-            OptimizationSetupTabBackground = System.Windows.Media.Brushes.LightGray;
 
             NotifyPreparePlanForTreatmentCommand = new DelegateCommand(PreparePlanForTreatment);
             _planPrepVM = new PlanPreparationViewModel(NotifyPreparePlanForTreatmentCommand);
@@ -279,6 +287,35 @@ namespace TBIAutoPlanner.ViewModels
 
             ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
             WindowClosingCommand = new DelegateCommand(WindowClosing);
+        }
+
+        private void InitializeUIWithConfigurationSettings()
+        {
+            if (!TBIAutoPlannerSettings.ShowStitchCTTab)
+            {
+                StitchCTTabVisible = Visibility.Collapsed;
+                InitialTabSelected = 1;
+            }
+            PTVMarginFromBody = TBIAutoPlannerSettings.PTVInnerMarginFromBodyInCM;
+            UseFlash = TBIAutoPlannerSettings.UseFlash;
+            if(!TBIAutoPlannerSettings.UseFlash) FlashMarginVisible = Visibility.Hidden;
+            FlashMargin = TBIAutoPlannerSettings.FlashMarginInCM;
+
+            if (EclipseContext.GetInstance().IsInitialized && ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
+            {
+                _structureIdsPostUnion = StructureTuningHelper.GenerateStructureIdListPostUnion(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id).ToList());
+            }
+            else
+            {
+                _structureIdsPostUnion = new List<string> {"lung_l", "lung_r", "kidney_l", "kidney_r", "PTV^Body" };
+            }
+
+            SpecifyTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
+            StructureTuningTabBackground = System.Windows.Media.Brushes.LightGray;
+            TSManipulationTabBackground = System.Windows.Media.Brushes.LightGray;
+            BeamPlacementTabBackground = System.Windows.Media.Brushes.LightGray;
+            OptimizationSetupTabBackground = System.Windows.Media.Brushes.LightGray;
+
         }
 
         #region information and help guides
@@ -332,7 +369,10 @@ namespace TBIAutoPlanner.ViewModels
             List<RequestedTSManipulationModel> tsManipulations = _tsManipulationVM.RequestedTSManipulations.ToList();
             TSGenerationManipulation_TBI generateTS = new TSGenerationManipulation_TBI(tsGeneration, 
                                                                                        tsManipulations, 
-                                                                                       _prescriptions);
+                                                                                       _prescriptions,
+                                                                                       UseFlash,
+                                                                                       FlashMargin,
+                                                                                       PTVMarginFromBody);
 
             EclipseContext.GetInstance().Patient.BeginModifications();
             bool failed = generateTS.Execute();
@@ -390,7 +430,12 @@ namespace TBIAutoPlanner.ViewModels
         private void GeneratePlansAndPlaceBeams()
         {
             _planIsocenters = _beamPlacementVM.PlanIsocenterList.ToList();
-            GeneratePlansAndPlaceBeams_TBI placeBeams = new GeneratePlansAndPlaceBeams_TBI();
+            GeneratePlansAndPlaceBeams_TBI placeBeams = new GeneratePlansAndPlaceBeams_TBI(_planIsocenters,
+                                                                                           _beamPlacementVM.SelectedLinac,
+                                                                                           _beamPlacementVM.SelectedEnergy,
+                                                                                           PTVMarginFromBody,
+                                                                                           _beamPlacementVM.ContourFieldOverlapChecked,
+                                                                                           _beamPlacementVM.FieldOverlapMargin);
             bool failed = placeBeams.Execute();
             Logger.GetInstance().AppendLogOutput("Generate plans and place beams output:", placeBeams.GetLogOutput());
             if (failed) return;
@@ -558,9 +603,126 @@ namespace TBIAutoPlanner.ViewModels
         }
 
         #region script configuration
-        private void LoadScriptConfigurationSettings()
+        private void LoadScriptConfigurationSettings(string file)
         {
+            //encapsulate everything in a try-catch statment so I can be a bit lazier about data checking of the configuration settings (i.e., if a parameter or value is bad the script won't crash)
+            try
+            {
+                using (StreamReader reader = new StreamReader(file))
+                {
+                    //setup temporary vectors to hold the parsed data
+                    string line;
+                    List<string> linac_temp = new List<string> { };
+                    List<string> energy_temp = new List<string> { };
+                    List<VRect<double>> jawPos_temp = new List<VRect<double>> { };
+                    List<RequestedTSManipulationModel> defaultTSManipulations_temp = new List<RequestedTSManipulationModel> { };
+                    List<RequestedTSStructureModel> defaultTSstructures_temp = new List<RequestedTSStructureModel> { };
 
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        //this line contains useful information (i.e., it is not a comment)
+                        if (!string.IsNullOrEmpty(line) && line.Substring(0, 1) != "%")
+                        {
+                            //useful info on this line in the format of parameter=value
+                            //parse parameter and value separately using '=' as the delimeter
+                            if (line.Contains("="))
+                            {
+                                //default configuration parameters
+                                string parameter = line.Substring(0, line.IndexOf("="));
+                                string value = line.Substring(line.IndexOf("=") + 1, line.Length - line.IndexOf("=") - 1);
+                                //check if it's a double value
+                                if (double.TryParse(value, out double result))
+                                {
+                                    if (parameter == "default flash margin") TBIAutoPlannerSettings.FlashMarginInCM = result;
+                                    else if (parameter == "default target margin") TBIAutoPlannerSettings.PTVInnerMarginFromBodyInCM = result;
+                                }
+                                else if (parameter == "close progress windows on finish")
+                                {
+                                    if (!string.IsNullOrEmpty(value)) TBIAutoPlannerSettings.CloseProgressWindowOnFinish = bool.Parse(value);
+                                }
+                                else if (parameter == "beams per iso")
+                                {
+                                    //parse the default requested number of beams per isocenter
+                                    line = ConfigurationHelper.CropLine(line, "{");
+                                    List<int> b = new List<int> { };
+                                    //second character should not be the end brace (indicates the last element in the array)
+                                    while (line.Substring(1, 1) != "}")
+                                    {
+                                        b.Add(int.Parse(line.Substring(0, line.IndexOf(","))));
+                                        line = ConfigurationHelper.CropLine(line, ",");
+                                    }
+                                    b.Add(int.Parse(line.Substring(0, line.IndexOf("}"))));
+                                    TBIAutoPlannerSettings.BeamsPerIsocenter.Clear();
+                                    TBIAutoPlannerSettings.BeamsPerIsocenter.AddRange(b);
+                                }
+                                else if (parameter == "collimator rotations")
+                                {
+                                    //parse the default requested number of beams per isocenter
+                                    line = ConfigurationHelper.CropLine(line, "{");
+                                    List<double> c = new List<double> { };
+                                    //second character should not be the end brace (indicates the last element in the array)
+                                    while (line.Contains(","))
+                                    {
+                                        c.Add(double.Parse(line.Substring(0, line.IndexOf(","))));
+                                        line = ConfigurationHelper.CropLine(line, ",");
+                                    }
+                                    c.Add(double.Parse(line.Substring(0, line.IndexOf("}"))));
+                                    TBIAutoPlannerSettings.CollimatorRotations.Clear();
+                                    TBIAutoPlannerSettings.CollimatorRotations.AddRange(c);
+                                }
+                                else if (parameter == "check couch collision")
+                                {
+                                    if (!string.IsNullOrEmpty(value)) TBIAutoPlannerSettings.CheckTTCollision = bool.Parse(value);
+                                }
+                                else if (parameter == "show CT stitcher tab") TBIAutoPlannerSettings.ShowStitchCTTab = bool.Parse(value);
+                                else if (parameter == "course Id") TBIAutoPlannerSettings.CourseId = value;
+                                else if (parameter == "use GPU for dose calculation") TBIAutoPlannerSettings.UseGPUForDosecalculation = bool.Parse(value);
+                                else if (parameter == "use GPU for optimization") TBIAutoPlannerSettings.UseGPUForOptimization = bool.Parse(value);
+                                else if (parameter == "MR level restart") TBIAutoPlannerSettings.MRLevelRestart = value;
+                                //other parameters that should be updated
+                                else if (parameter == "use flash by default") TBIAutoPlannerSettings.UseFlash = bool.Parse(value);
+                                else if (parameter == "calculation model") { if (value != "") TBIAutoPlannerSettings.DoseCalculationAlgorithm = value; }
+                                else if (parameter == "optimization model") { if (value != "") TBIAutoPlannerSettings.OptimizationAlorithm = value; }
+                                else if (parameter == "contour field overlap") { if (value != "") TBIAutoPlannerSettings.ContourFieldOverlap = bool.Parse(value); }
+                                else if (parameter == "contour field overlap margin") { if (value != "") TBIAutoPlannerSettings.ContourFieldOverlapMarginInCM = double.Parse(value); }
+                            }
+                            else if (line.Contains("add default TS manipulation")) defaultTSManipulations_temp.Add(ConfigurationHelper.ParseTSManipulation(line));
+                            else if (line.Contains("create default TS")) defaultTSstructures_temp.Add(ConfigurationHelper.ParseCreateTS(line));
+                            else if (line.Contains("add linac"))
+                            {
+                                //parse the linacs that should be added. One entry per line
+                                line = ConfigurationHelper.CropLine(line, "{");
+                                TBIAutoPlannerSettings.AvailableLinacs.Add(line.Substring(0, line.IndexOf("}")));
+                            }
+                            else if (line.Contains("add beam energy"))
+                            {
+                                //parse the photon energies that should be added. One entry per line
+                                line = ConfigurationHelper.CropLine(line, "{");
+                                TBIAutoPlannerSettings.AvailableEnergies.Add(line.Substring(0, line.IndexOf("}")));
+                            }
+                            else if (line.Contains("add jaw position"))
+                            {
+                                //parse the default requested number of beams per isocenter
+                                VRect<double> parsedPositions = ConfigurationHelper.ParseJawPositions(line);
+                                if (parsedPositions.X1 != parsedPositions.X2) jawPos_temp.Add(parsedPositions);
+                            }
+                        }
+                    }
+                    //anything that is an array needs to be updated AFTER the while loop.
+                    if (jawPos_temp.Count == 4)
+                    {
+                        TBIAutoPlannerSettings.JawPositions.Clear();
+                        TBIAutoPlannerSettings.JawPositions = new List<VRect<double>>(jawPos_temp);
+                    }
+                }
+            }
+            //let the user know if the data parsing failed
+            catch (Exception e)
+            {
+                Logger.GetInstance().LogError($"Error could not load configuration file because: {e.Message}\n\nAssuming default parameters");
+                Logger.GetInstance().LogError(e.StackTrace, true);
+                return;
+            }
         }
         
         private bool LoadPlanTemplates()
@@ -602,17 +764,17 @@ namespace TBIAutoPlanner.ViewModels
             sb.AppendLine("Available photon energies:");
             foreach (string e in TBIAutoPlannerSettings.AvailableEnergies) sb.AppendLine($"    {e}");
             sb.AppendLine($"Beams per isocenter: ");
-            for (int i = 0; i < TBIAutoPlannerSettings.BeamsPerIsocenter.Length; i++)
+            for (int i = 0; i < TBIAutoPlannerSettings.BeamsPerIsocenter.Count; i++)
             {
                 sb.Append($"{TBIAutoPlannerSettings.BeamsPerIsocenter.ElementAt(i)}");
-                if (i != TBIAutoPlannerSettings.BeamsPerIsocenter.Length - 1) sb.Append(", ");
+                if (i != TBIAutoPlannerSettings.BeamsPerIsocenter.Count - 1) sb.Append(", ");
             }
             sb.AppendLine("");
             sb.AppendLine("Collimator rotation (deg) order: ");
-            for (int i = 0; i < TBIAutoPlannerSettings.CollimatorRotations.Length; i++)
+            for (int i = 0; i < TBIAutoPlannerSettings.CollimatorRotations.Count; i++)
             {
                 sb.Append($"{TBIAutoPlannerSettings.CollimatorRotations.ElementAt(i):0.0}");
-                if (i != TBIAutoPlannerSettings.CollimatorRotations.Length - 1) sb.Append(", ");
+                if (i != TBIAutoPlannerSettings.CollimatorRotations.Count - 1) sb.Append(", ");
             }
             sb.AppendLine("");
             sb.AppendLine($"Include flash by default: {TBIAutoPlannerSettings.UseFlash}");

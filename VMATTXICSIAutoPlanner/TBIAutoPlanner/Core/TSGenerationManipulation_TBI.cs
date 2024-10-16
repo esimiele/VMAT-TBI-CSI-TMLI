@@ -31,15 +31,25 @@ namespace TBIAutoPlanner.Core
         //"ORGAN", "PTV", "TREATED_VOLUME", "SUPPORT", "FIXATION", "CONTROL", and "DOSE_REGION". 
         private List<PrescriptionModel> prescriptions;
         private List<RequestedTSStructureModel> TS_structures;
+        private bool _useFlash;
+        private double _flashMargin;
+        private double _ptvMarginFromBody;
         #endregion
 
         internal TSGenerationManipulation_TBI(List<RequestedTSStructureModel> ts,
                                               List<RequestedTSManipulationModel> list,
-                                              List<PrescriptionModel> presc) 
+                                              List<PrescriptionModel> presc,
+                                              bool flash,
+                                              double flashMargin,
+                                              double ptvMargin) 
         {
             prescriptions = new List<PrescriptionModel>(presc);
             TS_structures = new List<RequestedTSStructureModel>(ts);
             TSManipulationList = new List<RequestedTSManipulationModel>(list);
+            _useFlash = flash;
+            _flashMargin = flashMargin;
+            _ptvMarginFromBody = ptvMargin;
+            SetCloseOnFinish(TBIAutoPlannerSettings.CloseProgressWindowOnFinish, 3000);
         }
 
 
@@ -59,7 +69,7 @@ namespace TBIAutoPlanner.Core
                 if (TSManipulationList.Any()) if (CheckHighResolution()) return true;
                 if (CreateTSStructures()) return true;
                 if (PerformTSStructureManipulation()) return true;
-                if (TBIAutoPlannerSettings.UseFlash) if (CreateFlash()) return true;
+                if (_useFlash) if (CreateFlash()) return true;
                 if (CleanUpDummyBox()) return true;
                 if (CalculateNumIsos()) return true;
                 UpdateUILabel("Finished!");
@@ -336,13 +346,13 @@ namespace TBIAutoPlanner.Core
         private bool GeneratePTVFromBody(Structure addedStructure)
         {
             if (CopyBodyStructureOnToStructure(addedStructure)) return true;
-            (bool fail, StringBuilder errorMessage) = ContourHelper.CropStructureFromBody(addedStructure, EclipseContext.GetInstance().StructureSet, -TBIAutoPlannerSettings.PTVInnerMarginFromBodyInCM);
+            (bool fail, StringBuilder errorMessage) = ContourHelper.CropStructureFromBody(addedStructure, EclipseContext.GetInstance().StructureSet, -_ptvMarginFromBody);
             if (fail)
             {
                 ProvideUIUpdate(errorMessage.ToString());
                 return true;
             }
-            ProvideUIUpdate($"Cropped {addedStructure.Id} from body with -{TBIAutoPlannerSettings.PTVInnerMarginFromBodyInCM} cm margin");
+            ProvideUIUpdate($"Cropped {addedStructure.Id} from body with -{_ptvMarginFromBody} cm margin");
             return false;
         }
         #endregion
@@ -562,12 +572,12 @@ namespace TBIAutoPlanner.Core
             //8 -14-2020, an asymmetric margin is used because I might intend to change this code so flash is added in all directions except for sup/inf/post
             Structure body = StructureTuningHelper.GetStructureFromId("body", EclipseContext.GetInstance().StructureSet);
             bolusFlash.SegmentVolume = body.AsymmetricMargin(new AxisAlignedMargins(StructureMarginGeometry.Outer,
-                                                                                    TBIAutoPlannerSettings.FlashMarginInCM * 10.0,
-                                                                                    TBIAutoPlannerSettings.FlashMarginInCM * 10.0,
-                                                                                    TBIAutoPlannerSettings.FlashMarginInCM * 10.0,
-                                                                                    TBIAutoPlannerSettings.FlashMarginInCM * 10.0,
-                                                                                    TBIAutoPlannerSettings.FlashMarginInCM * 10.0,
-                                                                                    TBIAutoPlannerSettings.FlashMarginInCM * 10.0));
+                                                                                    _flashMargin * 10.0,
+                                                                                    _flashMargin * 10.0,
+                                                                                    _flashMargin * 10.0,
+                                                                                    _flashMargin * 10.0,
+                                                                                    _flashMargin * 10.0,
+                                                                                    _flashMargin * 10.0));
             return false;
         }
 

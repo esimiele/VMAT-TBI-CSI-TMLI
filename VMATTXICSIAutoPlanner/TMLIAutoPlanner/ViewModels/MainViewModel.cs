@@ -539,9 +539,120 @@ namespace TMLIAutoPlanner.ViewModels
         }
 
         #region script configuration
-        private void LoadScriptConfigurationSettings()
+        private void LoadScriptConfigurationSettings(string file)
         {
+            //encapsulate everything in a try-catch statment so I can be a bit lazier about data checking of the configuration settings (i.e., if a parameter or value is bad the script won't crash)
+            try
+            {
+                using (StreamReader reader = new StreamReader(file))
+                {
+                    //setup temporary vectors to hold the parsed data
+                    string line;
+                    List<string> linac_temp = new List<string> { };
+                    List<string> energy_temp = new List<string> { };
+                    List<VRect<double>> jawPos_temp = new List<VRect<double>> { };
+                    List<RequestedTSManipulationModel> defaultTSManipulations_temp = new List<RequestedTSManipulationModel> { };
+                    List<RequestedTSStructureModel> defaultTSstructures_temp = new List<RequestedTSStructureModel> { };
 
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        //this line contains useful information (i.e., it is not a comment)
+                        if (!string.IsNullOrEmpty(line) && line.Substring(0, 1) != "%")
+                        {
+                            //useful info on this line in the format of parameter=value
+                            //parse parameter and value separately using '=' as the delimeter
+                            if (line.Contains("="))
+                            {
+                                //default configuration parameters
+                                string parameter = line.Substring(0, line.IndexOf("="));
+                                string value = line.Substring(line.IndexOf("=") + 1, line.Length - line.IndexOf("=") - 1);
+                                //check if it's a double value
+                                if (parameter == "close progress windows on finish")
+                                {
+                                    if (!string.IsNullOrEmpty(value)) TMLIAutoPlannerSettings.CloseProgressWindowOnFinish = bool.Parse(value);
+                                }
+                                else if (parameter == "beams per iso")
+                                {
+                                    //parse the default requested number of beams per isocenter
+                                    line = ConfigurationHelper.CropLine(line, "{");
+                                    List<int> b = new List<int> { };
+                                    //second character should not be the end brace (indicates the last element in the array)
+                                    while (line.Substring(1, 1) != "}")
+                                    {
+                                        b.Add(int.Parse(line.Substring(0, line.IndexOf(","))));
+                                        line = ConfigurationHelper.CropLine(line, ",");
+                                    }
+                                    b.Add(int.Parse(line.Substring(0, line.IndexOf("}"))));
+                                    TMLIAutoPlannerSettings.BeamsPerIsocenter.Clear();
+                                    TMLIAutoPlannerSettings.BeamsPerIsocenter.AddRange(b);
+                                }
+                                else if (parameter == "collimator rotations")
+                                {
+                                    //parse the default requested number of beams per isocenter
+                                    line = ConfigurationHelper.CropLine(line, "{");
+                                    List<double> c = new List<double> { };
+                                    //second character should not be the end brace (indicates the last element in the array)
+                                    while (line.Contains(","))
+                                    {
+                                        c.Add(double.Parse(line.Substring(0, line.IndexOf(","))));
+                                        line = ConfigurationHelper.CropLine(line, ",");
+                                    }
+                                    c.Add(double.Parse(line.Substring(0, line.IndexOf("}"))));
+                                    TMLIAutoPlannerSettings.CollimatorRotations.Clear();
+                                    TMLIAutoPlannerSettings.CollimatorRotations.AddRange(c);
+                                }
+                                else if (parameter == "check couch collision")
+                                {
+                                    if (!string.IsNullOrEmpty(value)) TMLIAutoPlannerSettings.CheckTTCollision = bool.Parse(value);
+                                }
+                                else if (parameter == "show CT stitcher tab") TMLIAutoPlannerSettings.ShowStitchCTTab = bool.Parse(value);
+                                else if (parameter == "course Id") TMLIAutoPlannerSettings.CourseId = value;
+                                else if (parameter == "use GPU for dose calculation") TMLIAutoPlannerSettings.UseGPUForDosecalculation = bool.Parse(value);
+                                else if (parameter == "use GPU for optimization") TMLIAutoPlannerSettings.UseGPUForOptimization = bool.Parse(value);
+                                else if (parameter == "MR level restart") TMLIAutoPlannerSettings.MRLevelRestart = value;
+                                //other parameters that should be updated
+                                else if (parameter == "calculation model") { if (value != "") TMLIAutoPlannerSettings.DoseCalculationAlgorithm = value; }
+                                else if (parameter == "optimization model") { if (value != "") TMLIAutoPlannerSettings.OptimizationAlorithm = value; }
+                                else if (parameter == "contour field overlap") { if (value != "") TMLIAutoPlannerSettings.ContourFieldOverlap = bool.Parse(value); }
+                                else if (parameter == "contour field overlap margin") { if (value != "") TMLIAutoPlannerSettings.ContourFieldOverlapMarginInCM = double.Parse(value); }
+                            }
+                            else if (line.Contains("add default TS manipulation")) defaultTSManipulations_temp.Add(ConfigurationHelper.ParseTSManipulation(line));
+                            else if (line.Contains("create default TS")) defaultTSstructures_temp.Add(ConfigurationHelper.ParseCreateTS(line));
+                            else if (line.Contains("add linac"))
+                            {
+                                //parse the linacs that should be added. One entry per line
+                                line = ConfigurationHelper.CropLine(line, "{");
+                                TMLIAutoPlannerSettings.AvailableLinacs.Add(line.Substring(0, line.IndexOf("}")));
+                            }
+                            else if (line.Contains("add beam energy"))
+                            {
+                                //parse the photon energies that should be added. One entry per line
+                                line = ConfigurationHelper.CropLine(line, "{");
+                                TMLIAutoPlannerSettings.AvailableEnergies.Add(line.Substring(0, line.IndexOf("}")));
+                            }
+                            else if (line.Contains("add jaw position"))
+                            {
+                                //parse the default requested number of beams per isocenter
+                                VRect<double> parsedPositions = ConfigurationHelper.ParseJawPositions(line);
+                                if (parsedPositions.X1 != parsedPositions.X2) jawPos_temp.Add(parsedPositions);
+                            }
+                        }
+                    }
+                    //anything that is an array needs to be updated AFTER the while loop.
+                    if (jawPos_temp.Count == 4)
+                    {
+                        TMLIAutoPlannerSettings.JawPositions.Clear();
+                        TMLIAutoPlannerSettings.JawPositions = new List<VRect<double>>(jawPos_temp);
+                    }
+                }
+            }
+            //let the user know if the data parsing failed
+            catch (Exception e)
+            {
+                Logger.GetInstance().LogError($"Error could not load configuration file because: {e.Message}\n\nAssuming default parameters");
+                Logger.GetInstance().LogError(e.StackTrace, true);
+                return;
+            }
         }
 
         private bool LoadPlanTemplates()
@@ -583,17 +694,17 @@ namespace TMLIAutoPlanner.ViewModels
             sb.AppendLine("Available photon energies:");
             foreach (string e in TMLIAutoPlannerSettings.AvailableEnergies) sb.AppendLine($"    {e}");
             sb.AppendLine($"Beams per isocenter: ");
-            for (int i = 0; i < TMLIAutoPlannerSettings.BeamsPerIsocenter.Length; i++)
+            for (int i = 0; i < TMLIAutoPlannerSettings.BeamsPerIsocenter.Count; i++)
             {
                 sb.Append($"{TMLIAutoPlannerSettings.BeamsPerIsocenter.ElementAt(i)}");
-                if (i != TMLIAutoPlannerSettings.BeamsPerIsocenter.Length - 1) sb.Append(", ");
+                if (i != TMLIAutoPlannerSettings.BeamsPerIsocenter.Count - 1) sb.Append(", ");
             }
             sb.AppendLine("");
             sb.AppendLine("Collimator rotation (deg) order: ");
-            for (int i = 0; i < TMLIAutoPlannerSettings.CollimatorRotations.Length; i++)
+            for (int i = 0; i < TMLIAutoPlannerSettings.CollimatorRotations.Count; i++)
             {
                 sb.Append($"{TMLIAutoPlannerSettings.CollimatorRotations.ElementAt(i):0.0}");
-                if (i != TMLIAutoPlannerSettings.CollimatorRotations.Length - 1) sb.Append(", ");
+                if (i != TMLIAutoPlannerSettings.CollimatorRotations.Count - 1) sb.Append(", ");
             }
 
             sb.AppendLine("");

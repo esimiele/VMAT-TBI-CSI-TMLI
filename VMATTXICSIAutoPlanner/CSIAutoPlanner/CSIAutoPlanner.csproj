@@ -47,5 +47,10 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\AutoPlannerHelpers\AutoPlannerHelpers.csproj" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Core\" />
+	  <Folder Include="Configuration\" />
+	  <Folder Include="PlanTemplates\" />
+	</ItemGroup>
 
 </Project>

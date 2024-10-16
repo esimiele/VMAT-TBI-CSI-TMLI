@@ -37,9 +37,16 @@ namespace AutoPlannerLauncher.ViewModels
         internal LauncherMainViewModel(string[] args) 
         { 
             _arguments = args;
+            if (bool.TryParse(args[1], out bool showLauncher))
+            {
+                if(showLauncher) LaunchOptimizationLoopVisible = Visibility.Visible;
+            }
+            LaunchVMATTBICommand = new DelegateCommand(LaunchVMATTBI);
+            LaunchVMATCSICommand = new DelegateCommand(LaunchVMATCSI);
+            LaunchVMATTMLICommand = new DelegateCommand(LaunchVMATTMLI);
         }
 
-        public void LaunchVMATBI()
+        public void LaunchVMATTBI()
         {
             LaunchExe("TBIAutoPlanner");
         }
@@ -76,7 +83,7 @@ namespace AutoPlannerLauncher.ViewModels
         private string SerializeInputArguments()
         {
             StringBuilder sb = new StringBuilder();
-            for(int i = 0; i < _arguments.Length; i++)
+            for(int i = 2; i < _arguments.Length; i++)
             {
                 sb.Append($"{_arguments[i]} ");
             }

@@ -15,8 +15,8 @@ namespace TBIAutoPlanner.Settings
         internal static double ContourFieldOverlapMarginInCM { get; set; } = 1.0;
         internal static List<string> AvailableLinacs { get; set; } = new List<string>();
         internal static List<string> AvailableEnergies { get; set; } = new List<string>();
-        internal static int[] BeamsPerIsocenter {  get; set; } = new int[] { 4, 3, 3, 2, 2, 2, 2 };
-        internal static double[] CollimatorRotations { get; set; } = new double[] { 3.0, 357.0, 90.0, 90.0};
+        internal static List<int> BeamsPerIsocenter {  get; set; } = new List<int> { 4, 3, 3, 2, 2, 2, 2 };
+        internal static List<double> CollimatorRotations { get; set; } = new List<double> { 3.0, 357.0, 90.0, 90.0};
         internal static List<VRect<double>> JawPositions { get; set; } = new List<VRect<double>>
         {
             new VRect<double>(-20.0, -200.0, 200.0, 200.0),
@@ -29,5 +29,6 @@ namespace TBIAutoPlanner.Settings
         internal static string OptimizationAlorithm { get; set; } = "PO_15605";
         internal static bool UseGPUForOptimization { get; set; } = false;
         internal static string MRLevelRestart { get; set; } = "MR3";
+        internal static bool ShowStitchCTTab { get; set; } = true;
     }
 }

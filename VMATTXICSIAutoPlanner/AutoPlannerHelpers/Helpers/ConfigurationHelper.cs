@@ -1,5 +1,6 @@
 ﻿using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.EnumTypeHelpers;
+using AutoPlannerHelpers.Logging;
 using AutoPlannerHelpers.Models;
 using AutoPlannerHelpers.PlanTemplateModels;
 using System;
@@ -326,9 +327,8 @@ namespace AutoPlannerHelpers.Helpers
         /// </summary>
         /// <param name="line"></param>
         /// <returns></returns>
-        public static (bool, VRect<double>) ParseJawPositions(string line)
+        public static VRect<double> ParseJawPositions(string line)
         {
-            bool fail = false;
             List<double> tmp = new List<double> { };
             VRect<double> jawPos = new VRect<double> { };
             line = CropLine(line, "{");
@@ -339,9 +339,14 @@ namespace AutoPlannerHelpers.Helpers
                 line = CropLine(line, ",");
             }
             tmp.Add(double.Parse(line.Substring(0, line.IndexOf("}"))));
-            if (tmp.Count != 4) fail = true;
+            if (tmp.Count != 4)
+            {
+                Logger.GetInstance().LogError("Error! Jaw positions not defined correctly!");
+                Logger.GetInstance().LogError(line);
+                return jawPos;
+            }
             else jawPos = new VRect<double>(tmp.ElementAt(0), tmp.ElementAt(1), tmp.ElementAt(2), tmp.ElementAt(3));
-            return (fail, jawPos);
+            return jawPos;
         }
 
         /// <summary>

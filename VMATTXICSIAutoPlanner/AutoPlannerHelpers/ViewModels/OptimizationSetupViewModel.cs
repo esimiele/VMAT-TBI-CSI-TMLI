@@ -52,7 +52,8 @@ namespace AutoPlannerHelpers.ViewModels
             ClearOptimizationConstraintListCommand = new DelegateCommand(ClearOptimizationConstraints);
             ClearRowCommand = new DelegateCommand<OptimizationConstraintModel>(ClearRow);
             AssignOptimizationConstraintsCommand = new DelegateCommand(AssignOptimizationConstraints);
-            StructureIds = new List<string>(sIds);
+            if(sIds.Any()) StructureIds = new List<string>(sIds);
+            else StructureIds = new List<string> { "1", "2", "3"};
             PlanOptimizationConstraints = new ObservableCollectionPropertyNotify<PlanOptimizationSetupModel> { };
             _notifyMainVMExecuted = notifyMainVMExecuted;
         }

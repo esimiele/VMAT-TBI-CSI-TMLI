@@ -131,11 +131,11 @@
                     </TabItem>
                     <TabItem Header="Structure Tuning" Background="{Binding StructureTuningTabBackground, FallbackValue=LightGray}" BorderThickness="0,1,1,0" Height="29" VerticalAlignment="Top">
                         <TabControl TabStripPlacement="Top" Background="DarkGray">
-                            <TabItem Header="Tuning Structure Generation" Content="{Binding TSGeneration}" BorderThickness="1,1,1,1" Width="193">
+                            <TabItem Header="Structure Generation" Content="{Binding TSGeneration}" BorderThickness="1,1,1,1" Width="193">
                             </TabItem>
                             <TabItem Header="Ring Generation" Content="{Binding RingGeneration}" BorderThickness="0,1,1,1" Width="193">
                             </TabItem>
-                            <TabItem Header="Tuning Structure Manipulation" Content="{Binding TSManipulation}" Background="{Binding TSManipulationTabBackground, FallbackValue=LightGray}"  BorderThickness="0,1,1,1" Width="193" x:Name="TSManipulationTabItem">
+                            <TabItem Header="Structure Manipulation" Content="{Binding TSManipulation}" Background="{Binding TSManipulationTabBackground, FallbackValue=LightGray}"  BorderThickness="0,1,1,1" Width="193" x:Name="TSManipulationTabItem">
                             </TabItem>
                         </TabControl>
                     </TabItem>

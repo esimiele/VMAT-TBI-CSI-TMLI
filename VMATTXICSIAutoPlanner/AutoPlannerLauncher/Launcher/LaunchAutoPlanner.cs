@@ -23,21 +23,9 @@ namespace VMS.TPS
                 if (context.Patient != null)
                 {
                     bool addOptLaunchOption = false;
-                    ExternalPlanSetup plan = context.ExternalPlanSetup;
-                    if (plan != null && (plan.Id.ToLower().Contains("tbi") || plan.Id.ToLower().Contains("csi")))
+                    if (!ReferenceEquals(context.ExternalPlanSetup, null))
                     {
                         addOptLaunchOption = true;
-                    }
-                    else
-                    {
-                        List<Course> courses = context.Patient.Courses.Where(x => x.Id.ToLower().Contains("tbi") || x.Id.ToLower().Contains("csi")).ToList();
-                        if (courses.Any())
-                        {
-                            if (courses.SelectMany(x => x.ExternalPlanSetups).Any(x => x.Id.ToLower().Contains("tbi") || x.Id.ToLower().Contains("csi")))
-                            {
-                                addOptLaunchOption = true;
-                            }
-                        }
                     }
                     string exeName = "Launcher";
                     string path = AppExePath(exeName);
@@ -86,6 +74,20 @@ namespace VMS.TPS
         private string GetSourceFilePath([CallerFilePath] string sourceFilePath = "")
         {
             return sourceFilePath;
+        }
+
+        private string SerializeEclipseContext(ScriptContext context, bool showLaunchOptimizationButton)
+        {
+            string serializedContext = string.Format("-l {0}", showLaunchOptimizationButton);
+            if (context != null)
+            {
+                if (context.Patient != null) serializedContext += string.Format(" -m {0}", context.Patient.Id);
+                if (context.StructureSet != null) serializedContext += string.Format(" -s {0}", context.StructureSet.UID);
+                if (context.Image != null) serializedContext += string.Format(" -i {0}", context.Image.FOR);
+                if (context.ExternalPlanSetup != null) serializedContext += string.Format(" -p {0}", context.ExternalPlanSetup.UID);
+                if (context.Course != null) serializedContext += string.Format(" -c {0}", context.Course.Id);
+            }
+            return serializedContext;
         }
     }
 }

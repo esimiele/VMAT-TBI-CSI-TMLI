@@ -8,6 +8,7 @@ using VMS.TPS.Common.Model.Types;
 using System.Linq;
 using SimpleProgressWindow;
 using AutoPlannerHelpers.Prompts;
+using AutoPlannerHelpers.Context;
 
 namespace AutoPlannerHelpers.BaseCore
 {
@@ -21,13 +22,12 @@ namespace AutoPlannerHelpers.BaseCore
         protected bool contourOverlap = false;
         private string courseId;
         protected Course theCourse;
-        protected StructureSet selectedSS;
         //plan ID, target Id, numFx, dosePerFx, cumulative dose
         protected List<PrescriptionModel> prescriptions;
         protected string calculationModel = "";
         protected string optimizationModel = "";
-        protected string useGPUdose = "";
-        protected string useGPUoptimization = "";
+        protected bool useGPUdose = false;
+        protected bool useGPUoptimization = false;
         protected string MRrestart = "";
         protected double contourOverlapMargin;
 
@@ -107,10 +107,10 @@ namespace AutoPlannerHelpers.BaseCore
             int counter = 0;
             ProvideUIUpdate(0, $"Checking for existing course {courseId}");
             //look for a course with id = courseId assigned at initialization. If it does not exit, create it, otherwise load it into memory
-            if (selectedSS.Patient.Courses.Any(x => string.Equals(x.Id, courseId)))
+            if (EclipseContext.GetInstance().Patient.Courses.Any(x => string.Equals(x.Id, courseId)))
             {
                 ProvideUIUpdate(100 * ++counter / calcItems, $"Course {courseId} found!");
-                theCourse = selectedSS.Patient.Courses.FirstOrDefault(x => string.Equals(x.Id, courseId));
+                theCourse = EclipseContext.GetInstance().Patient.Courses.FirstOrDefault(x => string.Equals(x.Id, courseId));
             }
             else
             {
@@ -134,9 +134,9 @@ namespace AutoPlannerHelpers.BaseCore
         private Course CreateCourse()
         {
             Course tmpCourse = null;
-            if (selectedSS.Patient.CanAddCourse())
+            if (EclipseContext.GetInstance().Patient.CanAddCourse())
             {
-                tmpCourse = selectedSS.Patient.AddCourse();
+                tmpCourse = EclipseContext.GetInstance().Patient.AddCourse();
                 tmpCourse.Id = courseId;
             }
             else
@@ -158,7 +158,7 @@ namespace AutoPlannerHelpers.BaseCore
                 int counter = 0;
                 int calcItems = 5;
                 ProvideUIUpdate(0, $"Creating plan {itr.PlanId}");
-                ExternalPlanSetup thePlan = theCourse.AddExternalPlanSetup(selectedSS);
+                ExternalPlanSetup thePlan = theCourse.AddExternalPlanSetup(EclipseContext.GetInstance().StructureSet);
                 ProvideUIUpdate(100 * ++counter / calcItems, $"Created plan {itr.PlanId}");
 
                 //100% dose prescribed in plan and plan ID is in the prescriptions
@@ -226,9 +226,9 @@ namespace AutoPlannerHelpers.BaseCore
             foreach (KeyValuePair<string, string> t in d) ProvideUIUpdate($"{t.Key}, {t.Value}");
 
             //set the GPU dose calculation option (only valid for acuros)
-            if (useGPUdose == "Yes" && !calculationModel.Contains("AAA"))
+            if (useGPUdose && !calculationModel.Contains("AAA"))
             {
-                thePlan.SetCalculationOption(calculationModel, "UseGPU", useGPUdose);
+                thePlan.SetCalculationOption(calculationModel, "UseGPU", useGPUdose ? "Yes" : "No");
                 ProvideUIUpdate(100 * ++counter / calcItems, $"Set GPU option for dose calc to {useGPUdose}");
             }
             else
@@ -245,9 +245,9 @@ namespace AutoPlannerHelpers.BaseCore
             else ProvideUIUpdate(100 * ++counter / calcItems, $"MR restart level set to {MRrestart}");
 
             //set the GPU optimization option
-            if (useGPUoptimization == "Yes")
+            if (useGPUoptimization)
             {
-                thePlan.SetCalculationOption(optimizationModel, "General/OptimizerSettings/UseGPU", useGPUoptimization);
+                thePlan.SetCalculationOption(optimizationModel, "General/OptimizerSettings/UseGPU", useGPUoptimization ? "Yes" : "No");
                 ProvideUIUpdate(100 * ++counter / calcItems, $"Set GPU option for optimization to {useGPUoptimization}");
             }
             else
@@ -302,16 +302,16 @@ namespace AutoPlannerHelpers.BaseCore
             }
             string targetId = prescriptions.First(x => string.Equals(x.PlanId, isoLocations.PlanId)).TargetId;
 
-            if (!StructureTuningHelper.DoesStructureExistInSS(targetId, selectedSS, true))
+            if (!StructureTuningHelper.DoesStructureExistInSS(targetId, EclipseContext.GetInstance().StructureSet, true))
             {
                 ProvideUIUpdate($"Error getting target structure ({targetId}) for plan: {isoLocations.PlanId}! Exiting!", true);
                 return true;
             }
-            Structure target_tmp = StructureTuningHelper.GetStructureFromId(targetId, selectedSS);
+            Structure target_tmp = StructureTuningHelper.GetStructureFromId(targetId, EclipseContext.GetInstance().StructureSet);
             ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Retrieved target: {target_tmp.Id} for plan: {isoLocations.PlanId}");
 
             //grab the image and get the z resolution and dicom origin (we only care about the z position of the dicom origin)
-            Image image = selectedSS.Image;
+            Image image = EclipseContext.GetInstance().StructureSet.Image;
             double zResolution = image.ZRes;
             VVector dicomOrigin = image.Origin;
             ProvideUIUpdate($"Retrived image: {image.Id}");
@@ -334,7 +334,7 @@ namespace AutoPlannerHelpers.BaseCore
 
                 ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Starting slice to contour: {result.StartSlice}");
                 //add a new junction structure (named TS_jnx<i>) to the stack. Contours will be added to these structure later
-                result.JunctionStructure = selectedSS.AddStructure("CONTROL", $"TS_jnx{isoCount + i}");
+                result.JunctionStructure = EclipseContext.GetInstance().StructureSet.AddStructure("CONTROL", $"TS_jnx{isoCount + i}");
                 ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Added TS junction to stack: TS_jnx{isoCount + 1}");
                 overlap.Add(result);
             }

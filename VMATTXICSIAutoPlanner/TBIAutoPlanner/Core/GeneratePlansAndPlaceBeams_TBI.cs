@@ -8,6 +8,8 @@ using System.Runtime.ExceptionServices;
 using System;
 using VMS.TPS.Common.Model.API;
 using VMS.TPS.Common.Model.Types;
+using TBIAutoPlanner.Settings;
+using AutoPlannerHelpers.Context;
 
 namespace TBIAutoPlanner.Core
 {
@@ -23,12 +25,10 @@ namespace TBIAutoPlanner.Core
         private List<ExternalPlanSetup> legsPlans = new List<ExternalPlanSetup> { };
 
         //data members
-        private double[] collRot;
         private double gantryStart;
         private double gantryStop;
         private ExternalBeamMachineParameters ebmpArc;
         private ExternalBeamMachineParameters ebmpStatic;
-        private List<VRect<double>> jawPos;
         private double targetMargin;
         private int numVMATIsos;
         private int totalNumIsos;
@@ -42,63 +42,40 @@ namespace TBIAutoPlanner.Core
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="ss"></param>
         /// <param name="planInfo"></param>
-        /// <param name="coll"></param>
-        /// <param name="jp"></param>
         /// <param name="linac"></param>
         /// <param name="energy"></param>
-        /// <param name="calcModel"></param>
-        /// <param name="optModel"></param>
-        /// <param name="gpuDose"></param>
-        /// <param name="gpuOpt"></param>
-        /// <param name="mr"></param>
         /// <param name="tgtMargin"></param>
         /// <param name="overlap"></param>
         /// <param name="overlapMargin"></param>
-        /// <param name="TTCollision"></param>
-        /// <param name="closePW"></param>
-        public GeneratePlansAndPlaceBeams_TBI(StructureSet ss,
-                              List<PlanIsocenterModel> planInfo,
-                              double[] coll,
-                              List<VRect<double>> jp,
-                              string linac,
-                              string energy,
-                              string calcModel,
-                              string optModel,
-                              string gpuDose,
-                              string gpuOpt,
-                              string mr,
-                              double tgtMargin,
-                              bool overlap,
-                              double overlapMargin,
-                              bool TTCollision,
-                              bool closePW)
+        public GeneratePlansAndPlaceBeams_TBI(List<PlanIsocenterModel> planInfo,
+                                              string linac,
+                                              string energy,
+                                              double tgtMargin,
+                                              bool overlap,
+                                              double overlapMargin)
         {
-            selectedSS = ss;
             planIsocenters = new List<PlanIsocenterModel>(planInfo);
             numVMATIsos = planIsocenters.First().Isocenters.Count;
             if (planIsocenters.Count > 1) totalNumIsos = numVMATIsos + planIsocenters.Last().Isocenters.Count;
             else totalNumIsos = numVMATIsos;
-            collRot = coll;
-            jawPos = new List<VRect<double>>(jp);
             ebmpArc = new ExternalBeamMachineParameters(linac, energy, 600, "ARC", null);
             //AP/PA beams always use 6X
             ebmpStatic = new ExternalBeamMachineParameters(linac, "6X", 600, "STATIC", null);
             //copy the calculation model
-            calculationModel = calcModel;
-            optimizationModel = optModel;
-            useGPUdose = gpuDose;
-            useGPUoptimization = gpuOpt;
-            MRrestart = mr;
+            calculationModel = TBIAutoPlannerSettings.DoseCalculationAlgorithm;
+            optimizationModel = TBIAutoPlannerSettings.OptimizationAlorithm;
+            useGPUdose = TBIAutoPlannerSettings.UseGPUForDosecalculation;
+            useGPUoptimization = TBIAutoPlannerSettings.UseGPUForOptimization;
+            MRrestart = TBIAutoPlannerSettings.MRLevelRestart;
             //convert from cm to mm
             targetMargin = tgtMargin * 10.0;
             //user wants to contour the overlap between fields in adjacent VMAT isocenters
             contourOverlap = overlap;
             contourOverlapMargin = overlapMargin;
             //check for potential collision between TT and gantry
-            checkTTCollision = TTCollision;
-            SetCloseOnFinish(closePW, 3000);
+            checkTTCollision = TBIAutoPlannerSettings.CheckTTCollision;
+            SetCloseOnFinish(TBIAutoPlannerSettings.CloseProgressWindowOnFinish, 3000);
         }
 
         /// <summary>
@@ -175,7 +152,7 @@ namespace TBIAutoPlanner.Core
             UpdateUILabel($"Creating AP/PA plan: {planIso.PlanId}");
             int percentComplete = 0;
             int calcItems = 4;
-            ExternalPlanSetup legsPlan = theCourse.AddExternalPlanSetup(selectedSS);
+            ExternalPlanSetup legsPlan = theCourse.AddExternalPlanSetup(EclipseContext.GetInstance().StructureSet);
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Creating AP/PA plan");
 
             legsPlan.Id = planIso.PlanId;
@@ -212,7 +189,7 @@ namespace TBIAutoPlanner.Core
         {
             int percentComplete = 0;
             int calcItems = 10;
-            Image _image = selectedSS.Image;
+            Image _image = EclipseContext.GetInstance().StructureSet.Image;
             VVector userOrigin = _image.UserOrigin;
             double isoSeparation = CalculateIsocenterSeparation(targetSupExtent, targetInfExtent, maxFieldYExtent, minOverlap, numVMATIsos);
             int isoCount = 0;
@@ -252,7 +229,7 @@ namespace TBIAutoPlanner.Core
         {
             int percentComplete = 0;
             int calcItems = 10;
-            Image _image = selectedSS.Image;
+            Image _image = EclipseContext.GetInstance().StructureSet.Image;
             VVector userOrigin = _image.UserOrigin;
             double isoSeparation = CalculateIsocenterSeparation(targetSupExtent, targetInfExtent, maxFieldYExtent, minOverlap, totalNumIsos - numVMATIsos);
 
@@ -271,7 +248,7 @@ namespace TBIAutoPlanner.Core
                 }
                 else
                 {
-                    double legsTargetExtent = StructureTuningHelper.GetStructureFromId("matchline", selectedSS).CenterPoint.z - targetInfExtent;
+                    double legsTargetExtent = StructureTuningHelper.GetStructureFromId("matchline", EclipseContext.GetInstance().StructureSet).CenterPoint.z - targetInfExtent;
                     if (legsTargetExtent < 600.0)
                     {
                         ProvideUIUpdate($"Separation between matchline center z and target inferior extent: {legsTargetExtent:0.0} mm");
@@ -325,10 +302,10 @@ namespace TBIAutoPlanner.Core
         {
             List<PlanIsocenterModel> allIsocenters = new List<PlanIsocenterModel> { };
 
-            Image image = selectedSS.Image;
+            Image image = EclipseContext.GetInstance().StructureSet.Image;
             VVector userOrigin = image.UserOrigin;
             //manually calculate the target sup/inf extent to avoid having to figure out if flash was used or not
-            Structure target = StructureTuningHelper.GetStructureFromId("body", selectedSS);
+            Structure target = StructureTuningHelper.GetStructureFromId("body", EclipseContext.GetInstance().StructureSet);
             double targetSupExtent = target.MeshGeometry.Positions.Max(p => p.Z) - targetMargin;
             double targetInfExtent = target.MeshGeometry.Positions.Min(p => p.Z) + targetMargin;
 
@@ -336,10 +313,10 @@ namespace TBIAutoPlanner.Core
             if (checkTTCollision)
             {
                 ProvideUIUpdate("Checking for potential couch collision");
-                if (StructureTuningHelper.DoesStructureExistInSS("couchsurface", selectedSS, true))
+                if (StructureTuningHelper.DoesStructureExistInSS("couchsurface", EclipseContext.GetInstance().StructureSet, true))
                 {
                     double TT = 0;
-                    Structure couchSurface = selectedSS.Structures.FirstOrDefault(x => x.Id.ToLower() == "couchsurface");
+                    Structure couchSurface = EclipseContext.GetInstance().StructureSet.Structures.FirstOrDefault(x => x.Id.ToLower() == "couchsurface");
                     TT = (couchSurface.MeshGeometry.Positions.Min(p => p.Y) - userOrigin.y) / 10.0;
 
                     ProvideUIUpdate("Couch surface structure retrieved");
@@ -359,9 +336,9 @@ namespace TBIAutoPlanner.Core
             else ProvideUIUpdate($"Couch collision check NOT requested. Skipping");
 
             //matchline is present and not empty
-            if (StructureTuningHelper.DoesStructureExistInSS("matchline", selectedSS, true))
+            if (StructureTuningHelper.DoesStructureExistInSS("matchline", EclipseContext.GetInstance().StructureSet, true))
             {
-                Structure matchline = StructureTuningHelper.GetStructureFromId("matchline", selectedSS);
+                Structure matchline = StructureTuningHelper.GetStructureFromId("matchline", EclipseContext.GetInstance().StructureSet);
                 allIsocenters.Add(new PlanIsocenterModel(vmatPlan.Id, CalculateVMATIsoPositions(targetSupExtent, matchline.CenterPoint.z, 10.0, 400.0, 20.0, offsetY, planIsocenters.First().Isocenters)));
                 List<IsocenterModel> legsIsoModels = CalculateAPPAIsoPositions(matchline.CenterPoint.z,
                                                                                                 targetInfExtent,
@@ -424,11 +401,11 @@ namespace TBIAutoPlanner.Core
                 {
                     //second isocenter and third beam requires the x-jaw positions to be mirrored about the y-axis (these jaw positions are in the fourth element of the jawPos list)
                     //this is generally the isocenter located in the pelvis and we want the beam aimed at the kidneys-area
-                    if (isoCount == 1 && j == 2) jp = jawPos.ElementAt(j + 1);
-                    else if (isoCount == 1 && j == 3) jp = jawPos.ElementAt(j - 1);
-                    else jp = jawPos.ElementAt(j);
+                    if (isoCount == 1 && j == 2) jp = TBIAutoPlannerSettings.JawPositions.ElementAt(j + 1);
+                    else if (isoCount == 1 && j == 3) jp = TBIAutoPlannerSettings.JawPositions.ElementAt(j - 1);
+                    else jp = TBIAutoPlannerSettings.JawPositions.ElementAt(j);
 
-                    double coll = collRot[j];
+                    double coll = TBIAutoPlannerSettings.CollimatorRotations.ElementAt(j);
                     if ((totalNumIsos > numVMATIsos) && (isoCount == (numVMATIsos - 1)))
                     {
                         //zero collimator rotations of two main fields for beams in isocenter immediately superior to matchline. 
@@ -481,7 +458,7 @@ namespace TBIAutoPlanner.Core
             int percentComplete = 0;
             int calcItems = 3 + planIso.Isocenters.First().NumberOfBeams * 5;
 
-            Structure target = StructureTuningHelper.GetStructureFromId("body", selectedSS);
+            Structure target = StructureTuningHelper.GetStructureFromId("body", EclipseContext.GetInstance().StructureSet);
             ProvideUIUpdate(100 * ++percentComplete / calcItems, "Retrieved body structure");
             double targetInfExtent = target.MeshGeometry.Positions.Min(p => p.Z) + targetMargin;
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Calculated target inferior extent: {targetInfExtent}");
@@ -500,7 +477,7 @@ namespace TBIAutoPlanner.Core
             x2 = CalculateX2JawPosition(planIso.Isocenters.First().IsocenterPosition.z, targetInfExtent, 20.0);
             if (isLastIso)
             {
-                double legsTargetExtent = StructureTuningHelper.GetStructureFromId("matchline", selectedSS).CenterPoint.z - targetInfExtent;
+                double legsTargetExtent = StructureTuningHelper.GetStructureFromId("matchline", EclipseContext.GetInstance().StructureSet).CenterPoint.z - targetInfExtent;
 
                 if (legsPlans.Count() > 1 && legsTargetExtent < 600.0)
                 {
