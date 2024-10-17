@@ -40,18 +40,12 @@ namespace CSIAutoPlanner.ViewModels
         private int _boostNumberOfFractions;
         private double _boostPlanTotalDose;
         private CSIAutoPlanTemplate _selectedTemplate;
-        private bool _useFlash;
-        private Visibility _flashMarginVisible;
-        private double _flashMargin;
-        private double _ptvMarginFromBody;
         private System.Windows.Media.SolidColorBrush _prepForTargetsBackground;
         private System.Windows.Media.SolidColorBrush _specifyTargetsTabBackground;
         private System.Windows.Media.SolidColorBrush _structureTuningTabBackground;
         private System.Windows.Media.SolidColorBrush _tsManipulationTabBackground;
         private System.Windows.Media.SolidColorBrush _beamPlacementTabBackground;
         private System.Windows.Media.SolidColorBrush _optimizationSetupTabBackground;
-        private Visibility _stitchCTTabVisible;
-        private int _initialTabSelected;
 
         public string PatientMRN
         {
@@ -142,19 +136,6 @@ namespace CSIAutoPlanner.ViewModels
             get { return _optimizationSetupTabBackground; }
             set { SetProperty(ref _optimizationSetupTabBackground, value); }
         }
-
-        public Visibility StitchCTTabVisible
-        {
-            get { return _stitchCTTabVisible; }
-            set { SetProperty(ref _stitchCTTabVisible, value); }
-        }
-
-        public int InitialTabSelected
-        {
-            get { return _initialTabSelected; }
-            set { SetProperty(ref _initialTabSelected, value); }
-        }
-
         #endregion
 
         #region view objects
@@ -166,6 +147,10 @@ namespace CSIAutoPlanner.ViewModels
         private object _specifyTargets;
         private TSGenerationViewModel _tsGenerationVM;
         private object _tsGeneration;
+        private StructureCropOverlapViewModel _structureCropOverlapVM;
+        private object _structureCropOverlap;
+        private RingGenerationViewModel _ringGenerationVM;
+        private object _ringGeneration;
         private TSManipulationViewModel _tsManipulationVM;
         private object _tsManipulation;
         private BeamPlacementViewModel _beamPlacementVM;
@@ -181,7 +166,6 @@ namespace CSIAutoPlanner.ViewModels
             get { return _exportCT; }
             set { SetProperty(ref _exportCT, value); }
         }
-
 
         public object PrepForTargets
         {
@@ -199,6 +183,18 @@ namespace CSIAutoPlanner.ViewModels
         {
             get { return _tsGeneration; }
             set { SetProperty(ref _tsGeneration, value); }
+        }
+
+        public object StructureCropOverlap
+        {
+            get { return _structureCropOverlap; }
+            set { SetProperty(ref _structureCropOverlap, value); }
+        }
+
+        public object RingGeneration
+        {
+            get { return _ringGeneration; }
+            set { SetProperty(ref _ringGeneration, value); }
         }
 
         public object TSManipulation
@@ -285,6 +281,12 @@ namespace CSIAutoPlanner.ViewModels
             _tsGenerationVM = new TSGenerationViewModel();
             TSGeneration = new TSGenerationView { DataContext = _tsGenerationVM };
 
+            _ringGenerationVM = new RingGenerationViewModel(_structureIdsPostUnion);
+            RingGeneration = new RingGenerationView { DataContext = _ringGenerationVM };
+
+            _structureCropOverlapVM = new StructureCropOverlapViewModel(_structureIdsPostUnion);
+            StructureCropOverlap = new StructureCropOverlapView { DataContext = _structureCropOverlapVM };
+
             NotifyGenerateManipulateTuningStructuresCommand = new DelegateCommand(PerformTSStructureGenerationManipulation);
             _tsManipulationVM = new TSManipulationViewModel(NotifyGenerateManipulateTuningStructuresCommand, _structureIdsPostUnion);
             TSManipulation = new TSManipulationView { DataContext = _tsManipulationVM };
@@ -319,7 +321,7 @@ namespace CSIAutoPlanner.ViewModels
             }
             else
             {
-                _structureIdsPostUnion = new List<string> { "lung_l", "lung_r", "kidney_l", "kidney_r", "PTV^Body" };
+                _structureIdsPostUnion = new List<string> { "lung_l", "lung_r", "kidney_l", "kidney_r", "PTV^Body", "OpticChiasm","Brainstem" };
             }
             SpecifyTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
             PrepForTargetsBackground = System.Windows.Media.Brushes.LightGray;
@@ -403,10 +405,15 @@ namespace CSIAutoPlanner.ViewModels
         private void PerformTSStructureGenerationManipulation()
         {
             List<RequestedTSStructureModel> tsGeneration = _tsGenerationVM.RequestedTuningStructures.ToList();
+            List<TSRingStructureModel> rings = _ringGenerationVM.RequestedRingStructures.ToList();
+            List<string> cropOverlapStructures = _structureCropOverlapVM.CropOverlapStructures.ToList();
             List<RequestedTSManipulationModel> tsManipulations = _tsManipulationVM.RequestedTSManipulations.ToList();
-            TSGenerationManipulation_CSI generateTS = new TSGenerationManipulation_CSI(tsGeneration,
-                                                                                       tsManipulations,
-                                                                                       _prescriptions);
+            return;
+            TSGenerationManipulation_CSI generateTS = new TSGenerationManipulation_CSI(tsGeneration, 
+                                                                                       tsManipulations, 
+                                                                                       rings, 
+                                                                                       _prescriptions, 
+                                                                                       cropOverlapStructures);
 
             EclipseContext.GetInstance().Patient.BeginModifications();
             bool failed = generateTS.Execute();
@@ -563,6 +570,8 @@ namespace CSIAutoPlanner.ViewModels
             BoostNumberOfFractions = SelectedTemplate.BoostRxNumberOfFractions;
             _setTargetsVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
             _tsGenerationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
+            _ringGenerationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate, true);
+            _structureCropOverlapVM.AutoPlanTemplateSelectionChanged(_selectedTemplate, true);
             _tsManipulationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
         }
 

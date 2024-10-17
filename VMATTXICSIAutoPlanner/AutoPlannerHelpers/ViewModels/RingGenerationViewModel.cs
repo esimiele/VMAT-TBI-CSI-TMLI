@@ -2,6 +2,7 @@
 using AutoPlannerHelpers.PlanTemplateModels;
 using Prism.Commands;
 using Prism.Mvvm;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,6 +13,7 @@ namespace AutoPlannerHelpers.ViewModels
         public ObservableCollectionPropertyNotify<TSRingStructureModel> RequestedRingStructures { get; set; }
 
         #region properties
+        private List<string> _originalStructureIdList;
         private List<string> _structureIdsPostUnion;
 
         public List<string> StructureIdsPostUnion
@@ -34,6 +36,7 @@ namespace AutoPlannerHelpers.ViewModels
 
         public RingGenerationViewModel(List<string> ids) 
         {
+            _originalStructureIdList = new List<string>(ids);
             StructureIdsPostUnion = new List<string>(ids);
             RequestedRingStructures = new ObservableCollectionPropertyNotify<TSRingStructureModel> { };
             AddRingCommand = new DelegateCommand(AddRing);
@@ -42,14 +45,16 @@ namespace AutoPlannerHelpers.ViewModels
             ClearRowCommand = new DelegateCommand<TSRingStructureModel>(ClearRow);
         }
 
-        public void AutoPlanTemplateSelectionChanged(AutoPlanTemplateBase template)
+        public void AutoPlanTemplateSelectionChanged(AutoPlanTemplateBase template, bool skipStructureCheck = false)
         {
             if (ReferenceEquals(template, null)) return;
             _selectedTemplate = template;
-            UpdateViewWithAutoPlanTemplateRings();
+            StructureIdsPostUnion.Clear();
+            StructureIdsPostUnion = new List<string>(_originalStructureIdList);
+            UpdateViewWithAutoPlanTemplateRings(skipStructureCheck);
         }
 
-        private void UpdateViewWithAutoPlanTemplateRings(bool skipStructureIdCheck = false)
+        private void UpdateViewWithAutoPlanTemplateRings(bool skipStructureIdCheck)
         {
             RequestedRingStructures.Clear();
             List<TSRingStructureModel> templateRings;
@@ -58,7 +63,11 @@ namespace AutoPlannerHelpers.ViewModels
             else return;
             foreach (TSRingStructureModel itr in templateRings)
             {
-                if (skipStructureIdCheck) RequestedRingStructures.Add(itr);
+                if (skipStructureIdCheck)
+                {
+                    if (!StructureIdsPostUnion.Any(x => string.Equals(x, itr.TargetId, StringComparison.OrdinalIgnoreCase))) StructureIdsPostUnion.Add(itr.TargetId);
+                    RequestedRingStructures.Add(itr);
+                }
                 else if (StructureIdsPostUnion.Any(x => string.Equals(x, itr.TargetId, System.StringComparison.OrdinalIgnoreCase)))
                 {
                     //only add it they base structure exists in the structure set
@@ -75,7 +84,7 @@ namespace AutoPlannerHelpers.ViewModels
         public void AddDefaultRings()
         {
             if (ReferenceEquals(_selectedTemplate, null)) return;
-            UpdateViewWithAutoPlanTemplateRings();
+            UpdateViewWithAutoPlanTemplateRings(false);
         }
 
         public void ClearRingList()

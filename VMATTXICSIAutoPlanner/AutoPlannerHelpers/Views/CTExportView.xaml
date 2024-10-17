@@ -115,9 +115,6 @@
             </Setter>
         </Style>
     </UserControl.Resources>
-    <UserControl.InputBindings>
-        <KeyBinding Key="E" Modifiers="Ctrl" Command="{Binding KeyboardTestCommand}"/>
-    </UserControl.InputBindings>
     <Grid>
         <Border Margin="0" BorderThickness="1,0,0,0" BorderBrush="Black">
             <StackPanel>

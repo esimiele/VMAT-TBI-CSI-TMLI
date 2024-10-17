@@ -259,24 +259,7 @@
                             </TabItem>
                             <TabItem Header="Ring Generation" Content="{Binding RingGeneration}" BorderThickness="0,1,1,1" Width="124">
                             </TabItem>
-                            <TabItem Header="Crop/Contour Overlap" Width="150" BorderThickness="0,1,1,1">
-                                <Border Margin="0" BorderThickness="1,0,0,0" BorderBrush="Black">
-                                    <StackPanel HorizontalAlignment="Center" Margin="0">
-                                        <Grid Width="580" HorizontalAlignment="Center" Margin="0,0,0,0">
-                                            <Label Content="Crop/Contour Overlap With Targets" FontSize="20" FontStyle="Normal" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,0,0,0"></Label>
-                                            <Button Content="?" Width="20" Height="24" HorizontalAlignment="Right"/>
-                                        </Grid>
-                                        <Grid Height="25" Width ="560" HorizontalAlignment="Center" Margin="0,5,0,0">
-                                            <Button x:Name="addCropOverlapOAR" Content="Add OAR" Width="100" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                                            <Button Content="Add Defaults" Width="100" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-                                            <Button x:Name="clearCropOverlapOARsBtn" Content="Clear List" Width="100" HorizontalAlignment="Right" VerticalAlignment="Top"/>
-                                        </Grid>
-                                        <ScrollViewer x:Name="cropOverlapOARsScroller" Height="360" Width="585" Margin="0,5,0,0" HorizontalAlignment="Center" VerticalAlignment="Bottom" Style="{StaticResource ScrollViewerStyle}">
-                                            <StackPanel Name="cropOverlapOARsSP" Margin="5">
-                                            </StackPanel>
-                                        </ScrollViewer>
-                                    </StackPanel>
-                                </Border>
+                            <TabItem Header="Crop/Contour Overlap" Content="{Binding StructureCropOverlap}" Width="150" BorderThickness="0,1,1,1">
                             </TabItem>
                             <TabItem Header="Structure Manipulation" Content="{Binding TSManipulation}" Background="{Binding TSManipulationTabBackground, FallbackValue=LightGray}"  BorderThickness="0,1,1,1" Width="160" x:Name="TSManipulationTabItem">
                             </TabItem>
