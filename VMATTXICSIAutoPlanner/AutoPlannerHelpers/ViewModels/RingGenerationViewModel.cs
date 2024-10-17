@@ -5,6 +5,7 @@ using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace AutoPlannerHelpers.ViewModels
 {
@@ -49,8 +50,7 @@ namespace AutoPlannerHelpers.ViewModels
         {
             if (ReferenceEquals(template, null)) return;
             _selectedTemplate = template;
-            StructureIdsPostUnion.Clear();
-            StructureIdsPostUnion = new List<string>(_originalStructureIdList);
+            StructureIdsPostUnion.RemoveAll(x => !_originalStructureIdList.Contains(x));
             UpdateViewWithAutoPlanTemplateRings(skipStructureCheck);
         }
 
@@ -68,7 +68,7 @@ namespace AutoPlannerHelpers.ViewModels
                     if (!StructureIdsPostUnion.Any(x => string.Equals(x, itr.TargetId, StringComparison.OrdinalIgnoreCase))) StructureIdsPostUnion.Add(itr.TargetId);
                     RequestedRingStructures.Add(itr);
                 }
-                else if (StructureIdsPostUnion.Any(x => string.Equals(x, itr.TargetId, System.StringComparison.OrdinalIgnoreCase)))
+                else if (StructureIdsPostUnion.Any(x => string.Equals(x, itr.TargetId, StringComparison.OrdinalIgnoreCase)))
                 {
                     //only add it they base structure exists in the structure set
                     RequestedRingStructures.Add(itr);

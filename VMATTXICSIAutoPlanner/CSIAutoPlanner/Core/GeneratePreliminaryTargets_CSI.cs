@@ -3,6 +3,7 @@ using AutoPlannerHelpers.Delegates;
 using AutoPlannerHelpers.Helpers;
 using AutoPlannerHelpers.Models;
 using SimpleProgressWindow;
+using CSIAutoPlanner.Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,12 +34,10 @@ namespace CSIAutoPlanner.Core
         /// Constructor
         /// </summary>
         /// <param name="tgts"></param>
-        /// <param name="ss"></param>
-        /// <param name="closePW"></param>
-        public GeneratePreliminaryTargets_CSI(List<RequestedTSStructureModel> tgts, bool closePW)
+        public GeneratePreliminaryTargets_CSI(List<RequestedTSStructureModel> tgts)
         {
             createPrelimTargetList = new List<RequestedTSStructureModel>(tgts);
-            SetCloseOnFinish(closePW, 3000);
+            SetCloseOnFinish(CSIAutoPlannerSettings.CloseProgressWindowOnFinish, 3000);
         }
 
         /// <summary>

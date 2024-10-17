@@ -15,21 +15,21 @@ namespace AutoPlannerHelpers.UIHelpers
         /// </summary>
         /// <param name="templates"></param>
         /// <returns></returns>
-        public static StringBuilder PrintPlanTemplateConfigurationParameters(List<AutoPlanTemplateBase> templates)
-        {
-            if (templates.First() is CSIAutoPlanTemplate) return PrintCSIPlanTemplateConfigurationParameters(templates.Cast<CSIAutoPlanTemplate>().ToList());
-            else return PrintTBIPlanTemplateConfigurationParameters(templates.Cast<TBIAutoPlanTemplate>().ToList());
-        }
+        //public static StringBuilder PrintPlanTemplateConfigurationParameters(List<AutoPlanTemplateBase> templates)
+        //{
+        //    if (templates.First() is CSIAutoPlanTemplate) return PrintCSIPlanTemplateConfigurationParameters(templates.Cast<CSIAutoPlanTemplate>().ToList());
+        //    else return PrintTBIPlanTemplateConfigurationParameters(templates.Cast<TBIAutoPlanTemplate>().ToList());
+        //}
 
         /// <summary>
         /// Helper method to print the CSI plan template parameters
         /// </summary>
         /// <param name="templates"></param>
         /// <returns></returns>
-        public static StringBuilder PrintCSIPlanTemplateConfigurationParameters(List<CSIAutoPlanTemplate> templates)
+        public static StringBuilder PrintCSIPlanTemplateConfigurationParameters(List<AutoPlanTemplateBase> templates)
         {
             StringBuilder sb = new StringBuilder();
-            foreach (CSIAutoPlanTemplate itr in templates.Where(x => !string.Equals(x.TemplateName, "--select--")))
+            foreach (CSIAutoPlanTemplate itr in templates.ConvertAll(x => x as CSIAutoPlanTemplate).Where(x => !string.Equals(x.TemplateName, "--select--")))
             {
                 sb.AppendLine("-----------------------------------------------------------------------------");
 

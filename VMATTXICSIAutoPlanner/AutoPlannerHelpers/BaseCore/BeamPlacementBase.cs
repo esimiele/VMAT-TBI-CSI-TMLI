@@ -20,7 +20,7 @@ namespace AutoPlannerHelpers.BaseCore
         public string StackTraceError { get; protected set; } = string.Empty;
 
         protected bool contourOverlap = false;
-        private string courseId;
+        protected string courseId;
         protected Course theCourse;
         //plan ID, target Id, numFx, dosePerFx, cumulative dose
         protected List<PrescriptionModel> prescriptions;
@@ -85,17 +85,6 @@ namespace AutoPlannerHelpers.BaseCore
         #endregion
 
         #region concrete methods
-        /// <summary>
-        /// Initialize the place beams functionality by copying the course Id and prescriptions locally
-        /// </summary>
-        /// <param name="cId"></param>
-        /// <param name="presc"></param>
-        public void Initialize(string cId, List<PrescriptionModel> presc)
-        {
-            courseId = cId;
-            prescriptions = new List<PrescriptionModel>(presc);
-        }
-
         /// <summary>
         /// Method to check if any courses exist in Aria that have a match Id to the request course Id. If so, grab that course. If not, create the course
         /// </summary>

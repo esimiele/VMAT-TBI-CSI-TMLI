@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Windows;
+﻿using System.Windows;
 using TBIAutoPlanner.ViewModels;
 using TBIAutoPlanner.Views;
 
@@ -12,7 +11,7 @@ namespace TBIAutoPlanner
     {
         private void Application_Startup(object sender, StartupEventArgs e)
         {
-            MainView mv = new MainView { DataContext = new MainViewModel(e.Args) };
+            TBIMainView mv = new TBIMainView { DataContext = new TBIMainViewModel(e.Args) };
             mv.ShowDialog();
         }
     }

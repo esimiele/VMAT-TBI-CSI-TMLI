@@ -12,16 +12,21 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-namespace TMLIAutoPlanner.Views
+namespace CSIAutoPlanner.Views
 {
     /// <summary>
     /// Interaction logic for MainView.xaml
     /// </summary>
-    public partial class MainView : Window
+    public partial class CSIMainView : Window
     {
-        public MainView()
+        public CSIMainView()
         {
             InitializeComponent();
+        }
+
+        private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            SizeToContent = SizeToContent.WidthAndHeight;
         }
     }
 }

@@ -11,7 +11,7 @@ namespace TMLIAutoPlanner
     {
         private void Application_Startup(object sender, StartupEventArgs e)
         {
-            MainView mv = new MainView { DataContext = new MainViewModel(e.Args) };
+            TMLIMainView mv = new TMLIMainView { DataContext = new TMLIMainViewModel(e.Args) };
             mv.ShowDialog();
         }
     }

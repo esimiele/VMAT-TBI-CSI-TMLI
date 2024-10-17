@@ -101,7 +101,7 @@ namespace AutoPlannerHelpers.ViewModels
 
         private void AddDefualtOptimizationConstraints()
         {
-            if (ReferenceEquals(_selectedTemplate, null) || ReferenceEquals(_prescriptions, null) || !_prescriptions.Any()) return;
+            if (ReferenceEquals(_selectedTemplate, null) || !_prescriptions.Any()) return;
 
             PlanOptimizationConstraints.Clear();
             List<PlanOptimizationSetupModel> constraints = OptimizationSetupHelper.RetrieveOptConstraintsFromTemplate(_selectedTemplate, _prescriptions);

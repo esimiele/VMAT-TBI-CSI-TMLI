@@ -30,21 +30,13 @@ namespace AutoPlannerHelpers.Helpers
                                                                                 double initDosePerFx,
                                                                                 int initNumFx,
                                                                                 double initRxDose,
-                                                                                string boostDosePerFxText = "",
-                                                                                string boostNumFxText = "",
-                                                                                string boostRxText = "")
+                                                                                double boostDosePerFx = double.NaN,
+                                                                                int boostNumFx = -1,
+                                                                                double boostRxDose = double.NaN)
         {
             List<PrescriptionModel> prescriptions = new List<PrescriptionModel> { };
             double dosePerFx = 0.0;
             int numFractions = 0;
-            double boostRxDose = 0.0;
-            
-            //slightly different logic, only want to try and parse if the boostRxText is not null or empty
-            if (!string.IsNullOrEmpty(boostRxText) && !double.TryParse(boostRxText, out boostRxDose))
-            {
-                Logger.GetInstance().LogError("Error! Boost Plan Rx dose is not empty or could not be parsed! Exiting!");
-                return prescriptions;
-            }
 
             //verify the integrity of the list and it is ready to be pushed to a prescription list
             if (VerifyRequestedTargetIntegrity(targets, initRxDose, boostRxDose)) return prescriptions;
@@ -58,21 +50,23 @@ namespace AutoPlannerHelpers.Helpers
                 rx = highestRxTgtForPlan.TargetRxDose - priorRxDoses;
                 if (rx == initRxDose)
                 {
-                    dosePerFx = initDosePerFx;
-                    numFractions = initNumFx;
                     if (double.IsNaN(initDosePerFx) || initDosePerFx < 0 || initNumFx < 0)
                     {
                         Logger.GetInstance().LogError("Error! Could not parse dose per fx or number of fractions for initial plan! Exiting");
                         return new List<PrescriptionModel> { };
                     }
+                    dosePerFx = initDosePerFx;
+                    numFractions = initNumFx;
                 }
                 else if (rx == boostRxDose)
                 {
-                    if (!double.TryParse(boostDosePerFxText, out dosePerFx) || !int.TryParse(boostNumFxText, out numFractions))
+                    if (double.IsNaN(boostDosePerFx) || boostDosePerFx < 0 || boostNumFx < 0)
                     {
                         Logger.GetInstance().LogError("Error! Could not parse dose per fx or number of fractions for boost plan! Exiting");
                         return new List<PrescriptionModel> { };
                     }
+                    dosePerFx = boostDosePerFx;
+                    numFractions = boostNumFx;
                 }
                 foreach (TargetModel itr1 in itr.Targets)
                 {

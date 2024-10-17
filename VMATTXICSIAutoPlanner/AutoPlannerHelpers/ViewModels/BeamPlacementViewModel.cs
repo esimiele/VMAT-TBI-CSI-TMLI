@@ -90,17 +90,15 @@ namespace AutoPlannerHelpers.ViewModels
         #region fields
         #endregion
 
-        public BeamPlacementViewModel(DelegateCommand NotifyMainVMExecuted, PlanType type, List<string> linacs, List<string> energies)
+        public BeamPlacementViewModel(DelegateCommand NotifyMainVMExecuted, PlanType type)
         {
             _notifyMainVMExecuted = NotifyMainVMExecuted;
             ContourOverlapMarginVisible = Visibility.Hidden;
-            if (type == PlanType.VMAT_TBI) RequestedNumberOfIsosVisible = Visibility.Visible;
-            else RequestedNumberOfIsosVisible = Visibility.Collapsed;
+            if (type == PlanType.VMAT_CSI) RequestedNumberOfIsosVisible = Visibility.Collapsed;
+            else RequestedNumberOfIsosVisible = Visibility.Visible;
             UpdateNumberOfIsocentersCommand = new DelegateCommand(UpdateRequestedNumberOfVMATIsocenters);
             CreatePlansAndPlaceBeamsCommand = new DelegateCommand(CreatePlansAndPlaceBeams);
             _requestedNumberOfVMATIsos = 0;
-            AvailableLinacs = new List<string>(linacs);
-            AvailableEnergies = new List<string>(energies);
         }
 
         private void UpdateContourFieldOverlapChecked()
@@ -109,11 +107,13 @@ namespace AutoPlannerHelpers.ViewModels
             else ContourOverlapMarginVisible = Visibility.Hidden;
         }
 
-        public void PopulatePlanIsocenterList(List<PlanIsocenterModel> isos)
+        public void PopulateBeamPlacementUI(List<PlanIsocenterModel> isos, List<string> linacs, List<string> energies)
         {
             _requestedNumberOfVMATIsos = isos.First().Isocenters.Count(x => x.BeamType == BeamType.VMAT);
             PlanIsocenterList = new ObservableCollectionPropertyNotify<PlanIsocenterModel> { };
             foreach(PlanIsocenterModel itr in isos) PlanIsocenterList.Add(itr);
+            AvailableLinacs = new List<string>(linacs);
+            AvailableEnergies = new List<string>(energies);
         }
 
         public void UpdateRequestedNumberOfVMATIsocenters() 

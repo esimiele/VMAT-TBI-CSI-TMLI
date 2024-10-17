@@ -11,7 +11,7 @@ namespace CSIAutoPlanner
     {
         private void Application_Startup(object sender, StartupEventArgs e)
         {
-            MainView mv = new MainView { DataContext = new MainViewModel(e.Args) };
+            CSIMainView mv = new CSIMainView { DataContext = new CSIMainViewModel(e.Args) };
             mv.ShowDialog();
         }
     }

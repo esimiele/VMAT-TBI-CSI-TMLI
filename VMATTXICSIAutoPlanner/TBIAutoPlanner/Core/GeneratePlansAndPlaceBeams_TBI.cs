@@ -49,6 +49,7 @@ namespace TBIAutoPlanner.Core
         /// <param name="overlap"></param>
         /// <param name="overlapMargin"></param>
         public GeneratePlansAndPlaceBeams_TBI(List<PlanIsocenterModel> planInfo,
+                                              List<PrescriptionModel> presc,
                                               string linac,
                                               string energy,
                                               double tgtMargin,
@@ -56,9 +57,11 @@ namespace TBIAutoPlanner.Core
                                               double overlapMargin)
         {
             planIsocenters = new List<PlanIsocenterModel>(planInfo);
-            numVMATIsos = planIsocenters.First().Isocenters.Count;
-            if (planIsocenters.Count > 1) totalNumIsos = numVMATIsos + planIsocenters.Last().Isocenters.Count;
-            else totalNumIsos = numVMATIsos;
+            prescriptions = new List<PrescriptionModel>(presc);
+            numVMATIsos = planIsocenters.SelectMany(x => x.Isocenters).Count(x => x.BeamType == AutoPlannerHelpers.Enums.BeamType.VMAT);
+            int numAPPAIsos = planIsocenters.SelectMany(x => x.Isocenters).Count(x => x.BeamType == AutoPlannerHelpers.Enums.BeamType.APPA);
+            totalNumIsos = numVMATIsos + numAPPAIsos;
+            courseId = TBIAutoPlannerSettings.CourseId;
             ebmpArc = new ExternalBeamMachineParameters(linac, energy, 600, "ARC", null);
             //AP/PA beams always use 6X
             ebmpStatic = new ExternalBeamMachineParameters(linac, "6X", 600, "STATIC", null);

@@ -168,7 +168,7 @@ namespace CSIAutoPlanner.Core
                         (bool fail, StringBuilder errorMessage) = ContourHelper.CreateRing(target, ring, EclipseContext.GetInstance().StructureSet, itr.MarginFromTargetInCM, itr.RingThicknessInCM);
                         if (fail)
                         {
-                            ProvideUIUpdate(errorMessage.ToString());
+                            ProvideUIUpdate(errorMessage.ToString(), true);
                             return true;
                         }
                         TSRingStructureModel addRing = new TSRingStructureModel(itr);

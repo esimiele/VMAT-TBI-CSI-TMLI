@@ -21,6 +21,7 @@ namespace AutoPlannerHelpers.Helpers
                 if (numVMATIsos > 2) isoNames.Add(new IsocenterModel("UpSpine"));
                 isoNames.Add(new IsocenterModel("LowSpine"));
             }
+            foreach (IsocenterModel itr in isoNames) itr.BeamType = Enums.BeamType.VMAT;
             return isoNames;
         }
 
@@ -67,6 +68,7 @@ namespace AutoPlannerHelpers.Helpers
                     }
                 }
             }
+            foreach (IsocenterModel itr in isoNames) itr.BeamType = Enums.BeamType.VMAT;
             return isoNames;
         }
 
@@ -83,6 +85,7 @@ namespace AutoPlannerHelpers.Helpers
                 new IsocenterModel("AP / PA upper legs")
             };
             if (numIsos == numVMATIsos + 2) isoNames.Add(new IsocenterModel("AP / PA lower legs"));
+            foreach (IsocenterModel itr in isoNames) itr.BeamType = Enums.BeamType.APPA;
             return isoNames;
         }
     }
