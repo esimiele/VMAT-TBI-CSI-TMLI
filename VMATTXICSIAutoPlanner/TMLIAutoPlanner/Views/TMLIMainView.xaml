@@ -116,9 +116,9 @@
                     <Label Content="Number of fractions:" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center"></Label>
                     <Label Content="Rx dose (cGy):" Grid.Row="3" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center"></Label>
 
-                    <TextBox Text="{Binding DosePerFraction}"  Grid.Row="1" Grid.Column="1" TextAlignment="Center" HorizontalAlignment="Left" VerticalAlignment="Center" Width="75"></TextBox>
-                    <TextBox Text="{Binding NumberOfFractions}" Grid.Row="2" Grid.Column="1" TextAlignment="Center" HorizontalAlignment="Left" VerticalAlignment="Center" Width="75"></TextBox>
-                    <TextBox Text="{Binding PlanTotalDose}" Grid.Row="3" Grid.Column="1" TextAlignment="Center" HorizontalAlignment="Left" VerticalAlignment="Center" Width="75" IsReadOnly="True"></TextBox>
+                    <TextBox Text="{Binding InitialDosePerFraction}"  Grid.Row="1" Grid.Column="1" TextAlignment="Center" HorizontalAlignment="Left" VerticalAlignment="Center" Width="75"></TextBox>
+                    <TextBox Text="{Binding InitialNumberOfFractions}" Grid.Row="2" Grid.Column="1" TextAlignment="Center" HorizontalAlignment="Left" VerticalAlignment="Center" Width="75"></TextBox>
+                    <TextBox Text="{Binding InitialPlanTotalDose}" Grid.Row="3" Grid.Column="1" TextAlignment="Center" HorizontalAlignment="Left" VerticalAlignment="Center" Width="75" IsReadOnly="True"></TextBox>
                 </Grid>
             </Grid>
 

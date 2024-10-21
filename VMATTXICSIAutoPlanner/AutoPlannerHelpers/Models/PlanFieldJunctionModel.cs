@@ -5,11 +5,11 @@ namespace AutoPlannerHelpers.Models
 {
     public class PlanFieldJunctionModel
     {
-        public ExternalPlanSetup PlanSetup { get; set; } = null;
+        public string PlanId { get; set; } = null;
         public List<FieldJunctionModel> FieldJunctions { get; set; } = new List<FieldJunctionModel> { };
-        public PlanFieldJunctionModel(ExternalPlanSetup p, IEnumerable<FieldJunctionModel> junctions)
+        public PlanFieldJunctionModel(string pid, IEnumerable<FieldJunctionModel> junctions)
         {
-            PlanSetup = p;
+            PlanId = pid;
             FieldJunctions = new List<FieldJunctionModel>(junctions);
         }
     }

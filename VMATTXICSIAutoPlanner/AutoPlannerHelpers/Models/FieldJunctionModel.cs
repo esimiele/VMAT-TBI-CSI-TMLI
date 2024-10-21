@@ -7,7 +7,7 @@ namespace AutoPlannerHelpers.Models
         public double OverlapCenterPositionZ { get; set; } = double.NaN;
         public int NumberOfCTSlices { get; set; } = -1;
         public int StartSlice { get; set; } = -1;
-        public Structure JunctionStructure { get; set; } = null;
+        public string JunctionStructureId { get; set; } = string.Empty;
 
         public FieldJunctionModel(double center, int numSlice, int start)
         {

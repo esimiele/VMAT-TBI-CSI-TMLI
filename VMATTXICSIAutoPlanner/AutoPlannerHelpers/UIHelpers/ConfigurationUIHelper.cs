@@ -87,10 +87,10 @@ namespace AutoPlannerHelpers.UIHelpers
         /// </summary>
         /// <param name="templates"></param>
         /// <returns></returns>
-        public static StringBuilder PrintTBIPlanTemplateConfigurationParameters(List<TBIAutoPlanTemplate> templates)
+        public static StringBuilder PrintTBIPlanTemplateConfigurationParameters(List<AutoPlanTemplateBase> templates)
         {
             StringBuilder sb = new StringBuilder();
-            foreach (TBIAutoPlanTemplate itr in templates.Where(x => !string.Equals(x.TemplateName, "--select--")))
+            foreach (TBIAutoPlanTemplate itr in templates.ConvertAll(x => x as TBIAutoPlanTemplate).Where(x => !string.Equals(x.TemplateName, "--select--")))
             {
                 sb.AppendLine("----------------------------------------------------------------------------");
 
@@ -119,10 +119,10 @@ namespace AutoPlannerHelpers.UIHelpers
         /// </summary>
         /// <param name="templates"></param>
         /// <returns></returns>
-        public static StringBuilder PrintTMLIPlanTemplateConfigurationParameters(List<TMLIAutoPlanTemplate> templates)
+        public static StringBuilder PrintTMLIPlanTemplateConfigurationParameters(List<AutoPlanTemplateBase> templates)
         {
             StringBuilder sb = new StringBuilder();
-            foreach (TMLIAutoPlanTemplate itr in templates.Where(x => !string.Equals(x.TemplateName, "--select--")))
+            foreach (TMLIAutoPlanTemplate itr in templates.ConvertAll(x => x as TMLIAutoPlanTemplate).Where(x => !string.Equals(x.TemplateName, "--select--")))
             {
                 sb.AppendLine("----------------------------------------------------------------------------");
 

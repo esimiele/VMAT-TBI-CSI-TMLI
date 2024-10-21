@@ -8,9 +8,10 @@
         public double RingThicknessInCM { get; set; } = double.NaN;
         public double DoseLevel { get; set; } = double.NaN;
 
-        public TSRingStructureModel(string id, double margin, double thickness, double dose)
+        public TSRingStructureModel(string id, double margin, double thickness, double dose, string ringId = "")
         {
             TargetId = id;
+            RingId = ringId;
             MarginFromTargetInCM = margin;
             RingThicknessInCM = thickness;
             DoseLevel = dose;

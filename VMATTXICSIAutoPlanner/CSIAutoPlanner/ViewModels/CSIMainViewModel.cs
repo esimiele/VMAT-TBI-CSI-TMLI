@@ -31,7 +31,6 @@ namespace CSIAutoPlanner.ViewModels
     {
 
         #region properties
-        
         private double _boostDosePerFraction;
         private int _boostNumberOfFractions;
         private double _boostPlanTotalDose;
@@ -56,23 +55,17 @@ namespace CSIAutoPlanner.ViewModels
             set { SetProperty(ref _boostPlanTotalDose, value); }
         }
 
-        
-
         public System.Windows.Media.SolidColorBrush PrepForTargetsBackground
         {
             get { return _prepForTargetsBackground; }
             set { SetProperty(ref _prepForTargetsBackground, value); }
         }
 
-        
-
         public System.Windows.Media.SolidColorBrush SetTargetsTabBackground
         {
             get { return _setTargetsTabBackground; }
             set { SetProperty(ref _setTargetsTabBackground, value); }
         }
-
-        
         #endregion
 
         #region view objects
@@ -80,14 +73,10 @@ namespace CSIAutoPlanner.ViewModels
         private object _exportCT;
         private PrepForTargetsViewModel _prepForTargetsVM;
         private object _prepForTargets;
-        
         private StructureCropOverlapViewModel _structureCropOverlapVM;
         private object _structureCropOverlap;
         private RingGenerationViewModel _ringGenerationVM;
         private object _ringGeneration;
-        
-        private PlanPreparationViewModel _planPrepVM;
-        private object _planPreparation;
 
         public object ExportCT
         {
@@ -101,7 +90,6 @@ namespace CSIAutoPlanner.ViewModels
             set { SetProperty(ref _prepForTargets, value); }
         }
 
-
         public object StructureCropOverlap
         {
             get { return _structureCropOverlap; }
@@ -113,12 +101,6 @@ namespace CSIAutoPlanner.ViewModels
             get { return _ringGeneration; }
             set { SetProperty(ref _ringGeneration, value); }
         }
-
-        public object PlanPreparation
-        {
-            get { return _planPreparation; }
-            set { SetProperty(ref _planPreparation, value); }
-        }
         #endregion
 
         #region commands
@@ -126,21 +108,19 @@ namespace CSIAutoPlanner.ViewModels
         public DelegateCommand HelpGuideCommand { get; set; }
         private DelegateCommand NotifyExportCTCommand;
         private DelegateCommand NotifyPrepForTargetsCommand;
-        
-        private DelegateCommand NotifyPreparePlanForTreatmentCommand;
         #endregion
 
         public CSIMainViewModel(string[] args) :
-            base(PlanType.VMAT_CSI)
+            base(PlanType.VMAT_CSI, args)
         {
             Initialize();
         }
 
         public void Initialize()
         {
-            string configurationFile = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\configuration\\VMAT_CSI_config.ini";
-            LoadScriptConfigurationSettings(configurationFile);
-            InitializeUIWithConfigurationSettings();
+            _generalConfigurationFile = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\configuration\\VMAT_CSI_config.ini";
+            LoadScriptConfigurationSettings(_generalConfigurationFile);
+            LoadPlanTemplates();
 
             List<ExportCTModel> models = new List<ExportCTModel>
             {
@@ -162,22 +142,15 @@ namespace CSIAutoPlanner.ViewModels
             _structureCropOverlapVM = new StructureCropOverlapViewModel(_structureIdsPostUnion);
             StructureCropOverlap = new StructureCropOverlapView { DataContext = _structureCropOverlapVM };
 
-            NotifyPreparePlanForTreatmentCommand = new DelegateCommand(PreparePlanForTreatment);
-            _planPrepVM = new PlanPreparationViewModel(NotifyPreparePlanForTreatmentCommand);
-            PlanPreparation = new PlanPreparationView { DataContext = _planPrepVM };
-
             QuickStartGuideCommand = new DelegateCommand(LaunchQuickStartGuide);
             HelpGuideCommand = new DelegateCommand(LaunchHelpGuide);
 
-            LoadPlanTemplates();
-        }
+            //needs to be initialized after the plan templates are loaded
+            ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
 
-        private void InitializeUIWithConfigurationSettings()
-        {
             SpecifyTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
             if (EclipseContext.GetInstance().IsInitialized && ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
             {
-                _structureIdsPostUnion = StructureTuningHelper.GenerateStructureIdListPostUnion(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id).ToList());
                 if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => x.IsApproved && x.Id.ToLower().Contains("ptv")))
                 {
                     SetTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
@@ -191,14 +164,9 @@ namespace CSIAutoPlanner.ViewModels
             }
             else
             {
-                _structureIdsPostUnion = new List<string> { "lung_l", "lung_r", "kidney_l", "kidney_r", "PTV^Body", "OpticChiasm","Brainstem" };
                 PrepForTargetsBackground = System.Windows.Media.Brushes.LightGray;
                 SetTargetsTabBackground = System.Windows.Media.Brushes.LightGray;
             }
-            StructureTuningTabBackground = System.Windows.Media.Brushes.LightGray;
-            TSManipulationTabBackground = System.Windows.Media.Brushes.LightGray;
-            BeamPlacementTabBackground = System.Windows.Media.Brushes.LightGray;
-            OptimizationSetupTabBackground = System.Windows.Media.Brushes.LightGray;
         }
 
         public void ExportCTImage()
@@ -212,7 +180,6 @@ namespace CSIAutoPlanner.ViewModels
             Logger.GetInstance().AppendLogOutput("Export CT data:", imageExport.GetLogOutput());
             Logger.GetInstance().OpType = ScriptOperationType.ExportCT;
             if (result) return;
-            //exportCTTabItem.Background = System.Windows.Media.Brushes.ForestGreen;
             //this.Close();
         }
 
@@ -256,7 +223,6 @@ namespace CSIAutoPlanner.ViewModels
                                                                  _boostPlanTotalDose);
             if (!_prescriptions.Any()) return;
             _optimizationSetupVM.UpdatePrescriptionList(_prescriptions);
-            if (!ReferenceEquals(_selectedTemplate, null)) _optimizationSetupVM.UpdateUIWithSelectedPlanTemplate(_selectedTemplate);
             SpecifyTargetsTabBackground = System.Windows.Media.Brushes.ForestGreen;
             StructureTuningTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
             TSManipulationTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
@@ -305,8 +271,14 @@ namespace CSIAutoPlanner.ViewModels
             _planIsocenters = generateTS.PlanIsocentersList;
 
             _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters, CSIAutoPlannerSettings.AvailableLinacs, CSIAutoPlannerSettings.AvailableEnergies);
-            UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets);
-            UpdateOptimizationConstraintsWithRings(generateTS.AddedRings);
+            UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, (_selectedTemplate as CSIAutoPlanTemplate).InitialOptimizationConstraints);
+            UpdateOptimizationConstraintsWithRings(generateTS.AddedRings, (_selectedTemplate as CSIAutoPlanTemplate).InitialOptimizationConstraints, _prescriptions.Where(x => string.Equals(x.PlanId, _prescriptions.First().PlanId)));
+            if (generateTS.PlanTargets.Count > 1)
+            {
+                UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, (_selectedTemplate as CSIAutoPlanTemplate).BoostOptimizationConstraints);
+                UpdateOptimizationConstraintsWithRings(generateTS.AddedRings, (_selectedTemplate as CSIAutoPlanTemplate).BoostOptimizationConstraints, _prescriptions.Where(x => string.Equals(x.PlanId, _prescriptions.Last().PlanId)));
+            }
+
             UpdateOptimizationConstraintsWithCropOverlapStructures(generateTS.TargetCropOverlapManipulations);
 
             StructureTuningTabBackground = System.Windows.Media.Brushes.ForestGreen;
@@ -321,28 +293,6 @@ namespace CSIAutoPlanner.ViewModels
 
             //_planIsocenters.Add(new PlanIsocenterModel("test", new List<IsocenterModel> { new IsocenterModel("1", 2, BeamType.VMAT), new IsocenterModel("2", 3, BeamType.VMAT), new IsocenterModel("3", 4, BeamType.VMAT) }));
             //_planIsocenters.Add(new PlanIsocenterModel("doubleTest", new List<IsocenterModel> { new IsocenterModel("4", 2, BeamType.APPA) }));
-        }
-
-        public void UpdateOptimizationConstraintsWithTSTargets(List<PlanTargetsModel> planTargets)
-        {
-            //update optimization constraint list to replace target constraints with ts targets
-            if (!ReferenceEquals(_selectedTemplate, null))
-            {
-                foreach (PlanTargetsModel itr in planTargets)
-                {
-                    foreach (TargetModel target in itr.Targets)
-                    {
-                        if ((_selectedTemplate as CSIAutoPlanTemplate).InitialOptimizationConstraints.Any(x => string.Equals(x.StructureId, target.TargetId)))
-                        {
-                            (_selectedTemplate as CSIAutoPlanTemplate).InitialOptimizationConstraints.First(x => string.Equals(x.StructureId, target.TargetId)).StructureId = target.TsTargetId;
-                        }
-                        else
-                        {
-                            (_selectedTemplate as CSIAutoPlanTemplate).BoostOptimizationConstraints.First(x => string.Equals(x.StructureId, target.TargetId)).StructureId = target.TsTargetId;
-                        }
-                    }
-                }
-            }
         }
 
         public void UpdateOptimizationConstraintsWithRings(List<TSRingStructureModel> rings)
@@ -412,32 +362,15 @@ namespace CSIAutoPlanner.ViewModels
             if (!placeBeams.VMATPlans.Any()) return;
             EclipseContext.GetInstance().VMATPlans = placeBeams.VMATPlans;
             Logger.GetInstance().PlanUIDs = placeBeams.VMATPlans.OrderBy(x => x.CreationDateTime).Select(x => x.UID).ToList();
-            UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions);
+            UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions, (_selectedTemplate as CSIAutoPlanTemplate).InitialOptimizationConstraints);
             if (!ReferenceEquals(_selectedTemplate, null)) _optimizationSetupVM.UpdateUIWithSelectedPlanTemplate(_selectedTemplate);
             BeamPlacementTabBackground = System.Windows.Media.Brushes.ForestGreen;
             OptimizationSetupTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
         }
-
-        public void UpdateOptimizationConstraintsWithTSJunctions(List<PlanFieldJunctionModel> junctions)
-        {
-            //update optimization constraint list to replace target constraints with ts targets
-            if (!ReferenceEquals(_selectedTemplate, null))
-            {
-                foreach (PlanFieldJunctionModel itr in junctions)
-                {
-                    double dose = _prescriptions.Last().CumulativeDoseToTarget;
-                    foreach (FieldJunctionModel jnx in itr.FieldJunctions)
-                    {
-                        (_selectedTemplate as CSIAutoPlanTemplate).InitialOptimizationConstraints.Insert(0, new OptimizationConstraintModel(jnx.JunctionStructure.Id, OptimizationObjectiveType.Lower, dose, Units.cGy, 100.0, 100));
-                        (_selectedTemplate as CSIAutoPlanTemplate).InitialOptimizationConstraints.Insert(1, new OptimizationConstraintModel(jnx.JunctionStructure.Id, OptimizationObjectiveType.Upper, 1.02 * dose, Units.cGy, 0.0, 100));
-                    }
-                }
-            }
-        }
         #endregion
 
         #region prepare for treatment
-        public void PreparePlanForTreatment()
+        protected override void PreparePlanForTreatment()
         {
 
         }
@@ -475,7 +408,7 @@ namespace CSIAutoPlanner.ViewModels
         }
 
         #region script configuration
-        private void LoadScriptConfigurationSettings(string file)
+        protected override void LoadScriptConfigurationSettings(string file)
         {
             try
             {
@@ -685,7 +618,5 @@ namespace CSIAutoPlanner.ViewModels
             return sb;
         }
         #endregion
-
-        
     }
 }

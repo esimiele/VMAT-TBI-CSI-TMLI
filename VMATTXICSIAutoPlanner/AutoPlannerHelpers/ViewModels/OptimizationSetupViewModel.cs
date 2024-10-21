@@ -34,21 +34,22 @@ namespace AutoPlannerHelpers.ViewModels
         #region fields
         private AutoPlanTemplateBase _selectedTemplate;
         private List<PrescriptionModel> _prescriptions;
+        private PlanType _planType;
         #endregion
 
         #region commands
         private DelegateCommand _notifyMainVMExecuted;
         public DelegateCommand AddOptimizationConstraintCommand { get; set; }
-        public DelegateCommand AddDefualtOptimizationConstraintsCommand { get; set; }
+        public DelegateCommand AddDefaultOptimizationConstraintsCommand { get; set; }
         public DelegateCommand ClearOptimizationConstraintListCommand { get; set; }
         public DelegateCommand<OptimizationConstraintModel> ClearRowCommand { get; set; }
         public DelegateCommand AssignOptimizationConstraintsCommand { get; set; }
         #endregion
 
-        public OptimizationSetupViewModel(List<string> sIds, DelegateCommand notifyMainVMExecuted)
+        public OptimizationSetupViewModel(List<string> sIds, DelegateCommand notifyMainVMExecuted, PlanType planType)
         {
             AddOptimizationConstraintCommand = new DelegateCommand(AddOptimizationObjective);
-            AddDefualtOptimizationConstraintsCommand = new DelegateCommand(AddDefualtOptimizationConstraints);
+            AddDefaultOptimizationConstraintsCommand = new DelegateCommand(AddDefaultOptimizationConstraints);
             ClearOptimizationConstraintListCommand = new DelegateCommand(ClearOptimizationConstraints);
             ClearRowCommand = new DelegateCommand<OptimizationConstraintModel>(ClearRow);
             AssignOptimizationConstraintsCommand = new DelegateCommand(AssignOptimizationConstraints);
@@ -56,6 +57,7 @@ namespace AutoPlannerHelpers.ViewModels
             else StructureIds = new List<string> { "1", "2", "3"};
             PlanOptimizationConstraints = new ObservableCollectionPropertyNotify<PlanOptimizationSetupModel> { };
             _notifyMainVMExecuted = notifyMainVMExecuted;
+            _planType = planType;
         }
 
         public void UpdatePrescriptionList(List<PrescriptionModel> prescriptions)
@@ -67,7 +69,7 @@ namespace AutoPlannerHelpers.ViewModels
         {
             if (ReferenceEquals(template, null) || ReferenceEquals(_prescriptions, null) || !_prescriptions.Any()) return;
             _selectedTemplate = template;
-            AddDefualtOptimizationConstraints();
+            AddDefaultOptimizationConstraints();
         }
 
         private void AddOptimizationObjective()
@@ -99,12 +101,12 @@ namespace AutoPlannerHelpers.ViewModels
             return new OptimizationConstraintModel(_structureIds.First(), OptimizationObjectiveType.None, 0.0, Units.None, 0.0, 0);
         }
 
-        private void AddDefualtOptimizationConstraints()
+        private void AddDefaultOptimizationConstraints()
         {
             if (ReferenceEquals(_selectedTemplate, null) || !_prescriptions.Any()) return;
 
             PlanOptimizationConstraints.Clear();
-            List<PlanOptimizationSetupModel> constraints = OptimizationSetupHelper.RetrieveOptConstraintsFromTemplate(_selectedTemplate, _prescriptions);
+            List<PlanOptimizationSetupModel> constraints = OptimizationSetupHelper.RetrieveOptConstraintsFromTemplate(_selectedTemplate, _prescriptions, _planType);
             foreach (PlanOptimizationSetupModel itr in  constraints) PlanOptimizationConstraints.Add(itr);
         }
 

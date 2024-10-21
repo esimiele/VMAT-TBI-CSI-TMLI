@@ -21,7 +21,6 @@ namespace AutoPlannerHelpers.BaseViewModel
     {
         public ObservableCollection<AutoPlanTemplateBase> PlanTemplates { get; set; }
 
-
         #region properties
         protected string _patientMRN;
         protected string _structureSetId;
@@ -53,8 +52,6 @@ namespace AutoPlannerHelpers.BaseViewModel
             get { return _selectedTemplate; }
             set { SetProperty(ref _selectedTemplate, value); UpdateUIWithSelectedPlanTemplate(); }
         }
-
-
 
         public double InitialDosePerFraction
         {
@@ -116,6 +113,8 @@ namespace AutoPlannerHelpers.BaseViewModel
         private object _beamPlacement;
         protected TSGenerationViewModel _tsGenerationVM;
         private object _tsGeneration;
+        private PlanPreparationViewModel _planPrepVM;
+        private object _planPreparation;
         private object _scriptConfiguration;
 
         public object SpecifyTargets
@@ -153,6 +152,12 @@ namespace AutoPlannerHelpers.BaseViewModel
             get { return _beamPlacement; }
             set { SetProperty(ref _beamPlacement, value); }
         }
+
+        public object PlanPreparation
+        {
+            get { return _planPreparation; }
+            set { SetProperty(ref _planPreparation, value); }
+        }
         #endregion
 
         #region commands
@@ -161,6 +166,7 @@ namespace AutoPlannerHelpers.BaseViewModel
         protected DelegateCommand NotifyGenerateManipulateTuningStructuresCommand;
         protected DelegateCommand NotifyBeamsPlacedCommand;
         protected DelegateCommand NotifyAssignOptimizationConstraintsCommand;
+        protected DelegateCommand NotifyPreparePlanForTreatmentCommand;
         #endregion
 
         #region fields
@@ -170,9 +176,17 @@ namespace AutoPlannerHelpers.BaseViewModel
         protected string _generalConfigurationFile = string.Empty;
         #endregion
 
-        public BaseViewModel(PlanType type)
+        public BaseViewModel(PlanType type, string[] args)
         {
-            PlanTemplates = new ObservableCollection<AutoPlanTemplateBase>() { };
+            if (args.Any()) EclipseContextHelper.GenerateEclipseContext(args.ToList());
+            if (EclipseContext.GetInstance().IsInitialized && ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
+            {
+                _structureIdsPostUnion = StructureTuningHelper.GenerateStructureIdListPostUnion(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id).ToList());
+            }
+            else
+            {
+                _structureIdsPostUnion = new List<string> { "lung_l", "lung_r", "kidney_l", "kidney_r", "PTV^Body", "OpticChiasm", "Brainstem" };
+            }
 
             NotifySetTargetsCommand = new DelegateCommand(SetTargets);
             _setTargetsVM = new SetTargetsViewModel(NotifySetTargetsCommand);
@@ -190,24 +204,21 @@ namespace AutoPlannerHelpers.BaseViewModel
             BeamPlacement = new BeamPlacementView { DataContext = _beamPlacementVM };
 
             NotifyAssignOptimizationConstraintsCommand = new DelegateCommand(AssignOptimizationConstraints);
-            _optimizationSetupVM = new OptimizationSetupViewModel(_structureIdsPostUnion, NotifyAssignOptimizationConstraintsCommand);
+            _optimizationSetupVM = new OptimizationSetupViewModel(_structureIdsPostUnion, NotifyAssignOptimizationConstraintsCommand, type);
             OptimizationSetup = new OptimizationSetupView { DataContext = _optimizationSetupVM };
 
-            ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
+            NotifyPreparePlanForTreatmentCommand = new DelegateCommand(PreparePlanForTreatment);
+            _planPrepVM = new PlanPreparationViewModel(NotifyPreparePlanForTreatmentCommand);
+            PlanPreparation = new PlanPreparationView { DataContext = _planPrepVM };
 
+            PlanTemplates = new ObservableCollection<AutoPlanTemplateBase>() { };
             WindowClosingCommand = new DelegateCommand(WindowClosing);
+
+            StructureTuningTabBackground = System.Windows.Media.Brushes.LightGray;
+            TSManipulationTabBackground = System.Windows.Media.Brushes.LightGray;
+            BeamPlacementTabBackground = System.Windows.Media.Brushes.LightGray;
+            OptimizationSetupTabBackground = System.Windows.Media.Brushes.LightGray;
         }
-
-        protected abstract void PerformTSStructureGenerationManipulation();
-
-        protected abstract void GeneratePlansAndPlaceBeams();
-
-        protected void AssignOptimizationConstraints()
-        {
-            OptimizationSetupTabBackground = System.Windows.Media.Brushes.ForestGreen;
-        }
-
-        protected abstract StringBuilder BuildScriptConfigurationInfo();
 
         protected virtual void SetTargets()
         {
@@ -215,7 +226,6 @@ namespace AutoPlannerHelpers.BaseViewModel
             _prescriptions = TargetsHelper.BuildPrescriptionList(_setTargetsVM.PlanTargets, _initialDosePerFraction, _initialNumberOfFractions, _initialPlanTotalDose);
             if (!_prescriptions.Any()) return;
             _optimizationSetupVM.UpdatePrescriptionList(_prescriptions);
-            if (!ReferenceEquals(_selectedTemplate, null)) _optimizationSetupVM.UpdateUIWithSelectedPlanTemplate(_selectedTemplate);
             SpecifyTargetsTabBackground = System.Windows.Media.Brushes.ForestGreen;
             StructureTuningTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
             TSManipulationTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
@@ -223,7 +233,69 @@ namespace AutoPlannerHelpers.BaseViewModel
 
         protected abstract bool VerifyTargetsIntegrity(List<PlanTargetsModel> parsedTargets);
 
+        protected abstract void PerformTSStructureGenerationManipulation();
+
+        protected abstract void GeneratePlansAndPlaceBeams();
+
+        public List<OptimizationConstraintModel> UpdateOptimizationConstraintsWithTSTargets(List<PlanTargetsModel> planTargets, List<OptimizationConstraintModel> constraints)
+        {
+            //update optimization constraint list to replace target constraints with ts targets
+            foreach (PlanTargetsModel itr in planTargets)
+            {
+                foreach (TargetModel target in itr.Targets)
+                {
+                    if (constraints.Any(x => string.Equals(x.StructureId, target.TargetId)))
+                    {
+                        foreach(OptimizationConstraintModel matchingTargetConstraint in constraints.Where(x => string.Equals(x.StructureId, target.TargetId)))
+                        {
+                            matchingTargetConstraint.StructureId = target.TsTargetId;
+                        }
+                    }
+                }
+            }
+            return new List<OptimizationConstraintModel>(constraints);
+        }
+
+        public List<OptimizationConstraintModel> UpdateOptimizationConstraintsWithRings(List<TSRingStructureModel> rings, List<OptimizationConstraintModel> constraints, IEnumerable<PrescriptionModel> planPrescriptions)
+        {
+            foreach (TSRingStructureModel itr in rings)
+            {
+                if (planPrescriptions.Any(x => string.Equals(x.TargetId, itr.TargetId)))
+                {
+                    constraints.Insert(0, new OptimizationConstraintModel(itr.RingId, OptimizationObjectiveType.Upper, itr.DoseLevel, Units.cGy, 0.0, 80));
+                }
+            }
+            return new List<OptimizationConstraintModel>(constraints);
+        }
+
+        public List<OptimizationConstraintModel> UpdateOptimizationConstraintsWithTSJunctions(List<PlanFieldJunctionModel> junctions, List<OptimizationConstraintModel> constraints)
+        {
+            //update optimization constraint list to replace target constraints with ts targets
+            foreach (PlanFieldJunctionModel itr in junctions)
+            {
+                //get the dose for the last prescription item that has the same plan id as the current plan field junction model
+                double dose = _prescriptions.Last(x => string.Equals(itr.PlanId, x.PlanId)).CumulativeDoseToTarget;
+                foreach (FieldJunctionModel jnx in itr.FieldJunctions)
+                {
+                    constraints.Insert(0, new OptimizationConstraintModel(jnx.JunctionStructureId, OptimizationObjectiveType.Lower, dose, Units.cGy, 100.0, 100));
+                    constraints.Insert(1, new OptimizationConstraintModel(jnx.JunctionStructureId, OptimizationObjectiveType.Upper, 1.02 * dose, Units.cGy, 0.0, 100));
+                }
+            }
+            return new List<OptimizationConstraintModel>(constraints);
+        }
+
+        protected void AssignOptimizationConstraints()
+        {
+            OptimizationSetupTabBackground = System.Windows.Media.Brushes.ForestGreen;
+        }
+
+        protected abstract void LoadScriptConfigurationSettings(string file);
+        protected abstract StringBuilder BuildScriptConfigurationInfo();
+
+        protected abstract void PreparePlanForTreatment();
+
         protected abstract void UpdateUIWithSelectedPlanTemplate();
+
 
         public void ResetInitialRxDose()
         {

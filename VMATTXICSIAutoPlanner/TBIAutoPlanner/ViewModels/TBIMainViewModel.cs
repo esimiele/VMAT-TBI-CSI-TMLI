@@ -5,7 +5,6 @@ using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.ViewModels;
 using AutoPlannerHelpers.Views;
 using AutoPlannerHelpers.PlanTemplateModels;
-using Prism.Mvvm;
 using Prism.Commands;
 using AutoPlannerHelpers.Models;
 using System.IO;
@@ -23,69 +22,19 @@ using TBIAutoPlanner.Settings;
 using CTStitcher.Views;
 using CTStitcher.ViewModels;
 using PlanType = AutoPlannerHelpers.Enums.PlanType;
-using VMS.TPS.Common.Model.API;
-using AutoPlannerHelpers.Prompts;
+using AutoPlannerHelpers.BaseViewModel;
 
 namespace TBIAutoPlanner.ViewModels
 {
-    public class TBIMainViewModel : BindableBase
+    public class TBIMainViewModel : BaseViewModel
     {
-        public ObservableCollection<TBIAutoPlanTemplate> PlanTemplates { get; set; }
-
         #region properties
-        private string _patientMRN;
-        private string _structureSetId;
-        private double _dosePerFraction;
-        private int _numberOfFractions;
-        private double _planTotalDose;
-        private TBIAutoPlanTemplate _selectedTemplate;
         private bool _useFlash;
         private Visibility _flashMarginVisible;
         private double _flashMargin;
         private double _ptvMarginFromBody;
-        private System.Windows.Media.SolidColorBrush _specifyTargetsTabBackground;
-        private System.Windows.Media.SolidColorBrush _structureTuningTabBackground;
-        private System.Windows.Media.SolidColorBrush _tsManipulationTabBackground;
-        private System.Windows.Media.SolidColorBrush _beamPlacementTabBackground;
-        private System.Windows.Media.SolidColorBrush _optimizationSetupTabBackground;
         private Visibility _stitchCTTabVisible;
         private int _initialTabSelected;
-
-        public string PatientMRN
-        {
-            get { return _patientMRN; }
-            set { SetProperty(ref _patientMRN, value); }
-        }
-
-        public string StructureSetId
-        {
-            get { return _structureSetId; }
-            set { _structureSetId = value; }
-        }
-
-        public double DosePerFraction
-        {
-            get { return _dosePerFraction; }
-            set { SetProperty(ref _dosePerFraction, value); ResetRxDose(); }
-        }
-
-        public int NumberOfFractions
-        {
-            get { return _numberOfFractions; }
-            set { SetProperty(ref _numberOfFractions, value); ResetRxDose(); }
-        }
-
-        public double PlanTotalDose
-        {
-            get { return _planTotalDose; }
-            set { SetProperty(ref _planTotalDose, value); }
-        }
-
-        public TBIAutoPlanTemplate SelectedTemplate
-        {
-            get { return _selectedTemplate; }
-            set { SetProperty(ref _selectedTemplate, value); UpdateUIWithSelectedPlanTemplate(); }
-        }
 
         public bool UseFlash
         {
@@ -111,36 +60,6 @@ namespace TBIAutoPlanner.ViewModels
             set { SetProperty(ref _ptvMarginFromBody, value); }
         }
 
-        public System.Windows.Media.SolidColorBrush SpecifyTargetsTabBackground
-        {
-            get { return _specifyTargetsTabBackground; }
-            set { SetProperty(ref _specifyTargetsTabBackground, value); }
-        }
-
-        public System.Windows.Media.SolidColorBrush StructureTuningTabBackground
-        {
-            get { return _structureTuningTabBackground; }
-            set { SetProperty(ref _structureTuningTabBackground, value); }
-        }
-
-        public System.Windows.Media.SolidColorBrush TSManipulationTabBackground
-        {
-            get { return _tsManipulationTabBackground; }
-            set { SetProperty(ref _tsManipulationTabBackground, value); }
-        }
-
-        public System.Windows.Media.SolidColorBrush BeamPlacementTabBackground
-        {
-            get { return _beamPlacementTabBackground; }
-            set { SetProperty(ref _beamPlacementTabBackground, value); }
-        }
-
-        public System.Windows.Media.SolidColorBrush OptimizationSetupTabBackground
-        {
-            get { return _optimizationSetupTabBackground; }
-            set { SetProperty(ref _optimizationSetupTabBackground, value); }
-        }
-
         public Visibility StitchCTTabVisible
         {
             get { return _stitchCTTabVisible; }
@@ -158,66 +77,11 @@ namespace TBIAutoPlanner.ViewModels
         #region view objects
         private CTStitcherViewModel _stitcherViewModel;
         private object _stitchCT;
-        private SetTargetsViewModel _setTargetsVM;
-        private object _specifyTargets;
-        private TSGenerationViewModel _tsGenerationVM;
-        private object _tsGeneration;
-        private TSManipulationViewModel _tsManipulationVM;
-        private object _tsManipulation;
-        private BeamPlacementViewModel _beamPlacementVM;
-        private object _beamPlacement;
-        private OptimizationSetupViewModel _optimizationSetupVM;
-        private object _optimizationSetup;
-        private PlanPreparationViewModel _planPrepVM;
-        private object _planPreparation;
-        private object _scriptConfiguration;
 
         public object StitchCT
         {
             get { return _stitchCT; }
             set { SetProperty(ref _stitchCT, value); }
-        }
-
-        public object SpecifyTargets
-        {
-            get { return _specifyTargets; }
-            set { SetProperty(ref _specifyTargets, value); }
-        }
-
-        public object TSGeneration
-        {
-            get { return _tsGeneration; }
-            set { SetProperty(ref _tsGeneration, value); }
-        }
-
-        public object TSManipulation
-        {
-            get { return _tsManipulation; }
-            set { SetProperty(ref _tsManipulation, value); }
-        }
-
-        public object OptimizationSetup
-        {
-            get { return _optimizationSetup; }
-            set { SetProperty(ref _optimizationSetup, value); }
-        }
-
-        public object PlanPreparation
-        {
-            get { return _planPreparation; }
-            set { SetProperty(ref _planPreparation, value); }
-        }
-
-        public object ScriptConfiguration
-        {
-            get { return _scriptConfiguration; }
-            set { SetProperty(ref _scriptConfiguration, value); }
-        }
-
-        public object BeamPlacement
-        {
-            get { return _beamPlacement; }
-            set { SetProperty(ref _beamPlacement, value); }
         }
         #endregion
 
@@ -225,72 +89,26 @@ namespace TBIAutoPlanner.ViewModels
         public DelegateCommand QuickStartGuideCommand { get; set; }
         public DelegateCommand HelpGuideCommand { get; set; }
         public DelegateCommand PTVMarginInfoCommand { get; set; }
-        private DelegateCommand NotifySetTargetsCommand;
-        private DelegateCommand NotifyGenerateManipulateTuningStructuresCommand;
-        private DelegateCommand NotifyBeamsPlacedCommand;
-        private DelegateCommand NotifyAssignOptimizationConstraintsCommand;
-        private DelegateCommand NotifyPreparePlanForTreatmentCommand;
-        public DelegateCommand WindowClosingCommand { get; set; }
         #endregion
 
         #region fields
-        private List<PrescriptionModel> _prescriptions = new List<PrescriptionModel> { };
-        private List<PlanIsocenterModel> _planIsocenters = new List<PlanIsocenterModel> { };
-        private List<string> _structureIdsPostUnion;
-        private string _generalConfigurationFile = string.Empty;
         #endregion
 
-        public TBIMainViewModel(string[] args)
+        public TBIMainViewModel(string[] args) :
+            base(PlanType.VMAT_TBI, args)
         {
-            if (args.Any()) EclipseContextHelper.GenerateEclipseContext(args.ToList());
             Initialize();
         }
 
         public void Initialize()
         {
-            string configurationFile = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\configuration\\VMAT_TBI_config.ini";
-            LoadScriptConfigurationSettings(configurationFile);
-            InitializeUIWithConfigurationSettings();
+            _generalConfigurationFile = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\configuration\\VMAT_TBI_config.ini";
+            LoadScriptConfigurationSettings(_generalConfigurationFile);
+            LoadPlanTemplates();
 
             _stitcherViewModel = new CTStitcherViewModel();
             StitchCT = new CTStitcherView { DataContext = _stitcherViewModel };
 
-            NotifySetTargetsCommand = new DelegateCommand(SetTargets);
-            _setTargetsVM = new SetTargetsViewModel(NotifySetTargetsCommand);
-            SpecifyTargets = new SpecifyTargetsView { DataContext = _setTargetsVM };
-
-            _tsGenerationVM = new TSGenerationViewModel();
-            TSGeneration = new TSGenerationView { DataContext = _tsGenerationVM };
-
-            NotifyGenerateManipulateTuningStructuresCommand = new DelegateCommand(PerformTSStructureGenerationManipulation);
-            _tsManipulationVM = new TSManipulationViewModel(NotifyGenerateManipulateTuningStructuresCommand, _structureIdsPostUnion);
-            TSManipulation = new TSManipulationView { DataContext = _tsManipulationVM };
-
-            NotifyBeamsPlacedCommand = new DelegateCommand(GeneratePlansAndPlaceBeams);
-            _beamPlacementVM = new BeamPlacementViewModel(NotifyBeamsPlacedCommand, PlanType.VMAT_TBI);
-            BeamPlacement = new BeamPlacementView { DataContext = _beamPlacementVM };
-
-            NotifyAssignOptimizationConstraintsCommand = new DelegateCommand(AssignOptimizationConstraints);
-            _optimizationSetupVM = new OptimizationSetupViewModel(_structureIdsPostUnion, NotifyAssignOptimizationConstraintsCommand);
-            OptimizationSetup = new OptimizationSetupView { DataContext = _optimizationSetupVM };
-
-            NotifyPreparePlanForTreatmentCommand = new DelegateCommand(PreparePlanForTreatment);
-            _planPrepVM = new PlanPreparationViewModel(NotifyPreparePlanForTreatmentCommand);
-            PlanPreparation = new PlanPreparationView { DataContext = _planPrepVM };
-
-            QuickStartGuideCommand = new DelegateCommand(LaunchQuickStartGuide);
-            HelpGuideCommand = new DelegateCommand(LaunchHelpGuide);
-            PTVMarginInfoCommand = new DelegateCommand(ShowPTVMarginInfo);
-
-            PlanTemplates = new ObservableCollection<TBIAutoPlanTemplate>() { new TBIAutoPlanTemplate("--select--") };
-            LoadPlanTemplates();
-
-            ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
-            WindowClosingCommand = new DelegateCommand(WindowClosing);
-        }
-
-        private void InitializeUIWithConfigurationSettings()
-        {
             if (!TBIAutoPlannerSettings.ShowStitchCTTab)
             {
                 StitchCTTabVisible = Visibility.Collapsed;
@@ -298,23 +116,17 @@ namespace TBIAutoPlanner.ViewModels
             }
             PTVMarginFromBody = TBIAutoPlannerSettings.PTVInnerMarginFromBodyInCM;
             UseFlash = TBIAutoPlannerSettings.UseFlash;
-            if(!TBIAutoPlannerSettings.UseFlash) FlashMarginVisible = Visibility.Hidden;
+            if (!TBIAutoPlannerSettings.UseFlash) FlashMarginVisible = Visibility.Hidden;
             FlashMargin = TBIAutoPlannerSettings.FlashMarginInCM;
 
-            if (EclipseContext.GetInstance().IsInitialized && ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
-            {
-                _structureIdsPostUnion = StructureTuningHelper.GenerateStructureIdListPostUnion(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id).ToList());
-            }
-            else
-            {
-                _structureIdsPostUnion = new List<string> {"lung_l", "lung_r", "kidney_l", "kidney_r", "PTV^Body" };
-            }
+            QuickStartGuideCommand = new DelegateCommand(LaunchQuickStartGuide);
+            HelpGuideCommand = new DelegateCommand(LaunchHelpGuide);
+            PTVMarginInfoCommand = new DelegateCommand(ShowPTVMarginInfo);
+
+            //needs to be initialized after the plan templates are loaded
+            ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
 
             SpecifyTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
-            StructureTuningTabBackground = System.Windows.Media.Brushes.LightGray;
-            TSManipulationTabBackground = System.Windows.Media.Brushes.LightGray;
-            BeamPlacementTabBackground = System.Windows.Media.Brushes.LightGray;
-            OptimizationSetupTabBackground = System.Windows.Media.Brushes.LightGray;
 
         }
 
@@ -336,19 +148,8 @@ namespace TBIAutoPlanner.ViewModels
         #endregion
 
         #region specify targets
-        private void SetTargets()
-        {
-            if(VerifyTargetsIntegrity(_setTargetsVM.PlanTargets)) return;
-            _prescriptions = TargetsHelper.BuildPrescriptionList(_setTargetsVM.PlanTargets, _dosePerFraction, _numberOfFractions, _planTotalDose);
-            if(!_prescriptions.Any()) return;
-            _optimizationSetupVM.UpdatePrescriptionList(_prescriptions);
-            if(!ReferenceEquals(_selectedTemplate, null)) _optimizationSetupVM.UpdateUIWithSelectedPlanTemplate(_selectedTemplate);
-            SpecifyTargetsTabBackground = System.Windows.Media.Brushes.ForestGreen;
-            StructureTuningTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
-            TSManipulationTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
-        }
 
-        private bool VerifyTargetsIntegrity(List<PlanTargetsModel> parsedTargets)
+        protected override bool VerifyTargetsIntegrity(List<PlanTargetsModel> parsedTargets)
         {
             //verify selected targets are APPROVED
             //for tbi, we only want to make there is one plan (not configured for sequential boosts)
@@ -363,7 +164,7 @@ namespace TBIAutoPlanner.ViewModels
         #endregion
 
         #region TS generation and manipulation
-        private void PerformTSStructureGenerationManipulation()
+        protected override void PerformTSStructureGenerationManipulation()
         {
             List<RequestedTSStructureModel> tsGeneration = _tsGenerationVM.RequestedTuningStructures.ToList();
             List<RequestedTSManipulationModel> tsManipulations = _tsManipulationVM.RequestedTSManipulations.ToList();
@@ -391,7 +192,7 @@ namespace TBIAutoPlanner.ViewModels
             _planIsocenters = generateTS.PlanIsocentersList;
 
             _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters, TBIAutoPlannerSettings.AvailableLinacs, TBIAutoPlannerSettings.AvailableEnergies);
-            UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets);
+            UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, (_selectedTemplate as TBIAutoPlanTemplate).InitialOptimizationConstraints);
 
             StructureTuningTabBackground = System.Windows.Media.Brushes.ForestGreen;
             TSManipulationTabBackground = System.Windows.Media.Brushes.ForestGreen;
@@ -406,28 +207,10 @@ namespace TBIAutoPlanner.ViewModels
             //_planIsocenters.Add(new PlanIsocenterModel("test", new List<IsocenterModel> { new IsocenterModel("1", 2, BeamType.VMAT), new IsocenterModel("2", 3, BeamType.VMAT), new IsocenterModel("3", 4, BeamType.VMAT) }));
             //_planIsocenters.Add(new PlanIsocenterModel("doubleTest", new List<IsocenterModel> { new IsocenterModel("4", 2, BeamType.APPA) }));
         }
-
-        public void UpdateOptimizationConstraintsWithTSTargets(List<PlanTargetsModel> planTargets)
-        {
-            //update optimization constraint list to replace target constraints with ts targets
-            if (!ReferenceEquals(_selectedTemplate, null))
-            {
-                foreach (PlanTargetsModel itr in planTargets)
-                {
-                    foreach (TargetModel target in itr.Targets)
-                    {
-                        if (_selectedTemplate.InitialOptimizationConstraints.Any(x => string.Equals(x.StructureId, target.TargetId)))
-                        {
-                            _selectedTemplate.InitialOptimizationConstraints.First(x => string.Equals(x.StructureId, target.TargetId)).StructureId = target.TsTargetId;
-                        }
-                    }
-                }
-            }
-        }
         #endregion
 
         #region beam placement
-        private void GeneratePlansAndPlaceBeams()
+        protected override void GeneratePlansAndPlaceBeams()
         {
             _planIsocenters = _beamPlacementVM.PlanIsocenterList.ToList();
             GeneratePlansAndPlaceBeams_TBI placeBeams = new GeneratePlansAndPlaceBeams_TBI(_planIsocenters,
@@ -441,157 +224,105 @@ namespace TBIAutoPlanner.ViewModels
             Logger.GetInstance().AppendLogOutput("Generate plans and place beams output:", placeBeams.GetLogOutput());
             if (failed) return;
             if (placeBeams.VMATPlans.Any()) EclipseContext.GetInstance().VMATPlans = placeBeams.VMATPlans;
-            UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions);
+            UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions, (_selectedTemplate as TBIAutoPlanTemplate).InitialOptimizationConstraints);
             if(!ReferenceEquals(_selectedTemplate, null)) _optimizationSetupVM.UpdateUIWithSelectedPlanTemplate(_selectedTemplate);
             BeamPlacementTabBackground = System.Windows.Media.Brushes.ForestGreen;
             OptimizationSetupTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
         }
-
-        public void UpdateOptimizationConstraintsWithTSJunctions(List<PlanFieldJunctionModel> junctions)
-        {
-            //update optimization constraint list to replace target constraints with ts targets
-            if (!ReferenceEquals(_selectedTemplate, null))
-            {
-                foreach (PlanFieldJunctionModel itr in junctions)
-                {
-                    double dose = _prescriptions.Last().CumulativeDoseToTarget;
-                    foreach (FieldJunctionModel jnx in itr.FieldJunctions)
-                    {
-                        _selectedTemplate.InitialOptimizationConstraints.Insert(0,new OptimizationConstraintModel(jnx.JunctionStructure.Id, OptimizationObjectiveType.Lower, dose, Units.cGy, 100.0, 100));
-                        _selectedTemplate.InitialOptimizationConstraints.Insert(1,new OptimizationConstraintModel(jnx.JunctionStructure.Id, OptimizationObjectiveType.Upper, 1.02*dose, Units.cGy, 0.0, 100));
-                    }
-                }
-            }
-        }
-        #endregion
-
-        #region opimization parameters
-        public void AssignOptimizationConstraints()
-        {
-            OptimizationSetupTabBackground = System.Windows.Media.Brushes.ForestGreen;
-        }
         #endregion
 
         #region prepare for treatment
-        public void PreparePlanForTreatment()
+        protected override void PreparePlanForTreatment()
         {
-            ExternalPlanSetup thePlan = PlanPrepHelper.RetrieveVMATPlan(EclipseContext.GetInstance().Patient, Logger.GetInstance().LogPath, TBIAutoPlannerSettings.CourseId);
-            if (ReferenceEquals(thePlan, null)) return;
-            EclipseContext.GetInstance().VMATPlans = new List<ExternalPlanSetup> { thePlan };
+            //ExternalPlanSetup thePlan = PlanPrepHelper.RetrieveVMATPlan(EclipseContext.GetInstance().Patient, Logger.GetInstance().LogPath, TBIAutoPlannerSettings.CourseId);
+            //if (ReferenceEquals(thePlan, null)) return;
+            //EclipseContext.GetInstance().VMATPlans = new List<ExternalPlanSetup> { thePlan };
 
-            if (GenerateShiftNote()) return;
-            if(SeparatePlans()) return;
-            Logger.GetInstance().OpType = ScriptOperationType.PlanPrep;
-            _planPrepVM.UpdateUIAllPrepItemsCompleted();
+            //if (GenerateShiftNote()) return;
+            //if(SeparatePlans()) return;
+            //Logger.GetInstance().OpType = ScriptOperationType.PlanPrep;
+            //_planPrepVM.UpdateUIAllPrepItemsCompleted();
         }
 
         public bool GenerateShiftNote()
         {
-            List<ExternalPlanSetup> appaPlans = new List<ExternalPlanSetup> { };
-            if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Any(x => x.Id.ToLower().Contains("legs")))
-            {
-                appaPlans = EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("legs")).ToList();
-                if (appaPlans.Any(x => x.TreatmentOrientation != PatientOrientation.FeetFirstSupine))
-                {
-                    StringBuilder sb = new StringBuilder();
-                    sb.AppendLine($"The AP/PA plan {appaPlans.First(x => x.TreatmentOrientation != PatientOrientation.FeetFirstSupine).Id} is NOT in the FFS orientation!");
-                    sb.AppendLine("THE COUCH SHIFTS FOR THESE PLANS WILL NOT BE ACCURATE! Please fix and try again!");
-                    Logger.GetInstance().LogError(sb.ToString());
-                    return true;
-                }
-            }
+            //List<ExternalPlanSetup> appaPlans = new List<ExternalPlanSetup> { };
+            //if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Any(x => x.Id.ToLower().Contains("legs")))
+            //{
+            //    appaPlans = EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("legs")).ToList();
+            //    if (appaPlans.Any(x => x.TreatmentOrientation != PatientOrientation.FeetFirstSupine))
+            //    {
+            //        StringBuilder sb = new StringBuilder();
+            //        sb.AppendLine($"The AP/PA plan {appaPlans.First(x => x.TreatmentOrientation != PatientOrientation.FeetFirstSupine).Id} is NOT in the FFS orientation!");
+            //        sb.AppendLine("THE COUCH SHIFTS FOR THESE PLANS WILL NOT BE ACCURATE! Please fix and try again!");
+            //        Logger.GetInstance().LogError(sb.ToString());
+            //        return true;
+            //    }
+            //}
 
-            Clipboard.SetText(PlanPrepHelper.GetTBIShiftNote(EclipseContext.GetInstance().VMATPlans.First(), appaPlans).ToString());
+            //Clipboard.SetText(PlanPrepHelper.GetTBIShiftNote(EclipseContext.GetInstance().VMATPlans.First(), appaPlans).ToString());
             return false;
         }
         public bool SeparatePlans()
         {
-            //The shift note has to be retrieved first! Otherwise, we don't have instances of the plan objects
-            if (!EclipseContext.GetInstance().VMATPlans.Any() || EclipseContext.GetInstance().VMATPlans.Count > 1)
-            {
-                Logger.GetInstance().LogError("Please generate the shift note before separating the plans!");
-                return true;
-            }
-            ExternalPlanSetup thePlan = EclipseContext.GetInstance().VMATPlans.First();
+            ////The shift note has to be retrieved first! Otherwise, we don't have instances of the plan objects
+            //if (!EclipseContext.GetInstance().VMATPlans.Any() || EclipseContext.GetInstance().VMATPlans.Count > 1)
+            //{
+            //    Logger.GetInstance().LogError("Please generate the shift note before separating the plans!");
+            //    return true;
+            //}
+            //ExternalPlanSetup thePlan = EclipseContext.GetInstance().VMATPlans.First();
 
-            if (!thePlan.Beams.Any(x => x.IsSetupField))
-            {
-                ConfirmPrompt CUI = new ConfirmPrompt($"I didn't find any setup fields in the {thePlan.Id}." + Environment.NewLine + Environment.NewLine + "Are you sure you want to continue?!");
-                CUI.ShowDialog();
-                if (!CUI.GetSelection()) return true;
-            }
+            //if (!thePlan.Beams.Any(x => x.IsSetupField))
+            //{
+            //    ConfirmPrompt CUI = new ConfirmPrompt($"I didn't find any setup fields in the {thePlan.Id}." + Environment.NewLine + Environment.NewLine + "Are you sure you want to continue?!");
+            //    CUI.ShowDialog();
+            //    if (!CUI.GetSelection()) return true;
+            //}
 
-            bool removeFlash = false;
-            StringBuilder sb = new StringBuilder();
-            //check if flash was used in the plan. If so, ask the user if they want to remove these structures as part of cleanup
-            if (PlanPrepHelper.CheckForFlash(thePlan.StructureSet))
-            {
-                sb.AppendLine("I found some structures in the structure set for generating flash.");
-                sb.AppendLine("Should I remove them?");
-                sb.AppendLine("(NOTE: this will require dose recalculation for all plans using this structure set!)");
-                ConfirmPrompt CP = new ConfirmPrompt(sb.ToString(), "YES", "NO");
-                CP.ShowDialog();
-                if (CP.GetSelection()) removeFlash = true;
-            }
+            //bool removeFlash = false;
+            //StringBuilder sb = new StringBuilder();
+            ////check if flash was used in the plan. If so, ask the user if they want to remove these structures as part of cleanup
+            //if (PlanPrepHelper.CheckForFlash(thePlan.StructureSet))
+            //{
+            //    sb.AppendLine("I found some structures in the structure set for generating flash.");
+            //    sb.AppendLine("Should I remove them?");
+            //    sb.AppendLine("(NOTE: this will require dose recalculation for all plans using this structure set!)");
+            //    ConfirmPrompt CP = new ConfirmPrompt(sb.ToString(), "YES", "NO");
+            //    CP.ShowDialog();
+            //    if (CP.GetSelection()) removeFlash = true;
+            //}
 
-            //separate the plans
-            EclipseContext.GetInstance().Patient.BeginModifications();
-            PreparePlansForTreatment_TBI planPrep = new PreparePlansForTreatment_TBI(removeFlash);
-            bool result = planPrep.Execute();
-            Logger.GetInstance().AppendLogOutput("Plan preparation:", planPrep.GetLogOutput());
-            if (result) return true;
+            ////separate the plans
+            //EclipseContext.GetInstance().Patient.BeginModifications();
+            //PreparePlansForTreatment_TBI planPrep = new PreparePlansForTreatment_TBI(removeFlash);
+            //bool result = planPrep.Execute();
+            //Logger.GetInstance().AppendLogOutput("Plan preparation:", planPrep.GetLogOutput());
+            //if (result) return true;
 
-            //inform the user it's done
-            sb.Clear();
-            sb.AppendLine("Original plan(s) have been separated!");
-            sb.AppendLine("Be sure to set the target volume and primary reference point!");
-            if (thePlan.Beams.Any(x => x.IsSetupField))
-            {
-                sb.AppendLine("Also reset the isocenter position of the setup fields!");
-            }
-            sb.AppendLine("");
-            sb.AppendLine("Isocenter shifts have been copied to the clipboard!");
-            sb.AppendLine("Paste them into the journal note!");
-            MessageBox.Show(sb.ToString());
+            ////inform the user it's done
+            //sb.Clear();
+            //sb.AppendLine("Original plan(s) have been separated!");
+            //sb.AppendLine("Be sure to set the target volume and primary reference point!");
+            //if (thePlan.Beams.Any(x => x.IsSetupField))
+            //{
+            //    sb.AppendLine("Also reset the isocenter position of the setup fields!");
+            //}
+            //sb.AppendLine("");
+            //sb.AppendLine("Isocenter shifts have been copied to the clipboard!");
+            //sb.AppendLine("Paste them into the journal note!");
+            //MessageBox.Show(sb.ToString());
 
             return false;
         }
         #endregion
 
-        private void ResetRxDose()
-        {
-            if (NumberOfFractions > 0 && DosePerFraction > 0)
-            {
-                //double priorTotalDose = PlanTotalDose;
-                PlanTotalDose = DosePerFraction * NumberOfFractions;
-                //if (PlanTotalDose != priorTotalDose)
-                //{
-                //    foreach (PlanObjectiveModel itr in PlanObjectives)
-                //    {
-                //        if (itr.QueryDoseUnits == Units.cGy)
-                //        {
-                //            itr.QueryDose = Math.Round(itr.QueryDose * PlanTotalDose / priorTotalDose, 1);
-                //        }
-                //    }
-                //    PlanObjectives.Refresh();
-                //    foreach (OptimizationConstraintModel itr in OptimizationConstraints)
-                //    {
-                //        if (itr.QueryDoseUnits == Units.cGy)
-                //        {
-                //            itr.QueryDose = Math.Round(itr.QueryDose * PlanTotalDose / priorTotalDose, 1);
-                //        }
-                //    }
-                //    OptimizationConstraints.Refresh();
-                //}
-            }
-        }
-
-        private void UpdateUIWithSelectedPlanTemplate()
+        protected override void UpdateUIWithSelectedPlanTemplate()
         {
             if (ReferenceEquals(_selectedTemplate, null)) return;
 
-            DosePerFraction = SelectedTemplate.InitialRxDosePerFx;
-            NumberOfFractions = SelectedTemplate.InitialRxNumberOfFractions;
+            InitialDosePerFraction = (_selectedTemplate as TBIAutoPlanTemplate).InitialRxDosePerFx;
+            InitialNumberOfFractions = (_selectedTemplate as TBIAutoPlanTemplate).InitialRxNumberOfFractions;
             _setTargetsVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
             _tsGenerationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
             _tsManipulationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
@@ -604,7 +335,7 @@ namespace TBIAutoPlanner.ViewModels
         }
 
         #region script configuration
-        private void LoadScriptConfigurationSettings(string file)
+        protected override void LoadScriptConfigurationSettings(string file)
         {
             try
             {
@@ -741,7 +472,7 @@ namespace TBIAutoPlanner.ViewModels
             return false;
         }
 
-        private StringBuilder BuildScriptConfigurationInfo()
+        protected override StringBuilder BuildScriptConfigurationInfo()
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine($"{DateTime.Now}");
@@ -791,13 +522,5 @@ namespace TBIAutoPlanner.ViewModels
             return sb;
         }
         #endregion
-
-        public void WindowClosing()
-        {
-            if(EclipseContext.GetInstance().IsInitialized)
-            {
-                ScriptClosingHelper.CloseApplication(false);
-            }
-        }
     }
 }

@@ -253,7 +253,7 @@
                             </TabItem>
                         </TabControl>
                     </TabItem>
-                    <TabItem Header="Structure Tuning" BorderThickness="0,1,1,0" x:Name="structureTuningTabItem" Margin="0,0,1,1">
+                    <TabItem Header="Structure Tuning" Background="{Binding StructureTuningTabBackground}" BorderThickness="0,1,1,0" x:Name="structureTuningTabItem" Margin="0,0,1,1">
                         <TabControl Background="DarkGray">
                             <TabItem Header="Structure Generation" Content="{Binding TSGeneration}" BorderThickness="1,1,1,1" Width="153">
                             </TabItem>

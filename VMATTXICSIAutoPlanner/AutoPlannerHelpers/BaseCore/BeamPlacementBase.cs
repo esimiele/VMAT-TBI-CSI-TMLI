@@ -323,11 +323,11 @@ namespace AutoPlannerHelpers.BaseCore
 
                 ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Starting slice to contour: {result.StartSlice}");
                 //add a new junction structure (named TS_jnx<i>) to the stack. Contours will be added to these structure later
-                result.JunctionStructure = EclipseContext.GetInstance().StructureSet.AddStructure("CONTROL", $"TS_jnx{isoCount + i}");
+                result.JunctionStructureId = EclipseContext.GetInstance().StructureSet.AddStructure("CONTROL", $"TS_jnx{isoCount + i}").Id;
                 ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Added TS junction to stack: TS_jnx{isoCount + 1}");
                 overlap.Add(result);
             }
-            FieldJunctions.Add(new PlanFieldJunctionModel(VMATPlans.First(x => string.Equals(x.Id, isoLocations.PlanId, StringComparison.OrdinalIgnoreCase)), overlap));
+            FieldJunctions.Add(new PlanFieldJunctionModel(VMATPlans.First(x => string.Equals(x.Id, isoLocations.PlanId, StringComparison.OrdinalIgnoreCase)).Id, overlap));
 
             //make a box at the min/max x,y positions of the target structure with no margin
             VVector[] targetBoundingBox = CreateTargetBoundingBox(target_tmp, 0.0);
@@ -341,14 +341,15 @@ namespace AutoPlannerHelpers.BaseCore
                 {
                     percentCompletion = 0;
                     calcItems = junction.NumberOfCTSlices;
-                    ProvideUIUpdate(0, $"Contouring junction: {junction.JunctionStructure.Id}");
+                    ProvideUIUpdate(0, $"Contouring junction: {junction.JunctionStructureId}");
+                    Structure junctionStructure = EclipseContext.GetInstance().StructureSet.Structures.First(x => string.Equals(x.Id, junction.JunctionStructureId, StringComparison.OrdinalIgnoreCase));
                     for (int i = junction.StartSlice; i < (junction.StartSlice + junction.NumberOfCTSlices); i++)
                     {
-                        junction.JunctionStructure.AddContourOnImagePlane(targetBoundingBox, i);
+                        junctionStructure.AddContourOnImagePlane(targetBoundingBox, i);
                         ProvideUIUpdate(100 * ++percentCompletion / calcItems);
                     }
                     //only keep the portion of the box contour that overlaps with the target
-                    junction.JunctionStructure.SegmentVolume = junction.JunctionStructure.And(target_tmp.Margin(0));
+                    junctionStructure.SegmentVolume = junctionStructure.And(target_tmp.Margin(0));
                     count++;
                 }
             }
