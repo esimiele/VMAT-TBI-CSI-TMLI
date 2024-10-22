@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -171,13 +172,16 @@ namespace AutoPlannerHelpers.BaseViewModel
 
         #region fields
         protected List<PrescriptionModel> _prescriptions = new List<PrescriptionModel> { };
+        protected List<PlanOptimizationSetupModel> _planOptimizationSetup = new List<PlanOptimizationSetupModel> { };
         protected List<PlanIsocenterModel> _planIsocenters = new List<PlanIsocenterModel> { };
         protected List<string> _structureIdsPostUnion;
         protected string _generalConfigurationFile = string.Empty;
+        private PlanType _planType;
         #endregion
 
         public BaseViewModel(PlanType type, string[] args)
         {
+            _planType = type;
             if (args.Any()) EclipseContextHelper.GenerateEclipseContext(args.ToList());
             if (EclipseContext.GetInstance().IsInitialized && ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
             {
@@ -225,10 +229,33 @@ namespace AutoPlannerHelpers.BaseViewModel
             if (VerifyTargetsIntegrity(_setTargetsVM.PlanTargets)) return;
             _prescriptions = TargetsHelper.BuildPrescriptionList(_setTargetsVM.PlanTargets, _initialDosePerFraction, _initialNumberOfFractions, _initialPlanTotalDose);
             if (!_prescriptions.Any()) return;
-            _optimizationSetupVM.UpdatePrescriptionList(_prescriptions);
+            _planOptimizationSetup = BuildPlanOptimizationSetupList();
             SpecifyTargetsTabBackground = System.Windows.Media.Brushes.ForestGreen;
             StructureTuningTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
             TSManipulationTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
+        }
+
+        protected List<PlanOptimizationSetupModel> BuildPlanOptimizationSetupList()
+        {
+            if (!ReferenceEquals(_selectedTemplate, null))
+            {
+                return OptimizationSetupHelper.RetrieveOptConstraintsFromTemplate(_selectedTemplate, _prescriptions, _planType);
+            }
+            else
+            {
+                List<PlanOptimizationSetupModel> result = new List<PlanOptimizationSetupModel> { };
+                foreach (PlanTargetsModel itr in TargetsHelper.GroupPrescriptionsByPlanIdAndOrderByTargetRx(_prescriptions))
+                {
+                    List<OptimizationConstraintModel> constraints = new List<OptimizationConstraintModel>();
+                    foreach (TargetModel target in itr.Targets)
+                    {
+                        constraints.Add(new OptimizationConstraintModel(target.TargetId, OptimizationObjectiveType.Lower, target.TargetRxDose, Units.cGy, 100.0, 100));
+                        constraints.Add(new OptimizationConstraintModel(target.TargetId, OptimizationObjectiveType.Upper, 1.02 * target.TargetRxDose, Units.cGy, 0.0, 100));
+                    }
+                    result.Add(new PlanOptimizationSetupModel(itr.PlanId, constraints));
+                }
+                return result;
+            }
         }
 
         protected abstract bool VerifyTargetsIntegrity(List<PlanTargetsModel> parsedTargets);
@@ -237,51 +264,61 @@ namespace AutoPlannerHelpers.BaseViewModel
 
         protected abstract void GeneratePlansAndPlaceBeams();
 
-        public List<OptimizationConstraintModel> UpdateOptimizationConstraintsWithTSTargets(List<PlanTargetsModel> planTargets, List<OptimizationConstraintModel> constraints)
+        public List<PlanOptimizationSetupModel> UpdateOptimizationConstraintsWithTSTargets(List<PlanTargetsModel> planTargets, List<PlanOptimizationSetupModel> planConstraints)
         {
             //update optimization constraint list to replace target constraints with ts targets
             foreach (PlanTargetsModel itr in planTargets)
             {
-                foreach (TargetModel target in itr.Targets)
+                if(planConstraints.Any(x => string.Equals(x.PlanId, itr.PlanId)))
                 {
-                    if (constraints.Any(x => string.Equals(x.StructureId, target.TargetId)))
+                    List<OptimizationConstraintModel> constraints = planConstraints.First(x => string.Equals(x.PlanId, itr.PlanId)).OptimizationConstraints;
+                    foreach (TargetModel target in itr.Targets)
                     {
-                        foreach(OptimizationConstraintModel matchingTargetConstraint in constraints.Where(x => string.Equals(x.StructureId, target.TargetId)))
+                        if (constraints.Any(x => string.Equals(x.StructureId, target.TargetId)))
                         {
-                            matchingTargetConstraint.StructureId = target.TsTargetId;
+                            foreach (OptimizationConstraintModel matchingTargetConstraint in constraints.Where(x => string.Equals(x.StructureId, target.TargetId)))
+                            {
+                                matchingTargetConstraint.StructureId = target.TsTargetId;
+                            }
                         }
                     }
                 }
             }
-            return new List<OptimizationConstraintModel>(constraints);
+            return planConstraints;
         }
 
-        public List<OptimizationConstraintModel> UpdateOptimizationConstraintsWithRings(List<TSRingStructureModel> rings, List<OptimizationConstraintModel> constraints, IEnumerable<PrescriptionModel> planPrescriptions)
+        public List<PlanOptimizationSetupModel> UpdateOptimizationConstraintsWithRings(List<TSRingStructureModel> rings, List<PlanOptimizationSetupModel> planConstraints)
         {
             foreach (TSRingStructureModel itr in rings)
             {
-                if (planPrescriptions.Any(x => string.Equals(x.TargetId, itr.TargetId)))
+                if(_prescriptions.Any(x => string.Equals(itr.TargetId, x.TargetId)))
                 {
+                    //grab the plan that contains this specific target
+                    string planId = _prescriptions.First(x => string.Equals(itr.TargetId, x.TargetId)).PlanId;
+                    //grab the optimization constraints that belong to this plan
+                    List<OptimizationConstraintModel> constraints = planConstraints.First(x => string.Equals(planId, x.PlanId)).OptimizationConstraints;
+                    //insert the ts ring constraint
                     constraints.Insert(0, new OptimizationConstraintModel(itr.RingId, OptimizationObjectiveType.Upper, itr.DoseLevel, Units.cGy, 0.0, 80));
                 }
             }
-            return new List<OptimizationConstraintModel>(constraints);
+            return planConstraints;
         }
 
-        public List<OptimizationConstraintModel> UpdateOptimizationConstraintsWithTSJunctions(List<PlanFieldJunctionModel> junctions, List<OptimizationConstraintModel> constraints)
+        public List<PlanOptimizationSetupModel> UpdateOptimizationConstraintsWithTSJunctions(List<PlanFieldJunctionModel> junctions, List<PlanOptimizationSetupModel> planConstraints)
         {
             //update optimization constraint list to replace target constraints with ts targets
             foreach (PlanFieldJunctionModel itr in junctions)
             {
-                //get the dose for the last prescription item that has the same plan id as the current plan field junction model
+                //get the dose for the last prescription item that has the same plan id as the current plan field junction model (should already be sorted by cumulative dose to targets)
                 double dose = _prescriptions.Last(x => string.Equals(itr.PlanId, x.PlanId)).CumulativeDoseToTarget;
+                List<OptimizationConstraintModel> constraints = planConstraints.First(x => string.Equals(x.PlanId, itr.PlanId)).OptimizationConstraints;
                 foreach (FieldJunctionModel jnx in itr.FieldJunctions)
                 {
                     constraints.Insert(0, new OptimizationConstraintModel(jnx.JunctionStructureId, OptimizationObjectiveType.Lower, dose, Units.cGy, 100.0, 100));
                     constraints.Insert(1, new OptimizationConstraintModel(jnx.JunctionStructureId, OptimizationObjectiveType.Upper, 1.02 * dose, Units.cGy, 0.0, 100));
                 }
             }
-            return new List<OptimizationConstraintModel>(constraints);
+            return planConstraints;
         }
 
         protected void AssignOptimizationConstraints()
@@ -291,11 +328,8 @@ namespace AutoPlannerHelpers.BaseViewModel
 
         protected abstract void LoadScriptConfigurationSettings(string file);
         protected abstract StringBuilder BuildScriptConfigurationInfo();
-
         protected abstract void PreparePlanForTreatment();
-
         protected abstract void UpdateUIWithSelectedPlanTemplate();
-
 
         public void ResetInitialRxDose()
         {

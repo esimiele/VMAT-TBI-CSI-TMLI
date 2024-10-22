@@ -15,5 +15,10 @@ namespace AutoPlannerHelpers.Models
             NumberOfCTSlices = numSlice;
             StartSlice = start;
         }
+
+        public FieldJunctionModel(string id)
+        {
+            JunctionStructureId = id;
+        }
     }
 }

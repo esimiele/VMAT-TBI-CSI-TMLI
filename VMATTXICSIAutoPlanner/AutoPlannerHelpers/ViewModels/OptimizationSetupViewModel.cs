@@ -32,8 +32,7 @@ namespace AutoPlannerHelpers.ViewModels
         #endregion
 
         #region fields
-        private AutoPlanTemplateBase _selectedTemplate;
-        private List<PrescriptionModel> _prescriptions;
+        private List<PlanOptimizationSetupModel> _defaultPlanOptSetup = new List<PlanOptimizationSetupModel>();
         private PlanType _planType;
         #endregion
 
@@ -60,15 +59,10 @@ namespace AutoPlannerHelpers.ViewModels
             _planType = planType;
         }
 
-        public void UpdatePrescriptionList(List<PrescriptionModel> prescriptions)
+        public void UpdateUIWithPlanOptimizationSetupList(List<PlanOptimizationSetupModel> planOptSetup)
         {
-            _prescriptions = new List<PrescriptionModel>(prescriptions);
-        }
-
-        public void UpdateUIWithSelectedPlanTemplate(AutoPlanTemplateBase template)
-        {
-            if (ReferenceEquals(template, null) || ReferenceEquals(_prescriptions, null) || !_prescriptions.Any()) return;
-            _selectedTemplate = template;
+            if (!planOptSetup.Any()) return;
+            _defaultPlanOptSetup = planOptSetup;
             AddDefaultOptimizationConstraints();
         }
 
@@ -103,11 +97,10 @@ namespace AutoPlannerHelpers.ViewModels
 
         private void AddDefaultOptimizationConstraints()
         {
-            if (ReferenceEquals(_selectedTemplate, null) || !_prescriptions.Any()) return;
+            if (!_defaultPlanOptSetup.Any()) return;
 
             PlanOptimizationConstraints.Clear();
-            List<PlanOptimizationSetupModel> constraints = OptimizationSetupHelper.RetrieveOptConstraintsFromTemplate(_selectedTemplate, _prescriptions, _planType);
-            foreach (PlanOptimizationSetupModel itr in  constraints) PlanOptimizationConstraints.Add(itr);
+            foreach (PlanOptimizationSetupModel itr in _defaultPlanOptSetup) PlanOptimizationConstraints.Add(itr);
         }
 
         private void ClearOptimizationConstraints()

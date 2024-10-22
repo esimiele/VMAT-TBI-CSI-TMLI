@@ -143,8 +143,8 @@ namespace TMLIAutoPlanner.ViewModels
             _planIsocenters = generateTS.PlanIsocentersList;
 
             _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters, TMLIAutoPlannerSettings.AvailableLinacs, TMLIAutoPlannerSettings.AvailableEnergies);
-            UpdateOptimizationConstraintsWithRings(rings, (_selectedTemplate as TMLIAutoPlanTemplate).InitialOptimizationConstraints, _prescriptions.Where(x => string.Equals(x.PlanId, _prescriptions.First().PlanId)));
-            UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, (_selectedTemplate as TMLIAutoPlanTemplate).InitialOptimizationConstraints);
+            UpdateOptimizationConstraintsWithRings(rings, _planOptimizationSetup);
+            UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
 
             StructureTuningTabBackground = System.Windows.Media.Brushes.ForestGreen;
             TSManipulationTabBackground = System.Windows.Media.Brushes.ForestGreen;
@@ -170,8 +170,9 @@ namespace TMLIAutoPlanner.ViewModels
             Logger.GetInstance().AppendLogOutput("Generate plans and place beams output:", placeBeams.GetLogOutput());
             if (failed) return;
             if (placeBeams.VMATPlans.Any()) EclipseContext.GetInstance().VMATPlans = placeBeams.VMATPlans;
-            UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions, (_selectedTemplate as TMLIAutoPlanTemplate).InitialOptimizationConstraints);
-            if (!ReferenceEquals(_selectedTemplate, null)) _optimizationSetupVM.UpdateUIWithSelectedPlanTemplate(_selectedTemplate);
+            UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions, _planOptimizationSetup);
+            _optimizationSetupVM.UpdateUIWithPlanOptimizationSetupList(_planOptimizationSetup);
+
             BeamPlacementTabBackground = System.Windows.Media.Brushes.ForestGreen;
             OptimizationSetupTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
         }

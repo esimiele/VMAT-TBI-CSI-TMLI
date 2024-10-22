@@ -148,7 +148,6 @@ namespace TBIAutoPlanner.ViewModels
         #endregion
 
         #region specify targets
-
         protected override bool VerifyTargetsIntegrity(List<PlanTargetsModel> parsedTargets)
         {
             //verify selected targets are APPROVED
@@ -192,7 +191,7 @@ namespace TBIAutoPlanner.ViewModels
             _planIsocenters = generateTS.PlanIsocentersList;
 
             _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters, TBIAutoPlannerSettings.AvailableLinacs, TBIAutoPlannerSettings.AvailableEnergies);
-            UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, (_selectedTemplate as TBIAutoPlanTemplate).InitialOptimizationConstraints);
+            UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
 
             StructureTuningTabBackground = System.Windows.Media.Brushes.ForestGreen;
             TSManipulationTabBackground = System.Windows.Media.Brushes.ForestGreen;
@@ -224,8 +223,9 @@ namespace TBIAutoPlanner.ViewModels
             Logger.GetInstance().AppendLogOutput("Generate plans and place beams output:", placeBeams.GetLogOutput());
             if (failed) return;
             if (placeBeams.VMATPlans.Any()) EclipseContext.GetInstance().VMATPlans = placeBeams.VMATPlans;
-            UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions, (_selectedTemplate as TBIAutoPlanTemplate).InitialOptimizationConstraints);
-            if(!ReferenceEquals(_selectedTemplate, null)) _optimizationSetupVM.UpdateUIWithSelectedPlanTemplate(_selectedTemplate);
+            UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions, _planOptimizationSetup);
+            _optimizationSetupVM.UpdateUIWithPlanOptimizationSetupList(_planOptimizationSetup);
+
             BeamPlacementTabBackground = System.Windows.Media.Brushes.ForestGreen;
             OptimizationSetupTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
         }
