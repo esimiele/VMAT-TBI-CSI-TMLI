@@ -28,6 +28,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImportListener", "ImportListener\ImportListener.csproj", "{29B101A9-56C4-494D-89A7-9A3737F12B64}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoPlannerOptimizationLoop", "AutoPlannerOptimizationLoop\AutoPlannerOptimizationLoop.csproj", "{380FC746-F0F4-4771-A6C7-3C9348849269}"
+	ProjectSection(ProjectDependencies) = postProject
+		{73A53BBF-24FD-4214-990F-A16A323C1A65} = {73A53BBF-24FD-4214-990F-A16A323C1A65}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

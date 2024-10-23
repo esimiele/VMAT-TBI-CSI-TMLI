@@ -5,7 +5,7 @@ namespace AutoPlannerHelpers.Models
 { 
     public class PlanObjectiveModel : IPlanConstraint
     {
-        //structure, constraint type, dose, relative volume, dose value presentation (unless otherwise specified)
+        public bool IsValidObjective { get => !string.IsNullOrEmpty(StructureId) && ConstraintType != OptimizationObjectiveType.None && !double.IsNaN(QueryDose) && QueryDoseUnits != Units.None && !double.IsNaN(QueryVolume) && QueryVolumeUnits != Units.None; }
         public string StructureId { get; set; } = string.Empty;
         public OptimizationObjectiveType ConstraintType { get; set; } = OptimizationObjectiveType.None;
         public double QueryDose { get; set; } = double.NaN;
@@ -21,6 +21,16 @@ namespace AutoPlannerHelpers.Models
             QueryDoseUnits = queryDoseUnits;
             QueryVolume = queryVolume;
             QueryVolumeUnits = queryVolumeUnits;
+        }
+
+        public PlanObjectiveModel(PlanObjectiveModel model)
+        {
+            StructureId = model.StructureId;
+            ConstraintType = model.ConstraintType;
+            QueryDose = model.QueryDose;
+            QueryDoseUnits = model.QueryDoseUnits;
+            QueryVolume = model.QueryVolume;
+            QueryVolumeUnits = model.QueryVolumeUnits;
         }
     }
 }

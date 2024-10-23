@@ -21,7 +21,7 @@
 	</PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Core\" />
+    <Folder Include="Images\" />
     <Folder Include="Configuration\" />
     <Folder Include="Prompts\" />
   </ItemGroup>
@@ -41,6 +41,12 @@
 		<Reference Include="VMS.TPS.Common.Model.Types">
 			<HintPath>..\..\..\VMS_TPS_resources\16.1\VMS.TPS.Common.Model.Types.dll</HintPath>
 		</Reference>
+	</ItemGroup>
+	<ItemGroup>
+	  <PackageReference Include="Prism.Core" Version="9.0.537" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\AutoPlannerHelpers\AutoPlannerHelpers.csproj" />
 	</ItemGroup>
 
 </Project>

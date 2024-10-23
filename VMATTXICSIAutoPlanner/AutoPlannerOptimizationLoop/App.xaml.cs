@@ -1,6 +1,8 @@
 ﻿using System.Configuration;
 using System.Data;
 using System.Windows;
+using AutoPlannerOptimizationLoop.Views;
+using AutoPlannerOptimizationLoop.ViewModels;
 
 namespace AutoPlannerOptimizationLoop
 {
@@ -11,8 +13,8 @@ namespace AutoPlannerOptimizationLoop
     {
         private void Application_Startup(object sender, StartupEventArgs e)
         {
-
+            OptimizationLoopMainView mv = new OptimizationLoopMainView { DataContext = new OptimizationLoopMainViewModel() };
+            mv.ShowDialog();
         }
     }
-
 }

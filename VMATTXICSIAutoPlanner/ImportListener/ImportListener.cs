@@ -33,8 +33,9 @@ namespace ImportListener
         [STAThread]
         static void Main(string[] args)
         {
-            ImportSettingsModel importSettings = new ImportSettingsModel(args);
-            if (!importSettings.ParseError) Run(importSettings);
+            //args = new string[] { "\\\\shariatscap105\\Dicom\\RSDCM\\Import\\", "CSI55", "VMSDBD" ,"10.151.176.60" ,"51402" ,"DCMTK" ,"50400" ,"3600" };
+            ImportSettingsModel importSettings = ImportListenerHelper.ParseInputArguments(args.ToList());
+            if (importSettings.IsValid) Run(importSettings);
             else Console.WriteLine("Error! Unable to parse command line arguments! Cannot listen for RT structure set! Exiting");
 
             Console.WriteLine("Press any key to exit");
@@ -67,7 +68,7 @@ namespace ImportListener
                             //and instruct to auto downsample to normal res
                             if (CheckIfImportedStructuresAreHighRes(settings.MRN))
                             {
-                                if (LaunchExe("VMATCSIAutoPlanMT", settings.MRN))
+                                if (LaunchExe("CSIAutoPlanner", settings.MRN))
                                 {
                                     Environment.Exit(0);
                                 }
