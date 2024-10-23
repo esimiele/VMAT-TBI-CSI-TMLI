@@ -35,7 +35,6 @@ namespace TBIAutoPlanner.Core
         private int totalNumVMATBeams;
         protected double checkIsoPlacementLimit = 5.0;
         protected bool checkIsoPlacement = false;
-        private bool checkTTCollision = false;
 
         public GeneratePlansAndPlaceBeams_TBI() { }
 
@@ -77,7 +76,6 @@ namespace TBIAutoPlanner.Core
             contourOverlap = overlap;
             contourOverlapMargin = overlapMargin;
             //check for potential collision between TT and gantry
-            checkTTCollision = TBIAutoPlannerSettings.CheckTTCollision;
             SetCloseOnFinish(TBIAutoPlannerSettings.CloseProgressWindowOnFinish, 3000);
         }
 
@@ -96,7 +94,7 @@ namespace TBIAutoPlanner.Core
                 vmatPlan = VMATPlans.First();
                 if (planIsocenters.Count > 1)
                 {
-                    foreach (var planIso in planIsocenters.Where(x => x.PlanId.Contains("legs")))
+                    foreach (PlanIsocenterModel planIso in planIsocenters.Where(x => x.PlanId.Contains("legs")))
                     {
                         if (CreateAPPAPlan(planIso)) return true;
                     }
@@ -313,7 +311,7 @@ namespace TBIAutoPlanner.Core
             double targetInfExtent = target.MeshGeometry.Positions.Min(p => p.Z) + targetMargin;
 
             double offsetY = 0.0;
-            if (checkTTCollision)
+            if (TBIAutoPlannerSettings.CheckTTCollision)
             {
                 ProvideUIUpdate("Checking for potential couch collision");
                 if (StructureTuningHelper.DoesStructureExistInSS("couchsurface", EclipseContext.GetInstance().StructureSet, true))

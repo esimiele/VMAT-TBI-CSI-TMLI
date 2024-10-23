@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Data;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using AutoPlannerHelpers.Context;
 using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.Helpers;
@@ -14,7 +11,6 @@ using AutoPlannerHelpers.ViewModels;
 using AutoPlannerHelpers.Views;
 using Prism.Commands;
 using Prism.Mvvm;
-using VMS.TPS.Common.Model.API;
 
 namespace AutoPlannerHelpers.BaseViewModel
 {
@@ -235,7 +231,7 @@ namespace AutoPlannerHelpers.BaseViewModel
             TSManipulationTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
         }
 
-        protected List<PlanOptimizationSetupModel> BuildPlanOptimizationSetupList()
+        public List<PlanOptimizationSetupModel> BuildPlanOptimizationSetupList()
         {
             if (!ReferenceEquals(_selectedTemplate, null))
             {
@@ -299,6 +295,19 @@ namespace AutoPlannerHelpers.BaseViewModel
                     List<OptimizationConstraintModel> constraints = planConstraints.First(x => string.Equals(planId, x.PlanId)).OptimizationConstraints;
                     //insert the ts ring constraint
                     constraints.Insert(0, new OptimizationConstraintModel(itr.RingId, OptimizationObjectiveType.Upper, itr.DoseLevel, Units.cGy, 0.0, 80));
+                }
+            }
+            return planConstraints;
+        }
+
+        public List<PlanOptimizationSetupModel> UpdateOptimizationConstraintsWithCropOverlapStructures(List<TSTargetCropOverlapModel> manipulations, List<PlanOptimizationSetupModel> planConstraints)
+        {
+            foreach (TSTargetCropOverlapModel itr in manipulations)
+            {
+                List<OptimizationConstraintModel> constraints = planConstraints.First(x => string.Equals(x.PlanId, itr.PlanId)).OptimizationConstraints;
+                foreach (OptimizationConstraintModel model in constraints.Where(x => string.Equals(x.StructureId, itr.TargetId)))
+                {
+                    model.StructureId = itr.ManipulationTargetId;
                 }
             }
             return planConstraints;

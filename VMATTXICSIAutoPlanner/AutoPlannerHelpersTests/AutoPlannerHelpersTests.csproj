@@ -12,6 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="JustMock.Commercial" Version="2024.3.805.336" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.2" />
     <PackageReference Include="MSTest.TestAdapter" Version="2.2.10" />
     <PackageReference Include="MSTest.TestFramework" Version="2.2.10" />
@@ -23,6 +24,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="VMS.TPS.Common.Model.API">
+      <HintPath>..\..\..\VMS_TPS_resources\16.1\VMS.TPS.Common.Model.API.dll</HintPath>
+    </Reference>
     <Reference Include="VMS.TPS.Common.Model.Types">
       <HintPath>..\..\..\VMS_TPS_resources\16.1\VMS.TPS.Common.Model.Types.dll</HintPath>
     </Reference>

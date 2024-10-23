@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.Helpers;
 using AutoPlannerHelpers.Models;
@@ -14,7 +13,7 @@ using AutoPlannerHelpers.Context;
 
 namespace AutoPlannerHelpers.BaseCore
 {
-    public class TSGenerationManipulationBase : SimpleMTbase
+    public abstract class TSGenerationManipulationBase : SimpleMTbase
     {
         #region properties
         public List<PlanIsocenterModel> PlanIsocentersList { get; protected set; } = new List<PlanIsocenterModel> { };
@@ -27,28 +26,10 @@ namespace AutoPlannerHelpers.BaseCore
         #endregion
 
         #region virtual methods
-        protected virtual bool PreliminaryChecks()
-        {
-            //specific to each case (TBI or CSI)
-            return false;
-        }
-
-        protected virtual bool CreateTSStructures()
-        {
-            //no virtual method implementation as this code really can't be abstracted
-            return false;
-        }
-
-        protected virtual bool PerformTSStructureManipulation()
-        {
-            return false;
-        }
-
-
-        protected virtual bool CalculateNumIsos()
-        {
-            return false;
-        }
+        protected abstract bool PreliminaryChecks();
+        protected abstract bool CreateTSStructures();
+        protected abstract bool PerformTSStructureManipulation();
+        protected abstract bool CalculateNumIsos();
         #endregion
 
         #region helper functions related to TS generation and manipulation

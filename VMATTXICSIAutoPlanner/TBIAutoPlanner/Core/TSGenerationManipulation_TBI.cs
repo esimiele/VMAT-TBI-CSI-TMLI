@@ -52,7 +52,6 @@ namespace TBIAutoPlanner.Core
             SetCloseOnFinish(TBIAutoPlannerSettings.CloseProgressWindowOnFinish, 3000);
         }
 
-
         #region Run control
         /// <summary>
         /// Run control

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using PlanType = AutoPlannerHelpers.Enums.PlanType;
 using AutoPlannerHelpers.Models;
+using AutoPlannerHelpers.PlanTemplateModels;
 
 namespace AutoPlannerHelpersTests.BaseViewModel
 {
@@ -16,6 +17,11 @@ namespace AutoPlannerHelpersTests.BaseViewModel
         public void SetPrescriptions(List<PrescriptionModel> prescriptions)
         {
             _prescriptions = prescriptions;
+        }
+
+        public void SetSelectedTemplate(AutoPlanTemplateBase template)
+        { 
+            _selectedTemplate = template; 
         }
 
         public DummyVM(PlanType type, string[] args) : base(type, args) { }

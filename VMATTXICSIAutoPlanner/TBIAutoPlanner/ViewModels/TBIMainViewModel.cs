@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Windows;
-using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.ViewModels;
 using AutoPlannerHelpers.Views;
 using AutoPlannerHelpers.PlanTemplateModels;
@@ -167,8 +165,8 @@ namespace TBIAutoPlanner.ViewModels
         {
             List<RequestedTSStructureModel> tsGeneration = _tsGenerationVM.RequestedTuningStructures.ToList();
             List<RequestedTSManipulationModel> tsManipulations = _tsManipulationVM.RequestedTSManipulations.ToList();
-            TSGenerationManipulation_TBI generateTS = new TSGenerationManipulation_TBI(tsGeneration, 
-                                                                                       tsManipulations, 
+            TSGenerationManipulation_TBI generateTS = new TSGenerationManipulation_TBI(tsGeneration,
+                                                                                       tsManipulations,
                                                                                        _prescriptions,
                                                                                        UseFlash,
                                                                                        FlashMargin,
@@ -177,7 +175,6 @@ namespace TBIAutoPlanner.ViewModels
             EclipseContext.GetInstance().Patient.BeginModifications();
             bool failed = generateTS.Execute();
             Logger.GetInstance().AppendLogOutput("TS Generation and manipulation output:", generateTS.GetLogOutput());
-
             if (failed) return;
 
             //does the structure sparing list need to be updated? This occurs when structures the user elected to spare with option of 'Mean Dose < Rx Dose' are high resolution. Since Eclipse can't perform
@@ -191,7 +188,7 @@ namespace TBIAutoPlanner.ViewModels
             _planIsocenters = generateTS.PlanIsocentersList;
 
             _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters, TBIAutoPlannerSettings.AvailableLinacs, TBIAutoPlannerSettings.AvailableEnergies);
-            UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
+            _planOptimizationSetup = UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
 
             StructureTuningTabBackground = System.Windows.Media.Brushes.ForestGreen;
             TSManipulationTabBackground = System.Windows.Media.Brushes.ForestGreen;
@@ -223,7 +220,7 @@ namespace TBIAutoPlanner.ViewModels
             Logger.GetInstance().AppendLogOutput("Generate plans and place beams output:", placeBeams.GetLogOutput());
             if (failed) return;
             if (placeBeams.VMATPlans.Any()) EclipseContext.GetInstance().VMATPlans = placeBeams.VMATPlans;
-            UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions, _planOptimizationSetup);
+            _planOptimizationSetup = UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions, _planOptimizationSetup);
             _optimizationSetupVM.UpdateUIWithPlanOptimizationSetupList(_planOptimizationSetup);
 
             BeamPlacementTabBackground = System.Windows.Media.Brushes.ForestGreen;
@@ -451,7 +448,7 @@ namespace TBIAutoPlanner.ViewModels
                 return;
             }
         }
-        
+
         private bool LoadPlanTemplates()
         {
             int count = 1;

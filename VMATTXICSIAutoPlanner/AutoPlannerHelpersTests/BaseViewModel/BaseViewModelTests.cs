@@ -76,7 +76,6 @@ namespace AutoPlannerHelpers.BaseViewModel.Tests
                 new PlanOptimizationSetupModel("CSI-bst", testTemplate.BoostOptimizationConstraints),
             };
 
-
             List<OptimizationConstraintModel> exepctedInitial = SetupDummyInitialOptObjList();
             foreach (OptimizationConstraintModel itr in exepctedInitial.Where(x => string.Equals(x.StructureId, "PTV_CSI"))) itr.StructureId = "TS_PTV_CSI";
             List<OptimizationConstraintModel> exepctedBoost = SetupDummyBoostOptObjList();
@@ -92,12 +91,12 @@ namespace AutoPlannerHelpers.BaseViewModel.Tests
             inputPlanOptimizationSetup = baseVM.UpdateOptimizationConstraintsWithTSTargets(planTargets, inputPlanOptimizationSetup);
 
             Assert.AreEqual(inputPlanOptimizationSetup.Count, expectedPlanOptimizationSetup.Count);
-            for(int i = 0 ; i < inputPlanOptimizationSetup.Count; i++)
+            for (int i = 0; i < inputPlanOptimizationSetup.Count; i++)
             {
                 Console.WriteLine($"{expectedPlanOptimizationSetup.ElementAt(i).PlanId} | {inputPlanOptimizationSetup.ElementAt(i).PlanId}");
                 Assert.AreEqual(expectedPlanOptimizationSetup.ElementAt(i).PlanId, inputPlanOptimizationSetup.ElementAt(i).PlanId);
                 Assert.AreEqual(expectedPlanOptimizationSetup.ElementAt(i).OptimizationConstraints.Count, inputPlanOptimizationSetup.ElementAt(i).OptimizationConstraints.Count);
-                for(int j = 0 ; j < inputPlanOptimizationSetup.ElementAt(i).OptimizationConstraints.Count; j++)
+                for (int j = 0; j < inputPlanOptimizationSetup.ElementAt(i).OptimizationConstraints.Count; j++)
                 {
                     Console.WriteLine($"{comparer.Print(expectedPlanOptimizationSetup.ElementAt(i).OptimizationConstraints.ElementAt(j))} | {comparer.Print(inputPlanOptimizationSetup.ElementAt(i).OptimizationConstraints.ElementAt(j))}");
                     Assert.IsTrue(comparer.Equals(expectedPlanOptimizationSetup.ElementAt(i).OptimizationConstraints.ElementAt(j), inputPlanOptimizationSetup.ElementAt(i).OptimizationConstraints.ElementAt(j)));
@@ -124,7 +123,7 @@ namespace AutoPlannerHelpers.BaseViewModel.Tests
             List<PrescriptionModel> prescriptions = new List<PrescriptionModel>
             {
                 new PrescriptionModel("CSI-init", "PTV_CSI", 20, new DoseValue(180, DoseValue.DoseUnit.cGy), 3600),
-                new PrescriptionModel("CSI-bst", "PTV_Boost", 10, new DoseValue(180, DoseValue.DoseUnit.cGy), 1800),
+                new PrescriptionModel("CSI-bst", "PTV_Boost", 10, new DoseValue(180, DoseValue.DoseUnit.cGy), 5400),
             };
             DummyVM baseVM = new DummyVM(PlanType.None, new string[] { });
             baseVM.SetPrescriptions(prescriptions);
@@ -175,7 +174,7 @@ namespace AutoPlannerHelpers.BaseViewModel.Tests
             List<PrescriptionModel> prescriptions = new List<PrescriptionModel>
             {
                 new PrescriptionModel("CSI-init", "PTV_CSI", 20, new DoseValue(180, DoseValue.DoseUnit.cGy), 3600),
-                new PrescriptionModel("CSI-bst", "PTV_Boost", 10, new DoseValue(180, DoseValue.DoseUnit.cGy), 1800),
+                new PrescriptionModel("CSI-bst", "PTV_Boost", 10, new DoseValue(180, DoseValue.DoseUnit.cGy), 5400),
             };
             DummyVM baseVM = new DummyVM(PlanType.None, new string[] { });
             baseVM.SetPrescriptions(prescriptions);
@@ -186,7 +185,7 @@ namespace AutoPlannerHelpers.BaseViewModel.Tests
             exepctedInitial.Insert(1, new OptimizationConstraintModel("TS_jnx2", OptimizationObjectiveType.Upper, 1.02 * 3600, Units.cGy, 0.0, 100));
             exepctedInitial.Insert(2, new OptimizationConstraintModel("TS_jnx1", OptimizationObjectiveType.Lower, 3600, Units.cGy, 100.0, 100));
             exepctedInitial.Insert(3, new OptimizationConstraintModel("TS_jnx1", OptimizationObjectiveType.Upper, 1.02 * 3600, Units.cGy, 0.0, 100));
-            
+
             List<OptimizationConstraintModel> exepctedBoost = SetupDummyBoostOptObjList();
             List<PlanOptimizationSetupModel> expectedPlanOptimizationSetup = new List<PlanOptimizationSetupModel>
             {
@@ -209,6 +208,81 @@ namespace AutoPlannerHelpers.BaseViewModel.Tests
                 }
                 Console.WriteLine("");
             }
+        }
+
+        [TestMethod()]
+        public void BuildPlanOptimizationSetupListTest()
+        {
+            CSIAutoPlanTemplate testTemplate = ConstructTestCSIAutoPlanTemplate();
+            List<PrescriptionModel> prescriptions = new List<PrescriptionModel>
+            {
+                new PrescriptionModel("CSI-init", "PTV_CSI", 20, new DoseValue(180, DoseValue.DoseUnit.cGy), 3600),
+                new PrescriptionModel("CSI-bst", "PTV_Boost", 10, new DoseValue(180, DoseValue.DoseUnit.cGy), 5400),
+            };
+            DummyVM baseVM = new DummyVM(PlanType.VMAT_CSI, new string[] { });
+            baseVM.SetPrescriptions(prescriptions);
+            baseVM.SetSelectedTemplate(testTemplate);
+
+            OptimizationConstraintComparer comparer = new OptimizationConstraintComparer();
+            List<PlanOptimizationSetupModel> expectedPlanOptimizationSetup = new List<PlanOptimizationSetupModel>
+            {
+                new PlanOptimizationSetupModel("CSI-init", SetupDummyInitialOptObjList()),
+                new PlanOptimizationSetupModel("CSI-bst",  SetupDummyBoostOptObjList()),
+            };
+
+            List<PlanOptimizationSetupModel> resultPlanOptimizationSetup = baseVM.BuildPlanOptimizationSetupList();
+
+            Assert.AreEqual(resultPlanOptimizationSetup.Count, expectedPlanOptimizationSetup.Count);
+            for (int i = 0; i < resultPlanOptimizationSetup.Count; i++)
+            {
+                Console.WriteLine($"{expectedPlanOptimizationSetup.ElementAt(i).PlanId} | {resultPlanOptimizationSetup.ElementAt(i).PlanId}");
+                Assert.AreEqual(expectedPlanOptimizationSetup.ElementAt(i).PlanId, resultPlanOptimizationSetup.ElementAt(i).PlanId);
+                Assert.AreEqual(expectedPlanOptimizationSetup.ElementAt(i).OptimizationConstraints.Count, resultPlanOptimizationSetup.ElementAt(i).OptimizationConstraints.Count);
+                for (int j = 0; j < resultPlanOptimizationSetup.ElementAt(i).OptimizationConstraints.Count; j++)
+                {
+                    Console.WriteLine($"{comparer.Print(expectedPlanOptimizationSetup.ElementAt(i).OptimizationConstraints.ElementAt(j))} | {comparer.Print(resultPlanOptimizationSetup.ElementAt(i).OptimizationConstraints.ElementAt(j))}");
+                    Assert.IsTrue(comparer.Equals(expectedPlanOptimizationSetup.ElementAt(i).OptimizationConstraints.ElementAt(j), resultPlanOptimizationSetup.ElementAt(i).OptimizationConstraints.ElementAt(j)));
+                }
+                Console.WriteLine("");
+            }
+
+            baseVM.SetSelectedTemplate(null);
+
+            expectedPlanOptimizationSetup = new List<PlanOptimizationSetupModel>
+            {
+                new PlanOptimizationSetupModel("CSI-init", new List<OptimizationConstraintModel>
+                {
+                    new OptimizationConstraintModel("PTV_CSI", OptimizationObjectiveType.Lower, 3600, Units.cGy, 100.0, 100),
+                    new OptimizationConstraintModel("PTV_CSI", OptimizationObjectiveType.Upper, 3672, Units.cGy, 0.0, 100),
+                }),
+                new PlanOptimizationSetupModel("CSI-bst",  new List<OptimizationConstraintModel>
+                {
+                    new OptimizationConstraintModel ("PTV_Boost", OptimizationObjectiveType.Lower, 5400, Units.cGy, 100.0, 100),
+                    new OptimizationConstraintModel ("PTV_Boost", OptimizationObjectiveType.Upper, 5508, Units.cGy, 0.0, 100),
+                }),
+            };
+
+            resultPlanOptimizationSetup = baseVM.BuildPlanOptimizationSetupList();
+
+            Assert.AreEqual(resultPlanOptimizationSetup.Count, expectedPlanOptimizationSetup.Count);
+            for (int i = 0; i < resultPlanOptimizationSetup.Count; i++)
+            {
+                Console.WriteLine($"{expectedPlanOptimizationSetup.ElementAt(i).PlanId} | {resultPlanOptimizationSetup.ElementAt(i).PlanId}");
+                Assert.AreEqual(expectedPlanOptimizationSetup.ElementAt(i).PlanId, resultPlanOptimizationSetup.ElementAt(i).PlanId);
+                Assert.AreEqual(expectedPlanOptimizationSetup.ElementAt(i).OptimizationConstraints.Count, resultPlanOptimizationSetup.ElementAt(i).OptimizationConstraints.Count);
+                for (int j = 0; j < resultPlanOptimizationSetup.ElementAt(i).OptimizationConstraints.Count; j++)
+                {
+                    Console.WriteLine($"{comparer.Print(expectedPlanOptimizationSetup.ElementAt(i).OptimizationConstraints.ElementAt(j))} | {comparer.Print(resultPlanOptimizationSetup.ElementAt(i).OptimizationConstraints.ElementAt(j))}");
+                    Assert.IsTrue(comparer.Equals(expectedPlanOptimizationSetup.ElementAt(i).OptimizationConstraints.ElementAt(j), resultPlanOptimizationSetup.ElementAt(i).OptimizationConstraints.ElementAt(j)));
+                }
+                Console.WriteLine("");
+            }
+        }
+
+        [TestMethod()]
+        public void UpdateOptimizationConstraintsWithCropOverlapStructuresTest()
+        {
+            Assert.Fail();
         }
     }
 }

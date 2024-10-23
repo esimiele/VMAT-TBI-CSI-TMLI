@@ -31,5 +31,25 @@ namespace TMLIAutoPlanner.Core
             _requestedRings = new List<TSRingStructureModel>(rings);
             prescriptions = new List<PrescriptionModel>(presc);
         }
+
+        protected override bool PreliminaryChecks()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        protected override bool CreateTSStructures()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        protected override bool PerformTSStructureManipulation()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        protected override bool CalculateNumIsos()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

@@ -1,0 +1,46 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net472</TargetFramework>
+		<Nullable>disable</Nullable>
+		<UseWPF>true</UseWPF>
+		<Deterministic>false</Deterministic>
+		<LangVersion>preview</LangVersion>
+		<PlatformTarget>x64</PlatformTarget>
+		<Platforms>x64</Platforms>
+		<AssemblyVersion></AssemblyVersion>
+		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<OutputPath>..\..\bin\VMAT-TXI-CSI</OutputPath>
+		<BaseOutputPath>..\..\bin\</BaseOutputPath>
+		<Build>$([System.DateTime]::op_Subtraction($([System.DateTime]::get_Now().get_Date()),$([System.DateTime]::new(2000,1,1))).get_TotalDays())</Build>
+		<Revision>$([MSBuild]::Divide($([System.DateTime]::get_Now().get_TimeOfDay().get_TotalMinutes()), 2).ToString('F0'))</Revision>
+		<Version>1.0.$(Build).$(Revision)</Version>
+		<Configurations>Debug-v15;Debug-v16;Release</Configurations>
+	</PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Core\" />
+    <Folder Include="Configuration\" />
+    <Folder Include="Prompts\" />
+  </ItemGroup>
+
+	<ItemGroup Condition="'$(Configuration)' == 'Debug-v15'">
+		<Reference Include="VMS.TPS.Common.Model.API">
+			<HintPath>..\..\..\VMS_TPS_resources\15.6\VMS.TPS.Common.Model.API.dll</HintPath>
+		</Reference>
+		<Reference Include="VMS.TPS.Common.Model.Types">
+			<HintPath>..\..\..\VMS_TPS_resources\15.6\VMS.TPS.Common.Model.Types.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup Condition="'$(Configuration)' == 'Debug-v16'">
+		<Reference Include="VMS.TPS.Common.Model.API">
+			<HintPath>..\..\..\VMS_TPS_resources\16.1\VMS.TPS.Common.Model.API.dll</HintPath>
+		</Reference>
+		<Reference Include="VMS.TPS.Common.Model.Types">
+			<HintPath>..\..\..\VMS_TPS_resources\16.1\VMS.TPS.Common.Model.Types.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+
+</Project>
