@@ -23,7 +23,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
 {
     public class OptimizationLoopMainViewModel : BindableBase
     {
-        public ObservableCollection<TBIAutoPlanTemplate> PlanTemplates { get; set; }
+        public ObservableCollection<AutoPlanTemplateBase> PlanTemplates { get; set; }
         public ObservableCollectionPropertyNotify<PlanObjectiveModel> PlanObjectives { get; set; }
         public ObservableCollectionPropertyNotify<OptimizationConstraintModel> OptimizationConstraints { get; set; }
 
@@ -155,7 +155,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             ClearPlanObjectiveListCommand = new DelegateCommand(ClearPlanObjectives);
             AddOptimizationConstraintCommand = new DelegateCommand(AddOptimizationObjective);
             ClearOptimizationConstraintListCommand = new DelegateCommand(ClearOptimizationConstraints);
-            PlanTemplates = new ObservableCollection<TBIAutoPlanTemplate> { };
+            PlanTemplates = new ObservableCollection<AutoPlanTemplateBase> { };
             PlanObjectives = new ObservableCollectionPropertyNotify<PlanObjectiveModel> { };
             OptimizationConstraints = new ObservableCollectionPropertyNotify<OptimizationConstraintModel> { };
             ClearRowCommand = new DelegateCommand<object>(ClearRow);
@@ -195,7 +195,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             {
                 Logger.GetInstance().LogError("Error! Structure set, Application, or Plan is null! Unable to assign normalization volume!", true);
                 List<string> structures = PlanTemplates.SelectMany(x => x.PlanObjectives).Select(x => x.StructureId).ToList();
-                structures.AddRange(PlanTemplates.SelectMany(x => x.InitialOptimizationConstraints).Select(x => x.StructureId).ToList());
+                //structures.AddRange(PlanTemplates.SelectMany(x => x.InitialOptimizationConstraints).Select(x => x.StructureId).ToList());
                 StructureIds = structures.Distinct().ToList();
                 return;
             }

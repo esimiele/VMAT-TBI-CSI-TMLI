@@ -57,11 +57,11 @@ namespace AutoPlannerOptimizationLoop.Base
         {
             if (string.IsNullOrEmpty(reason))
             {
-                ProvideUpdate($"Error! {optorcalc} failed!" + Environment.NewLine + " Try running the {0} manually Eclipse for more information!" + Environment.NewLine + Environment.NewLine + " Exiting!", true);
+                ProvideUIUpdate($"Error! {optorcalc} failed!" + Environment.NewLine + " Try running the {0} manually Eclipse for more information!" + Environment.NewLine + Environment.NewLine + " Exiting!", true);
             }
             else
             {
-                ProvideUpdate($"Error! {optorcalc} failed because: {reason}" + Environment.NewLine + Environment.NewLine + " Exiting!", true);
+                ProvideUIUpdate($"Error! {optorcalc} failed because: {reason}" + Environment.NewLine + Environment.NewLine + " Exiting!", true);
             }
         }
 
@@ -70,15 +70,15 @@ namespace AutoPlannerOptimizationLoop.Base
         /// </summary>
         protected void PrintRunSetupInfo()
         {
-            ProvideUpdate(OptimizationLoopUIHelper.GetRunSetupInfoHeader(_data.Plans,
+            ProvideUIUpdate(OptimizationLoopUIHelper.GetRunSetupInfoHeader(_data.Plans,
                                                                            _data.PlanType,
                                                                            _data.RunCoverageCheck,
                                                                            _data.NumberOfIterations,
             _data.OneMoreOptimization,
                                                                            _data.CopyAndSaveEachOptimizedPlan,
                                                                            _data.TargetCoverageNormalization));
-            ProvideUpdate(OptimizationLoopUIHelper.PrintPlanObjectives(_data.PlanObjectives));
-            ProvideUpdate(OptimizationLoopUIHelper.PrintRequestedTSStructures(_data.RequestedOptimizationTSStructures));
+            ProvideUIUpdate(OptimizationLoopUIHelper.PrintPlanObjectives(_data.PlanObjectives));
+            ProvideUIUpdate(OptimizationLoopUIHelper.PrintRequestedTSStructures(_data.RequestedOptimizationTSStructures));
         }
         #endregion
 
@@ -97,32 +97,32 @@ namespace AutoPlannerOptimizationLoop.Base
             //check if the user assigned the imaging device Id. If not, the optimization will crash with no error
             if (string.IsNullOrEmpty(ss.Image.Series.ImagingDeviceId))
             {
-                ProvideUpdate("Error! Did you forget to set the imaging device to 'Def_CTScanner'?", true);
+                ProvideUIUpdate("Error! Did you forget to set the imaging device to 'Def_CTScanner'?", true);
                 return true;
             }
-            ProvideUpdate(100 * ++percentComplete / calcItems, $"Imaging device Id: {ss.Image.Series.ImagingDeviceId}");
+            ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Imaging device Id: {ss.Image.Series.ImagingDeviceId}");
 
             //is the user origin set, does the body exist, and is the user origin inside the body
             if (!ss.Image.HasUserOrigin || !StructureTuningHelper.DoesStructureExistInSS("body", ss, true) || !StructureTuningHelper.GetStructureFromId("body", ss).IsPointInsideSegment(ss.Image.UserOrigin))
             {
-                ProvideUpdate("Did you forget to set the user origin?" + Environment.NewLine + "User origin is NOT inside body contour!" + Environment.NewLine + "Please fix and try again!", true);
+                ProvideUIUpdate("Did you forget to set the user origin?" + Environment.NewLine + "User origin is NOT inside body contour!" + Environment.NewLine + "Please fix and try again!", true);
                 return true;
             }
-            ProvideUpdate(100 * ++percentComplete / calcItems, "User origin assigned and located within body structure");
+            ProvideUIUpdate(100 * ++percentComplete / calcItems, "User origin assigned and located within body structure");
 
             if (!targetIDs.Any())
             {
-                ProvideUpdate("Error! No target ids present in list! Unable to verify targets! Exiting", true);
+                ProvideUIUpdate("Error! No target ids present in list! Unable to verify targets! Exiting", true);
                 return true;
             }
             foreach (string itr in targetIDs)
             {
                 if (!StructureTuningHelper.DoesStructureExistInSS(itr, ss, true))
                 {
-                    ProvideUpdate($"Error! Target: {itr} is missing from structure set or empty! Please fix and try again!", true);
+                    ProvideUIUpdate($"Error! Target: {itr} is missing from structure set or empty! Please fix and try again!", true);
                     return true;
                 }
-                else ProvideUpdate(100 * ++percentComplete / calcItems, $"Target: {itr} is in structure set and is not null");
+                else ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Target: {itr} is in structure set and is not null");
             }
 
             UpdateOverallProgress(100 * ++overallPercentCompletion / overallCalcItems);
@@ -144,10 +144,10 @@ namespace AutoPlannerOptimizationLoop.Base
             {
                 if (itr.Beams.Any(x => !x.IsSetupField))
                 {
-                    ProvideUpdate($"No beams present in plan: {itr.Id}!", true);
+                    ProvideUIUpdate($"No beams present in plan: {itr.Id}!", true);
                     return true;
                 }
-                ProvideUpdate(100 * ++percentComplete / calcItems, $"Beams present in plan: {itr.Id}");
+                ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Beams present in plan: {itr.Id}");
 
                 //check each beam to ensure the isoposition is rounded-off to the nearest 5mm
                 calcItems += itr.Beams.Where(x => !x.IsSetupField).Count();
@@ -156,16 +156,16 @@ namespace AutoPlannerOptimizationLoop.Base
                     BeamParameters bp = b.GetEditableParameters();
                     bp.Isocenter = RoundIsocenterPosition(b.IsocenterPosition, itr);
                     b.ApplyParameters(bp);
-                    ProvideUpdate(100 * ++percentComplete / calcItems);
+                    ProvideUIUpdate(100 * ++percentComplete / calcItems);
                 }
 
                 //set auto NTO priority to zero (i.e., shut it off)
                 itr.OptimizationSetup.AddAutomaticNormalTissueObjective(0.0);
-                ProvideUpdate(100 * ++percentComplete / calcItems, $"Set automatic NTO priority to 0 for plan: {itr.Id}");
+                ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Set automatic NTO priority to 0 for plan: {itr.Id}");
 
                 //be sure to set the dose value presentation to absolute! This is important for plan evaluation in the evaluateAndUpdatePlan method below
                 itr.DoseValuePresentation = DoseValuePresentation.Absolute;
-                ProvideUpdate(100 * ++percentComplete / calcItems, $"Set dose value presentation to absolute for plan: {itr.Id}");
+                ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Set dose value presentation to absolute for plan: {itr.Id}");
             }
             UpdateOverallProgress(100 * ++overallPercentCompletion / overallCalcItems);
             return false;
@@ -181,14 +181,14 @@ namespace AutoPlannerOptimizationLoop.Base
         {
             int counter = 0;
             int calcItems = 3;
-            ProvideUpdate(100 * ++counter / calcItems, "Rounding Y- and Z-positions to nearest integer values");
+            ProvideUIUpdate(100 * ++counter / calcItems, "Rounding Y- and Z-positions to nearest integer values");
             v = plan.StructureSet.Image.DicomToUser(v, plan);
             //round z position to the nearest integer
             v.x = Math.Round(v.x / 10.0f) * 10.0f;
             v.y = Math.Round(v.y / 10.0f) * 10.0f;
             v.z = Math.Round(v.z / 10.0f) * 10.0f;
-            ProvideUpdate(100 * ++counter / calcItems, $"Calculated isocenter position (user coordinates): ({v.x}, {v.y}, {v.z})");
-            ProvideUpdate(100 * ++counter / calcItems, "Adding calculated isocenter position to stack!");
+            ProvideUIUpdate(100 * ++counter / calcItems, $"Calculated isocenter position (user coordinates): ({v.x}, {v.y}, {v.z})");
+            ProvideUIUpdate(100 * ++counter / calcItems, "Adding calculated isocenter position to stack!");
             return plan.StructureSet.Image.UserToDicom(v, plan);
         }
         #endregion
@@ -235,19 +235,19 @@ namespace AutoPlannerOptimizationLoop.Base
 
             foreach (ExternalPlanSetup itr in plans)
             {
-                ProvideUpdate(100 * ++percentComplete / calcItems, $"Running one final optimization to try and reduce global plan hotspots for plan: {itr.Id}!");
-                ProvideUpdate($"Elapsed time: {ElapsedRunTime}");
+                ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Running one final optimization to try and reduce global plan hotspots for plan: {itr.Id}!");
+                ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
 
                 //one final push to lower the global plan hotspot if the user asked for it
                 if (OptimizePlan(_data.IsDemo, new OptimizationOptionsVMAT(OptimizationOption.ContinueOptimizationWithPlanDoseAsIntermediateDose, ""), itr, _data.Application)) return true;
                 UpdateOverallProgress(100 * ++overallPercentCompletion / overallCalcItems);
-                ProvideUpdate(100 * ++percentComplete / calcItems, "Optimization finished! Calculating dose!");
-                ProvideUpdate($"Elapsed time: {ElapsedRunTime}");
+                ProvideUIUpdate(100 * ++percentComplete / calcItems, "Optimization finished! Calculating dose!");
+                ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
 
                 if (CalculateDose(_data.IsDemo, itr, _data.Application)) return true;
                 UpdateOverallProgress(100 * ++overallPercentCompletion / overallCalcItems);
-                ProvideUpdate(100 * ++percentComplete / calcItems, "Dose calculated, normalizing plan!");
-                ProvideUpdate($"Elapsed time: {ElapsedRunTime}");
+                ProvideUIUpdate(100 * ++percentComplete / calcItems, "Dose calculated, normalizing plan!");
+                ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
 
                 //normalize
                 double normalizationValue = NormalizePlan(itr,
@@ -259,12 +259,12 @@ namespace AutoPlannerOptimizationLoop.Base
                                                           _data.TargetCoverageNormalization);
                 if (double.IsNaN(normalizationValue)) return true;
                 itr.PlanNormalizationValue = normalizationValue;
-                ProvideUpdate($"{itr.Id} normalized. Normalization value = {normalizationValue:0.0}%");
+                ProvideUIUpdate($"{itr.Id} normalized. Normalization value = {normalizationValue:0.0}%");
                 UpdateOverallProgress(100 * ++overallPercentCompletion / overallCalcItems);
-                ProvideUpdate($"{itr.Id} normalized!");
+                ProvideUIUpdate($"{itr.Id} normalized!");
 
                 //print requested additional info about the plan
-                ProvideUpdate(OptimizationLoopUIHelper.PrintAdditionalPlanDoseInfo(_data.RequestedPlanMetrics, itr, _data.NormalizationVolumes));
+                ProvideUIUpdate(OptimizationLoopUIHelper.PrintAdditionalPlanDoseInfo(_data.RequestedPlanMetrics, itr, _data.NormalizationVolumes));
             }
             return false;
         }
@@ -287,30 +287,30 @@ namespace AutoPlannerOptimizationLoop.Base
             if (_data.IsDemo) Thread.Sleep(3000);
             else _data.Application.SaveModifications();
 
-            ProvideUpdate("Starting optimization loop!");
+            ProvideUIUpdate("Starting optimization loop!");
             //counter to keep track of how many optimization iterations have been performed
             int count = 0;
             while (count < _data.NumberOfIterations)
             {
                 bool isFinalOpt = (_data.OneMoreOptimization && ((count + 1) == _data.NumberOfIterations));
-                ProvideUpdate(100 * (++percentComplete) / calcItems, $"Iteration {count + 1}:");
-                ProvideUpdate($"Elapsed time: {ElapsedRunTime}");
+                ProvideUIUpdate(100 * (++percentComplete) / calcItems, $"Iteration {count + 1}:");
+                ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
 
                 if (OptimizePlan(_data.IsDemo, new OptimizationOptionsVMAT(OptimizationIntermediateDoseOption.NoIntermediateDose, ""), plan, _data.Application)) return true;
-                ProvideUpdate(100 * (++percentComplete) / calcItems, "Optimization finished! Calculating intermediate dose!");
-                ProvideUpdate($"Elapsed time: {ElapsedRunTime}");
+                ProvideUIUpdate(100 * (++percentComplete) / calcItems, "Optimization finished! Calculating intermediate dose!");
+                ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
 
                 if (CalculateDose(_data.IsDemo, plan, _data.Application)) return true;
-                ProvideUpdate(100 * (++percentComplete) / calcItems, "Dose calculated! Continuing optimization!");
-                ProvideUpdate($"Elapsed time: {ElapsedRunTime}");
+                ProvideUIUpdate(100 * (++percentComplete) / calcItems, "Dose calculated! Continuing optimization!");
+                ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
 
                 if (OptimizePlan(_data.IsDemo, new OptimizationOptionsVMAT(OptimizationOption.ContinueOptimizationWithPlanDoseAsIntermediateDose, ""), plan, _data.Application)) return true;
-                ProvideUpdate(100 * (++percentComplete) / calcItems, "Optimization finished! Calculating dose!");
-                ProvideUpdate($"Elapsed time: {ElapsedRunTime}");
+                ProvideUIUpdate(100 * (++percentComplete) / calcItems, "Optimization finished! Calculating dose!");
+                ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
 
                 if (CalculateDose(_data.IsDemo, plan, _data.Application)) return true;
-                ProvideUpdate(100 * (++percentComplete) / calcItems, "Dose calculated, normalizing plan!");
-                ProvideUpdate($"Elapsed time: {ElapsedRunTime}");
+                ProvideUIUpdate(100 * (++percentComplete) / calcItems, "Dose calculated, normalizing plan!");
+                ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
 
                 double normalizationValue = NormalizePlan(plan,
                                                           TargetsHelper.GetTargetStructureForPlanType(_data.StructureSet,
@@ -321,8 +321,8 @@ namespace AutoPlannerOptimizationLoop.Base
                                                           _data.TargetCoverageNormalization);
                 if (double.IsNaN(normalizationValue)) return true;
                 plan.PlanNormalizationValue = normalizationValue;
-                ProvideUpdate($"{plan.Id} normalized. Normalization value = {normalizationValue:0.0}%");
-                ProvideUpdate(100 * (++percentComplete) / calcItems, "Evaluating plan quality and updating constraints!");
+                ProvideUIUpdate($"{plan.Id} normalized. Normalization value = {normalizationValue:0.0}%");
+                ProvideUIUpdate(100 * (++percentComplete) / calcItems, "Evaluating plan quality and updating constraints!");
 
                 //evaluate the new plan for quality and make any adjustments to the optimization parameters
                 PlanEvaluationDataContainer e = EvaluateAndUpdatePlan(plan, _data.PlanObjectives, isFinalOpt);
@@ -331,7 +331,7 @@ namespace AutoPlannerOptimizationLoop.Base
                 {
                     //updated optimization constraint list is empty, which means that all plan objectives have been met. 
                     //Let the user know and break the loop. Also set oneMoreOpt to false so that extra optimization is not performed
-                    ProvideUpdate("All plan objectives have been met! Exiting!", true);
+                    ProvideUIUpdate("All plan objectives have been met! Exiting!", true);
                     _data.OneMoreOptimization = false;
                     return false;
                 }
@@ -342,15 +342,15 @@ namespace AutoPlannerOptimizationLoop.Base
                 //the same plan!
                 if (!_data.IsDemo && _data.CopyAndSaveEachOptimizedPlan && (_data.OneMoreOptimization || ((count + 1) != _data.NumberOfIterations))) CopyAndSavePlan(plan, count);
 
-                ProvideUpdate(OptimizationLoopUIHelper.PrintPlanOptimizationResultVsConstraints(plan, OptimizationSetupHelper.ReadConstraintsFromPlan(plan), e.PlanDifferenceFromOptConstraints, e.TotalOptimizationCostOptConstraints));
-                ProvideUpdate(OptimizationLoopUIHelper.PrintAdditionalPlanDoseInfo(_data.RequestedPlanMetrics, plan, _data.NormalizationVolumes));
+                ProvideUIUpdate(OptimizationLoopUIHelper.PrintPlanOptimizationResultVsConstraints(plan, OptimizationSetupHelper.ReadConstraintsFromPlan(plan), e.PlanDifferenceFromOptConstraints, e.TotalOptimizationCostOptConstraints));
+                ProvideUIUpdate(OptimizationLoopUIHelper.PrintAdditionalPlanDoseInfo(_data.RequestedPlanMetrics, plan, _data.NormalizationVolumes));
 
                 //really crank up the priority and lower the dose objective on the cooler on the last iteration of the optimization loop
                 //this is basically here to avoid having to call op.updateConstraints a second time (if this batch of code was placed outside of the loop)
                 if (isFinalOpt) e.UpdatedOptimizationObjectives = OptimizationLoopHelper.IncreaseOptConstraintPrioritiesForFinalOpt(e.UpdatedOptimizationObjectives);
 
                 //print updated optimization constraints
-                ProvideUpdate(100 * ++percentComplete / calcItems, OptimizationLoopUIHelper.PrintPlanOptimizationConstraints(plan, e.UpdatedOptimizationObjectives));
+                ProvideUIUpdate(100 * ++percentComplete / calcItems, OptimizationLoopUIHelper.PrintPlanOptimizationConstraints(plan, e.UpdatedOptimizationObjectives));
 
                 //update the optimization constraints in the plan
                 UpdateConstraints(e.UpdatedOptimizationObjectives, plan);
@@ -441,7 +441,7 @@ namespace AutoPlannerOptimizationLoop.Base
             string newPlanId = $"opt itr {plan.Id}{count + 1}";
             if (newPlanId.Length > 13) newPlanId = newPlanId.Substring(0, 13);
             newPlan.Id = newPlanId;
-            ProvideUpdate($"Copying plan: {plan.Id} and saving as: {newPlan.Id}");
+            ProvideUIUpdate($"Copying plan: {plan.Id} and saving as: {newPlan.Id}");
             return false;
         }
 
@@ -454,7 +454,7 @@ namespace AutoPlannerOptimizationLoop.Base
             int priority;
 
             UpdateUILabel("Initialize constraints:");
-            ProvideUpdate(OptimizationLoopUIHelper.GetOptimizationObjectivesHeader(plan.Id));
+            ProvideUIUpdate(OptimizationLoopUIHelper.GetOptimizationObjectivesHeader(plan.Id));
             foreach (OptimizationConstraintModel opt in originalOptObj)
             {
                 //leave the PTV priorities at their original values (i.e., 100)
@@ -462,9 +462,9 @@ namespace AutoPlannerOptimizationLoop.Base
                 //start OAR structure priorities at 2/3 of the values the user specified so there is some wiggle room for adjustment
                 else priority = (int)Math.Ceiling(((double)opt.Priority * 2) / 3);
                 optObj.Add(new OptimizationConstraintModel(opt.StructureId, opt.ConstraintType, opt.QueryDose, Units.cGy, opt.QueryVolume, priority));
-                ProvideUpdate(100 * ++percentComplete / calcItems, String.Format("{0, -16} | {1, -16} | {2,-10:N1} | {3,-10:N1} | {4,-8} |", opt.StructureId, opt.ConstraintType, opt.QueryDose, opt.QueryVolume, priority));
+                ProvideUIUpdate(100 * ++percentComplete / calcItems, String.Format("{0, -16} | {1, -16} | {2,-10:N1} | {3,-10:N1} | {4,-8} |", opt.StructureId, opt.ConstraintType, opt.QueryDose, opt.QueryVolume, priority));
             }
-            ProvideUpdate(" ");
+            ProvideUIUpdate(" ");
 
             UpdateOverallProgress(100 * ++overallPercentCompletion / overallCalcItems);
             return optObj;
@@ -479,7 +479,7 @@ namespace AutoPlannerOptimizationLoop.Base
             foreach (OptimizationObjective o in plan.OptimizationSetup.Objectives)
             {
                 plan.OptimizationSetup.RemoveObjective(o);
-                ProvideUpdate(100 * ++percentComplete / calcItems);
+                ProvideUIUpdate(100 * ++percentComplete / calcItems);
             }
 
             UpdateUILabel("Assign updated constraints:");
@@ -502,7 +502,7 @@ namespace AutoPlannerOptimizationLoop.Base
                                                                 new DoseValue(dose, DoseValue.DoseUnit.cGy),
                                                                 opt.Priority);
                 }
-                ProvideUpdate(100 * ++percentComplete / calcItems);
+                ProvideUIUpdate(100 * ++percentComplete / calcItems);
             }
             UpdateOverallProgress(100 * ++overallPercentCompletion / overallCalcItems);
             return false;
@@ -525,12 +525,12 @@ namespace AutoPlannerOptimizationLoop.Base
             //in demo mode, dose might not be calculated for the plan
             if (!plan.IsDoseValid)
             {
-                ProvideUpdate($"Error! Dose for plan {plan.Id} is NOT valid! Cannot normalize! Exiting!", true);
+                ProvideUIUpdate($"Error! Dose for plan {plan.Id} is NOT valid! Cannot normalize! Exiting!", true);
                 return normValue;
             }
             if (ReferenceEquals(target, null) || target.IsEmpty)
             {
-                ProvideUpdate($"Error! Target/normalization structure for plan {plan.Id} is NOT null or empty! Cannot normalize! Exiting!", true);
+                ProvideUIUpdate($"Error! Target/normalization structure for plan {plan.Id} is NOT null or empty! Cannot normalize! Exiting!", true);
                 return normValue;
             }
             //how to normalize a plan in the ESAPI workspace:
@@ -543,17 +543,17 @@ namespace AutoPlannerOptimizationLoop.Base
             //get current coverage of the RxDose
             double coverage = plan.GetVolumeAtDose(target, dv, VolumePresentation.Relative);
 
-            ProvideUpdate($"{target.Id} V{relativeDose}% = {coverage:0.0}%");
+            ProvideUIUpdate($"{target.Id} V{relativeDose}% = {coverage:0.0}%");
             //if the current coverage doesn't equal the desired coverage, then renormalize the plan
             if (coverage != targetVolCoverage)
             {
-                ProvideUpdate($"Renormalizing plan: {plan.Id} to acheive {target.Id} V{relativeDose}% >= {targetVolCoverage}");
+                ProvideUIUpdate($"Renormalizing plan: {plan.Id} to acheive {target.Id} V{relativeDose}% >= {targetVolCoverage}");
                 //get the dose that does cover the targetVolCoverage of the target volume and scale the dose distribution by the ratio of that dose to the relative prescription dose
                 dv = plan.GetDoseAtVolume(target, targetVolCoverage, VolumePresentation.Relative, DoseValuePresentation.Absolute);
                 normValue = 100.0 * dv.Dose / (relativeDose * RxDose / 100);
                 if (normValue < 0.01 || normValue > 10000.0)
                 {
-                    ProvideUpdate($"Calculated plan normalization value ({normValue}%) is outside of acceptable range: 0.01% - 10000.0%! Exiting", true);
+                    ProvideUIUpdate($"Calculated plan normalization value ({normValue}%) is outside of acceptable range: 0.01% - 10000.0%! Exiting", true);
                     return double.NaN;
                 }
             }
@@ -576,7 +576,7 @@ namespace AutoPlannerOptimizationLoop.Base
                                                        bool finalOptimization)
         {
             UpdateUILabel($"Plan evaluation: {plan.Id}");
-            ProvideUpdate(Environment.NewLine + "Constructed evaluation data struct!");
+            ProvideUIUpdate(Environment.NewLine + "Constructed evaluation data struct!");
             //create a new data structure to hold the results of the plan quality evaluation
             PlanEvaluationDataContainer e = new PlanEvaluationDataContainer();
 
@@ -595,9 +595,9 @@ namespace AutoPlannerOptimizationLoop.Base
                 e.AllPlanObjectivesMet = true;
                 return e;
             }
-            ProvideUpdate("All plan objectives NOT met! Adjusting optimization parameters!");
+            ProvideUIUpdate("All plan objectives NOT met! Adjusting optimization parameters!");
 
-            ProvideUpdate($"Parsing optimization objectives from plan: {plan.Id}");
+            ProvideUIUpdate($"Parsing optimization objectives from plan: {plan.Id}");
             List<OptimizationConstraintModel> optParams = OptimizationSetupHelper.ReadConstraintsFromPlan(plan);
             List<PlanOptConstraintsDeviationModel> differenceFromOptConstraints = EvaluateResultVsOptimizationConstraints(plan, optParams);
             e.TotalOptimizationCostOptConstraints = differenceFromOptConstraints.Sum(x => x.OptimizationCost);
@@ -642,7 +642,7 @@ namespace AutoPlannerOptimizationLoop.Base
         public List<PlanObjectivesDeviationModel> EvaluateResultVsPlanObjectives(ExternalPlanSetup plan,
                                                                                     List<PlanObjectiveModel> planObj)
         {
-            ProvideUpdate("Evluating optimization result vs plan objectives");
+            ProvideUIUpdate("Evluating optimization result vs plan objectives");
             int percentComplete = 0;
             int calcItems = 1 + planObj.Count();
             List<PlanObjectivesDeviationModel> differenceFromPlanObj = new List<PlanObjectivesDeviationModel> { };
@@ -652,7 +652,7 @@ namespace AutoPlannerOptimizationLoop.Base
             //then we have achieved the desired plan quality and can stop the optimization loop
             foreach (PlanObjectiveModel itr in planObj)
             {
-                ProvideUpdate(100 * ++percentComplete / calcItems);
+                ProvideUIUpdate(100 * ++percentComplete / calcItems);
                 //used to account for the case where there is a template plan objective that is not included in the current case (e.g., testes are not always spared)
                 if (StructureTuningHelper.DoesStructureExistInSS(itr.StructureId, plan.StructureSet, true))
                 {
@@ -662,18 +662,18 @@ namespace AutoPlannerOptimizationLoop.Base
                     if (diff <= 0.0)
                     {
                         //objective was met. Increment the counter for the number of objecives met
-                        ProvideUpdate($"Plan objective met for: ({itr.StructureId},{itr.ConstraintType},{itr.QueryDose} {itr.QueryDoseUnits}, {itr.QueryVolume} {itr.QueryVolumeUnits})");
+                        ProvideUIUpdate($"Plan objective met for: ({itr.StructureId},{itr.ConstraintType},{itr.QueryDose} {itr.QueryDoseUnits}, {itr.QueryVolume} {itr.QueryVolumeUnits})");
                     }
                     else
                     {
-                        ProvideUpdate($"Plan objective NOT met for: ({itr.StructureId},{itr.ConstraintType},{itr.QueryDose} {itr.QueryDoseUnits}, {itr.QueryVolume} {itr.QueryVolumeUnits})");
+                        ProvideUIUpdate($"Plan objective NOT met for: ({itr.StructureId},{itr.ConstraintType},{itr.QueryDose} {itr.QueryDoseUnits}, {itr.QueryVolume} {itr.QueryVolumeUnits})");
                     }
 
                     //add this comparison to the list and increment the running total of the cost for the plan objectives
                     differenceFromPlanObj.Add(new PlanObjectivesDeviationModel(s, diff * diff, diff <= 0));
                 }
             }
-            ProvideUpdate(100, $"Elapsed time: {ElapsedRunTime}");
+            ProvideUIUpdate(100, $"Elapsed time: {ElapsedRunTime}");
             return differenceFromPlanObj;
         }
 
@@ -686,14 +686,14 @@ namespace AutoPlannerOptimizationLoop.Base
         public List<PlanOptConstraintsDeviationModel> EvaluateResultVsOptimizationConstraints(ExternalPlanSetup plan,
                                                                                                  List<OptimizationConstraintModel> optParams)
         {
-            ProvideUpdate("Evaluating optimization result vs optimization constraints:");
+            ProvideUIUpdate("Evaluating optimization result vs optimization constraints:");
             //since we didn't meet all of the plan objectives, we now need to evaluate how well the plan compared to the desired plan objectives
             List<PlanOptConstraintsDeviationModel> differenceFromOptConstraints = new List<PlanOptConstraintsDeviationModel> { };
             int percentComplete = 0;
             int calcItems = 1 + optParams.Count();
             foreach (OptimizationConstraintModel itr in optParams)
             {
-                ProvideUpdate(100 * ++percentComplete / calcItems);
+                ProvideUIUpdate(100 * ++percentComplete / calcItems);
                 //get the structure for each optimization object in optParams and its associated DVH
                 Structure s = StructureTuningHelper.GetStructureFromId(itr.StructureId, _data.StructureSet);
                 //dose representation in optimization objectives is always absolute!
@@ -706,7 +706,7 @@ namespace AutoPlannerOptimizationLoop.Base
                 differenceFromOptConstraints.Add(new PlanOptConstraintsDeviationModel(s, itr.QueryDose, diff * diff, cost, itr.Priority));
                 //add the cost for this constraint to the running total
             }
-            ProvideUpdate(100, $"Elapsed time: {ElapsedRunTime}");
+            ProvideUIUpdate(100, $"Elapsed time: {ElapsedRunTime}");
             //save the total cost from this optimization
             return differenceFromOptConstraints;
         }
@@ -724,7 +724,7 @@ namespace AutoPlannerOptimizationLoop.Base
                                                                                           double totalCostOptimizationConstraints,
                                                                                           List<OptimizationConstraintModel> optParams)
         {
-            ProvideUpdate("Determining new optimization objectives for next iteration");
+            ProvideUIUpdate("Determining new optimization objectives for next iteration");
             //not all plan objectives were met and now we need to do some investigative work to find out what failed and by how much
             //update optimization parameters based on how each of the structures contained in diffPlanOpt performed
             List<OptimizationConstraintModel> updatedOptimizationConstraints = new List<OptimizationConstraintModel> { };
@@ -733,7 +733,7 @@ namespace AutoPlannerOptimizationLoop.Base
             int count = 0;
             foreach (PlanOptConstraintsDeviationModel itr in diffPlanOpt)
             {
-                ProvideUpdate(100 * ++percentComplete / calcItems);
+                ProvideUIUpdate(100 * ++percentComplete / calcItems);
                 double relative_cost = 0.0;
                 //assign new objective dose and priority to the current dose and priority
                 double newDose = itr.DoseConstraint;
@@ -776,7 +776,7 @@ namespace AutoPlannerOptimizationLoop.Base
                 }
                 count++;
             }
-            ProvideUpdate(100, String.Format("Elapsed time: {0}", ElapsedRunTime));
+            ProvideUIUpdate(100, String.Format("Elapsed time: {0}", ElapsedRunTime));
             return updatedOptimizationConstraints;
         }
         #endregion
@@ -797,7 +797,7 @@ namespace AutoPlannerOptimizationLoop.Base
         {
             UpdateUILabel("Update TS heaters & coolers:");
             bool wasKilled = false;
-            ProvideUpdate("Updating heater and cooler tuning structures for next iteration");
+            ProvideUIUpdate("Updating heater and cooler tuning structures for next iteration");
             int percentComplete = 0;
             int calcItems = 2 + _data.RequestedOptimizationTSStructures.Count();
             //first remove existing structures
@@ -806,11 +806,11 @@ namespace AutoPlannerOptimizationLoop.Base
             //list to hold info related to optimization constraints for any added heater and cooler structures
             List<OptimizationConstraintModel> heaterCoolerOptConstraints = OptimizationSetupHelper.ReadConstraintsFromPlan(plan).Where(x => x.StructureId.ToLower().Contains("cooler") || x.StructureId.ToLower().Contains("heater")).ToList();
             //now create new cooler and heating structures
-            ProvideUpdate($"Retrieving target structure for plan: {plan.Id}");
+            ProvideUIUpdate($"Retrieving target structure for plan: {plan.Id}");
             Dictionary<string, string> plansTargets = TargetsHelper.GetHighestRxPlanTargetList(_data.Prescriptions);
             if (!plansTargets.Any())
             {
-                ProvideUpdate("Error! Could not retrieve list of plans and associated targets! Exiting", true);
+                ProvideUIUpdate("Error! Could not retrieve list of plans and associated targets! Exiting", true);
                 wasKilled = true;
                 return (wasKilled, heaterCoolerOptConstraints);
             }
@@ -819,10 +819,10 @@ namespace AutoPlannerOptimizationLoop.Base
             if (plansTargets.Any(x => string.Equals(x.Key, plan.Id))) targetId = plansTargets.First(x => string.Equals(x.Key, plan.Id)).Value;
 
             Structure target = TargetsHelper.GetTargetStructureForPlanType(_data.StructureSet, targetId, _data.UseFlash, _data.PlanType);
-            ProvideUpdate($"Retrieved target: {target.Id} for plan: {plan.Id} to evaluate requested heater/cooler structures");
+            ProvideUIUpdate($"Retrieved target: {target.Id} for plan: {plan.Id} to evaluate requested heater/cooler structures");
             if (ReferenceEquals(target, null) || target.IsEmpty)
             {
-                ProvideUpdate($"Error! Target structure not found or is empty for plan: {plan.Id}! Exiting!", true);
+                ProvideUIUpdate($"Error! Target structure not found or is empty for plan: {plan.Id}! Exiting!", true);
                 wasKilled = true;
                 return (wasKilled, heaterCoolerOptConstraints);
             }
@@ -830,25 +830,25 @@ namespace AutoPlannerOptimizationLoop.Base
             //iterate through the list of requested optimization tuning structures
             foreach (RequestedOptimizationTSStructureModel itr in requestedTSStructures)
             {
-                ProvideUpdate(100 * ++percentComplete / calcItems);
+                ProvideUIUpdate(100 * ++percentComplete / calcItems);
                 EvaluateHeaterCoolerCreationCriteria(plan, target, itr.CreationCriteria);
                 //does it have constraints that need to be met before adding the TS structure?
                 if (itr.AllCriteriaMet(isFinalOptimization))
                 {
-                    ProvideUpdate($"All conditions met for: {itr.TSStructureId}! Adding to structure set!");
+                    ProvideUIUpdate($"All conditions met for: {itr.TSStructureId}! Adding to structure set!");
                     if (itr.GetType() == typeof(TSCoolerStructureModel))
                     {
                         //cooler
-                        ProvideUpdate(TSHeaterCoolerHelper.GenerateCooler(plan, (itr as TSCoolerStructureModel)));
+                        ProvideUIUpdate(TSHeaterCoolerHelper.GenerateCooler(plan, (itr as TSCoolerStructureModel)));
                     }
                     else
                     {
                         //heater
-                        ProvideUpdate(TSHeaterCoolerHelper.GenerateHeater(plan, target, (itr as TSHeaterStructureModel)));
+                        ProvideUIUpdate(TSHeaterCoolerHelper.GenerateHeater(plan, target, (itr as TSHeaterStructureModel)));
                     }
                     heaterCoolerOptConstraints.AddRange(itr.Constraints);
                 }
-                else ProvideUpdate($"All conditions NOT met for: {itr.TSStructureId}! Skipping!");
+                else ProvideUIUpdate($"All conditions NOT met for: {itr.TSStructureId}! Skipping!");
 
                 if (AbortOptimization)
                 {
@@ -856,7 +856,7 @@ namespace AutoPlannerOptimizationLoop.Base
                     return (wasKilled, heaterCoolerOptConstraints);
                 }
             }
-            ProvideUpdate(100, $"Elapsed time: {ElapsedRunTime}");
+            ProvideUIUpdate(100, $"Elapsed time: {ElapsedRunTime}");
             return (wasKilled, heaterCoolerOptConstraints);
         }
 
@@ -874,16 +874,16 @@ namespace AutoPlannerOptimizationLoop.Base
         /// <param name="plan"></param>
         protected void RemoveCoolHeatStructures(ExternalPlanSetup plan)
         {
-            ProvideUpdate("Removing existing heater and cooler structures");
+            ProvideUIUpdate("Removing existing heater and cooler structures");
             StructureSet ss = plan.StructureSet;
             List<Structure> coolerHeater = ss.Structures.Where(x => x.Id.ToLower().Contains("ts_cooler") || x.Id.ToLower().Contains("ts_heater")).ToList();
             int percentComplete = 0;
             int calcItems = coolerHeater.Count();
             foreach (Structure itr in coolerHeater)
             {
-                ProvideUpdate(100 * ++percentComplete / calcItems, $"Removing structure: {itr.Id}");
+                ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Removing structure: {itr.Id}");
                 if (ss.CanRemoveStructure(itr)) ss.RemoveStructure(itr);
-                else ProvideUpdate($"Warning! Cannot remove {itr.Id} from the structure set! Skipping!");
+                else ProvideUIUpdate($"Warning! Cannot remove {itr.Id} from the structure set! Skipping!");
             }
         }
         #endregion

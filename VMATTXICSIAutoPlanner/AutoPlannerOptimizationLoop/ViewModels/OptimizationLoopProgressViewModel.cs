@@ -181,7 +181,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         /// <param name="message"></param>
         /// <param name="fail"></param>
         //two overloaded methods to provide periodic updates on the progress of the optimization loop
-        protected void ProvideUpdate(int percentComplete, string message, bool fail = false)
+        protected void ProvideUIUpdate(int percentComplete, string message, bool fail = false)
         {
             if (fail) FailEvent();
             TaskProgress = percentComplete;
@@ -199,7 +199,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         /// <param name="message"></param>
         /// <param name="fail"></param>
         //two overloaded methods to provide periodic updates on the progress of the optimization loop
-        protected void ProvideUpdate(int percentComplete, bool fail = false)
+        protected void ProvideUIUpdate(int percentComplete, bool fail = false)
         {
             if (fail) FailEvent();
             TaskProgress = percentComplete;
@@ -210,7 +210,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         /// </summary>
         /// <param name="message"></param>
         /// <param name="fail"></param>
-        protected void ProvideUpdate(string message, bool fail = false)
+        protected void ProvideUIUpdate(string message, bool fail = false)
         {
             if (fail) FailEvent();
             ProgressInfo += message + Environment.NewLine;
@@ -272,7 +272,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             //}
             //else
             //{
-            //    ProvideUpdate($"Warning! {logPath} does not exist! Could not write to log file!", false);
+            //    ProvideUIUpdate($"Warning! {logPath} does not exist! Could not write to log file!", false);
             //}
         }
         #endregion
@@ -330,10 +330,10 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             _timer.Stop();
             canClose = true;
             OverallProgress = 100;
-            ProvideUpdate(100, Environment.NewLine + "Finished!", false);
-            ProvideUpdate($"Total run time: {ElapsedRunTime}" + Environment.NewLine, false);
+            ProvideUIUpdate(100, Environment.NewLine + "Finished!", false);
+            ProvideUIUpdate($"Total run time: {ElapsedRunTime}" + Environment.NewLine, false);
 
-            ProvideUpdate("Errors and warnings:", false);
+            ProvideUIUpdate("Errors and warnings:", false);
             LoadAndPrintErrorsWarnings();
         }
 
@@ -352,7 +352,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         {
             if (!File.Exists(fileNameErrorsWarnings))
             {
-                ProvideUpdate("None", false);
+                ProvideUIUpdate("None", false);
                 return;
             }
             try
@@ -362,7 +362,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                     string line;
                     while ((line = reader.ReadLine()) != null)
                     {
-                        if (!string.IsNullOrEmpty(line)) ProvideUpdate(line, false);
+                        if (!string.IsNullOrEmpty(line)) ProvideUIUpdate(line, false);
                     }
                     reader.Close();
                 }
@@ -370,7 +370,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             }
             catch (Exception e)
             {
-                ProvideUpdate($"Error! Could not load errors and warnings log because: {e.Message}", true);
+                ProvideUIUpdate($"Error! Could not load errors and warnings log because: {e.Message}", true);
             }
         }
         #endregion

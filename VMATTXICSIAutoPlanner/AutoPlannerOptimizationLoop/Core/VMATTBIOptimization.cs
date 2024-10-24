@@ -44,20 +44,20 @@ namespace AutoPlannerOptimizationLoop.Core
                 //if (PreliminaryChecksSSAndImage(_data.StructureSet, _data.Prescriptions.Select(x => x.TargetId))) return true;
                 //if (PreliminaryChecksPlans(_data.Plans)) return true;
 
-                //ProvideUpdate(String.Format(" Commencing optimization loop!"));
+                //ProvideUIUpdate(String.Format(" Commencing optimization loop!"));
                 //if (RunOptimizationLoop(_data.Plans)) return true;
                 UpdateUILabel("Counting");
                 for (int i = 0; i < 100; i++)
                 {
                     _constraints.First().StructureId = $"test{i}";
-                    ProvideUpdate(i, $"Constraint Id: {_constraints.First().StructureId}");
+                    ProvideUIUpdate(i, $"Constraint Id: {_constraints.First().StructureId}");
                     Thread.Sleep(100);
                 }
                 OptimizationRunCompleted();
             }
             catch (Exception e)
             {
-                ProvideUpdate($"{e.Message}", true);
+                ProvideUIUpdate($"{e.Message}", true);
                 return true;
             }
             return false;
@@ -102,14 +102,14 @@ namespace AutoPlannerOptimizationLoop.Core
         /// <returns></returns>
         private bool RemoveFlashAndRecalc(List<ExternalPlanSetup> plans)
         {
-            ProvideUpdate(100 * ++overallPercentCompletion / overallCalcItems, Environment.NewLine + "Removing flash, recalculating dose, and renormalizing to TS_PTV_VMAT!");
-            ProvideUpdate($"Elapsed time: {ElapsedRunTime}");
+            ProvideUIUpdate(100 * ++overallPercentCompletion / overallCalcItems, Environment.NewLine + "Removing flash, recalculating dose, and renormalizing to TS_PTV_VMAT!");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
 
             Structure bolus = StructureTuningHelper.GetStructureFromId("bolus_flash", _data.StructureSet); ;
             if (bolus == null)
             {
                 //no structure named bolus_flash found. This is a problem. 
-                ProvideUpdate("No structure named 'BOLUS_FLASH' found in structure set! Exiting!", true);
+                ProvideUIUpdate("No structure named 'BOLUS_FLASH' found in structure set! Exiting!", true);
                 return true;
             }
             else
@@ -133,19 +133,19 @@ namespace AutoPlannerOptimizationLoop.Core
                 foreach (ExternalPlanSetup itr in plansWithCalcDose)
                 {
                     CalculateDose(_data.IsDemo, itr, _data.Application);
-                    ProvideUpdate(100 * ++overallPercentCompletion / overallCalcItems, "Dose calculated, normalizing plan!");
-                    ProvideUpdate($"Elapsed time: {ElapsedRunTime}");
+                    ProvideUIUpdate(100 * ++overallPercentCompletion / overallCalcItems, "Dose calculated, normalizing plan!");
+                    ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
                     if (plans.Any(x => x == itr))
                     {
                         //force the plan to normalize to TS_PTV_VMAT after removing flash
                         double normalizationValue = NormalizePlan(itr, TargetsHelper.GetTargetStructureForPlanType(_data.StructureSet, "", false, _data.PlanType), _data.TreatmentPercentage, _data.TargetCoverageNormalization);
                         if (double.IsNaN(normalizationValue)) return true;
                         itr.PlanNormalizationValue = normalizationValue;
-                        ProvideUpdate(100 * ++overallPercentCompletion / overallCalcItems, $"{itr.Id} normalized. Normalization value = {normalizationValue:0.0}%");
+                        ProvideUIUpdate(100 * ++overallPercentCompletion / overallCalcItems, $"{itr.Id} normalized. Normalization value = {normalizationValue:0.0}%");
                     }
                     else
                     {
-                        ProvideUpdate(100 * ++overallPercentCompletion / overallCalcItems, $"Plan: {itr.Id} is not contained in the plan list! Skipping normalization!");
+                        ProvideUIUpdate(100 * ++overallPercentCompletion / overallCalcItems, $"Plan: {itr.Id} is not contained in the plan list! Skipping normalization!");
                     }
                 }
             }
