@@ -12,7 +12,7 @@ using Prism.Commands;
 
 namespace AutoPlannerOptimizationLoop.ViewModels
 {
-    public class OptimizationLoopProgressViewModel : BindableBase
+    public abstract class OptimizationLoopProgressViewModel : BindableBase
     {
         #region properties
         private string _progressInfo;

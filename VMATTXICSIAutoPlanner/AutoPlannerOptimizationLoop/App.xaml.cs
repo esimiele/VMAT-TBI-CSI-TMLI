@@ -13,7 +13,7 @@ namespace AutoPlannerOptimizationLoop
     {
         private void Application_Startup(object sender, StartupEventArgs e)
         {
-            OptimizationLoopMainView mv = new OptimizationLoopMainView { DataContext = new OptimizationLoopMainViewModel() };
+            OptimizationLoopMainView mv = new OptimizationLoopMainView { DataContext = new OptimizationLoopMainViewModel(e.Args) };
             mv.ShowDialog();
         }
     }

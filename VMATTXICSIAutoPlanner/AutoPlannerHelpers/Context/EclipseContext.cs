@@ -23,6 +23,5 @@ namespace AutoPlannerHelpers.Context
         public string ImageFOR { get; set; } = "";
         public string UserName { get; set; } = "";
         public string UserId { get; set; } = "";
-        public bool HasValue<T>(T obj) { return !ReferenceEquals(obj, null); }
     }
 }

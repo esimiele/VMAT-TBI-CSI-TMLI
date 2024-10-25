@@ -23,7 +23,6 @@
   <ItemGroup>
     <Folder Include="Images\" />
     <Folder Include="Configuration\" />
-    <Folder Include="Prompts\" />
   </ItemGroup>
 
 	<ItemGroup Condition="'$(Configuration)' == 'Debug-v15'">

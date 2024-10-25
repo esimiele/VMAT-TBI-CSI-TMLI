@@ -19,21 +19,21 @@ namespace CTStitcher.UIHelpers
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Eclipse context:");
-            sb.AppendLine($"    Application: {(context.HasValue(context.Application) ? "Initialized" : "")}");
-            sb.AppendLine($"    User: {(context.HasValue(context.Application) ? context.Application.CurrentUser.Name : "")}");
-            sb.AppendLine($"    Patient MRN: {(context.HasValue(context.Patient) ? context.Patient.Id : "")}");
-            sb.AppendLine($"    Course: {(context.HasValue(context.Course) ? context.Course.Id : "")}");
+            sb.AppendLine($"    Application: {(context.IsInitialized ? "Initialized" : "")}");
+            sb.AppendLine($"    User: {(context.IsInitialized ? context.Application.CurrentUser.Name : "")}");
+            sb.AppendLine($"    Patient MRN: {(!ReferenceEquals(context.Patient, null) ? context.Patient.Id : "")}");
+            sb.AppendLine($"    Course: {(!ReferenceEquals(context.Course, null) ? context.Course.Id : "")}");
             //sb.AppendLine($"    Plan: {(context.HasValue(context.Plan) ? context.Plan.Id : "")}");
-            sb.AppendLine($"    Structure set: {(context.HasValue(context.StructureSet) ? context.StructureSet.Id : "")}");
-            sb.AppendLine($"    Image FOR: {(context.HasValue(context.ImageFOR) ? context.ImageFOR : "")}");
+            sb.AppendLine($"    Structure set: {(!ReferenceEquals(context.StructureSet, null) ? context.StructureSet.Id : "")}");
+            sb.AppendLine($"    Image FOR: {(!ReferenceEquals(context.ImageFOR, null) ? context.ImageFOR : "")}");
             sb.AppendLine("    CT images:");
-            if (context.HasValue(context.CTImages))
+            if (context.CTImages.Any())
             {
                 foreach (Image itr in context.CTImages) sb.AppendLine($"        {itr.Id}");
             }
             else sb.AppendLine("        None");
             sb.AppendLine("Registrations:");
-            if (context.HasValue(context.Registrations))
+            if (context.Registrations.Any())
             {
                 foreach (Registration itr in context.Registrations) sb.AppendLine($"        {itr.Id}");
             }

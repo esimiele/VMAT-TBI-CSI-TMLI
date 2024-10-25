@@ -6,17 +6,15 @@ using AutoPlannerOptimizationLoop.DataContainers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using VMS.TPS.Common.Model.API;
 using VMS.TPS.Common.Model.Types;
-using AutoPlannerOptimizationLoop.Base;
 using AutoPlannerOptimizationLoop.UIHelpers;
 using AutoPlannerOptimizationLoop.Utilities;
 using AutoPlannerOptimizationLoop.Models;
 using AutoPlannerOptimizationLoop.Helpers;
 using AutoPlannerOptimizationLoop.ViewModels;
+using AutoPlannerHelpers.Prompts;
 
 namespace AutoPlannerOptimizationLoop.Base
 {
@@ -83,6 +81,44 @@ namespace AutoPlannerOptimizationLoop.Base
         #endregion
 
         #region preliminary checks
+        /// <summary>
+        /// Preliminary checks for the couch structures if they exist. Primarily if support structure contours exist on the first and last slices of the CT image
+        /// </summary>
+        /// <param name="ss"></param>
+        /// <returns></returns>
+        protected bool PreliminaryChecksCouch(StructureSet ss)
+        {
+            int percentComplete = 0;
+            int calcItems = 2;
+
+            //grab all couch structures including couch surface, rails, etc. Also grab the matchline and spinning manny couch (might not be present depending on the size of the patient)
+            List<Structure> couchAndRails = ss.Structures.Where(x => x.Id.ToLower().Contains("couch") || x.Id.ToLower().Contains("rail")).ToList();
+            ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved list of couch structures ({couchAndRails.Count} structures found)");
+
+            //check to see if the couch and rail structures are present in the structure set. If not, let the user know as an FYI. At this point, the user can choose to stop the optimization loop and add the couch structures
+            if (!couchAndRails.Any())
+            {
+                ConfirmPrompt CP = new ConfirmPrompt("I didn't found any couch structures in the structure set!" + Environment.NewLine + Environment.NewLine + "Continue?!");
+                CP.ShowDialog();
+                if (!CP.GetSelection())
+                {
+                    ProvideUIUpdate("Quitting!", true);
+                    return true;
+                }
+            }
+
+            //now check if the couch and spinning manny structures are present on the first and last slices of the CT image
+            if (couchAndRails.Any() && couchAndRails.Any(x => !x.IsEmpty))
+            {
+                if (couchAndRails.Any(x => x.GetContoursOnImagePlane(0).Any()) || couchAndRails.Any(x => x.GetContoursOnImagePlane(ss.Image.ZSize - 1).Any())) _checkSupportStructures = true;
+                ProvideUIUpdate(100 * ++percentComplete / calcItems, "Checking if couch structures are on first or last slices of image");
+            }
+            else ProvideUIUpdate(100 * ++percentComplete / calcItems, "No couch structures present --> nothing to check");
+
+            UpdateOverallProgress(100 * ++overallPercentCompletion / overallCalcItems);
+            return false;
+        }
+
         /// <summary>
         /// Helper method to check the attributes of the structure set, image, and integrity of the targets that will be used for optimization
         /// </summary>
