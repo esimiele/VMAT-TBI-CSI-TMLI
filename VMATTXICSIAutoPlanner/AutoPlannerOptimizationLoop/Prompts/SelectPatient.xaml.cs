@@ -22,15 +22,25 @@ namespace AutoPlannerOptimizationLoop.Prompts
     /// </summary>
     public partial class SelectPatient : Window
     {
-        private string _patientMRN = "";
-        private string _fullLogFileName = "";
+        private string _patientMRN;
+
+        public string PatientMRN
+        {
+            get { return _patientMRN; }
+            set { _patientMRN = value; }
+        }
+
+        private string _fullLogFileName;
+
+        public string FullLogFileName
+        {
+            get { return _fullLogFileName; }
+            set { _fullLogFileName = value; }
+        }
+        public bool SelectionMade { get; set; } = false;
+
         private string logPath = "";
         private List<string> logs = new List<string> { };
-        public bool selectionMade = false;
-        public (string, string) GetPatientMRN()
-        {
-            return (_patientMRN, _fullLogFileName);
-        }
 
         //ATTENTION! THE FOLLOWING LINE HAS TO BE FORMATTED THIS WAY, OTHERWISE THE DATA BINDING WILL NOT WORK!
         public ObservableCollection<string> PatientMRNs { get; set; }
@@ -75,7 +85,7 @@ namespace AutoPlannerOptimizationLoop.Prompts
                 //give priority to the text box data
                 if (string.IsNullOrEmpty(MRNTB.Text)) _fullLogFileName = LogHelper.GetFullLogFileFromExistingMRN(_patientMRN, logPath);
                 else _patientMRN = MRNTB.Text;
-                selectionMade = true;
+                SelectionMade = true;
             }
             this.Close();
         }
