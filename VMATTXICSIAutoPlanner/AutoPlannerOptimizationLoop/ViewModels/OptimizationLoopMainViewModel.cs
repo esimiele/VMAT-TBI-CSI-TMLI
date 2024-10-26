@@ -24,6 +24,9 @@ using VMS.TPS.Common.Model.Types;
 using System.Drawing.Drawing2D;
 using VMS.TPS.Common.Model.API;
 using AutoPlannerOptimizationLoop.Settings;
+using AutoPlannerHelpers.Views;
+using System.Text;
+using System.Data;
 
 namespace AutoPlannerOptimizationLoop.ViewModels
 {
@@ -39,26 +42,35 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         private double _threshold;
         private double _lowDoseLimit;
         private bool _isDemo;
+        private PlanType _planType = PlanType.VMAT_CSI;
         private List<string> _reminders = new List<string> { };
         private string _mrn;
-        private PlanType _planType;
         private AutoPlanTemplateBase _selectedTemplate;
         private double _basePlanDosePerFraction;
         private int _basePlanNumberOfFractions;
         private double _basePlanTotalDose;
         private string _basePlanNormalizationVolume;
+        private double _boostplanDosePerFraction;
+        private int _boostPlanNumberOfFractions;
+        private double _boostPlanTotalDose;
+        private string _boostPlanNormalizationVolume;
         private bool _runCoverageCheck;
         private bool _copyAndSaveEachPlan;
         private int _maxNumberOfIterations;
         private bool _runOneAdditionalOptimization;
         private double _planNormalizationValue;
-        private string _scriptConfiguration;
         private List<string> _structureIds;
 
         public string MRN
         {
             get { return _mrn; }
             set { SetProperty(ref _mrn, value); }
+        }
+
+        public PlanType PlanType
+        {
+            get { return _planType; }
+            set { SetProperty(ref _planType, value); }
         }
 
         public AutoPlanTemplateBase SelectedTemplate
@@ -121,16 +133,43 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             set { SetProperty(ref _planNormalizationValue, value); }
         }
 
-        public string ScriptConfiguration
+        public double BoostPlanDosePerFraction
         {
-            get { return _scriptConfiguration; }
-            set { SetProperty(ref _scriptConfiguration, value); }
+            get { return _boostplanDosePerFraction; }
+            set { SetProperty(ref _boostplanDosePerFraction, value); }
+        }
+
+        public int BoostPlanNumberOfFractions
+        {
+            get { return _boostPlanNumberOfFractions; }
+            set { SetProperty(ref _boostPlanNumberOfFractions, value); }
+        }
+
+        public double BoostPlanTotalDose
+        {
+            get { return _boostPlanTotalDose; }
+            set { SetProperty(ref _basePlanTotalDose, value); }
+        }
+
+        public string BoostPlanNormalizationVolume
+        {
+            get { return _boostPlanNormalizationVolume; }
+            set { SetProperty(ref _boostPlanNormalizationVolume, value); }
         }
 
         public List<string> StructureIds
         {
             get { return _structureIds; }
             set { SetProperty(ref _structureIds, value); }
+        }
+        #endregion
+
+        #region view objects
+        private object _scriptConfiguration;
+        public object ScriptConfiguration
+        {
+            get { return _scriptConfiguration; }
+            set { SetProperty(ref _scriptConfiguration, value); }
         }
         #endregion
 
@@ -141,12 +180,11 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         public DelegateCommand AddPlanObjectiveCommand { get; set; }
         public DelegateCommand ClearPlanObjectiveListCommand { get; set; }
         public DelegateCommand AddOptimizationConstraintCommand { get; set; }
+        public DelegateCommand GetOptConstraintsFromPlanCommand { get; set; }
+        public DelegateCommand GetOptConstraintsFromLogsCommand { get; set; }
         public DelegateCommand ClearOptimizationConstraintListCommand { get; set; }
         public DelegateCommand<object> ClearRowCommand { get; set; }
         public DelegateCommand StartOptimizationCommand { get; set; }
-        #endregion
-
-        #region fields
         #endregion
 
         public OptimizationLoopMainViewModel(string[] args)
@@ -156,6 +194,8 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             AddPlanObjectiveCommand = new DelegateCommand(AddPlanObjective);
             ClearPlanObjectiveListCommand = new DelegateCommand(ClearPlanObjectives);
             AddOptimizationConstraintCommand = new DelegateCommand(AddOptimizationObjective);
+            GetOptConstraintsFromPlanCommand = new DelegateCommand(GetOptimizationConstraintsFromPlan);
+            GetOptConstraintsFromLogsCommand = new DelegateCommand(GetOptimizationConstraintsFromLogs);
             ClearOptimizationConstraintListCommand = new DelegateCommand(ClearOptimizationConstraints);
             PlanTemplates = new ObservableCollection<AutoPlanTemplateBase> { };
             PlanObjectives = new ObservableCollectionPropertyNotify<PlanObjectiveModel> { };
@@ -165,12 +205,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             if (args.Any()) EclipseContextHelper.GenerateEclipseContext(args.ToList());
             Initialize();
             InitializeUI();
-        }
-
-        private void AssignDefaultLogAndDocPaths()
-        {
-            _logFilePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\logs\\";
-            _documentationPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\documentation\\";
+            ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
         }
 
         #region help and documentation
@@ -189,6 +224,14 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         {
             AssignDefaultLogAndDocPaths();
             LoadPatient();
+            LoadConfigurationSettingsForPlanType(_planType);
+            LoadTemplatePlanChoices(_planType);
+        }
+
+        private void AssignDefaultLogAndDocPaths()
+        {
+            _logFilePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\logs\\";
+            _documentationPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\documentation\\";
         }
 
         public void InitializeUI()
@@ -202,15 +245,22 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                 return;
             }
             else StructureIds = EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id).ToList();
+            if(PlanTemplates.Any(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed)))
+            {
+                SelectedTemplate = PlanTemplates.First(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed));
+            }
             if(OptimizationLoopSettings.PlanPreparationNormalizationVolumes.Any())
             {
                 BasePlanNormalizationVolume = OptimizationLoopSettings.PlanPreparationNormalizationVolumes.First().Value;
-
+                if (OptimizationLoopSettings.PlanPreparationNormalizationVolumes.Count == 2 && _planType == PlanType.VMAT_CSI)
+                {
+                    BoostPlanNormalizationVolume = OptimizationLoopSettings.PlanPreparationNormalizationVolumes.Last().Value;
+                }
             }
-
-            //populate optimization and plan objective tabs
-
-            DisplayConfigurationParameters();
+            foreach(PlanOptimizationSetupModel itr in OptimizationLoopSettings.PlanPreparationOptimizationSetup)
+            {
+                PlanOptimizationConstraints.Add(itr);
+            }
         }
         #endregion
 
@@ -243,40 +293,10 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                 MessageBox.Show($"Error! Failed to ready plan preparation log file for patient: {EclipseContext.GetInstance().Patient.Id}! Exiting initialization!");
                 return;
             }
-            LoadConfigurationSettingsForPlanType(_planType);
             LoadPlansAndStructureSet();
-            LoadTemplatePlanChoices(_planType);
             if (_planType == PlanType.VMAT_TBI && OptimizationLoopSettings.Reminders.Any(x => x.ToLower().Contains("base dose")))
             {
                 if (!EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Any(x => x.Id.ToLower().Contains("legs"))) OptimizationLoopSettings.Reminders.Remove(OptimizationLoopSettings.Reminders.First(x => x.ToLower().Contains("base dose")));
-            }
-        }
-
-        private void OpenPatient(string pat_mrn)
-        {
-            try
-            {
-                //pi = app.OpenPatientById(pat_mrn);
-                //MRN = EclipseContext.GetInstance().Patient.Id;
-                ////grab instances of the course and VMAT tbi plans that were created using the binary plug in script. This is explicitly here to let the user know if there is a problem with the course OR plan
-                ////Course c = pi.Courses.FirstOrDefault(x => x.Id.ToLower() == "vmat tbi");
-                //GetStructureSetAndPlans();
-                //if (!EclipseContext.GetInstance().VMATPlans.Any())
-                //{
-                //    MessageBox.Show("No plans found!");
-                //    return;
-                //}
-                ////ensure the correct plan target is selected and all requested objectives have a matching structure that exists in the structure set (needs to be done after structure set has been assinged)
-                //PopulateOptimizationTab(optimizationParamSP);
-
-                ////populate the prescription text boxes with the prescription stored in the VMAT TBI plan
-                //PopulateRx();
-
-                //planObjectiveHeader.Background = System.Windows.Media.Brushes.PaleVioletRed;
-            }
-            catch
-            {
-                MessageBox.Show("No such patient exists!");
             }
         }
 
@@ -345,47 +365,57 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         {
             if (BasePlanNumberOfFractions > 0 && BasePlanDosePerFraction > 0)
             {
-                double priorTotalDose = BasePlanTotalDose;
                 BasePlanTotalDose = BasePlanDosePerFraction * BasePlanNumberOfFractions;
-                if (BasePlanTotalDose != priorTotalDose)
-                {
-                    foreach (PlanObjectiveModel itr in PlanObjectives)
-                    {
-                        if (itr.QueryDoseUnits == Units.cGy)
-                        {
-                            itr.QueryDose = Math.Round(itr.QueryDose * BasePlanTotalDose / priorTotalDose, 1);
-                        }
-                    }
-                    PlanObjectives.Refresh();
-                    //foreach (OptimizationConstraintModel itr in OptimizationConstraints)
-                    //{
-                    //    if (itr.QueryDoseUnits == Units.cGy)
-                    //    {
-                    //        itr.QueryDose = Math.Round(itr.QueryDose * BasePlanTotalDose / priorTotalDose, 1);
-                    //    }
-                    //}
-                    //OptimizationConstraints.Refresh();
-                }
+            }
+            if(BoostPlanDosePerFraction > 0 && BoostPlanNumberOfFractions > 0)
+            {
+                BoostPlanTotalDose = BoostPlanDosePerFraction * BoostPlanNumberOfFractions;
             }
         }
 
         private void UpdateUIWithSelectedPlanTemplate()
         {
             if (ReferenceEquals(_selectedTemplate, null)) return;
+            if (_planType == PlanType.VMAT_TBI)
+            {
+                BasePlanDosePerFraction = (_selectedTemplate as TBIAutoPlanTemplate).InitialRxDosePerFx;
+                BasePlanNumberOfFractions = (_selectedTemplate as TBIAutoPlanTemplate).InitialRxNumberOfFractions;
+            }
+            else if (_planType == PlanType.VMAT_CSI)
+            {
+                BasePlanDosePerFraction = (_selectedTemplate as CSIAutoPlanTemplate).InitialRxDosePerFx;
+                BasePlanNumberOfFractions = (_selectedTemplate as CSIAutoPlanTemplate).InitialRxNumberOfFractions;
+                if ((_selectedTemplate as CSIAutoPlanTemplate).BoostRxDosePerFx != 0.1)
+                {
+                    BoostPlanDosePerFraction = (_selectedTemplate as CSIAutoPlanTemplate).BoostRxDosePerFx;
+                    BoostPlanNumberOfFractions = (_selectedTemplate as CSIAutoPlanTemplate).BoostRxNumberOfFractions;
+                }
+            }
+            else
+            {
+                BasePlanDosePerFraction = (_selectedTemplate as TMLIAutoPlanTemplate).InitialRxDosePerFx;
+                BasePlanNumberOfFractions = (_selectedTemplate as TMLIAutoPlanTemplate).InitialRxNumberOfFractions;
+            }
+            PlanObjectives.Clear();
+            foreach (PlanObjectiveModel itr in _selectedTemplate.PlanObjectives)
+            {
+                PlanObjectives.Add(new PlanObjectiveModel(itr));
+            }
 
-            //BasePlanDosePerFraction = _selectedTemplate.InitialRxDosePerFx;
-            //BasePlanNumberOfFractions = _selectedTemplate.InitialRxNumberOfFractions;
-            //BasePlanTotalDose = _selectedTemplate.InitialRxNumberOfFractions * _selectedTemplate.InitialRxDosePerFx;
-            //PlanObjectives.Clear();
-            //foreach (PlanObjectiveModel itr in _selectedTemplate.PlanObjectives)
-            //{
-            //    PlanObjectives.Add(new PlanObjectiveModel(itr));
-            //}
-            //PlanOptimizationConstraints.Clear();
-            //foreach (OptimizationConstraintModel itr in _selectedTemplate.InitialOptimizationConstraints)
-            //{
-            //    PlanOptimizationConstraints.Add(new OptimizationConstraintModel(itr));
-            //}
+            if(!OptimizationLoopSettings.PlanPreparationOptimizationSetup.Any())
+            {
+                PlanOptimizationConstraints.Clear();
+                if (_planType == PlanType.VMAT_TBI) PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel("1", (_selectedTemplate as TBIAutoPlanTemplate).InitialOptimizationConstraints));
+                else if (_planType == PlanType.VMAT_CSI)
+                {
+                    PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel("1", (_selectedTemplate as CSIAutoPlanTemplate).InitialOptimizationConstraints));
+                    if ((_selectedTemplate as CSIAutoPlanTemplate).BoostRxDosePerFx != 0.1)
+                    {
+                        PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel("2", (_selectedTemplate as CSIAutoPlanTemplate).BoostOptimizationConstraints));
+                    }
+                }
+                else PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel("1", (_selectedTemplate as TMLIAutoPlanTemplate).InitialOptimizationConstraints));
+            }
         }
 
         public void AddPlanObjective()
@@ -403,7 +433,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
 
         public void AddOptimizationObjective()
         {
-            if (PlanOptimizationConstraints.Count() == 1)
+            if (PlanOptimizationConstraints.Count() > 1)
             {
                 //logic for multiple plans
                 SelectItemPrompt SIP = new SelectItemPrompt("Please selct a plan to add a constraint!", new List<string>(PlanOptimizationConstraints.Select(x => x.PlanId)));
@@ -428,6 +458,24 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         private OptimizationConstraintModel GenerateNewEmptyOptimizationConstraint()
         {
             return new OptimizationConstraintModel(_structureIds.First(), OptimizationObjectiveType.None, 0.0, Units.None, 0.0, 0);
+        }
+
+        public void GetOptimizationConstraintsFromPlan()
+        {
+            if (!EclipseContext.GetInstance().IsInitialized || !EclipseContext.GetInstance().VMATPlans.Any()) return;
+            PlanOptimizationConstraints.Clear();
+            foreach(ExternalPlanSetup itr in EclipseContext.GetInstance().VMATPlans)
+            {
+                PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel(itr.Id, OptimizationSetupHelper.ReadConstraintsFromPlan(itr)));
+            }
+        }
+
+        public void GetOptimizationConstraintsFromLogs()
+        {
+            foreach (PlanOptimizationSetupModel itr in OptimizationLoopSettings.PlanPreparationOptimizationSetup)
+            {
+                PlanOptimizationConstraints.Add(itr);
+            }
         }
 
         public void ClearOptimizationConstraints()
@@ -472,28 +520,37 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             //}
             //Logger.GetInstance().AppendLogOutput("Checking for valid constraints and objectives");
 
-            //StringBuilder sb = new StringBuilder();
-            //if (objectives.Any())
-            //{
-            //    foreach (PlanObjectiveModel itr in objectives)
-            //    {
-            //        sb.AppendLine($"{itr.StructureId}, {itr.ConstraintType}, {itr.QueryVolume}, {itr.QueryDose}, {itr.QueryDoseUnits}");
-            //    }
-            //}
-            //else sb.AppendLine("No plan objectives in list");
-            //sb.AppendLine(" ");
-            //if(constraints.Any())
-            //{
-            //    foreach(OptimizationConstraintModel itr in constraints)
-            //    {
-            //        sb.AppendLine($"{itr.StructureId}, {itr.ConstraintType}, {itr.QueryDose}, {itr.QueryDoseUnits}, {itr.QueryVolume}, {itr.QueryVolumeUnits}, {itr.Priority}");
-            //    }
-            //}
-            //else sb.AppendLine("No optimization constraints in list");
+            StringBuilder sb = new StringBuilder();
+            if (PlanObjectives.Any())
+            {
+                foreach (PlanObjectiveModel itr in PlanObjectives)
+                {
+                    sb.AppendLine($"{itr.StructureId}, {itr.ConstraintType}, {itr.QueryVolume}, {itr.QueryDose}, {itr.QueryDoseUnits}");
+                }
+            }
+            else sb.AppendLine("No plan objectives in list");
+            sb.AppendLine(" ");
+            if (PlanOptimizationConstraints.Any())
+            {
+                foreach(PlanOptimizationSetupModel planopt in PlanOptimizationConstraints)
+                {
+                    sb.AppendLine($"Plan: {planopt.PlanId}");
+                    foreach (OptimizationConstraintModel itr in planopt.OptimizationConstraints)
+                    {
+                        sb.AppendLine($"{itr.StructureId}, {itr.ConstraintType}, {itr.QueryDose}, {itr.QueryDoseUnits}, {itr.QueryVolume}, {itr.QueryVolumeUnits}, {itr.Priority}");
+                    }
+                }
+            }
+            else sb.AppendLine("No optimization constraints in list");
+            MessageBox.Show(sb.ToString());
 
-            //MessageBox.Show(sb.ToString());
-            //List<OptimizationConstraintModel> constraints = OptimizationConstraints.Where(x => x.IsValidConstraint).ToList();
-            //OptimizationSetupHelper.AssignOptConstraints(constraints, EclipseContext.GetInstance().Plan, false, 0.0);
+            if(PlanOptimizationConstraints.Any())
+            {
+                foreach(PlanOptimizationSetupModel itr in PlanOptimizationConstraints)
+                {
+                    OptimizationSetupHelper.AssignOptConstraints(itr.OptimizationConstraints.Where(x => x.IsValidConstraint).ToList(), EclipseContext.GetInstance().VMATPlans.First(x => string.Equals(x.Id, itr.PlanId)), false, 0.0);
+                }
+            }
             //OptDataContainer _data = GenerateOptimizationDataContainer();
             //VMATTBIOptimization opt = new VMATTBIOptimization(_data);
             VMATTBIOptimization opt = new VMATTBIOptimization(new List<OptimizationConstraintModel> { new OptimizationConstraintModel("test", OptimizationObjectiveType.Lower, 100, Units.cGy, 100, 100)});
@@ -503,33 +560,26 @@ namespace AutoPlannerOptimizationLoop.ViewModels
 
         public OptDataContainer GenerateOptimizationDataContainer()
         {
-            List<PrescriptionModel> prescriptions = new List<PrescriptionModel>
-            {
-                //new PrescriptionModel(EclipseContext.GetInstance().Plan.Id, "PTV^Body", BasePlanNumberOfFractions, new DoseValue(BasePlanDosePerFraction, DoseValue.DoseUnit.cGy), BasePlanDosePerFraction * BasePlanNumberOfFractions)
-            };
-            Dictionary<string, string> normalizationVolumes = new Dictionary<string, string> { };
-            //normalizationVolumes.Add(EclipseContext.GetInstance().Plan.Id, BasePlanNormalizationVolume);
             List<RequestedOptimizationTSStructureModel> requestedOptStructures = new List<RequestedOptimizationTSStructureModel> { };
             List<RequestedPlanMetricModel> requestedPlanMetrics = new List<RequestedPlanMetricModel> { };
-            if (!ReferenceEquals(SelectedTemplate, null))
+            if (!ReferenceEquals(_selectedTemplate, null))
             {
-                requestedOptStructures.AddRange(SelectedTemplate.RequestedOptimizationTSStructures);
-                requestedPlanMetrics.AddRange(SelectedTemplate.RequestedPlanMetrics);
+                requestedOptStructures.AddRange(_selectedTemplate.RequestedOptimizationTSStructures);
+                requestedPlanMetrics.AddRange(_selectedTemplate.RequestedPlanMetrics);
             }
 
-            List<PlanObjectiveModel> objectives = PlanObjectives.Where(x => x.IsValidObjective).ToList();
             return new OptDataContainer(EclipseContext.GetInstance().VMATPlans,
-                                        prescriptions,
-                                        normalizationVolumes,
-                                        objectives,
+                                        OptimizationLoopSettings.PlanPreparationPrescriptions,
+                                        OptimizationLoopSettings.PlanPreparationNormalizationVolumes,
+                                        PlanObjectives.Where(x => x.IsValidObjective).ToList(),
                                         requestedOptStructures,
                                         requestedPlanMetrics,
-                                        PlanType.VMAT_TBI,
-                                        PlanNormalizationValue,
-                                        MaxNumberOfIterations,
-                                        RunCoverageCheck,
-                                        RunOneAdditionalOptimization,
-                                        CopyAndSaveEachPlan,
+                                        _planType,
+                                        _planNormalizationValue,
+                                        _maxNumberOfIterations,
+                                        _runCoverageCheck,
+                                        _runOneAdditionalOptimization,
+                                        _copyAndSaveEachPlan,
                                         false,
                                         _threshold,
                                         _lowDoseLimit,
@@ -547,13 +597,18 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         {
             int count = 1;
             SearchOption option = SearchOption.AllDirectories;
-            string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\templates\\TBI\\";
+            string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\templates\\";
+            if (_planType == PlanType.VMAT_TBI) path = Path.Combine(path, "TBI\\");
+            else if (_planType == PlanType.VMAT_CSI) path = Path.Combine(path, "CSI\\");
+            else path = Path.Combine(path, "TMLI\\");
             PlanTemplates.Clear();
             try
             {
                 foreach (string itr in Directory.GetFiles(path, "*.ini", option).OrderBy(x => x))
                 {
-                    PlanTemplates.Add(ConfigurationHelper.ReadTBITemplatePlan(itr, count++));
+                    if(_planType == PlanType.VMAT_TBI) PlanTemplates.Add(ConfigurationHelper.ReadTBITemplatePlan(itr, count++));
+                    else if (_planType == PlanType.VMAT_CSI) PlanTemplates.Add(ConfigurationHelper.ReadCSITemplatePlan(itr, count++));
+                    else PlanTemplates.Add(ConfigurationHelper.ReadTMLITemplatePlan(itr, count++));
                 }
             }
             catch (Exception e)
@@ -676,9 +731,9 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                                 string value = line.Substring(line.IndexOf("=") + 1, line.Length - line.IndexOf("=") - 1);
                                 if (parameter == "Plan type")
                                 {
-                                    if (value.Contains("CSI")) _planType = PlanType.VMAT_CSI;
-                                    else if (value.Contains("TBI")) _planType = PlanType.VMAT_TBI;
-                                    else _planType = PlanType.VMAT_TMLI;
+                                    if (value.Contains("CSI")) PlanType = PlanType.VMAT_CSI;
+                                    else if (value.Contains("TBI")) PlanType = PlanType.VMAT_TBI;
+                                    else PlanType = PlanType.VMAT_TMLI;
                                 }
                                 else if (parameter == "Template")
                                 {
@@ -756,22 +811,29 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         /// <summary>
         /// Simple helper method print the loaded configuration parameters to the UI on the Script Configuration tab
         /// </summary>
-        private void DisplayConfigurationParameters()
+        private StringBuilder BuildScriptConfigurationInfo()
         {
-            ScriptConfiguration = $"{DateTime.Now}" + Environment.NewLine;
-            ScriptConfiguration += $"Plan type: {_planType}" + Environment.NewLine + Environment.NewLine;
-            ScriptConfiguration += $"Documentation path: {_documentationPath}" + Environment.NewLine + Environment.NewLine;
-            ScriptConfiguration += $"Log file path: {_logFilePath}" + Environment.NewLine + Environment.NewLine;
-            ScriptConfiguration += "Default run parameters:" + Environment.NewLine;
-            ScriptConfiguration += $"Demo mode: {_isDemo}" + Environment.NewLine;
-            ScriptConfiguration += $"Run coverage check: {_runCoverageCheck}" + Environment.NewLine;
-            ScriptConfiguration += $"Run additional optimization: {_runOneAdditionalOptimization}" + Environment.NewLine;
-            ScriptConfiguration += $"Copy and save each optimized plan: {_copyAndSaveEachPlan}" + Environment.NewLine;
-            ScriptConfiguration += $"Plan normalization: {_planNormalizationValue}% (i.e., PTV V100% = {_planNormalizationValue}%)" + Environment.NewLine;
-            ScriptConfiguration += $"Decision threshold: {_threshold}" + Environment.NewLine;
-            ScriptConfiguration += $"Relative lower dose limit: {_lowDoseLimit}" + Environment.NewLine + Environment.NewLine;
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine($"{DateTime.Now}");
+            sb.AppendLine($"Plan type: {_planType}");
+            sb.AppendLine($"Documentation path: {_documentationPath}");
+            sb.AppendLine($"Log file path: {_logFilePath}");
+            sb.AppendLine("Default run parameters:");
+            sb.AppendLine($"Demo mode: {_isDemo}");
+            sb.AppendLine($"Run coverage check: {_runCoverageCheck}");
+            sb.AppendLine($"Run additional optimization: {_runOneAdditionalOptimization}");
+            sb.AppendLine($"Copy and save each optimized plan: {_copyAndSaveEachPlan}");
+            sb.AppendLine($"Plan normalization: {_planNormalizationValue}% (i.e., PTV V100% = {_planNormalizationValue}%)");
+            sb.AppendLine($"Decision threshold: {_threshold}");
+            sb.AppendLine($"Relative lower dose limit: {_lowDoseLimit}");
 
-            //if (PlanTemplates.Any()) ScriptConfiguration += ConfigurationUIHelper.PrintPlanTemplateConfigurationParameters(PlanTemplates.Cast<AutoPlanTemplateBase>().ToList()).ToString();
+            if (PlanTemplates.Any())
+            {
+                if(_planType == PlanType.VMAT_TBI) sb.Append(ConfigurationUIHelper.PrintTBIPlanTemplateConfigurationParameters(PlanTemplates.ToList()));
+                if(_planType == PlanType.VMAT_CSI) sb.Append(ConfigurationUIHelper.PrintCSIPlanTemplateConfigurationParameters(PlanTemplates.ToList()));
+                if(_planType == PlanType.VMAT_TMLI) sb.Append(ConfigurationUIHelper.PrintTMLIPlanTemplateConfigurationParameters(PlanTemplates.ToList()));
+            }
+            return sb;
         }
         #endregion
     }
