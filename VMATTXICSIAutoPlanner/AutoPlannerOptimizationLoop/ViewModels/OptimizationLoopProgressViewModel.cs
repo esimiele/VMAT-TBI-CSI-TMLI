@@ -9,6 +9,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using AutoPlannerOptimizationLoop.Enums;
 using Prism.Commands;
+using AutoPlannerHelpers.Helpers;
 
 namespace AutoPlannerOptimizationLoop.ViewModels
 {
@@ -96,12 +97,12 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         protected string fileName;
         protected string fileNameErrorsWarnings;
         //get instances of the stopwatch and dispatch timer to report how long the calculation takes at each reporting interval
-        protected Stopwatch sw = new Stopwatch();
-        protected System.Timers.Timer _timer = new System.Timers.Timer();
+        private Stopwatch sw = new Stopwatch();
+        private System.Timers.Timer _timer = new System.Timers.Timer();
 
         public OptimizationLoopProgressViewModel()
         {
-            RunStatusBackground = System.Windows.Media.Brushes.White;
+            RunStatusBackground = Brushes.White;
             WindowClosingCommand = new DelegateCommand(WindowClosing);
             AbortRunCommand = new DelegateCommand(AbortRun);
         }

@@ -163,42 +163,44 @@ namespace TBIAutoPlanner.ViewModels
         #region TS generation and manipulation
         protected override void PerformTSStructureGenerationManipulation()
         {
-            List<RequestedTSStructureModel> tsGeneration = _tsGenerationVM.RequestedTuningStructures.ToList();
-            List<RequestedTSManipulationModel> tsManipulations = _tsManipulationVM.RequestedTSManipulations.ToList();
-            TSGenerationManipulation_TBI generateTS = new TSGenerationManipulation_TBI(tsGeneration,
-                                                                                       tsManipulations,
-                                                                                       _prescriptions,
-                                                                                       UseFlash,
-                                                                                       FlashMargin,
-                                                                                       PTVMarginFromBody);
+            tester tester = new tester();
+            tester.Execute();
+            //List<RequestedTSStructureModel> tsGeneration = _tsGenerationVM.RequestedTuningStructures.ToList();
+            //List<RequestedTSManipulationModel> tsManipulations = _tsManipulationVM.RequestedTSManipulations.ToList();
+            //TSGenerationManipulation_TBI generateTS = new TSGenerationManipulation_TBI(tsGeneration,
+            //                                                                           tsManipulations,
+            //                                                                           _prescriptions,
+            //                                                                           UseFlash,
+            //                                                                           FlashMargin,
+            //                                                                           PTVMarginFromBody);
 
-            EclipseContext.GetInstance().Patient.BeginModifications();
-            bool failed = generateTS.Execute();
-            Logger.GetInstance().AppendLogOutput("TS Generation and manipulation output:", generateTS.GetLogOutput());
-            if (failed) return;
+            //EclipseContext.GetInstance().Patient.BeginModifications();
+            //bool failed = generateTS.Execute();
+            //Logger.GetInstance().AppendLogOutput("TS Generation and manipulation output:", generateTS.GetLogOutput());
+            //if (failed) return;
 
-            //does the structure sparing list need to be updated? This occurs when structures the user elected to spare with option of 'Mean Dose < Rx Dose' are high resolution. Since Eclipse can't perform
-            //boolean operations on structures of two different resolutions, code was added to the generateTS class to automatically convert these structures to low resolution with the name of
-            // '<original structure Id>_lowRes'. When these structures are converted to low resolution, the updateSparingList flag in the generateTS class is set to true to tell this class that the 
-            //structure sparing list needs to be updated with the new low resolution structures.
-            if (generateTS.DoesTSManipulationListRequireUpdating)
-            {
-                _tsManipulationVM.UpdateTSManipulationList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id), generateTS.TSManipulationList);
-            }
-            _planIsocenters = generateTS.PlanIsocentersList;
+            ////does the structure sparing list need to be updated? This occurs when structures the user elected to spare with option of 'Mean Dose < Rx Dose' are high resolution. Since Eclipse can't perform
+            ////boolean operations on structures of two different resolutions, code was added to the generateTS class to automatically convert these structures to low resolution with the name of
+            //// '<original structure Id>_lowRes'. When these structures are converted to low resolution, the updateSparingList flag in the generateTS class is set to true to tell this class that the 
+            ////structure sparing list needs to be updated with the new low resolution structures.
+            //if (generateTS.DoesTSManipulationListRequireUpdating)
+            //{
+            //    _tsManipulationVM.UpdateTSManipulationList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id), generateTS.TSManipulationList);
+            //}
+            //_planIsocenters = generateTS.PlanIsocentersList;
 
-            _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters, TBIAutoPlannerSettings.AvailableLinacs, TBIAutoPlannerSettings.AvailableEnergies);
-            _planOptimizationSetup = UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
+            //_beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters, TBIAutoPlannerSettings.AvailableLinacs, TBIAutoPlannerSettings.AvailableEnergies);
+            //_planOptimizationSetup = UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
 
-            StructureTuningTabBackground = System.Windows.Media.Brushes.ForestGreen;
-            TSManipulationTabBackground = System.Windows.Media.Brushes.ForestGreen;
-            BeamPlacementTabBackground = System.Windows.Media.Brushes.ForestGreen;
+            //StructureTuningTabBackground = System.Windows.Media.Brushes.ForestGreen;
+            //TSManipulationTabBackground = System.Windows.Media.Brushes.ForestGreen;
+            //BeamPlacementTabBackground = System.Windows.Media.Brushes.ForestGreen;
 
-            Logger.GetInstance().AddedStructures = generateTS.AddedStructureIds;
-            Logger.GetInstance().StructureManipulations = tsManipulations;
-            Logger.GetInstance().TSTargets = generateTS.PlanTargets.SelectMany(x => x.Targets).ToDictionary(x => x.TargetId, x => x.TsTargetId);
-            Logger.GetInstance().NormalizationVolumes = generateTS.NormalizationVolumes;
-            Logger.GetInstance().PlanIsocenters = generateTS.PlanIsocentersList;
+            //Logger.GetInstance().AddedStructures = generateTS.AddedStructureIds;
+            //Logger.GetInstance().StructureManipulations = tsManipulations;
+            //Logger.GetInstance().TSTargets = generateTS.PlanTargets.SelectMany(x => x.Targets).ToDictionary(x => x.TargetId, x => x.TsTargetId);
+            //Logger.GetInstance().NormalizationVolumes = generateTS.NormalizationVolumes;
+            //Logger.GetInstance().PlanIsocenters = generateTS.PlanIsocentersList;
 
             //_planIsocenters.Add(new PlanIsocenterModel("test", new List<IsocenterModel> { new IsocenterModel("1", 2, BeamType.VMAT), new IsocenterModel("2", 3, BeamType.VMAT), new IsocenterModel("3", 4, BeamType.VMAT) }));
             //_planIsocenters.Add(new PlanIsocenterModel("doubleTest", new List<IsocenterModel> { new IsocenterModel("4", 2, BeamType.APPA) }));

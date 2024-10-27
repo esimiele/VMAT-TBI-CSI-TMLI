@@ -20,13 +20,11 @@ using PlanType = AutoPlannerHelpers.Enums.PlanType;
 using AutoPlannerOptimizationLoop.Core;
 using AutoPlannerHelpers.Prompts;
 using AutoPlannerOptimizationLoop.Prompts;
-using VMS.TPS.Common.Model.Types;
-using System.Drawing.Drawing2D;
 using VMS.TPS.Common.Model.API;
 using AutoPlannerOptimizationLoop.Settings;
 using AutoPlannerHelpers.Views;
 using System.Text;
-using System.Data;
+using AutoPlannerOptimizationLoop.Base;
 
 namespace AutoPlannerOptimizationLoop.ViewModels
 {
@@ -204,7 +202,6 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             StartOptimizationCommand = new DelegateCommand(StartOptimization);
             if (args.Any()) EclipseContextHelper.GenerateEclipseContext(args.ToList());
             Initialize();
-            InitializeUI();
             ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
         }
 
@@ -226,6 +223,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             LoadPatient();
             LoadConfigurationSettingsForPlanType(_planType);
             LoadTemplatePlanChoices(_planType);
+            InitializeUI();
         }
 
         private void AssignDefaultLogAndDocPaths()
@@ -240,7 +238,6 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             {
                 Logger.GetInstance().LogError("Error! Structure set, Application, or Plan is null! Unable to assign normalization volume!", true);
                 List<string> structures = PlanTemplates.SelectMany(x => x.PlanObjectives).Select(x => x.StructureId).ToList();
-                //structures.AddRange(PlanTemplates.SelectMany(x => x.InitialOptimizationConstraints).Select(x => x.StructureId).ToList());
                 StructureIds = structures.Distinct().ToList();
                 return;
             }
@@ -399,22 +396,23 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             PlanObjectives.Clear();
             foreach (PlanObjectiveModel itr in _selectedTemplate.PlanObjectives)
             {
-                PlanObjectives.Add(new PlanObjectiveModel(itr));
+                if(_structureIds.Contains(itr.StructureId)) PlanObjectives.Add(new PlanObjectiveModel(itr));
+                
             }
 
             if(!OptimizationLoopSettings.PlanPreparationOptimizationSetup.Any())
             {
                 PlanOptimizationConstraints.Clear();
-                if (_planType == PlanType.VMAT_TBI) PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel("1", (_selectedTemplate as TBIAutoPlanTemplate).InitialOptimizationConstraints));
+                if (_planType == PlanType.VMAT_TBI) PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel("1", (_selectedTemplate as TBIAutoPlanTemplate).InitialOptimizationConstraints.Where(x => _structureIds.Contains(x.StructureId))));
                 else if (_planType == PlanType.VMAT_CSI)
                 {
-                    PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel("1", (_selectedTemplate as CSIAutoPlanTemplate).InitialOptimizationConstraints));
+                    PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel("1", (_selectedTemplate as CSIAutoPlanTemplate).InitialOptimizationConstraints.Where(x => _structureIds.Contains(x.StructureId))));
                     if ((_selectedTemplate as CSIAutoPlanTemplate).BoostRxDosePerFx != 0.1)
                     {
-                        PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel("2", (_selectedTemplate as CSIAutoPlanTemplate).BoostOptimizationConstraints));
+                        PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel("2", (_selectedTemplate as CSIAutoPlanTemplate).BoostOptimizationConstraints.Where(x => _structureIds.Contains(x.StructureId))));
                     }
                 }
-                else PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel("1", (_selectedTemplate as TMLIAutoPlanTemplate).InitialOptimizationConstraints));
+                else PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel("1", (_selectedTemplate as TMLIAutoPlanTemplate).InitialOptimizationConstraints.Where(x => _structureIds.Contains(x.StructureId))));
             }
         }
 
@@ -551,11 +549,14 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                     OptimizationSetupHelper.AssignOptConstraints(itr.OptimizationConstraints.Where(x => x.IsValidConstraint).ToList(), EclipseContext.GetInstance().VMATPlans.First(x => string.Equals(x.Id, itr.PlanId)), false, 0.0);
                 }
             }
-            //OptDataContainer _data = GenerateOptimizationDataContainer();
+            OptDataContainer _data = GenerateOptimizationDataContainer();
             //VMATTBIOptimization opt = new VMATTBIOptimization(_data);
-            VMATTBIOptimization opt = new VMATTBIOptimization(new List<OptimizationConstraintModel> { new OptimizationConstraintModel("test", OptimizationObjectiveType.Lower, 100, Units.cGy, 100, 100)});
+            OptimizationLoopBase opt;
+            if (_planType == PlanType.VMAT_TBI) opt = new VMATTBIOptimization(_data);
+            else if (_planType == PlanType.VMAT_CSI) opt = new VMATCSIOptimization(_data);
+            else opt = new VMATTMLIOptimization(_data);
+            //VMATTBIOptimization opt = new VMATTBIOptimization(new List<OptimizationConstraintModel> { new OptimizationConstraintModel("test", OptimizationObjectiveType.Lower, 100, Units.cGy, 100, 100)});
             if (opt.Execute()) return;
-
         }
 
         public OptDataContainer GenerateOptimizationDataContainer()

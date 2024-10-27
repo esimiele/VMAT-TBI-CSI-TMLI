@@ -1,7 +1,7 @@
 ﻿using System.Windows.Controls;
 using System.Windows;
 
-namespace AutoPlannerOptimizationLoop.Views
+namespace AutoPlannerHelpers.Views
 {
     public static class ScrollViewerAttachedProperties
     {

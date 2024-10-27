@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Windows.Threading;
 
-namespace AutoPlannerOptimizationLoop.Helpers
+namespace AutoPlannerHelpers.Helpers
 {
     public class ESAPIWorker
     {

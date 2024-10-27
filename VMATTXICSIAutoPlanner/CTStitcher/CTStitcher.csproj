@@ -26,20 +26,20 @@
 			<HintPath>..\..\..\VMS_TPS_resources\16.1\VMS.TPS.Common.Model.Types.dll</HintPath>
 		</Reference>
 	</ItemGroup>
-	<ItemGroup Condition="'$(Configuration)' == 'Debug-v16'">
-		<Reference Include="VMS.TPS.Common.Model.API">
-			<HintPath>..\..\..\VMS_TPS_resources\16.1\VMS.TPS.Common.Model.API.dll</HintPath>
-		</Reference>
-		<Reference Include="VMS.TPS.Common.Model.Types">
-			<HintPath>..\..\..\VMS_TPS_resources\16.1\VMS.TPS.Common.Model.Types.dll</HintPath>
-		</Reference>
-	</ItemGroup>
 	<ItemGroup Condition="'$(Configuration)' == 'Debug-v15'">
 		<Reference Include="VMS.TPS.Common.Model.API">
 			<HintPath>..\..\..\VMS_TPS_resources\15.6\VMS.TPS.Common.Model.API.dll</HintPath>
 		</Reference>
 		<Reference Include="VMS.TPS.Common.Model.Types">
 			<HintPath>..\..\..\VMS_TPS_resources\15.6\VMS.TPS.Common.Model.Types.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup Condition="'$(Configuration)' == 'Debug-v16'">
+		<Reference Include="VMS.TPS.Common.Model.API">
+			<HintPath>..\..\..\VMS_TPS_resources\16.1\VMS.TPS.Common.Model.API.dll</HintPath>
+		</Reference>
+		<Reference Include="VMS.TPS.Common.Model.Types">
+			<HintPath>..\..\..\VMS_TPS_resources\16.1\VMS.TPS.Common.Model.Types.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 

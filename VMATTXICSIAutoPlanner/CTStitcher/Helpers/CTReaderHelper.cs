@@ -4,7 +4,6 @@ using SimpleProgressWindow;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.Logging;
 using AutoPlannerHelpers.Context;
 using VMS.TPS.Common.Model.API;

@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AutoPlannerOptimizationLoop.Views"
+        xmlns:helpers="clr-namespace:AutoPlannerHelpers.Views;assembly=AutoPlannerHelpers"
         xmlns:i="clr-namespace:Microsoft.Xaml.Behaviors;assembly=Microsoft.Xaml.Behaviors"
         mc:Ignorable="d"
         HorizontalAlignment="Center" SizeToContent="WidthAndHeight" Background="DarkGray">
@@ -15,7 +16,7 @@
     <Grid>
         <StackPanel>
             <Label Content="Progress of Optimization Loop" FontSize="20" FontWeight="Bold" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="5"></Label>
-            <ScrollViewer x:Name ="scroller" VerticalAlignment="Bottom" HorizontalAlignment="Center" Width="795" Height="490" Margin="5" BorderBrush="Black" IsTabStop="False" local:ScrollViewerAttachedProperties.ScrollToBottomOnChange="{Binding ProgressInfo}">
+            <ScrollViewer x:Name ="scroller" VerticalAlignment="Bottom" HorizontalAlignment="Center" Width="795" Height="490" Margin="5" BorderBrush="Black" IsTabStop="False" helpers:ScrollViewerAttachedProperties.ScrollToBottomOnChange="{Binding ProgressInfo}">
                 <TextBox Text="{Binding ProgressInfo}" FontSize="12" FontFamily="Courier New" Width="775" Background="White" Padding="3" TextWrapping="Wrap"/>
             </ScrollViewer>
             <Grid Margin="5">
