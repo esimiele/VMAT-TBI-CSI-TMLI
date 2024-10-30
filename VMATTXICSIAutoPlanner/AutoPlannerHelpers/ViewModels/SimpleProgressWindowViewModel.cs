@@ -1,5 +1,7 @@
 ﻿using AutoPlannerHelpers.Helpers;
+using AutoPlannerHelpers.Interfaces;
 using AutoPlannerHelpers.Views;
+using Prism.Commands;
 using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
@@ -8,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
 
@@ -63,6 +66,9 @@ namespace AutoPlannerHelpers.ViewModels
         private int _closeTimeOut = 3000;
         #endregion
 
+        #region commands
+        #endregion
+
         public void DoStuff(ESAPIWorker slave)
         {
             slave.DoWork(() =>
@@ -97,7 +103,7 @@ namespace AutoPlannerHelpers.ViewModels
             slave.RunOnNewThread(() =>
             {
                 SimpleProgressWindowView pv = new SimpleProgressWindowView { DataContext = this };
-                this.OnRequestClose += (s,e) => pv.Close();
+                this.OnRequestClose += (s, e) => pv.Dispatcher.BeginInvoke(() => { Thread.Sleep(_closeTimeOut); pv.Close(); });
 
                 _timer.Interval = 1000;
                 _timer.Elapsed += new System.Timers.ElapsedEventHandler(Dt_tick);

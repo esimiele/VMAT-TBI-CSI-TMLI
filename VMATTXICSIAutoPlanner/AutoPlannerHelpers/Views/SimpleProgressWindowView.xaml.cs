@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AutoPlannerHelpers.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace AutoPlannerHelpers.Views
 {
@@ -27,5 +29,6 @@ namespace AutoPlannerHelpers.Views
         {
             SizeToContent = SizeToContent.WidthAndHeight;
         }
+        
     }
 }

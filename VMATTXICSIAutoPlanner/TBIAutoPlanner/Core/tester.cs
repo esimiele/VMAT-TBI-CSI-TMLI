@@ -13,7 +13,7 @@ namespace TBIAutoPlanner.Core
     {
         internal tester()
         {
-            SetCloseOnFinish(false, 3000);
+            SetCloseOnFinish(true, 500);
         }
 
         protected override bool Run()
@@ -22,7 +22,7 @@ namespace TBIAutoPlanner.Core
             for (int i = 0; i < 100; i++)
             {
                 ProvideUIUpdate(i);
-                Thread.Sleep(100);
+                Thread.Sleep(50);
             }
             return false;
         }
