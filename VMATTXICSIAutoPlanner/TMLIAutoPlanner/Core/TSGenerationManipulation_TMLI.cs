@@ -1,6 +1,8 @@
 ﻿using AutoPlannerHelpers.BaseCore;
 using AutoPlannerHelpers.Models;
+using System;
 using System.Collections.Generic;
+using System.Runtime.ExceptionServices;
 
 namespace TMLIAutoPlanner.Core
 {
@@ -30,6 +32,23 @@ namespace TMLIAutoPlanner.Core
             TS_structures = new List<RequestedTSStructureModel>(ts);
             _requestedRings = new List<TSRingStructureModel>(rings);
             prescriptions = new List<PrescriptionModel>(presc);
+        }
+
+        [HandleProcessCorruptedStateExceptions]
+        public override bool Run()
+        {
+            try
+            {
+                UpdateUILabel("Finished!");
+                ProvideUIUpdate(100, "Finished Structure Tuning!");
+                ProvideUIUpdate($"Run time: {GetElapsedTime()} (mm:ss)");
+            }
+            catch(Exception e)
+            {
+                ProvideUIUpdate($"{e.Message}", true);
+                return true;
+            }
+            return false;
         }
 
         protected override bool PreliminaryChecks()
