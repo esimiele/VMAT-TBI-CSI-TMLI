@@ -79,6 +79,35 @@ namespace AutoPlannerHelpers.Helpers
         }
 
         /// <summary>
+        /// Helper method to crop or subtract one structure from another ONTO structureToCrop
+        /// </summary>
+        /// <param name="structureToCrop"></param>
+        /// <param name="baseStructure"></param>
+        /// <param name="marginInCm"></param>
+        /// <returns></returns>
+        public static (bool, StringBuilder) CropStructureFromStructure(Structure structureToCrop, SegmentVolume baseStructure, double marginInCm)
+        {
+            StringBuilder sb = new StringBuilder();
+            bool fail = false;
+            //margin is in cm
+            if (!ReferenceEquals(structureToCrop, null) && !ReferenceEquals(baseStructure, null))
+            {
+                if (marginInCm >= -5.0 && marginInCm <= 5.0) structureToCrop.SegmentVolume = structureToCrop.SegmentVolume.Sub(baseStructure.Margin(marginInCm * 10));
+                else
+                {
+                    sb.AppendLine("Cropping margin MUST be within +/- 5.0 cm!");
+                    fail = true;
+                }
+            }
+            else
+            {
+                sb.AppendLine("Error either target or normal structures are missing! Can't crop target from normal structure!");
+                fail = true;
+            }
+            return (fail, sb);
+        }
+
+        /// <summary>
         /// Contour overlap between two structures ONTO the normal structure
         /// </summary>
         /// <param name="target"></param>
@@ -122,6 +151,35 @@ namespace AutoPlannerHelpers.Helpers
             if (!ReferenceEquals(baseStructure, null) && !ReferenceEquals(structureToUnion, null))
             {
                 if (marginInCm >= -5.0 && marginInCm <= 5.0) structureToUnion.SegmentVolume = baseStructure.SegmentVolume.Or(structureToUnion.SegmentVolume.Margin(marginInCm * 10));
+                else
+                {
+                    sb.AppendLine("Added margin MUST be within +/- 5.0 cm!");
+                    fail = true;
+                }
+            }
+            else
+            {
+                sb.AppendLine("Error either target or normal structures are missing! Can't union target and normal structure!");
+                fail = true;
+            }
+            return (fail, sb);
+        }
+
+        /// <summary>
+        /// Helper method to contour the union between two structures ONTO structureToUnion
+        /// </summary>
+        /// <param name="baseStructure"></param>
+        /// <param name="structureToUnion"></param>
+        /// <param name="marginInCm"></param>
+        /// <returns></returns>
+        public static (bool, StringBuilder) ContourUnion(SegmentVolume baseStructure, Structure structureToUnion, double marginInCm)
+        {
+            StringBuilder sb = new StringBuilder();
+            bool fail = false;
+            //margin is in cm
+            if (!ReferenceEquals(baseStructure, null) && !ReferenceEquals(structureToUnion, null))
+            {
+                if (marginInCm >= -5.0 && marginInCm <= 5.0) structureToUnion.SegmentVolume = baseStructure.Or(structureToUnion.SegmentVolume.Margin(marginInCm * 10));
                 else
                 {
                     sb.AppendLine("Added margin MUST be within +/- 5.0 cm!");

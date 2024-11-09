@@ -251,7 +251,6 @@ namespace TMLIAutoPlanner.ViewModels
         }
         #endregion
 
-
         protected override void UpdateUIWithSelectedPlanTemplate()
         {
             if (ReferenceEquals(_selectedTemplate, null)) return;
