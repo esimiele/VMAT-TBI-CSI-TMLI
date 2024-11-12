@@ -49,7 +49,7 @@ namespace TBIAutoPlanner.Core
             _useFlash = flash;
             _flashMargin = flashMargin;
             _ptvMarginFromBody = ptvMargin;
-            SetCloseOnFinish(TBIAutoPlannerSettings.CloseProgressWindowOnFinish, 3000);
+            SetCloseOnFinish(TMLIAutoPlannerSettings.CloseProgressWindowOnFinish, 3000);
         }
 
         #region Run control
@@ -799,12 +799,12 @@ namespace TBIAutoPlanner.Core
             {
                 if (NumberofIsocenters == NumberofVMATIsocenters + 2)
                 {
-                    PlanIsocentersList.Add(new PlanIsocenterModel("_upper legs", new IsocenterModel("AP / PA upper legs")));
-                    PlanIsocentersList.Add(new PlanIsocenterModel("_lower legs", new IsocenterModel("AP / PA lower legs")));
+                    PlanIsocentersList.Add(new PlanIsocenterModel("_upper legs", new IsocenterModel("AP / PA upper legs", 2, BeamType.APPA)));
+                    PlanIsocentersList.Add(new PlanIsocenterModel("_lower legs", new IsocenterModel("AP / PA lower legs", 2, BeamType.APPA)));
                 }
                 else
                 {
-                    PlanIsocentersList.Add(new PlanIsocenterModel("_legs", new IsocenterModel("AP / PA legs")));
+                    PlanIsocentersList.Add(new PlanIsocenterModel("_legs", new IsocenterModel("AP / PA legs", 2, BeamType.APPA)));
                 }
             }
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved appropriate isocenter names:");

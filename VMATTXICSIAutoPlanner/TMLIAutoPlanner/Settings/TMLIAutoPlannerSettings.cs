@@ -27,5 +27,8 @@ namespace TMLIAutoPlanner.Settings
         internal static bool UseGPUForOptimization { get; set; } = false;
         internal static string MRLevelRestart { get; set; } = "MR3";
         internal static bool ShowStitchCTTab { get; set; } = true;
+        internal static double MaxFieldYExtent = 400.0; //in mm
+        internal static double MinFieldOverlap = 20.0; //in mm
+        internal static bool AllBeamsVMAT = false;
     }
 }

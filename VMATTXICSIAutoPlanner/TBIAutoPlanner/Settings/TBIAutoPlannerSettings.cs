@@ -3,7 +3,7 @@ using VMS.TPS.Common.Model.Types;
 
 namespace TBIAutoPlanner.Settings
 {
-    internal static class TBIAutoPlannerSettings
+    internal static class TMLIAutoPlannerSettings
     {
         internal static bool CloseProgressWindowOnFinish { get; set; } = true;
         internal static string CourseId { get; set; } = "VMAT TBI";

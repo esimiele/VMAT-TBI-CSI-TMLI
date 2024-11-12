@@ -1,5 +1,6 @@
 ﻿using AutoPlannerHelpers.BaseCore;
 using AutoPlannerHelpers.Context;
+using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.Helpers;
 using AutoPlannerHelpers.Models;
 using AutoPlannerHelpers.Prompts;
@@ -21,6 +22,7 @@ namespace TMLIAutoPlanner.Core
         public int NumberofVMATIsocenters { get; private set; } = -1;
         //plan id, normalization volume
         public Dictionary<string, string> NormalizationVolumes { get; private set; } = new Dictionary<string, string> { };
+        public List<TSRingStructureModel> AddedRings { get; private set; } = new List<TSRingStructureModel> { };
         #endregion
 
         #region fields
@@ -66,6 +68,7 @@ namespace TMLIAutoPlanner.Core
                 if (TSManipulationList.Any()) if (CheckHighResolution()) return true;
                 if (CreateTSStructures()) return true;
                 if (PerformTSStructureManipulation()) return true;
+                if (GenerateRings()) return true;
                 if (CalculateNumIsos()) return true; 
                 UpdateUILabel("Finished!");
                 ProvideUIUpdate(100, "Finished Structure Tuning!");
@@ -206,7 +209,7 @@ namespace TMLIAutoPlanner.Core
         private bool GeneratePTV1200(Structure addedStructure)
         {
             StructureSet ss = EclipseContext.GetInstance().StructureSet;
-            ContourHelper.CopyStructureOntoStructure(StructureTuningHelper.GetStructureFromId("brain", ss),addedStructure);
+            ContourHelper.CopyStructureOntoStructure(StructureTuningHelper.GetStructureFromId("brain", ss), addedStructure);
             ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("liver", ss), addedStructure, 5.0);
             return false;
         }
@@ -233,7 +236,7 @@ namespace TMLIAutoPlanner.Core
                     target = GetTSTarget(itr.TargetId);
                     tmpTSTargetList.Add(new TargetModel(itr.TargetId, itr.CumulativeDoseToTarget, target.Id));
                 }
-                if (target == null || target.IsEmpty)
+                if (ReferenceEquals(target, null) || target.IsEmpty)
                 {
                     ProvideUIUpdate($"Error! Target structure: {itr.TargetId} is null or empty! Cannot perform tuning structure manipulations! Exiting!", true);
                     return true;
@@ -264,6 +267,60 @@ namespace TMLIAutoPlanner.Core
             return false;
         }
 
+        /// <summary>
+        /// Helper method to create and contour the requested ring structure (with user-supplied margin, thickness, and dose level)
+        /// </summary>
+        /// <returns></returns>
+        private bool GenerateRings()
+        {
+            if (_requestedRings.Any())
+            {
+                UpdateUILabel("Generating rings:");
+                ProvideUIUpdate("Generating requested ring structures for targets!");
+                int percentCompletion = 0;
+                int calcItems = 3 * _requestedRings.Count();
+                foreach (TSRingStructureModel itr in _requestedRings)
+                {
+                    Structure target = StructureTuningHelper.GetStructureFromId(itr.TargetId, EclipseContext.GetInstance().StructureSet);
+                    if (target != null)
+                    {
+                        ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Retrieved target: {target.Id}");
+                        string ringName = $"TS_ring{itr.DoseLevel}";
+                        if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => string.Equals(x.Id, ringName)))
+                        {
+                            ProvideUIUpdate($"Warning! Structure Id is taken: {ringName}! Attempting to update Id!");
+                            ringName += "_1";
+                            if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => string.Equals(x.Id, ringName)))
+                            {
+                                ProvideUIUpdate($"Error! Unable to update ring structure Id to: {ringName}! Exiting", true);
+                                return true;
+                            }
+                        }
+
+                        Structure ring = AddTSStructures(new RequestedTSStructureModel("CONTROL", ringName));
+                        if (ring == null) return true;
+                        ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Created empty ring: {ring.Id}");
+
+                        ProvideUIUpdate($"Contouring ring: {ring.Id}");
+                        (bool fail, StringBuilder errorMessage) = ContourHelper.CreateRing(target, ring, EclipseContext.GetInstance().StructureSet, itr.MarginFromTargetInCM, itr.RingThicknessInCM);
+                        if (fail)
+                        {
+                            ProvideUIUpdate(errorMessage.ToString(), true);
+                            return true;
+                        }
+                        TSRingStructureModel addRing = new TSRingStructureModel(itr);
+                        addRing.RingId = ring.Id;
+                        AddedRings.Add(addRing);
+                        ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Finished contouring ring: {itr}");
+                    }
+                    else ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Could NOT retrieve target: {itr.TargetId}! Skipping ring: TS_ring{itr.DoseLevel}");
+                }
+            }
+            else ProvideUIUpdate("No ring structures requested!");
+            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            return false;
+        }
+
         private (bool fail, string tsPTVVMATId) GenerateTSPTVTarget(Structure baseTarget, string requestedTsTargetId)
         {
             UpdateUILabel($"Create {requestedTsTargetId}:");
@@ -272,6 +329,11 @@ namespace TMLIAutoPlanner.Core
             Structure addedTSTarget = GetTSTarget(baseTarget.Id, requestedTsTargetId);
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Contoured TS target: {addedTSTarget.Id}");
 
+            if(TMLIAutoPlannerSettings.AllBeamsVMAT)
+            {
+                ProvideUIUpdate("All beams requested as VMAT. Skipping splitting of TS_PTV_TMLI at matchline");
+                return (false, addedTSTarget.Id);
+            }
             if (StructureTuningHelper.DoesStructureExistInSS("matchline", EclipseContext.GetInstance().StructureSet, true))
             {
                 ProvideUIUpdate($"Cutting {addedTSTarget} at the matchline!");
@@ -328,7 +390,127 @@ namespace TMLIAutoPlanner.Core
 
         protected override bool CalculateNumIsos()
         {
-            throw new System.NotImplementedException();
+            UpdateUILabel("Calculate number of isos:");
+            int percentComplete = 0;
+            int calcItems = 5;
+            Structure body = StructureTuningHelper.GetStructureFromId("body", EclipseContext.GetInstance().StructureSet);
+            ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved body structure");
+            Point3DCollection pts = body.MeshGeometry.Positions;
+            double bodyExtent = pts.Max(p => p.Z) - pts.Min(p => p.Z);
+            ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Calculated maximum extent of body: {bodyExtent:0.0} mm");
+
+            //calculate number of required isocenters
+            if (TMLIAutoPlannerSettings.AllBeamsVMAT || !StructureTuningHelper.DoesStructureExistInSS("matchline", EclipseContext.GetInstance().StructureSet))
+            {
+                ProvideUIUpdate("matchline structure not present in structure set");
+                //no matchline implying that this patient will be treated with VMAT only. For these cases the maximum number of allowed isocenters is 3.
+                //the reason for the explicit statements calculating the number of isos and then truncating them to 3 was to account for patients requiring < 3 isos and if, later on, we want to remove the restriction of 3 isos
+                NumberofIsocenters = NumberofVMATIsocenters = (int)Math.Ceiling(bodyExtent / (TMLIAutoPlannerSettings.MaxFieldYExtent - TMLIAutoPlannerSettings.MinFieldOverlap));
+                if (!TMLIAutoPlannerSettings.AllBeamsVMAT && NumberofIsocenters > 3) NumberofIsocenters = NumberofVMATIsocenters = 3;
+                ProvideUIUpdate(100 * ++percentComplete / calcItems);
+            }
+            else
+            {
+                //matchline structure is present, but empty
+                if (!StructureTuningHelper.DoesStructureExistInSS("matchline", EclipseContext.GetInstance().StructureSet, true))
+                {
+                    ConfirmPrompt CP = new ConfirmPrompt("I found a matchline structure in the structure set, but it's empty!" + Environment.NewLine + Environment.NewLine + "Do you want to continue without using the matchline structure?!");
+                    CP.ShowDialog();
+                    if (!CP.GetSelection()) return true;
+
+                    //continue and ignore the empty matchline structure (same calculation as VMAT only)
+                    NumberofIsocenters = NumberofVMATIsocenters = (int)Math.Ceiling(bodyExtent / (TMLIAutoPlannerSettings.MaxFieldYExtent - TMLIAutoPlannerSettings.MinFieldOverlap));
+                    if (NumberofIsocenters > 3) NumberofIsocenters = NumberofVMATIsocenters = 3;
+                    ProvideUIUpdate(100 * ++percentComplete / calcItems);
+
+                }
+                //matchline structure is present and not empty
+                else
+                {
+                    calcItems += 2;
+                    Structure matchline = StructureTuningHelper.GetStructureFromId("matchline", EclipseContext.GetInstance().StructureSet);
+                    ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved matchline structure");
+                    //get number of isos for PTV superior to matchplane (always truncate this value to a maximum of 4 isocenters)
+                    NumberofVMATIsocenters = (int)Math.Ceiling((pts.Max(p => p.Z) - matchline.CenterPoint.z) / (TMLIAutoPlannerSettings.MaxFieldYExtent - TMLIAutoPlannerSettings.MinFieldOverlap));
+                    if (NumberofVMATIsocenters > 4) NumberofVMATIsocenters = 4;
+                    ProvideUIUpdate($"Separation between body z max and matchline center z: {(pts.Max(p => p.Z) - matchline.CenterPoint.z):0.0}");
+                    ProvideUIUpdate($"numVAMTIsos calculated as double: {(pts.Max(p => p.Z) - matchline.CenterPoint.z) / (TMLIAutoPlannerSettings.MaxFieldYExtent - TMLIAutoPlannerSettings.MinFieldOverlap):0.0}");
+                    ProvideUIUpdate(100 * ++percentComplete / calcItems);
+
+                    //Only add a second legs iso if the extent of the body is > 40.0 cm
+                    ProvideUIUpdate($"Separation between matchline z center and body z min: {matchline.CenterPoint.z - pts.Min(p => p.Z):0.0}");
+                    if (matchline.CenterPoint.z - pts.Min(p => p.Z) <= TMLIAutoPlannerSettings.MaxFieldYExtent)
+                    {
+                        ProvideUIUpdate($"Separation between matchline z center and body z min is <= maximum field extent ({TMLIAutoPlannerSettings.MaxFieldYExtent} mm)");
+                        ProvideUIUpdate($"Only one APPA isocenters is required for coverage");
+                        NumberofIsocenters = NumberofVMATIsocenters + 1;
+                    }
+                    else
+                    {
+                        ProvideUIUpdate($"Separation between matchline z center and body z min is > maximum field extent ({TMLIAutoPlannerSettings.MaxFieldYExtent} mm)");
+                        ProvideUIUpdate($"Two APPA isocenters are required for coverage");
+                        NumberofIsocenters = NumberofVMATIsocenters + 2;
+                    }
+                    ProvideUIUpdate(100 * ++percentComplete / calcItems);
+                }
+            }
+            ProvideUIUpdate($"Calculated required number of VMAT Isos: {NumberofVMATIsocenters}");
+            ProvideUIUpdate($"Calculated total number of Isos: {NumberofIsocenters}");
+
+            if(TMLIAutoPlannerSettings.AllBeamsVMAT)
+            {
+                if(NumberofIsocenters == 6)
+                {
+                    List<IsocenterModel> isos = IsoNameHelper.GetTBIVMATIsoNames(4, 4);
+                    isos.Add(new IsocenterModel("upper legs", 2, BeamType.VMAT));
+                    isos.Add(new IsocenterModel("lower legs", 2, BeamType.VMAT));
+                    PlanIsocentersList.Add(new PlanIsocenterModel(prescriptions.First().PlanId, isos));
+                }
+                else
+                {
+                    int numUpperIsos = 3;
+                    int numLowerIsos = NumberofIsocenters - numUpperIsos;
+                    List<IsocenterModel> isos = IsoNameHelper.GetTBIVMATIsoNames(numUpperIsos, NumberofIsocenters);
+
+                    if(numLowerIsos == 2)
+                    {
+                        isos.Add(new IsocenterModel("upper legs", 2, BeamType.VMAT));
+                        isos.Add(new IsocenterModel("lower legs", 2, BeamType.VMAT));
+                    }
+                    else
+                    {
+                        isos.Add(new IsocenterModel("legs", 2, BeamType.VMAT));
+                    }
+                    PlanIsocentersList.Add(new PlanIsocenterModel(prescriptions.First().PlanId, isos));
+                }
+            }
+            else
+            {
+                //set isocenter names based on numIsos and numVMATIsos (determined these names from prior cases)
+                PlanIsocentersList.Add(new PlanIsocenterModel(prescriptions.First().PlanId, IsoNameHelper.GetTBIVMATIsoNames(NumberofVMATIsocenters, NumberofIsocenters)));
+                if (NumberofIsocenters > NumberofVMATIsocenters)
+                {
+                    if (NumberofIsocenters == NumberofVMATIsocenters + 2)
+                    {
+                        PlanIsocentersList.Add(new PlanIsocenterModel("_upper legs", new IsocenterModel("upper legs", 2, BeamType.APPA)));
+                        PlanIsocentersList.Add(new PlanIsocenterModel("_lower legs", new IsocenterModel("lower legs", 2, BeamType.APPA)));
+                    }
+                    else
+                    {
+                        PlanIsocentersList.Add(new PlanIsocenterModel("_legs", new IsocenterModel("legs", 2, BeamType.APPA)));
+                    }
+                }
+            }
+            ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved appropriate isocenter names:");
+            foreach (PlanIsocenterModel itr in PlanIsocentersList)
+            {
+                ProvideUIUpdate($"Plan Id: {itr.PlanId}");
+                foreach (IsocenterModel itr1 in itr.Isocenters)
+                {
+                    ProvideUIUpdate($" {itr1.IsocenterId}");
+                }
+            }
+            return false;
         }
     }
 }

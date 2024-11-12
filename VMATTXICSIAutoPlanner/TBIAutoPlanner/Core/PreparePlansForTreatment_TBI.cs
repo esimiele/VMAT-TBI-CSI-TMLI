@@ -26,7 +26,7 @@ namespace TBIAutoPlanner.Core
                 appaPlans = VMATPlan.Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("legs")).ToList();
             }
             removeFlash = flash;
-            SetCloseOnFinish(TBIAutoPlannerSettings.CloseProgressWindowOnFinish, 3000);
+            SetCloseOnFinish(TMLIAutoPlannerSettings.CloseProgressWindowOnFinish, 3000);
         }
 
         #region Run Control

@@ -10,20 +10,16 @@ using CTStitcher.ViewModels;
 using CTStitcher.Views;
 using TMLIAutoPlanner.Settings;
 using Prism.Commands;
-using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows;
-using VMS.TPS.Common.Model.API;
 using VMS.TPS.Common.Model.Types;
 using PlanType = AutoPlannerHelpers.Enums.PlanType;
 using AutoPlannerHelpers.UIHelpers;
 using System.Reflection;
-using AutoPlannerHelpers.Enums;
 using TMLIAutoPlanner.Core;
 using AutoPlannerHelpers.BaseViewModel;
 
@@ -67,20 +63,24 @@ namespace TMLIAutoPlanner.ViewModels
 
         public void Initialize()
         {
+            _generalConfigurationFile = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\configuration\\VMAT_TMLI_config.ini";
+            LoadScriptConfigurationSettings(_generalConfigurationFile);
+            LoadPlanTemplates();
+
             _stitcherViewModel = new CTStitcherViewModel();
             StitchCT = new CTStitcherView { DataContext = _stitcherViewModel };
 
             _ringGenerationVM = new RingGenerationViewModel(_structureIdsPostUnion);
             RingGeneration = new RingGenerationView { DataContext = _ringGenerationVM };
+
+            if (TMLIAutoPlannerSettings.AllBeamsVMAT) _beamPlacementVM.HideRequestedNumberOfIsos();
             
             QuickStartGuideCommand = new DelegateCommand(LaunchQuickStartGuide);
             HelpGuideCommand = new DelegateCommand(LaunchHelpGuide);
             PTVMarginInfoCommand = new DelegateCommand(ShowPTVMarginInfo);
 
-            LoadPlanTemplates();
             //needs to be initialized after the plan templates are loaded
             ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
-
             SpecifyTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
         }
 
@@ -143,8 +143,8 @@ namespace TMLIAutoPlanner.ViewModels
             _planIsocenters = generateTS.PlanIsocentersList;
 
             _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters, TMLIAutoPlannerSettings.AvailableLinacs, TMLIAutoPlannerSettings.AvailableEnergies);
-            UpdateOptimizationConstraintsWithRings(rings, _planOptimizationSetup);
-            UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
+            _planOptimizationSetup = UpdateOptimizationConstraintsWithRings(generateTS.AddedRings, _planOptimizationSetup);
+            _planOptimizationSetup = UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
 
             StructureTuningTabBackground = System.Windows.Media.Brushes.ForestGreen;
             TSManipulationTabBackground = System.Windows.Media.Brushes.ForestGreen;
@@ -165,12 +165,17 @@ namespace TMLIAutoPlanner.ViewModels
         protected override void GeneratePlansAndPlaceBeams()
         {
             _planIsocenters = _beamPlacementVM.PlanIsocenterList.ToList();
-            GeneratePlansAndPlaceBeams_TMLI placeBeams = new GeneratePlansAndPlaceBeams_TMLI();
+            GeneratePlansAndPlaceBeams_TMLI placeBeams = new GeneratePlansAndPlaceBeams_TMLI(_planIsocenters,
+                                                                                           _prescriptions,
+                                                                                           _beamPlacementVM.SelectedLinac,
+                                                                                           _beamPlacementVM.SelectedEnergy,
+                                                                                           _beamPlacementVM.ContourFieldOverlapChecked,
+                                                                                           _beamPlacementVM.FieldOverlapMargin);
             bool failed = placeBeams.Execute();
             Logger.GetInstance().AppendLogOutput("Generate plans and place beams output:", placeBeams.GetLogOutput());
             if (failed) return;
             if (placeBeams.VMATPlans.Any()) EclipseContext.GetInstance().VMATPlans = placeBeams.VMATPlans;
-            UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions, _planOptimizationSetup);
+            _planOptimizationSetup = UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions, _planOptimizationSetup);
             _optimizationSetupVM.UpdateUIWithPlanOptimizationSetupList(_planOptimizationSetup);
 
             BeamPlacementTabBackground = System.Windows.Media.Brushes.ForestGreen;

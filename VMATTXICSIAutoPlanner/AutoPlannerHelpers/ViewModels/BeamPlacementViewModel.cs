@@ -101,6 +101,11 @@ namespace AutoPlannerHelpers.ViewModels
             _requestedNumberOfVMATIsos = 0;
         }
 
+        public void HideRequestedNumberOfIsos()
+        {
+            RequestedNumberOfIsosVisible = Visibility.Collapsed;
+        }
+
         private void UpdateContourFieldOverlapChecked()
         {
             if (_contourFieldOverlapChecked) ContourOverlapMarginVisible = Visibility.Visible;
