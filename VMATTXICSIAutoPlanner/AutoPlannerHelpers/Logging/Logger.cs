@@ -96,6 +96,12 @@ namespace AutoPlannerHelpers.Logging
             _logFromOperations.AppendLine("");
         }
 
+        public void AppendLogOutput(string info, string s)
+        {
+            _logFromOperations.AppendLine(info);
+            _logFromOperations.AppendLine(s);
+        }
+
         /// <summary>
         /// Simple method to copy a string to the logs
         /// </summary>

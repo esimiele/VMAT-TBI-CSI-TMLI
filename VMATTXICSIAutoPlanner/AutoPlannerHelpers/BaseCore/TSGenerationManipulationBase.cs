@@ -6,14 +6,14 @@ using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.Helpers;
 using AutoPlannerHelpers.Models;
 using System.Windows.Media.Media3D;
-using SimpleProgressWindow;
 using VMS.TPS.Common.Model.API;
 using VMS.TPS.Common.Model.Types;
 using AutoPlannerHelpers.Context;
+using AutoPlannerHelpers.ViewModels;
 
 namespace AutoPlannerHelpers.BaseCore
 {
-    public abstract class TSGenerationManipulationBase : SimpleMTbase
+    public abstract class TSGenerationManipulationBase : SimpleProgressWindowViewModel
     {
         #region properties
         public List<PlanIsocenterModel> PlanIsocentersList { get; protected set; } = new List<PlanIsocenterModel> { };
@@ -59,7 +59,7 @@ namespace AutoPlannerHelpers.BaseCore
                 ProvideUIUpdate(100, "Structures unioned successfully!");
             }
             else ProvideUIUpdate(100, "No structures to union!");
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
 
@@ -279,7 +279,7 @@ namespace AutoPlannerHelpers.BaseCore
                 ProvideUIUpdate(100, "Finishing converting high resolution structures to default resolution");
             }
             else ProvideUIUpdate("No high resolution structures in the structure set!");
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
 
@@ -459,7 +459,7 @@ namespace AutoPlannerHelpers.BaseCore
             //now re-add the structurestoremove list of structures to the structure set
             if (VerifyAddTSStructures(structuresToRemove)) return true;
             ProvideUIUpdate(100, "Prior tuning structures successfully removed!");
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
 
@@ -558,7 +558,7 @@ namespace AutoPlannerHelpers.BaseCore
         /// Simple helper method to check if the user origin has been assigned and exists inside the patient body
         /// </summary>
         /// <returns></returns>
-        protected bool IsUOriginInside()
+        protected bool IsUserOriginInsideBody()
         {
             if (!EclipseContext.GetInstance().StructureSet.Image.HasUserOrigin ||
                 !StructureTuningHelper.DoesStructureExistInSS("Body", EclipseContext.GetInstance().StructureSet, true) ||

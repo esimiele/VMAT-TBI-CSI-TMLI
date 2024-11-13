@@ -107,15 +107,15 @@ namespace TBIAutoPlanner.ViewModels
             _stitcherViewModel = new CTStitcherViewModel();
             StitchCT = new CTStitcherView { DataContext = _stitcherViewModel };
 
-            if (!TMLIAutoPlannerSettings.ShowStitchCTTab)
+            if (!TBIAutoPlannerSettings.ShowStitchCTTab)
             {
                 StitchCTTabVisible = Visibility.Collapsed;
                 InitialTabSelected = 1;
             }
-            PTVMarginFromBody = TMLIAutoPlannerSettings.PTVInnerMarginFromBodyInCM;
-            UseFlash = TMLIAutoPlannerSettings.UseFlash;
-            if (!TMLIAutoPlannerSettings.UseFlash) FlashMarginVisible = Visibility.Hidden;
-            FlashMargin = TMLIAutoPlannerSettings.FlashMarginInCM;
+            PTVMarginFromBody = TBIAutoPlannerSettings.PTVInnerMarginFromBodyInCM;
+            UseFlash = TBIAutoPlannerSettings.UseFlash;
+            if (!TBIAutoPlannerSettings.UseFlash) FlashMarginVisible = Visibility.Hidden;
+            FlashMargin = TBIAutoPlannerSettings.FlashMarginInCM;
 
             QuickStartGuideCommand = new DelegateCommand(LaunchQuickStartGuide);
             HelpGuideCommand = new DelegateCommand(LaunchHelpGuide);
@@ -174,7 +174,7 @@ namespace TBIAutoPlanner.ViewModels
 
             EclipseContext.GetInstance().Patient.BeginModifications();
             bool failed = generateTS.Execute();
-            Logger.GetInstance().AppendLogOutput("TS Generation and manipulation output:", generateTS.GetLogOutput());
+            Logger.GetInstance().AppendLogOutput("TS Generation and manipulation output:", generateTS.LogOutput);
             if (failed) return;
 
             //does the structure sparing list need to be updated? This occurs when structures the user elected to spare with option of 'Mean Dose < Rx Dose' are high resolution. Since Eclipse can't perform
@@ -187,7 +187,7 @@ namespace TBIAutoPlanner.ViewModels
             }
             _planIsocenters = generateTS.PlanIsocentersList;
 
-            _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters, TMLIAutoPlannerSettings.AvailableLinacs, TMLIAutoPlannerSettings.AvailableEnergies);
+            _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters, TBIAutoPlannerSettings.AvailableLinacs, TBIAutoPlannerSettings.AvailableEnergies);
             _planOptimizationSetup = UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
 
             StructureTuningTabBackground = System.Windows.Media.Brushes.ForestGreen;
@@ -231,7 +231,7 @@ namespace TBIAutoPlanner.ViewModels
         #region prepare for treatment
         protected override void PreparePlanForTreatment()
         {
-            //ExternalPlanSetup thePlan = PlanPrepHelper.RetrieveVMATPlan(EclipseContext.GetInstance().Patient, Logger.GetInstance().LogPath, TMLIAutoPlannerSettings.CourseId);
+            //ExternalPlanSetup thePlan = PlanPrepHelper.RetrieveVMATPlan(EclipseContext.GetInstance().Patient, Logger.GetInstance().LogPath, TBIAutoPlannerSettings.CourseId);
             //if (ReferenceEquals(thePlan, null)) return;
             //EclipseContext.GetInstance().VMATPlans = new List<ExternalPlanSetup> { thePlan };
 
@@ -359,12 +359,12 @@ namespace TBIAutoPlanner.ViewModels
                                 //check if it's a double value
                                 if (double.TryParse(value, out double result))
                                 {
-                                    if (parameter == "default flash margin") TMLIAutoPlannerSettings.FlashMarginInCM = result;
-                                    else if (parameter == "default target margin") TMLIAutoPlannerSettings.PTVInnerMarginFromBodyInCM = result;
+                                    if (parameter == "default flash margin") TBIAutoPlannerSettings.FlashMarginInCM = result;
+                                    else if (parameter == "default target margin") TBIAutoPlannerSettings.PTVInnerMarginFromBodyInCM = result;
                                 }
                                 else if (parameter == "close progress windows on finish")
                                 {
-                                    if (!string.IsNullOrEmpty(value)) TMLIAutoPlannerSettings.CloseProgressWindowOnFinish = bool.Parse(value);
+                                    if (!string.IsNullOrEmpty(value)) TBIAutoPlannerSettings.CloseProgressWindowOnFinish = bool.Parse(value);
                                 }
                                 else if (parameter == "beams per iso")
                                 {
@@ -378,8 +378,8 @@ namespace TBIAutoPlanner.ViewModels
                                         line = ConfigurationHelper.CropLine(line, ",");
                                     }
                                     b.Add(int.Parse(line.Substring(0, line.IndexOf("}"))));
-                                    TMLIAutoPlannerSettings.BeamsPerIsocenter.Clear();
-                                    TMLIAutoPlannerSettings.BeamsPerIsocenter.AddRange(b);
+                                    TBIAutoPlannerSettings.BeamsPerIsocenter.Clear();
+                                    TBIAutoPlannerSettings.BeamsPerIsocenter.AddRange(b);
                                 }
                                 else if (parameter == "collimator rotations")
                                 {
@@ -393,36 +393,39 @@ namespace TBIAutoPlanner.ViewModels
                                         line = ConfigurationHelper.CropLine(line, ",");
                                     }
                                     c.Add(double.Parse(line.Substring(0, line.IndexOf("}"))));
-                                    TMLIAutoPlannerSettings.CollimatorRotations.Clear();
-                                    TMLIAutoPlannerSettings.CollimatorRotations.AddRange(c);
+                                    TBIAutoPlannerSettings.CollimatorRotations.Clear();
+                                    TBIAutoPlannerSettings.CollimatorRotations.AddRange(c);
                                 }
                                 else if (parameter == "check couch collision")
                                 {
-                                    if (!string.IsNullOrEmpty(value)) TMLIAutoPlannerSettings.CheckTTCollision = bool.Parse(value);
+                                    if (!string.IsNullOrEmpty(value)) TBIAutoPlannerSettings.CheckTTCollision = bool.Parse(value);
                                 }
-                                else if (parameter == "show CT stitcher tab") TMLIAutoPlannerSettings.ShowStitchCTTab = bool.Parse(value);
-                                else if (parameter == "course Id") TMLIAutoPlannerSettings.CourseId = value;
-                                else if (parameter == "use GPU for dose calculation") TMLIAutoPlannerSettings.UseGPUForDosecalculation = bool.Parse(value);
-                                else if (parameter == "use GPU for optimization") TMLIAutoPlannerSettings.UseGPUForOptimization = bool.Parse(value);
-                                else if (parameter == "MR level restart") TMLIAutoPlannerSettings.MRLevelRestart = value;
+                                else if (parameter == "show CT stitcher tab") TBIAutoPlannerSettings.ShowStitchCTTab = bool.Parse(value);
+                                else if (parameter == "course Id") TBIAutoPlannerSettings.CourseId = value;
+                                else if (parameter == "use GPU for dose calculation") TBIAutoPlannerSettings.UseGPUForDosecalculation = bool.Parse(value);
+                                else if (parameter == "use GPU for optimization") TBIAutoPlannerSettings.UseGPUForOptimization = bool.Parse(value);
+                                else if (parameter == "MR level restart") TBIAutoPlannerSettings.MRLevelRestart = value;
                                 //other parameters that should be updated
-                                else if (parameter == "use flash by default") TMLIAutoPlannerSettings.UseFlash = bool.Parse(value);
-                                else if (parameter == "calculation model") { if (value != "") TMLIAutoPlannerSettings.DoseCalculationAlgorithm = value; }
-                                else if (parameter == "optimization model") { if (value != "") TMLIAutoPlannerSettings.OptimizationAlorithm = value; }
-                                else if (parameter == "contour field overlap") { if (value != "") TMLIAutoPlannerSettings.ContourFieldOverlap = bool.Parse(value); }
-                                else if (parameter == "contour field overlap margin") { if (value != "") TMLIAutoPlannerSettings.ContourFieldOverlapMarginInCM = double.Parse(value); }
+                                else if (parameter == "use flash by default") TBIAutoPlannerSettings.UseFlash = bool.Parse(value);
+                                else if (parameter == "calculation model") { if (value != "") TBIAutoPlannerSettings.DoseCalculationAlgorithm = value; }
+                                else if (parameter == "optimization model") { if (value != "") TBIAutoPlannerSettings.OptimizationAlorithm = value; }
+                                else if (parameter == "contour field overlap") { if (value != "") TBIAutoPlannerSettings.ContourFieldOverlap = bool.Parse(value); }
+                                else if (parameter == "contour field overlap margin") { if (value != "") TBIAutoPlannerSettings.ContourFieldOverlapMarginInCM = double.Parse(value); }
+                                else if (parameter == "max Y-jaw field extent") TBIAutoPlannerSettings.MaxFieldYExtent = double.Parse(value);
+                                else if (parameter == "minimum field overlap") TBIAutoPlannerSettings.MinFieldOverlap = double.Parse(value);
+                                else if (parameter == "all beams VMAT") TBIAutoPlannerSettings.AllBeamsVMAT = bool.Parse(value);
                             }
                             else if (line.Contains("add linac"))
                             {
                                 //parse the linacs that should be added. One entry per line
                                 line = ConfigurationHelper.CropLine(line, "{");
-                                TMLIAutoPlannerSettings.AvailableLinacs.Add(line.Substring(0, line.IndexOf("}")));
+                                TBIAutoPlannerSettings.AvailableLinacs.Add(line.Substring(0, line.IndexOf("}")));
                             }
                             else if (line.Contains("add beam energy"))
                             {
                                 //parse the photon energies that should be added. One entry per line
                                 line = ConfigurationHelper.CropLine(line, "{");
-                                TMLIAutoPlannerSettings.AvailableEnergies.Add(line.Substring(0, line.IndexOf("}")));
+                                TBIAutoPlannerSettings.AvailableEnergies.Add(line.Substring(0, line.IndexOf("}")));
                             }
                             else if (line.Contains("add jaw position"))
                             {
@@ -435,8 +438,8 @@ namespace TBIAutoPlanner.ViewModels
                     //anything that is an array needs to be updated AFTER the while loop.
                     if (jawPos_temp.Count == 4)
                     {
-                        TMLIAutoPlannerSettings.JawPositions.Clear();
-                        TMLIAutoPlannerSettings.JawPositions = new List<VRect<double>>(jawPos_temp);
+                        TBIAutoPlannerSettings.JawPositions.Clear();
+                        TBIAutoPlannerSettings.JawPositions = new List<VRect<double>>(jawPos_temp);
                     }
                 }
             }
@@ -477,43 +480,43 @@ namespace TBIAutoPlanner.ViewModels
             else sb.AppendLine("Configuration file: none");
             sb.AppendLine($"Documentation path: {Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\documentation\\"}");
             sb.AppendLine($"Log file path: {Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\logs\\"}");
-            sb.AppendLine($"Close progress windows on finish: {TMLIAutoPlannerSettings.CloseProgressWindowOnFinish}");
+            sb.AppendLine($"Close progress windows on finish: {TBIAutoPlannerSettings.CloseProgressWindowOnFinish}");
             sb.AppendLine("Default parameters:");
-            sb.AppendLine($"Course Id: {TMLIAutoPlannerSettings.CourseId}");
-            sb.AppendLine($"Check for potential couch collision: {TMLIAutoPlannerSettings.CheckTTCollision}");
-            sb.AppendLine($"Contour field ovelap: {TMLIAutoPlannerSettings.ContourFieldOverlap}");
-            sb.AppendLine($"Contour field overlap margin: {TMLIAutoPlannerSettings.ContourFieldOverlapMarginInCM} cm");
+            sb.AppendLine($"Course Id: {TBIAutoPlannerSettings.CourseId}");
+            sb.AppendLine($"Check for potential couch collision: {TBIAutoPlannerSettings.CheckTTCollision}");
+            sb.AppendLine($"Contour field ovelap: {TBIAutoPlannerSettings.ContourFieldOverlap}");
+            sb.AppendLine($"Contour field overlap margin: {TBIAutoPlannerSettings.ContourFieldOverlapMarginInCM} cm");
             sb.AppendLine("Available linacs:");
-            foreach (string l in TMLIAutoPlannerSettings.AvailableLinacs) sb.AppendLine($"    {l}");
+            foreach (string l in TBIAutoPlannerSettings.AvailableLinacs) sb.AppendLine($"    {l}");
             sb.AppendLine("Available photon energies:");
-            foreach (string e in TMLIAutoPlannerSettings.AvailableEnergies) sb.AppendLine($"    {e}");
+            foreach (string e in TBIAutoPlannerSettings.AvailableEnergies) sb.AppendLine($"    {e}");
             sb.AppendLine($"Beams per isocenter: ");
-            for (int i = 0; i < TMLIAutoPlannerSettings.BeamsPerIsocenter.Count; i++)
+            for (int i = 0; i < TBIAutoPlannerSettings.BeamsPerIsocenter.Count; i++)
             {
-                sb.Append($"{TMLIAutoPlannerSettings.BeamsPerIsocenter.ElementAt(i)}");
-                if (i != TMLIAutoPlannerSettings.BeamsPerIsocenter.Count - 1) sb.Append(", ");
+                sb.Append($"{TBIAutoPlannerSettings.BeamsPerIsocenter.ElementAt(i)}");
+                if (i != TBIAutoPlannerSettings.BeamsPerIsocenter.Count - 1) sb.Append(", ");
             }
             sb.AppendLine("");
             sb.AppendLine("Collimator rotation (deg) order: ");
-            for (int i = 0; i < TMLIAutoPlannerSettings.CollimatorRotations.Count; i++)
+            for (int i = 0; i < TBIAutoPlannerSettings.CollimatorRotations.Count; i++)
             {
-                sb.Append($"{TMLIAutoPlannerSettings.CollimatorRotations.ElementAt(i):0.0}");
-                if (i != TMLIAutoPlannerSettings.CollimatorRotations.Count - 1) sb.Append(", ");
+                sb.Append($"{TBIAutoPlannerSettings.CollimatorRotations.ElementAt(i):0.0}");
+                if (i != TBIAutoPlannerSettings.CollimatorRotations.Count - 1) sb.Append(", ");
             }
             sb.AppendLine("");
-            sb.AppendLine($"Include flash by default: {TMLIAutoPlannerSettings.UseFlash}");
-            sb.AppendLine($"Flash margin: {TMLIAutoPlannerSettings.FlashMarginInCM} cm");
-            sb.AppendLine($"Target inner margin: {TMLIAutoPlannerSettings.PTVInnerMarginFromBodyInCM} cm");
+            sb.AppendLine($"Include flash by default: {TBIAutoPlannerSettings.UseFlash}");
+            sb.AppendLine($"Flash margin: {TBIAutoPlannerSettings.FlashMarginInCM} cm");
+            sb.AppendLine($"Target inner margin: {TBIAutoPlannerSettings.PTVInnerMarginFromBodyInCM} cm");
 
             sb.AppendLine("");
             sb.AppendLine("Field jaw position (cm) order: ");
             sb.AppendLine(" (x1,y1,x2,y2)");
-            foreach (VRect<double> j in TMLIAutoPlannerSettings.JawPositions) sb.AppendLine($"({j.X1 / 10:0.0},{j.Y1 / 10:0.0},{j.X2 / 10:0.0},{j.Y2 / 10:0.0})");
-            sb.AppendLine($"Photon dose calculation model: {TMLIAutoPlannerSettings.DoseCalculationAlgorithm}");
-            sb.AppendLine($"Use GPU for dose calculation: {TMLIAutoPlannerSettings.UseGPUForDosecalculation}");
-            sb.AppendLine($"Photon optimization model: {TMLIAutoPlannerSettings.OptimizationAlorithm}");
-            sb.AppendLine($"Use GPU for optimization: {TMLIAutoPlannerSettings.UseGPUForOptimization}");
-            sb.AppendLine($"MR level restart at: {TMLIAutoPlannerSettings.MRLevelRestart}");
+            foreach (VRect<double> j in TBIAutoPlannerSettings.JawPositions) sb.AppendLine($"({j.X1 / 10:0.0},{j.Y1 / 10:0.0},{j.X2 / 10:0.0},{j.Y2 / 10:0.0})");
+            sb.AppendLine($"Photon dose calculation model: {TBIAutoPlannerSettings.DoseCalculationAlgorithm}");
+            sb.AppendLine($"Use GPU for dose calculation: {TBIAutoPlannerSettings.UseGPUForDosecalculation}");
+            sb.AppendLine($"Photon optimization model: {TBIAutoPlannerSettings.OptimizationAlorithm}");
+            sb.AppendLine($"Use GPU for optimization: {TBIAutoPlannerSettings.UseGPUForOptimization}");
+            sb.AppendLine($"MR level restart at: {TBIAutoPlannerSettings.MRLevelRestart}");
 
             if (PlanTemplates.Any()) sb.Append(ConfigurationUIHelper.PrintTBIPlanTemplateConfigurationParameters(PlanTemplates.ToList()));
             return sb;

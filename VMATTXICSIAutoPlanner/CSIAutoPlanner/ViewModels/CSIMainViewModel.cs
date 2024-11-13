@@ -254,7 +254,7 @@ namespace CSIAutoPlanner.ViewModels
 
             EclipseContext.GetInstance().Patient.BeginModifications();
             bool failed = generateTS.Execute();
-            Logger.GetInstance().AppendLogOutput("TS Generation and manipulation output:", generateTS.GetLogOutput());
+            Logger.GetInstance().AppendLogOutput("TS Generation and manipulation output:", generateTS.LogOutput);
             if (failed) return;
 
             //does the structure sparing list need to be updated? This occurs when structures the user elected to spare with option of 'Mean Dose < Rx Dose' are high resolution. Since Eclipse can't perform

@@ -129,7 +129,7 @@ namespace TMLIAutoPlanner.ViewModels
 
             EclipseContext.GetInstance().Patient.BeginModifications();
             bool failed = generateTS.Execute();
-            Logger.GetInstance().AppendLogOutput("TS Generation and manipulation output:", generateTS.GetLogOutput());
+            Logger.GetInstance().AppendLogOutput("TS Generation and manipulation output:", generateTS.LogOutput);
             if (failed) return;
 
             //does the structure sparing list need to be updated? This occurs when structures the user elected to spare with option of 'Mean Dose < Rx Dose' are high resolution. Since Eclipse can't perform
@@ -344,6 +344,9 @@ namespace TMLIAutoPlanner.ViewModels
                                 else if (parameter == "optimization model") { if (value != "") TMLIAutoPlannerSettings.OptimizationAlorithm = value; }
                                 else if (parameter == "contour field overlap") { if (value != "") TMLIAutoPlannerSettings.ContourFieldOverlap = bool.Parse(value); }
                                 else if (parameter == "contour field overlap margin") { if (value != "") TMLIAutoPlannerSettings.ContourFieldOverlapMarginInCM = double.Parse(value); }
+                                else if (parameter == "max Y-jaw field extent") TMLIAutoPlannerSettings.MaxFieldYExtent = double.Parse(value);
+                                else if (parameter == "minimum field overlap") TMLIAutoPlannerSettings.MinFieldOverlap = double.Parse(value);
+                                else if (parameter == "all beams VMAT") TMLIAutoPlannerSettings.AllBeamsVMAT = bool.Parse(value);
                             }
                             else if (line.Contains("add default TS manipulation")) defaultTSManipulations_temp.Add(ConfigurationHelper.ParseTSManipulation(line));
                             else if (line.Contains("create default TS")) defaultTSstructures_temp.Add(ConfigurationHelper.ParseCreateTS(line));

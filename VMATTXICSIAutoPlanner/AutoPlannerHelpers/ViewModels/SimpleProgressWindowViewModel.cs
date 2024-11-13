@@ -54,7 +54,7 @@ namespace AutoPlannerHelpers.ViewModels
             set { SetProperty(ref _runTime, value); }
         }
 
-        protected string LogOutput { get => ProgressInfo; }
+        public string LogOutput { get => ProgressInfo; }
         protected string ElapsedRunTime { get => $"{sw.Elapsed.Hours:00}:{sw.Elapsed.Minutes:00}:{sw.Elapsed.Seconds:00}"; }
         #endregion
 

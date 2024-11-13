@@ -60,23 +60,23 @@ namespace TBIAutoPlanner.Core
             numVMATIsos = planIsocenters.SelectMany(x => x.Isocenters).Count(x => x.BeamType == AutoPlannerHelpers.Enums.BeamType.VMAT);
             int numAPPAIsos = planIsocenters.SelectMany(x => x.Isocenters).Count(x => x.BeamType == AutoPlannerHelpers.Enums.BeamType.APPA);
             totalNumIsos = numVMATIsos + numAPPAIsos;
-            courseId = TMLIAutoPlannerSettings.CourseId;
+            courseId = TBIAutoPlannerSettings.CourseId;
             ebmpArc = new ExternalBeamMachineParameters(linac, energy, 600, "ARC", null);
             //AP/PA beams always use 6X
             ebmpStatic = new ExternalBeamMachineParameters(linac, "6X", 600, "STATIC", null);
             //copy the calculation model
-            calculationModel = TMLIAutoPlannerSettings.DoseCalculationAlgorithm;
-            optimizationModel = TMLIAutoPlannerSettings.OptimizationAlorithm;
-            useGPUdose = TMLIAutoPlannerSettings.UseGPUForDosecalculation;
-            useGPUoptimization = TMLIAutoPlannerSettings.UseGPUForOptimization;
-            MRrestart = TMLIAutoPlannerSettings.MRLevelRestart;
+            calculationModel = TBIAutoPlannerSettings.DoseCalculationAlgorithm;
+            optimizationModel = TBIAutoPlannerSettings.OptimizationAlorithm;
+            useGPUdose = TBIAutoPlannerSettings.UseGPUForDosecalculation;
+            useGPUoptimization = TBIAutoPlannerSettings.UseGPUForOptimization;
+            MRrestart = TBIAutoPlannerSettings.MRLevelRestart;
             //convert from cm to mm
             targetMargin = tgtMargin * 10.0;
             //user wants to contour the overlap between fields in adjacent VMAT isocenters
             contourOverlap = overlap;
             contourOverlapMargin = overlapMargin;
             //check for potential collision between TT and gantry
-            SetCloseOnFinish(TMLIAutoPlannerSettings.CloseProgressWindowOnFinish, 3000);
+            SetCloseOnFinish(TBIAutoPlannerSettings.CloseProgressWindowOnFinish, 3000);
         }
 
         /// <summary>
@@ -311,7 +311,7 @@ namespace TBIAutoPlanner.Core
             double targetInfExtent = target.MeshGeometry.Positions.Min(p => p.Z) + targetMargin;
 
             double offsetY = 0.0;
-            if (TMLIAutoPlannerSettings.CheckTTCollision)
+            if (TBIAutoPlannerSettings.CheckTTCollision)
             {
                 ProvideUIUpdate("Checking for potential couch collision");
                 if (StructureTuningHelper.DoesStructureExistInSS("couchsurface", EclipseContext.GetInstance().StructureSet, true))
@@ -402,11 +402,11 @@ namespace TBIAutoPlanner.Core
                 {
                     //second isocenter and third beam requires the x-jaw positions to be mirrored about the y-axis (these jaw positions are in the fourth element of the jawPos list)
                     //this is generally the isocenter located in the pelvis and we want the beam aimed at the kidneys-area
-                    if (isoCount == 1 && j == 2) jp = TMLIAutoPlannerSettings.JawPositions.ElementAt(j + 1);
-                    else if (isoCount == 1 && j == 3) jp = TMLIAutoPlannerSettings.JawPositions.ElementAt(j - 1);
-                    else jp = TMLIAutoPlannerSettings.JawPositions.ElementAt(j);
+                    if (isoCount == 1 && j == 2) jp = TBIAutoPlannerSettings.JawPositions.ElementAt(j + 1);
+                    else if (isoCount == 1 && j == 3) jp = TBIAutoPlannerSettings.JawPositions.ElementAt(j - 1);
+                    else jp = TBIAutoPlannerSettings.JawPositions.ElementAt(j);
 
-                    double coll = TMLIAutoPlannerSettings.CollimatorRotations.ElementAt(j);
+                    double coll = TBIAutoPlannerSettings.CollimatorRotations.ElementAt(j);
                     if ((totalNumIsos > numVMATIsos) && (isoCount == (numVMATIsos - 1)))
                     {
                         //zero collimator rotations of two main fields for beams in isocenter immediately superior to matchline. 

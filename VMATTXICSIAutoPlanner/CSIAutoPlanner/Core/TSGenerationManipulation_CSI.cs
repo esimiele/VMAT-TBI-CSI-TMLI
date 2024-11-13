@@ -61,7 +61,7 @@ namespace CSIAutoPlanner.Core
         /// <returns></returns>
         //to handle system access exception violation
         [HandleProcessCorruptedStateExceptions]
-        public override bool Run()
+        protected override bool Run()
         {
             try
             {
@@ -81,7 +81,7 @@ namespace CSIAutoPlanner.Core
                 if (CalculateNumIsos()) return true;
                 UpdateUILabel("Finished!");
                 ProvideUIUpdate(100, "Finished Structure Tuning!");
-                ProvideUIUpdate($"Run time: {GetElapsedTime()} (mm:ss)");
+                ProvideUIUpdate($"Run time: {ElapsedRunTime} (mm:ss)");
                 return false;
             }
             catch (Exception e)
@@ -112,7 +112,7 @@ namespace CSIAutoPlanner.Core
             ProvideUIUpdate(100 * ++counter / calcItems, "Body structure found and is contoured");
 
             //check if user origin was set
-            if (IsUOriginInside()) return true;
+            if (IsUserOriginInsideBody()) return true;
             ProvideUIUpdate(100 * ++counter / calcItems, "User origin is inside body");
 
             //only need spinal cord to determine number of spine isocenters. Otherwise, just need target structures for this class
@@ -124,7 +124,7 @@ namespace CSIAutoPlanner.Core
 
             ProvideUIUpdate(100 * ++counter / calcItems, "Brain and spinal cord structures exist");
             ProvideUIUpdate(100, "Preliminary checks complete!");
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
         #endregion
@@ -180,7 +180,7 @@ namespace CSIAutoPlanner.Core
                 }
             }
             else ProvideUIUpdate("No ring structures requested!");
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
 
@@ -401,7 +401,7 @@ namespace CSIAutoPlanner.Core
                     ProvideUIUpdate($"The requested tuning structure generation operation is not recognized: {itr}. Skipping!");
                 }
             }
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
 
@@ -573,7 +573,7 @@ namespace CSIAutoPlanner.Core
             NormalizationVolumes.Add(tmpPlanId, prevTargetId);
             PlanTargets.Add(new PlanTargetsModel(tmpPlanId, new List<TargetModel>(tmpTSTargetList)));
             ProvideUIUpdate("Finished performing TS manipulations");
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
 
@@ -817,7 +817,7 @@ namespace CSIAutoPlanner.Core
                 }
             }
             else ProvideUIUpdate(100, "No structures remaining to crop and contour overlap with structures! Skipping!");
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
         #endregion
@@ -1032,7 +1032,7 @@ namespace CSIAutoPlanner.Core
                 ProvideUIUpdate(100 * ++counter / calcItems, "Added isocenter to stack!");
             }
             ProvideUIUpdate($"Required Number of Isocenters: {NumberofVMATIsocenters}");
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
 

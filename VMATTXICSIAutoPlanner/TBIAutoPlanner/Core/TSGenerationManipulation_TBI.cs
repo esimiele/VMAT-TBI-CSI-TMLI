@@ -49,7 +49,7 @@ namespace TBIAutoPlanner.Core
             _useFlash = flash;
             _flashMargin = flashMargin;
             _ptvMarginFromBody = ptvMargin;
-            SetCloseOnFinish(TMLIAutoPlannerSettings.CloseProgressWindowOnFinish, 3000);
+            SetCloseOnFinish(TBIAutoPlannerSettings.CloseProgressWindowOnFinish, 3000);
         }
 
         #region Run control
@@ -58,7 +58,7 @@ namespace TBIAutoPlanner.Core
         /// </summary>
         /// <returns></returns>
         [HandleProcessCorruptedStateExceptions]
-        public override bool Run()
+        protected override bool Run()
         {
             try
             {
@@ -73,7 +73,7 @@ namespace TBIAutoPlanner.Core
                 if (CalculateNumIsos()) return true;
                 UpdateUILabel("Finished!");
                 ProvideUIUpdate(100, "Finished Structure Tuning!");
-                ProvideUIUpdate($"Run time: {GetElapsedTime()} (mm:ss)");
+                ProvideUIUpdate($"Run time: {ElapsedRunTime} (mm:ss)");
             }
             catch (Exception e)
             {
@@ -104,14 +104,14 @@ namespace TBIAutoPlanner.Core
             ProvideUIUpdate(100 * ++counter / calcItems, "Body structure exists and is not empty");
 
             //check if user origin was set
-            if (IsUOriginInside()) return true;
+            if (IsUserOriginInsideBody()) return true;
             ProvideUIUpdate(100 * ++counter / calcItems, "User origin is inside body");
 
             if (CheckBodyExtentAndMatchline()) return true;
             ProvideUIUpdate(100 * ++counter / calcItems, "Body structure exists and matchline appropriate");
 
             if (CheckIfScriptRunPreviously()) return true;
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
 
@@ -332,7 +332,7 @@ namespace TBIAutoPlanner.Core
                 ProvideUIUpdate(100 * ++counter / calcItems);
             }
 
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
 
@@ -409,7 +409,7 @@ namespace TBIAutoPlanner.Core
             NormalizationVolumes.Add(prescriptions.Last().PlanId, tmpTSTargetList.OrderByDescending(x => x.TargetRxDose).First().TsTargetId);
             PlanTargets.Add(new PlanTargetsModel(prescriptions.Last().PlanId, new List<TargetModel>(tmpTSTargetList)));
 
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
 
@@ -733,15 +733,13 @@ namespace TBIAutoPlanner.Core
             double bodyExtent = pts.Max(p => p.Z) - pts.Min(p => p.Z);
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Calculated maximum extent of body: {bodyExtent:0.0} mm");
 
-            double minFieldOverlap = 20.0;
-            double maxFieldExtent = 400.0;
             //calculate number of required isocenters
             if (!StructureTuningHelper.DoesStructureExistInSS("matchline", EclipseContext.GetInstance().StructureSet))
             {
                 ProvideUIUpdate("matchline structure not present in structure set");
                 //no matchline implying that this patient will be treated with VMAT only. For these cases the maximum number of allowed isocenters is 3.
                 //the reason for the explicit statements calculating the number of isos and then truncating them to 3 was to account for patients requiring < 3 isos and if, later on, we want to remove the restriction of 3 isos
-                NumberofIsocenters = NumberofVMATIsocenters = (int)Math.Ceiling(bodyExtent / (maxFieldExtent - minFieldOverlap));
+                NumberofIsocenters = NumberofVMATIsocenters = (int)Math.Ceiling(bodyExtent / (TBIAutoPlannerSettings.MaxFieldYExtent - TBIAutoPlannerSettings.MinFieldOverlap));
                 if (NumberofIsocenters > 3) NumberofIsocenters = NumberofVMATIsocenters = 3;
                 ProvideUIUpdate(100 * ++percentComplete / calcItems);
             }
@@ -755,7 +753,7 @@ namespace TBIAutoPlanner.Core
                     if (!CP.GetSelection()) return true;
 
                     //continue and ignore the empty matchline structure (same calculation as VMAT only)
-                    NumberofIsocenters = NumberofVMATIsocenters = (int)Math.Ceiling(bodyExtent / (maxFieldExtent - minFieldOverlap));
+                    NumberofIsocenters = NumberofVMATIsocenters = (int)Math.Ceiling(bodyExtent / (TBIAutoPlannerSettings.MaxFieldYExtent - TBIAutoPlannerSettings.MinFieldOverlap));
                     if (NumberofIsocenters > 3) NumberofIsocenters = NumberofVMATIsocenters = 3;
                     ProvideUIUpdate(100 * ++percentComplete / calcItems);
 
@@ -767,23 +765,23 @@ namespace TBIAutoPlanner.Core
                     Structure matchline = StructureTuningHelper.GetStructureFromId("matchline", EclipseContext.GetInstance().StructureSet);
                     ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved matchline structure");
                     //get number of isos for PTV superior to matchplane (always truncate this value to a maximum of 4 isocenters)
-                    NumberofVMATIsocenters = (int)Math.Ceiling((pts.Max(p => p.Z) - matchline.CenterPoint.z) / (maxFieldExtent - minFieldOverlap));
+                    NumberofVMATIsocenters = (int)Math.Ceiling((pts.Max(p => p.Z) - matchline.CenterPoint.z) / (TBIAutoPlannerSettings.MaxFieldYExtent - TBIAutoPlannerSettings.MinFieldOverlap));
                     if (NumberofVMATIsocenters > 4) NumberofVMATIsocenters = 4;
                     ProvideUIUpdate($"Separation between body z max and matchline center z: {(pts.Max(p => p.Z) - matchline.CenterPoint.z):0.0}");
-                    ProvideUIUpdate($"numVAMTIsos calculated as double: {(pts.Max(p => p.Z) - matchline.CenterPoint.z) / (maxFieldExtent - minFieldOverlap):0.0}");
+                    ProvideUIUpdate($"numVAMTIsos calculated as double: {(pts.Max(p => p.Z) - matchline.CenterPoint.z) / (TBIAutoPlannerSettings.MaxFieldYExtent - TBIAutoPlannerSettings.MinFieldOverlap):0.0}");
                     ProvideUIUpdate(100 * ++percentComplete / calcItems);
 
                     //Only add a second legs iso if the extent of the body is > 40.0 cm
                     ProvideUIUpdate($"Separation between matchline z center and body z min: {matchline.CenterPoint.z - pts.Min(p => p.Z):0.0}");
-                    if (matchline.CenterPoint.z - pts.Min(p => p.Z) <= maxFieldExtent)
+                    if (matchline.CenterPoint.z - pts.Min(p => p.Z) <= TBIAutoPlannerSettings.MaxFieldYExtent)
                     {
-                        ProvideUIUpdate($"Separation between matchline z center and body z min is <= maximum field extent ({maxFieldExtent})");
+                        ProvideUIUpdate($"Separation between matchline z center and body z min is <= maximum field extent ({TBIAutoPlannerSettings.MaxFieldYExtent})");
                         ProvideUIUpdate($"Only one APPA isocenters is required for coverage");
                         NumberofIsocenters = NumberofVMATIsocenters + 1;
                     }
                     else
                     {
-                        ProvideUIUpdate($"Separation between matchline z center and body z min is > maximum field extent ({maxFieldExtent})");
+                        ProvideUIUpdate($"Separation between matchline z center and body z min is > maximum field extent ({TBIAutoPlannerSettings.MaxFieldYExtent})");
                         ProvideUIUpdate($"Two APPA isocenters are required for coverage");
                         NumberofIsocenters = NumberofVMATIsocenters + 2;
                     }
