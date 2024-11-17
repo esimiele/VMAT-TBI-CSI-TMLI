@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AutoPlannerOptimizationLoop.Prompts"
         mc:Ignorable="d"
-        Title="SelectPatient" WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight" Background="DarkGray">
+                Title="SelectPatient" WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight" Background="DarkGray">
     <Grid>
         <StackPanel>
             <Grid VerticalAlignment="Top" Background="White" Height="Auto">

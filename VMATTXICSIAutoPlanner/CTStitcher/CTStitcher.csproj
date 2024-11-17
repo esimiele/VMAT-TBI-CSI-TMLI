@@ -1,79 +1,213 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
-	  <TargetFramework>net472</TargetFramework>
-	  <ImplicitUsings>disable</ImplicitUsings>
-	  <Nullable>disable</Nullable>
-	  <UseWPF>true</UseWPF>
-	  <PlatformTarget>x64</PlatformTarget>
-	  <LangVersion>preview</LangVersion>
-	  <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
-	  <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-	  <Platforms>x64</Platforms>
-	  <OutputPath>..\..\bin\VMAT-TXI-CSI</OutputPath>
-	  <BaseOutputPath>..\..\bin\</BaseOutputPath>
-	  <Build>$([System.DateTime]::op_Subtraction($([System.DateTime]::get_Now().get_Date()),$([System.DateTime]::new(2000,1,1))).get_TotalDays())</Build>
-	  <Revision>$([MSBuild]::Divide($([System.DateTime]::get_Now().get_TimeOfDay().get_TotalMinutes()), 2).ToString('F0'))</Revision>
-	  <Version>1.0.$(Build).$(Revision)</Version>
-	  <Configurations>Release;Debug;Debug-v15;Debug-v16</Configurations>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{0EA71BF4-F48E-4AC6-9CB1-2756B42FBA65}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>CTStitcher</RootNamespace>
+    <AssemblyName>CTStitcher</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>false</Deterministic>
   </PropertyGroup>
-
-	<ItemGroup Condition="'$(Configuration)' == 'Debug'">
-		<Reference Include="VMS.TPS.Common.Model.API">
-			<HintPath>..\..\..\VMS_TPS_resources\16.1\VMS.TPS.Common.Model.API.dll</HintPath>
-		</Reference>
-		<Reference Include="VMS.TPS.Common.Model.Types">
-			<HintPath>..\..\..\VMS_TPS_resources\16.1\VMS.TPS.Common.Model.Types.dll</HintPath>
-		</Reference>
-	</ItemGroup>
-	<ItemGroup Condition="'$(Configuration)' == 'Debug-v15'">
-		<Reference Include="VMS.TPS.Common.Model.API">
-			<HintPath>..\..\..\VMS_TPS_resources\15.6\VMS.TPS.Common.Model.API.dll</HintPath>
-		</Reference>
-		<Reference Include="VMS.TPS.Common.Model.Types">
-			<HintPath>..\..\..\VMS_TPS_resources\15.6\VMS.TPS.Common.Model.Types.dll</HintPath>
-		</Reference>
-	</ItemGroup>
-	<ItemGroup Condition="'$(Configuration)' == 'Debug-v16'">
-		<Reference Include="VMS.TPS.Common.Model.API">
-			<HintPath>..\..\..\VMS_TPS_resources\16.1\VMS.TPS.Common.Model.API.dll</HintPath>
-		</Reference>
-		<Reference Include="VMS.TPS.Common.Model.Types">
-			<HintPath>..\..\..\VMS_TPS_resources\16.1\VMS.TPS.Common.Model.Types.dll</HintPath>
-		</Reference>
-	</ItemGroup>
-
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\bin\VMAT-TXI-CSI\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>preview</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>..\..\bin\VMAT-TXI-CSI\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>preview</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug-v16|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\bin\VMAT-TXI-CSI\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>preview</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug-v15|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\bin\VMAT-TXI-CSI\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>preview</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="ImageClasses\**" />
-    <EmbeddedResource Remove="ImageClasses\**" />
-    <None Remove="ImageClasses\**" />
-    <Page Remove="ImageClasses\**" />
+    <Reference Include="EvilDICOM, Version=3.0.8998.340, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\EvilDICOM.3.0.8998.340\lib\net472\EvilDICOM.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.8.0.0\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.DependencyInjection, Version=8.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.8.0.0\lib\net462\Microsoft.Extensions.DependencyInjection.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=8.0.0.1, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.Abstractions.8.0.1\lib\net462\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Logging, Version=8.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Logging.8.0.0\lib\net462\Microsoft.Extensions.Logging.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Logging.Abstractions, Version=8.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Logging.Abstractions.8.0.0\lib\net462\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Options, Version=8.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Options.8.0.0\lib\net462\Microsoft.Extensions.Options.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Primitives, Version=8.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Primitives.8.0.0\lib\net462\Microsoft.Extensions.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="Prism, Version=9.0.537.60525, Culture=neutral, PublicKeyToken=40ee6c3a2184dc59, processorArchitecture=MSIL">
+      <HintPath>..\packages\Prism.Core.9.0.537\lib\net47\Prism.dll</HintPath>
+    </Reference>
+    <Reference Include="Prism.Container.Abstractions, Version=9.0.106.9543, Culture=neutral, PublicKeyToken=40ee6c3a2184dc59, processorArchitecture=MSIL">
+      <HintPath>..\packages\Prism.Container.Abstractions.9.0.106\lib\net47\Prism.Container.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Prism.Events, Version=9.0.537.60525, Culture=neutral, PublicKeyToken=40ee6c3a2184dc59, processorArchitecture=MSIL">
+      <HintPath>..\packages\Prism.Events.9.0.537\lib\net47\Prism.Events.dll</HintPath>
+    </Reference>
+    <Reference Include="SimpleITKCSharpManaged, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <HintPath>..\packages\SimpleITK-win64-CSharp-x64.1.0.0.1\lib\SimpleITKCSharpManaged.dll</HintPath>
+    </Reference>
+    <Reference Include="SimpleProgressWindow, Version=1.2.8594.18064, Culture=neutral, processorArchitecture=AMD64">
+      <HintPath>..\packages\SimpleProgressWindow.1.2.8594.18064\lib\net472\SimpleProgressWindow.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Diagnostics.DiagnosticSource, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Diagnostics.DiagnosticSource.8.0.0\lib\net462\System.Diagnostics.DiagnosticSource.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.5.0\lib\net47\System.ValueTuple.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
-
+      <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+	<Reference Include="VMS.TPS.Common.Model.API">
+		<HintPath>..\..\..\VMS_TPS_resources\16.1\VMS.TPS.Common.Model.API.dll</HintPath>
+	</Reference>
+	<Reference Include="VMS.TPS.Common.Model.Types">
+		<HintPath>..\..\..\VMS_TPS_resources\16.1\VMS.TPS.Common.Model.Types.dll</HintPath>
+	</Reference>
+</ItemGroup>
+<ItemGroup Condition="'$(Configuration)' == 'Debug-v16'">
+	<Reference Include="VMS.TPS.Common.Model.API">
+		<HintPath>..\..\..\VMS_TPS_resources\16.1\VMS.TPS.Common.Model.API.dll</HintPath>
+	</Reference>
+	<Reference Include="VMS.TPS.Common.Model.Types">
+		<HintPath>..\..\..\VMS_TPS_resources\16.1\VMS.TPS.Common.Model.Types.dll</HintPath>
+	</Reference>
+</ItemGroup>
+<ItemGroup Condition="'$(Configuration)' == 'Debug-v15'">
+	<Reference Include="VMS.TPS.Common.Model.API">
+		<HintPath>..\..\..\VMS_TPS_resources\15.6\VMS.TPS.Common.Model.API.dll</HintPath>
+	</Reference>
+	<Reference Include="VMS.TPS.Common.Model.Types">
+		<HintPath>..\..\..\VMS_TPS_resources\15.6\VMS.TPS.Common.Model.Types.dll</HintPath>
+	</Reference>
+</ItemGroup>
   <ItemGroup>
-    <None Remove="SimpleITKCSharpNative.dll" />
+    <Compile Include="Core\Stitcher3DOF.cs" />
+    <Compile Include="Core\Stitcher6DOF.cs" />
+    <Compile Include="Delegates\AllDelegates.cs" />
+    <Compile Include="enums\AllEnums.cs" />
+    <Compile Include="Helpers\ConfigurationHelper.cs" />
+    <Compile Include="Helpers\CTReaderHelper.cs" />
+    <Compile Include="Helpers\CTStitcherHelper.cs" />
+    <Compile Include="Helpers\ITKImageHelper.cs" />
+    <Compile Include="ImageFormatConverters\CTFormatConverter.cs" />
+    <Compile Include="ImageReaders\CTReaderDCM.cs" />
+    <Compile Include="ImageReaders\CTReaderEclipse.cs" />
+    <Compile Include="ImageWriters\CTWriterDCM.cs" />
+    <Compile Include="Interfaces\ICTReader.cs" />
+    <Compile Include="Interfaces\IStitcher.cs" />
+    <Compile Include="Models\CTImageMetaDataModel.cs" />
+    <Compile Include="Models\CTImageModel.cs" />
+    <Compile Include="Models\CubeModel.cs" />
+    <Compile Include="Models\ImageSliceModel.cs" />
+    <Compile Include="Models\RegistrationPPModel.cs" />
+    <Compile Include="Models\Vector4DModel.cs" />
+    <Compile Include="Models\VectorModel.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Runners\CTStitcherRunner.cs" />
+    <Compile Include="Settings\CTStitcherSettings.cs" />
+    <Compile Include="UIHelpers\CTDisplayHelper.cs" />
+    <Compile Include="UIHelpers\CTStitcherUIHelper.cs" />
+    <Compile Include="UIHelpers\UILogHelper.cs" />
+    <Compile Include="Utilities\CTVoxelRescaler.cs" />
+    <Compile Include="Utilities\Interpolators.cs" />
+    <Compile Include="Utilities\UIDHelper.cs" />
+    <Compile Include="ViewModels\CTStitcherViewModel.cs" />
+    <Compile Include="Views\CTStitcherView.xaml.cs">
+      <DependentUpon>CTStitcherView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ZoomBorder.cs" />
   </ItemGroup>
-
+  <ItemGroup>
+    <ProjectReference Include="..\AutoPlannerHelpers\AutoPlannerHelpers.csproj">
+      <Project>{75860997-c5f3-4d38-a945-f63771fe5625}</Project>
+      <Name>AutoPlannerHelpers</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="Views\CTStitcherView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
   <ItemGroup>
     <Content Include="SimpleITKCSharpNative.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="EvilDICOM" Version="2.0.6.5" />
-	  <PackageReference Include="Prism.Core" Version="9.0.537" />
-    <PackageReference Include="SimpleITK-win64-CSharp-x64" Version="1.0.0.1" />
-    <PackageReference Include="SimpleProgressWindow" Version="1.2.8594.18064" />
+    <None Include="app.config" />
+    <None Include="packages.config" />
   </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\AutoPlannerHelpers\AutoPlannerHelpers.csproj" />
-  </ItemGroup>
-
-
-  <ItemGroup>
-    <Reference Include="System.Windows.Forms" />
-  </ItemGroup>
-
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

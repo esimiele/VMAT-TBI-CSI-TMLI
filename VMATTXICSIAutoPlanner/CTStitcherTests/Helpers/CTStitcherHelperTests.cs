@@ -1,6 +1,7 @@
 ﻿using CTStitcher.Models;
 using I = itk.simple;
 using Telerik.JustMock;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CTStitcher.Helpers.Tests
 {

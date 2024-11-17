@@ -1,5 +1,6 @@
 ﻿using CTStitcher.Models;
 using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CTStitcher.Utilities.Tests
 {

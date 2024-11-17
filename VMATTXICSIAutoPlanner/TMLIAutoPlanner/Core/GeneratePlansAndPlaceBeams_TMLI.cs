@@ -31,7 +31,6 @@ namespace TMLIAutoPlanner.Core
         private double gantryStop;
         private ExternalBeamMachineParameters ebmpArc;
         private ExternalBeamMachineParameters ebmpStatic;
-        private double targetMargin;
         private int numVMATIsos;
         private int totalNumIsos;
         private int totalNumVMATBeams;
@@ -305,8 +304,8 @@ namespace TMLIAutoPlanner.Core
             VVector userOrigin = image.UserOrigin;
             //manually calculate the target sup/inf extent to avoid having to figure out if flash was used or not
             Structure target = StructureTuningHelper.GetStructureFromId("body", EclipseContext.GetInstance().StructureSet);
-            double targetSupExtent = target.MeshGeometry.Positions.Max(p => p.Z) - targetMargin;
-            double targetInfExtent = target.MeshGeometry.Positions.Min(p => p.Z) + targetMargin;
+            double targetSupExtent = target.MeshGeometry.Positions.Max(p => p.Z);
+            double targetInfExtent = target.MeshGeometry.Positions.Min(p => p.Z);
 
             double offsetY = 0.0;
             if (TMLIAutoPlannerSettings.CheckTTCollision)
@@ -459,7 +458,7 @@ namespace TMLIAutoPlanner.Core
 
             Structure target = StructureTuningHelper.GetStructureFromId("body", EclipseContext.GetInstance().StructureSet);
             ProvideUIUpdate(100 * ++percentComplete / calcItems, "Retrieved body structure");
-            double targetInfExtent = target.MeshGeometry.Positions.Min(p => p.Z) + targetMargin;
+            double targetInfExtent = target.MeshGeometry.Positions.Min(p => p.Z);
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Calculated target inferior extent: {targetInfExtent}");
 
             ProvideUIUpdate("Preparation complete!");

@@ -103,7 +103,7 @@ namespace AutoPlannerHelpers.ViewModels
             slave.RunOnNewThread(() =>
             {
                 SimpleProgressWindowView pv = new SimpleProgressWindowView { DataContext = this };
-                this.OnRequestClose += (s, e) => pv.Dispatcher.BeginInvoke(() => { Thread.Sleep(_closeTimeOut); pv.Close(); });
+                this.OnRequestClose += (s, e) => pv.Dispatcher.BeginInvoke((Action)(() => { Thread.Sleep(_closeTimeOut); pv.Close(); }));
 
                 _timer.Interval = 1000;
                 _timer.Elapsed += new System.Timers.ElapsedEventHandler(Dt_tick);

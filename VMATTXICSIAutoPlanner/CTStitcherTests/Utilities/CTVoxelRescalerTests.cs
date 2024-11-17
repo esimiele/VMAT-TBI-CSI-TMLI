@@ -1,4 +1,5 @@
-﻿
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 namespace CTStitcher.Utilities.Tests
 {
     [TestClass()]

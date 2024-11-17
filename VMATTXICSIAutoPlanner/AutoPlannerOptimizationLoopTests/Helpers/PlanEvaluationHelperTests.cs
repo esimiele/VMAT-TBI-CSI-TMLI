@@ -1,4 +1,5 @@
-﻿using AutoPlannerHelpers.Enums;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.Helpers;
 using AutoPlannerHelpers.Models;
 using System;

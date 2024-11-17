@@ -1,51 +1,209 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
-	<PropertyGroup>
-		<OutputType>WinExe</OutputType>
-		<TargetFramework>net472</TargetFramework>
-		<Nullable>disable</Nullable>
-		<UseWPF>true</UseWPF>
-		<Deterministic>false</Deterministic>
-		<LangVersion>preview</LangVersion>
-		<PlatformTarget>x64</PlatformTarget>
-		<Platforms>x64</Platforms>
-		<AssemblyVersion></AssemblyVersion>
-		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
-		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-		<OutputPath>..\..\bin\VMAT-TXI-CSI</OutputPath>
-		<BaseOutputPath>..\..\bin\</BaseOutputPath>
-		<Build>$([System.DateTime]::op_Subtraction($([System.DateTime]::get_Now().get_Date()),$([System.DateTime]::new(2000,1,1))).get_TotalDays())</Build>
-		<Revision>$([MSBuild]::Divide($([System.DateTime]::get_Now().get_TimeOfDay().get_TotalMinutes()), 2).ToString('F0'))</Revision>
-		<Version>1.0.$(Build).$(Revision)</Version>
-		<Configurations>Debug-v15;Debug-v16;Release</Configurations>
-	</PropertyGroup>
-
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{4C9991E8-EEF5-4F1B-94CE-DC2ADF05C92F}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>AutoPlannerOptimizationLoop</RootNamespace>
+    <AssemblyName>AutoPlannerOptimizationLoop</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WarningLevel>4</WarningLevel>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>false</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\bin\VMAT-TXI-CSI\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>preview</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>..\..\bin\VMAT-TXI-CSI\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>preview</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug-v16|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\bin\VMAT-TXI-CSI\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug-v15|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\bin\VMAT-TXI-CSI\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>preview</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
   <ItemGroup>
-    <Folder Include="Images\" />
-    <Folder Include="Configuration\" />
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.8.0.0\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=8.0.0.1, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.Abstractions.8.0.1\lib\net462\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Xaml.Behaviors, Version=1.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Xaml.Behaviors.Wpf.1.1.135\lib\net462\Microsoft.Xaml.Behaviors.dll</HintPath>
+    </Reference>
+    <Reference Include="Prism, Version=9.0.537.60525, Culture=neutral, PublicKeyToken=40ee6c3a2184dc59, processorArchitecture=MSIL">
+      <HintPath>..\packages\Prism.Core.9.0.537\lib\net47\Prism.dll</HintPath>
+    </Reference>
+    <Reference Include="Prism.Container.Abstractions, Version=9.0.106.9543, Culture=neutral, PublicKeyToken=40ee6c3a2184dc59, processorArchitecture=MSIL">
+      <HintPath>..\packages\Prism.Container.Abstractions.9.0.106\lib\net47\Prism.Container.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Prism.Events, Version=9.0.537.60525, Culture=neutral, PublicKeyToken=40ee6c3a2184dc59, processorArchitecture=MSIL">
+      <HintPath>..\packages\Prism.Events.9.0.537\lib\net47\Prism.Events.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.5.3\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xaml">
+      <RequiredTargetFramework>4.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
   </ItemGroup>
-
-	<ItemGroup Condition="'$(Configuration)' == 'Debug-v15'">
-		<Reference Include="VMS.TPS.Common.Model.API">
-			<HintPath>..\..\..\VMS_TPS_resources\15.6\VMS.TPS.Common.Model.API.dll</HintPath>
-		</Reference>
-		<Reference Include="VMS.TPS.Common.Model.Types">
-			<HintPath>..\..\..\VMS_TPS_resources\15.6\VMS.TPS.Common.Model.Types.dll</HintPath>
-		</Reference>
-	</ItemGroup>
-	<ItemGroup Condition="'$(Configuration)' == 'Debug-v16'">
-		<Reference Include="VMS.TPS.Common.Model.API">
-			<HintPath>..\..\..\VMS_TPS_resources\16.1\VMS.TPS.Common.Model.API.dll</HintPath>
-		</Reference>
-		<Reference Include="VMS.TPS.Common.Model.Types">
-			<HintPath>..\..\..\VMS_TPS_resources\16.1\VMS.TPS.Common.Model.Types.dll</HintPath>
-		</Reference>
-	</ItemGroup>
-	<ItemGroup>
-	  <PackageReference Include="Prism.Core" Version="9.0.537" />
-	</ItemGroup>
-	<ItemGroup>
-	  <ProjectReference Include="..\AutoPlannerHelpers\AutoPlannerHelpers.csproj" />
-	</ItemGroup>
-
+      <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+	<Reference Include="VMS.TPS.Common.Model.API">
+		<HintPath>..\..\..\VMS_TPS_resources\16.1\VMS.TPS.Common.Model.API.dll</HintPath>
+	</Reference>
+	<Reference Include="VMS.TPS.Common.Model.Types">
+		<HintPath>..\..\..\VMS_TPS_resources\16.1\VMS.TPS.Common.Model.Types.dll</HintPath>
+	</Reference>
+</ItemGroup>
+<ItemGroup Condition="'$(Configuration)' == 'Debug-v16'">
+	<Reference Include="VMS.TPS.Common.Model.API">
+		<HintPath>..\..\..\VMS_TPS_resources\16.1\VMS.TPS.Common.Model.API.dll</HintPath>
+	</Reference>
+	<Reference Include="VMS.TPS.Common.Model.Types">
+		<HintPath>..\..\..\VMS_TPS_resources\16.1\VMS.TPS.Common.Model.Types.dll</HintPath>
+	</Reference>
+</ItemGroup>
+<ItemGroup Condition="'$(Configuration)' == 'Debug-v15'">
+	<Reference Include="VMS.TPS.Common.Model.API">
+		<HintPath>..\..\..\VMS_TPS_resources\15.6\VMS.TPS.Common.Model.API.dll</HintPath>
+	</Reference>
+	<Reference Include="VMS.TPS.Common.Model.Types">
+		<HintPath>..\..\..\VMS_TPS_resources\15.6\VMS.TPS.Common.Model.Types.dll</HintPath>
+	</Reference>
+</ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Prompts\ReminderPrompt.xaml.cs">
+      <DependentUpon>ReminderPrompt.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Prompts\SelectPatient.xaml.cs">
+      <DependentUpon>SelectPatient.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Settings\OptimizationLoopSettings.cs" />
+    <Compile Include="UIHelpers\OptimizationLoopUIHelper.cs" />
+    <Compile Include="Utilities\WinUtilitiesModified.cs" />
+    <Compile Include="ViewModels\OptimizationLoopMainViewModel.cs" />
+    <Compile Include="ViewModels\OptimizationLoopProgressViewModel.cs" />
+    <Compile Include="Views\EnumBindingSourceExtension.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Base\OptimizationLoopBase.cs" />
+    <Compile Include="Core\VMATCSIOptimization.cs" />
+    <Compile Include="Core\VMATTBIOptimization.cs" />
+    <Compile Include="Core\VMATTMLIOptimization.cs" />
+    <Compile Include="DataContainers\OptDataContainer.cs" />
+    <Compile Include="DataContainers\PlanEvaluationDataContainer.cs" />
+    <Compile Include="Enums\OptimizationLoopEnums.cs" />
+    <Compile Include="Helpers\PlanEvaluationHelper.cs" />
+    <Compile Include="Helpers\TSHeaterCoolerHelper.cs" />
+    <Compile Include="Interfaces\IPlanQualityEvaluation.cs" />
+    <Compile Include="Models\PlanObjectivesDeviationModel.cs" />
+    <Compile Include="Models\PlanOptConstraintsDeviationModel.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <None Include="Configuration\CSI_optimization_config.ini" />
+    <None Include="Configuration\TBI_optimization_config.ini" />
+    <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AutoPlannerHelpers\AutoPlannerHelpers.csproj">
+      <Project>{75860997-c5f3-4d38-a945-f63771fe5625}</Project>
+      <Name>AutoPlannerHelpers</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\StanfordMedicine1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="Prompts\ReminderPrompt.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Prompts\SelectPatient.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\OptimizationLoopMainView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\OptimizationLoopProgressView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -7,8 +7,6 @@ using CTStitcher.Settings;
 using System.IO;
 using System.Reflection;
 using CTStitcher.Helpers;
-using System.Windows;
-using System.Windows.Forms;
 using Prism.Commands;
 using CTStitcher.ImageFormatConverters;
 using CTStitcher.Runners;
@@ -22,6 +20,8 @@ using Image = System.Windows.Controls.Image;
 using AutoPlannerHelpers.Context;
 using AutoPlannerHelpers.Logging;
 using AutoPlannerHelpers.Enums;
+using System.Windows;
+using System.Windows.Forms;
 
 namespace CTStitcher.ViewModels
 {

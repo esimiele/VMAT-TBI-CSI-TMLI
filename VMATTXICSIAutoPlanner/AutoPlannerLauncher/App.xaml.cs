@@ -1,8 +1,12 @@
-﻿using System.Configuration;
-using System.Data;
-using System.Windows;
-using AutoPlannerLauncher.ViewModels;
+﻿using AutoPlannerLauncher.ViewModels;
 using AutoPlannerLauncher.Views;
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Data;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows;
 
 namespace AutoPlannerLauncher
 {
@@ -16,5 +20,4 @@ namespace AutoPlannerLauncher
             LauncherMainView mv = new LauncherMainView { DataContext = new LauncherMainViewModel(e.Args) };
         }
     }
-
 }

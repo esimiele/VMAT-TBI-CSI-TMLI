@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AutoPlannerOptimizationLoop.Prompts"
         mc:Ignorable="d"
-        Title="ReminderPrompt" WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight" Background="DarkGray" Closing="Window_Closing">
+                Title="ReminderPrompt" WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight" Background="DarkGray" Closing="Window_Closing">
     <Window.Resources>
         <!--Scrollbar Thumbs-->
         <Style x:Key="ScrollThumbs" TargetType="{x:Type Thumb}">

@@ -58,7 +58,7 @@ namespace AutoPlannerOptimizationLoop.Prompts
             {
                 PatientMRNs = new ObservableCollection<string>() { "--select--" };
                 List<string> directories = new List<string>(Directory.GetDirectories(logPath + "\\preparation\\", "*", SearchOption.TopDirectoryOnly).OrderByDescending(x => Directory.GetLastWriteTimeUtc(x)));
-                foreach(string directory in directories)
+                foreach (string directory in directories)
                 {
                     logs = new List<string>(Directory.GetDirectories(directory, "*", SearchOption.TopDirectoryOnly).OrderByDescending(x => Directory.GetLastWriteTimeUtc(x)));
                     foreach (string itr in logs)
