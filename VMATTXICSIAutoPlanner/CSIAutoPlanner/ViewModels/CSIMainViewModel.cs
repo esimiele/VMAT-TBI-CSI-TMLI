@@ -147,7 +147,7 @@ namespace CSIAutoPlanner.ViewModels
             SpecifyTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
             if (EclipseContext.GetInstance().IsInitialized && ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
             {
-                if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => x.IsApproved && x.Id.ToLower().Contains("ptv")))
+                if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => x.ApprovalHistory.Last().ApprovalStatus == StructureApprovalStatus.Approved && x.Id.ToLower().Contains("ptv")))
                 {
                     SetTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
                     PrepForTargetsBackground = System.Windows.Media.Brushes.LightGray;
