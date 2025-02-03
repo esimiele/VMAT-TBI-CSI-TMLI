@@ -185,32 +185,32 @@ namespace TMLIAutoPlanner.Core
             return false;
         }
 
-        private bool GeneratePTVTMLI(Structure addedStructure)
+        private bool GeneratePTVTMLI(Structure ptv)
         {
             StructureSet ss = EclipseContext.GetInstance().StructureSet;
-            ContourHelper.CopyStructureOntoStructure(StructureTuningHelper.GetStructureFromId("bones_body", ss), addedStructure);
-            ContourHelper.CropStructureFromStructure(addedStructure, StructureTuningHelper.GetStructureFromId("mandible", ss), 0.0);
+            ContourHelper.CopyStructureOntoStructure(StructureTuningHelper.GetStructureFromId("bones_body", ss), ptv);
+            ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("mandible", ss), 0.0);
             List<Structure> structures = new List<Structure>
             {
                 StructureTuningHelper.GetStructureFromId("lymphnodes", ss),
                 StructureTuningHelper.GetStructureFromId("spinalcanal", ss),
                 StructureTuningHelper.GetStructureFromId("spleen", ss)
             };
-            ContourHelper.ContourUnion(structures, addedStructure);
-            addedStructure.SegmentVolume = addedStructure.Margin(5.0);
+            ContourHelper.ContourUnion(structures, ptv);
+            ptv.SegmentVolume = ptv.Margin(5.0);
 
-            ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("bones_extrem", ss).Margin(10.0), addedStructure, 0.0);
-            ContourHelper.CropStructureFromStructure(addedStructure, StructureTuningHelper.GetStructureFromId("lungs", ss).Margin(5.0), 0.0);
-            ContourHelper.CropStructureFromStructure(addedStructure, StructureTuningHelper.GetStructureFromId("kidneys", ss).Margin(5.0), 0.0);
-            ContourHelper.CropStructureFromStructure(addedStructure, StructureTuningHelper.GetStructureFromId("esophagus", ss).Margin(5.0), 0.0);
+            ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("bones_extrem", ss).Margin(10.0), ptv, 0.0);
+            ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("lungs", ss).Margin(5.0), 0.0);
+            ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("kidneys", ss).Margin(5.0), 0.0);
+            ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("esophagus", ss).Margin(5.0), 0.0);
             return false;
         }
 
-        private bool GeneratePTV1200(Structure addedStructure)
+        private bool GeneratePTV1200(Structure ptv)
         {
             StructureSet ss = EclipseContext.GetInstance().StructureSet;
-            ContourHelper.CopyStructureOntoStructure(StructureTuningHelper.GetStructureFromId("brain", ss), addedStructure);
-            ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("liver", ss), addedStructure, 5.0);
+            ContourHelper.CopyStructureOntoStructure(StructureTuningHelper.GetStructureFromId("brain", ss), ptv);
+            ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("liver", ss), ptv, 5.0);
             return false;
         }
 
