@@ -34,15 +34,13 @@ namespace TMLIAutoPlanner.Core
         private List<TSRingStructureModel> _requestedRings;
         private List<string> _requiredStructuresForTarget = new List<string>
         {
-            "bones_body",
+            "bones_trunk",
             "mandible",
             "lymphnodes",
             "spinalcanal",
             "spleen",
             "bones_extern",
-            "lungs",
-            "kidneys",
-            "esophagus"
+            "ribs",
         };
         #endregion
 
@@ -188,8 +186,8 @@ namespace TMLIAutoPlanner.Core
         private bool GeneratePTVTMLI(Structure ptv)
         {
             StructureSet ss = EclipseContext.GetInstance().StructureSet;
-            ContourHelper.CopyStructureOntoStructure(StructureTuningHelper.GetStructureFromId("bones_body", ss), ptv);
-            ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("mandible", ss), 0.0);
+            ContourHelper.CopyStructureOntoStructure(StructureTuningHelper.GetStructureFromId("bones_trunk", ss), ptv);
+            ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("bones_face", ss), 0.0);
             List<Structure> structures = new List<Structure>
             {
                 StructureTuningHelper.GetStructureFromId("lymphnodes", ss),
@@ -199,10 +197,11 @@ namespace TMLIAutoPlanner.Core
             ContourHelper.ContourUnion(structures, ptv);
             ptv.SegmentVolume = ptv.Margin(5.0);
 
+            ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("ribs", ss).Margin(5.0), ptv, 0.0);
             ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("bones_extrem", ss).Margin(10.0), ptv, 0.0);
-            ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("lungs", ss).Margin(5.0), 0.0);
-            ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("kidneys", ss).Margin(5.0), 0.0);
-            ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("esophagus", ss).Margin(5.0), 0.0);
+            //ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("lungs", ss).Margin(5.0), 0.0);
+            //ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("kidneys", ss).Margin(5.0), 0.0);
+            //ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("esophagus", ss).Margin(5.0), 0.0);
             return false;
         }
 
