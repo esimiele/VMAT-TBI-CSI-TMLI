@@ -18,6 +18,7 @@ namespace AutoPlannerLauncher
         private void Application_Startup(object sender, StartupEventArgs e)
         {
             LauncherMainView mv = new LauncherMainView { DataContext = new LauncherMainViewModel(e.Args) };
+            mv.ShowDialog();
         }
     }
 }
