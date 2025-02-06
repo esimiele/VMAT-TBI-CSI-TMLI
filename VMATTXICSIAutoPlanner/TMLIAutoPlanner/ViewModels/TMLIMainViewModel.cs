@@ -63,6 +63,8 @@ namespace TMLIAutoPlanner.ViewModels
 
         public void Initialize()
         {
+            try { VMS.TPS.Common.Model.API.Application app = VMS.TPS.Common.Model.API.Application.CreateApplication(); }
+            catch (Exception e) { MessageBox.Show(e.Message); }
             _generalConfigurationFile = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\configuration\\VMAT_TMLI_config.ini";
             LoadScriptConfigurationSettings(_generalConfigurationFile);
             LoadPlanTemplates();

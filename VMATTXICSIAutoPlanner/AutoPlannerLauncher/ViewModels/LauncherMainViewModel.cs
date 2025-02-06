@@ -3,16 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Prism.Mvvm;
 using System.Windows;
-using Prism.Commands;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using System.Windows.Input;
 
 namespace AutoPlannerLauncher.ViewModels
 {
-    internal class LauncherMainViewModel : BindableBase
+    public class LauncherMainViewModel : ObservableObject
     {
         #region properties
         private Visibility _launchOptimizationLoopVisible;
@@ -25,37 +26,48 @@ namespace AutoPlannerLauncher.ViewModels
         #endregion
 
         #region commands
-        public DelegateCommand LaunchVMATTBICommand { get; set; }
-        public DelegateCommand LaunchVMATCSICommand { get; set; }
-        public DelegateCommand LaunchVMATTMLICommand { get; set; }
+        public ICommand LaunchVMATTBICommand { get; set; }
+        public ICommand LaunchVMATCSICommand { get; set; }
+        public ICommand LaunchVMATTMLICommand { get; set; }
         #endregion
 
         #region fields
         private string[] _arguments;
         #endregion
 
-        internal LauncherMainViewModel(string[] args) 
-        { 
-            _arguments = args;
-            if (bool.TryParse(args[1], out bool showLauncher))
-            {
-                if(showLauncher) LaunchOptimizationLoopVisible = Visibility.Visible;
-            }
-            LaunchVMATTBICommand = new DelegateCommand(LaunchVMATTBI);
-            LaunchVMATCSICommand = new DelegateCommand(LaunchVMATCSI);
-            LaunchVMATTMLICommand = new DelegateCommand(LaunchVMATTMLI);
-        }
-
-        public void LaunchVMATTBI()
+        internal LauncherMainViewModel(string[] args)
         {
-            LaunchExe("TBIAutoPlanner");
+            _arguments = args;
+            LaunchOptimizationLoopVisible = Visibility.Visible;
+            //if (bool.TryParse(args[1], out bool showLauncher))
+            //{
+            //    if(showLauncher) LaunchOptimizationLoopVisible = Visibility.Visible;
+            //}
+            LaunchVMATTBICommand = new RelayCommand(LaunchVMATTBI);
+            LaunchVMATCSICommand = new RelayCommand(LaunchVMATCSI);
+            LaunchVMATTMLICommand = new RelayCommand(LaunchVMATTMLI);
+
         }
 
+        private void LaunchVMATTBI()
+        {
+            try 
+            { 
+                VMS.TPS.Common.Model.API.Application app = VMS.TPS.Common.Model.API.Application.CreateApplication(); 
+                MessageBox.Show($"{app.PatientSummaries.First().Id}");
+            }
+            catch (Exception e) { MessageBox.Show(e.Message); }
+
+            //LaunchExe("TBIAutoPlanner");
+        }
+
+        [RelayCommand]
         public void LaunchVMATCSI()
         {
             LaunchExe("CSIAutoPlanner");
         }
 
+        [RelayCommand]
         public void LaunchVMATTMLI()
         {
             LaunchExe("TMLIAutoPlanner");
@@ -83,7 +95,7 @@ namespace AutoPlannerLauncher.ViewModels
         private string SerializeInputArguments()
         {
             StringBuilder sb = new StringBuilder();
-            for(int i = 2; i < _arguments.Length; i++)
+            for (int i = 2; i < _arguments.Length; i++)
             {
                 sb.Append($"{_arguments[i]} ");
             }
