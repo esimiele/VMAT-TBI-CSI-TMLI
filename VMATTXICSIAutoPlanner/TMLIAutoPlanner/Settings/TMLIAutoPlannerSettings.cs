@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using AutoPlannerHelpers.Models;
+using System.Collections.Generic;
 using VMS.TPS.Common.Model.Types;
 
 namespace TMLIAutoPlanner.Settings
@@ -12,7 +13,7 @@ namespace TMLIAutoPlanner.Settings
         internal static double ContourFieldOverlapMarginInCM { get; set; } = 1.0;
         internal static List<string> AvailableLinacs { get; set; } = new List<string>();
         internal static List<string> AvailableEnergies { get; set; } = new List<string>();
-        internal static List<int> BeamsPerIsocenter { get; set; } = new List<int> { 4, 3, 3, 2, 2, 2, 2 };
+        internal static List<int> BeamsPerIsocenter { get; set; } = new List<int> { 4, 4, 4, 4, 2, 2, 2 };
         internal static List<double> CollimatorRotations { get; set; } = new List<double> { 3.0, 357.0, 90.0, 90.0 };
         internal static List<VRect<double>> JawPositions { get; set; } = new List<VRect<double>>
         {
@@ -30,5 +31,7 @@ namespace TMLIAutoPlanner.Settings
         internal static double MaxFieldYExtent = 400.0; //in mm
         internal static double MinFieldOverlap = 20.0; //in mm
         internal static bool AllBeamsVMAT = false;
+        internal static ImportExportDataModel ImportExportData { get; set; } = new ImportExportDataModel();
+        internal static List<RequestedTSStructureModel> RequestedPreliminaryTargets { get; set; } = new List<RequestedTSStructureModel> { };
     }
 }

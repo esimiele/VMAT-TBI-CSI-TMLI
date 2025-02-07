@@ -99,6 +99,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Core\GeneratePreliminaryTargets_TMLI.cs" />
     <Compile Include="Settings\TMLIAutoPlannerSettings.cs" />
     <Compile Include="ViewModels\TMLIMainViewModel.cs" />
     <Compile Include="Views\TMLIMainView.xaml.cs">

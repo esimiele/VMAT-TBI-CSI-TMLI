@@ -22,17 +22,34 @@ using TMLIAutoPlanner.Core;
 using AutoPlannerHelpers.BaseViewModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Windows.Input;
+using AutoPlannerHelpers.Enums;
 
 namespace TMLIAutoPlanner.ViewModels
 {
     public class TMLIMainViewModel : BaseViewModel
     {
         #region properties
+        private System.Windows.Media.SolidColorBrush _prepForTargetsBackground;
+        private System.Windows.Media.SolidColorBrush _setTargetsTabBackground;
+
+        public System.Windows.Media.SolidColorBrush PrepForTargetsBackground
+        {
+            get { return _prepForTargetsBackground; }
+            set { SetProperty(ref _prepForTargetsBackground, value); }
+        }
+
+        public System.Windows.Media.SolidColorBrush SetTargetsTabBackground
+        {
+            get { return _setTargetsTabBackground; }
+            set { SetProperty(ref _setTargetsTabBackground, value); }
+        }
         #endregion
 
         #region view objects
         private CTStitcherViewModel _stitcherViewModel;
         private object _stitchCT;
+        private PrepForTargetsViewModel _prepForTargetsVM;
+        private object _prepForTargets;
         private RingGenerationViewModel _ringGenerationVM;
         private object _ringGeneration;
 
@@ -40,6 +57,12 @@ namespace TMLIAutoPlanner.ViewModels
         {
             get { return _stitchCT; }
             set { SetProperty(ref _stitchCT, value); }
+        }
+
+        public object PrepForTargets
+        {
+            get { return _prepForTargets; }
+            set { SetProperty(ref _prepForTargets, value); }
         }
 
         public object RingGeneration
@@ -53,6 +76,7 @@ namespace TMLIAutoPlanner.ViewModels
         public ICommand QuickStartGuideCommand { get; set; }
         public ICommand HelpGuideCommand { get; set; }
         public ICommand PTVMarginInfoCommand { get; set; }
+        private ICommand NotifyPrepForTargetsCommand;
         #endregion
 
         public TMLIMainViewModel(string[] args) :
@@ -63,14 +87,18 @@ namespace TMLIAutoPlanner.ViewModels
 
         public void Initialize()
         {
-            try { VMS.TPS.Common.Model.API.Application app = VMS.TPS.Common.Model.API.Application.CreateApplication(); }
-            catch (Exception e) { MessageBox.Show(e.Message); }
+            //try { VMS.TPS.Common.Model.API.Application app = VMS.TPS.Common.Model.API.Application.CreateApplication(); }
+            //catch (Exception e) { MessageBox.Show(e.Message); }
             _generalConfigurationFile = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\configuration\\VMAT_TMLI_config.ini";
             LoadScriptConfigurationSettings(_generalConfigurationFile);
             LoadPlanTemplates();
 
             _stitcherViewModel = new CTStitcherViewModel();
             StitchCT = new CTStitcherView { DataContext = _stitcherViewModel };
+
+            NotifyPrepForTargetsCommand = new RelayCommand(PreparePreliminaryTargets);
+            _prepForTargetsVM = new PrepForTargetsViewModel(NotifyPrepForTargetsCommand, TMLIAutoPlannerSettings.RequestedPreliminaryTargets);
+            PrepForTargets = new PrepForTargetsView { DataContext = _prepForTargetsVM };
 
             _ringGenerationVM = new RingGenerationViewModel(_structureIdsPostUnion);
             RingGeneration = new RingGenerationView { DataContext = _ringGenerationVM };
@@ -84,6 +112,24 @@ namespace TMLIAutoPlanner.ViewModels
             //needs to be initialized after the plan templates are loaded
             ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
             SpecifyTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
+            if (EclipseContext.GetInstance().IsInitialized && ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
+            {
+                if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => x.ApprovalHistory.Last().ApprovalStatus == StructureApprovalStatus.Approved && x.Id.ToLower().Contains("ptv")))
+                {
+                    SetTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
+                    PrepForTargetsBackground = System.Windows.Media.Brushes.LightGray;
+                }
+                else
+                {
+                    PrepForTargetsBackground = System.Windows.Media.Brushes.PaleVioletRed;
+                    SetTargetsTabBackground = System.Windows.Media.Brushes.LightGray;
+                }
+            }
+            else
+            {
+                PrepForTargetsBackground = System.Windows.Media.Brushes.LightGray;
+                SetTargetsTabBackground = System.Windows.Media.Brushes.LightGray;
+            }
         }
 
         #region information and help guides
@@ -104,6 +150,24 @@ namespace TMLIAutoPlanner.ViewModels
         #endregion
 
         #region specify targets
+        private void PreparePreliminaryTargets()
+        {
+            MessageBox.Show("Hello");
+            if (!_prepForTargetsVM.RequestedTuningStructures.Any()) return;
+            List<RequestedTSManipulationModel> targetCropOperations = new List<RequestedTSManipulationModel> { };
+            if (!ReferenceEquals(_selectedTemplate, null)) targetCropOperations.AddRange(_selectedTemplate.TSManipulations);
+            GeneratePreliminaryTargets_TMLI generateTargets = new GeneratePreliminaryTargets_TMLI(_prepForTargetsVM.RequestedTuningStructures.ToList(), 
+                                                                                                  targetCropOperations);
+            EclipseContext.GetInstance().Patient.BeginModifications();
+            bool result = generateTargets.Execute();
+            //grab the log output regardless if it passes or fails
+            Logger.GetInstance().AppendLogOutput("Preliminary target generation output:", generateTargets.GetLogOutput());
+            Logger.GetInstance().OpType = ScriptOperationType.GeneratePrelimTargets;
+            if (result) return;
+            Logger.GetInstance().AddedPrelimTargetsStructures = generateTargets.GetAddedTargetStructures();
+            PrepForTargetsBackground = System.Windows.Media.Brushes.ForestGreen;
+            MessageBox.Show("Structure set is prepared and ready for physician to review targets!");
+        }
         protected override bool VerifyTargetsIntegrity(List<PlanTargetsModel> parsedTargets)
         {
             //verify selected targets are APPROVED

@@ -102,7 +102,6 @@
     </Compile>
     <Compile Include="Core\GeneratePlansAndPlaceBeams_TBI.cs" />
     <Compile Include="Core\PreparePlansForTreatment_TBI.cs" />
-    <Compile Include="Core\tester.cs" />
     <Compile Include="Core\TSGenerationManipulation_TBI.cs" />
     <Page Include="Views\TBIMainView.xaml">
       <Generator>MSBuild:Compile</Generator>

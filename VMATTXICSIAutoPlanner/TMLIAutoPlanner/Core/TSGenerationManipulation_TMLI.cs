@@ -32,16 +32,7 @@ namespace TMLIAutoPlanner.Core
         private List<PrescriptionModel> prescriptions;
         private List<RequestedTSStructureModel> TS_structures;
         private List<TSRingStructureModel> _requestedRings;
-        private List<string> _requiredStructuresForTarget = new List<string>
-        {
-            "bones_trunk",
-            "mandible",
-            "lymphnodes",
-            "spinalcanal",
-            "spleen",
-            "bones_extern",
-            "ribs",
-        };
+        
         #endregion
 
         internal TSGenerationManipulation_TMLI(List<RequestedTSStructureModel> ts, 
@@ -101,15 +92,7 @@ namespace TMLIAutoPlanner.Core
             if (CheckBodyExtentAndMatchline()) return true;
             ProvideUIUpdate(100 * ++counter / calcItems, "Body structure exists and matchline appropriate");
 
-            foreach (string itr in _requiredStructuresForTarget)
-            {
-                if (!StructureTuningHelper.DoesStructureExistInSS(itr, EclipseContext.GetInstance().StructureSet, true))
-                {
-                    ProvideUIUpdate($"Error! {itr} structure is either empty or null! Fix and try again!", true);
-                    return true;
-                }
-            }
-            ProvideUIUpdate(100 * ++counter / calcItems, "All structures necessary for target creation present and not empty");
+            ProvideUIUpdate(100, "Preliminary checks complete!");
             ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
@@ -168,48 +151,11 @@ namespace TMLIAutoPlanner.Core
                 ProvideUIUpdate($"Contouring TS: {itr}");
                 Structure addedStructure = StructureTuningHelper.GetStructureFromId(itr, EclipseContext.GetInstance().StructureSet);
                 ProvideUIUpdate($"Retrieved structure: {addedStructure.Id}");
-                if (itr.ToLower().Contains("ptv_tmli"))
-                {
-                    if (GeneratePTVTMLI(addedStructure)) return true;
-                }
-                else if (itr.ToLower().Contains("ptv_1200"))
-                {
-                    if (GeneratePTV1200(addedStructure)) return true;
-                }
+                //logic goes here
+                //
                 ProvideUIUpdate(100 * ++counter / calcItems);
             }
-
             ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
-            return false;
-        }
-
-        private bool GeneratePTVTMLI(Structure ptv)
-        {
-            StructureSet ss = EclipseContext.GetInstance().StructureSet;
-            ContourHelper.CopyStructureOntoStructure(StructureTuningHelper.GetStructureFromId("bones_trunk", ss), ptv);
-            ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("bones_face", ss), 0.0);
-            List<Structure> structures = new List<Structure>
-            {
-                StructureTuningHelper.GetStructureFromId("lymphnodes", ss),
-                StructureTuningHelper.GetStructureFromId("spinalcanal", ss),
-                StructureTuningHelper.GetStructureFromId("spleen", ss)
-            };
-            ContourHelper.ContourUnion(structures, ptv);
-            ptv.SegmentVolume = ptv.Margin(5.0);
-
-            ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("ribs", ss).Margin(5.0), ptv, 0.0);
-            ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("bones_extrem", ss).Margin(10.0), ptv, 0.0);
-            //ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("lungs", ss).Margin(5.0), 0.0);
-            //ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("kidneys", ss).Margin(5.0), 0.0);
-            //ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("esophagus", ss).Margin(5.0), 0.0);
-            return false;
-        }
-
-        private bool GeneratePTV1200(Structure ptv)
-        {
-            StructureSet ss = EclipseContext.GetInstance().StructureSet;
-            ContourHelper.CopyStructureOntoStructure(StructureTuningHelper.GetStructureFromId("brain", ss), ptv);
-            ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("liver", ss), ptv, 5.0);
             return false;
         }
 
@@ -231,7 +177,7 @@ namespace TMLIAutoPlanner.Core
                 }
                 else
                 {
-                    //target Id is not ptv_body, generate a new TSTarget
+                    //target Id is not ptv_tmli, generate a new TSTarget
                     target = GetTSTarget(itr.TargetId);
                     tmpTSTargetList.Add(new TargetModel(itr.TargetId, itr.CumulativeDoseToTarget, target.Id));
                 }

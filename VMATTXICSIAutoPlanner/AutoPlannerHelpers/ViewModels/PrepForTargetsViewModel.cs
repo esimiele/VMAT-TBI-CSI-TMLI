@@ -22,7 +22,7 @@ namespace AutoPlannerHelpers.ViewModels
         public ICommand AddDefaultTSStructuresCommand { get; set; }
         public ICommand RemoveAllTSStructuresCommand { get; set; }
         public RelayCommand<RequestedTSStructureModel> ClearRowCommand { get; set; }
-        private ICommand RunPrepForTargetsCommand { get; set; }
+        public ICommand RunPrepForTargetsCommand { get; set; }
         private ICommand _notifyMainVMExecuted;
         #endregion
 
