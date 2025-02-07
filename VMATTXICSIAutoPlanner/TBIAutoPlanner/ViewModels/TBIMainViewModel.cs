@@ -3,7 +3,6 @@ using System.Windows;
 using AutoPlannerHelpers.ViewModels;
 using AutoPlannerHelpers.Views;
 using AutoPlannerHelpers.PlanTemplateModels;
-using Prism.Commands;
 using AutoPlannerHelpers.Models;
 using System.IO;
 using System.Reflection;
@@ -21,6 +20,8 @@ using CTStitcher.Views;
 using CTStitcher.ViewModels;
 using PlanType = AutoPlannerHelpers.Enums.PlanType;
 using AutoPlannerHelpers.BaseViewModel;
+using System.Windows.Input;
+using CommunityToolkit.Mvvm.Input;
 
 namespace TBIAutoPlanner.ViewModels
 {
@@ -84,9 +85,9 @@ namespace TBIAutoPlanner.ViewModels
         #endregion
 
         #region commands
-        public DelegateCommand QuickStartGuideCommand { get; set; }
-        public DelegateCommand HelpGuideCommand { get; set; }
-        public DelegateCommand PTVMarginInfoCommand { get; set; }
+        public ICommand QuickStartGuideCommand { get; set; }
+        public ICommand HelpGuideCommand { get; set; }
+        public ICommand PTVMarginInfoCommand { get; set; }
         #endregion
 
         #region fields
@@ -117,9 +118,9 @@ namespace TBIAutoPlanner.ViewModels
             if (!TBIAutoPlannerSettings.UseFlash) FlashMarginVisible = Visibility.Hidden;
             FlashMargin = TBIAutoPlannerSettings.FlashMarginInCM;
 
-            QuickStartGuideCommand = new DelegateCommand(LaunchQuickStartGuide);
-            HelpGuideCommand = new DelegateCommand(LaunchHelpGuide);
-            PTVMarginInfoCommand = new DelegateCommand(ShowPTVMarginInfo);
+            QuickStartGuideCommand = new RelayCommand(LaunchQuickStartGuide);
+            HelpGuideCommand = new RelayCommand(LaunchHelpGuide);
+            PTVMarginInfoCommand = new RelayCommand(ShowPTVMarginInfo);
 
             //needs to be initialized after the plan templates are loaded
             ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };

@@ -13,8 +13,6 @@ using AutoPlannerHelpers.PlanTemplateModels;
 using AutoPlannerHelpers.UIHelpers;
 using System.Windows;
 using AutoPlannerHelpers.ViewModels;
-using Prism.Commands;
-using Prism.Mvvm;
 using AutoPlannerOptimizationLoop.DataContainers;
 using PlanType = AutoPlannerHelpers.Enums.PlanType;
 using AutoPlannerOptimizationLoop.Core;
@@ -25,10 +23,13 @@ using AutoPlannerOptimizationLoop.Settings;
 using AutoPlannerHelpers.Views;
 using System.Text;
 using AutoPlannerOptimizationLoop.Base;
+using CommunityToolkit.Mvvm.ComponentModel;
+using System.Windows.Input;
+using CommunityToolkit.Mvvm.Input;
 
 namespace AutoPlannerOptimizationLoop.ViewModels
 {
-    public class OptimizationLoopMainViewModel : BindableBase
+    public class OptimizationLoopMainViewModel : ObservableObject
     {
         public ObservableCollection<AutoPlanTemplateBase> PlanTemplates { get; set; }
         public ObservableCollectionPropertyNotify<PlanObjectiveModel> PlanObjectives { get; set; }
@@ -172,34 +173,34 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         #endregion
 
         #region commands
-        public DelegateCommand QuickStartCommand { get; set; }
-        public DelegateCommand DocumentationCommand { get; set; }
-        public DelegateCommand OpenPatientCommand { get; set; }
-        public DelegateCommand AddPlanObjectiveCommand { get; set; }
-        public DelegateCommand ClearPlanObjectiveListCommand { get; set; }
-        public DelegateCommand AddOptimizationConstraintCommand { get; set; }
-        public DelegateCommand GetOptConstraintsFromPlanCommand { get; set; }
-        public DelegateCommand GetOptConstraintsFromLogsCommand { get; set; }
-        public DelegateCommand ClearOptimizationConstraintListCommand { get; set; }
-        public DelegateCommand<object> ClearRowCommand { get; set; }
-        public DelegateCommand StartOptimizationCommand { get; set; }
+        public ICommand QuickStartCommand { get; set; }
+        public ICommand DocumentationCommand { get; set; }
+        public ICommand OpenPatientCommand { get; set; }
+        public ICommand AddPlanObjectiveCommand { get; set; }
+        public ICommand ClearPlanObjectiveListCommand { get; set; }
+        public ICommand AddOptimizationConstraintCommand { get; set; }
+        public ICommand GetOptConstraintsFromPlanCommand { get; set; }
+        public ICommand GetOptConstraintsFromLogsCommand { get; set; }
+        public ICommand ClearOptimizationConstraintListCommand { get; set; }
+        public RelayCommand<object> ClearRowCommand { get; set; }
+        public ICommand StartOptimizationCommand { get; set; }
         #endregion
 
         public OptimizationLoopMainViewModel(string[] args)
         {
-            QuickStartCommand = new DelegateCommand(QuickStartHelp);
-            DocumentationCommand = new DelegateCommand(ShowDocumentation);
-            AddPlanObjectiveCommand = new DelegateCommand(AddPlanObjective);
-            ClearPlanObjectiveListCommand = new DelegateCommand(ClearPlanObjectives);
-            AddOptimizationConstraintCommand = new DelegateCommand(AddOptimizationObjective);
-            GetOptConstraintsFromPlanCommand = new DelegateCommand(GetOptimizationConstraintsFromPlan);
-            GetOptConstraintsFromLogsCommand = new DelegateCommand(GetOptimizationConstraintsFromLogs);
-            ClearOptimizationConstraintListCommand = new DelegateCommand(ClearOptimizationConstraints);
+            QuickStartCommand = new RelayCommand(QuickStartHelp);
+            DocumentationCommand = new RelayCommand(ShowDocumentation);
+            AddPlanObjectiveCommand = new RelayCommand(AddPlanObjective);
+            ClearPlanObjectiveListCommand = new RelayCommand(ClearPlanObjectives);
+            AddOptimizationConstraintCommand = new RelayCommand(AddOptimizationObjective);
+            GetOptConstraintsFromPlanCommand = new RelayCommand(GetOptimizationConstraintsFromPlan);
+            GetOptConstraintsFromLogsCommand = new RelayCommand(GetOptimizationConstraintsFromLogs);
+            ClearOptimizationConstraintListCommand = new RelayCommand(ClearOptimizationConstraints);
             PlanTemplates = new ObservableCollection<AutoPlanTemplateBase> { };
             PlanObjectives = new ObservableCollectionPropertyNotify<PlanObjectiveModel> { };
             PlanOptimizationConstraints = new ObservableCollectionPropertyNotify<PlanOptimizationSetupModel> { };
-            ClearRowCommand = new DelegateCommand<object>(ClearRow);
-            StartOptimizationCommand = new DelegateCommand(StartOptimization);
+            ClearRowCommand = new RelayCommand<object>(ClearRow);
+            StartOptimizationCommand = new RelayCommand(StartOptimization);
             if (args.Any()) EclipseContextHelper.GenerateEclipseContext(args.ToList());
             Initialize();
             ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };

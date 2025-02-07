@@ -2,16 +2,17 @@
 using System.Linq;
 using System.Text;
 using System.Windows;
+using System.Windows.Input;
 using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.Helpers;
 using AutoPlannerHelpers.Logging;
 using AutoPlannerHelpers.Models;
-using Prism.Commands;
-using Prism.Mvvm;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace AutoPlannerHelpers.ViewModels 
 {
-    public class BeamPlacementViewModel : BindableBase
+    public class BeamPlacementViewModel : ObservableObject
     {
         public ObservableCollectionPropertyNotify<PlanIsocenterModel> PlanIsocenterList { get; set; }
 
@@ -82,22 +83,22 @@ namespace AutoPlannerHelpers.ViewModels
         #endregion
 
         #region commands
-        private DelegateCommand _notifyMainVMExecuted;
-        public DelegateCommand UpdateNumberOfIsocentersCommand { get; set; }
-        public DelegateCommand CreatePlansAndPlaceBeamsCommand { get; set; }
+        private ICommand _notifyMainVMExecuted;
+        public ICommand UpdateNumberOfIsocentersCommand { get; set; }
+        public ICommand CreatePlansAndPlaceBeamsCommand { get; set; }
         #endregion
 
         #region fields
         #endregion
 
-        public BeamPlacementViewModel(DelegateCommand NotifyMainVMExecuted, PlanType type)
+        public BeamPlacementViewModel(ICommand NotifyMainVMExecuted, PlanType type)
         {
             _notifyMainVMExecuted = NotifyMainVMExecuted;
             ContourOverlapMarginVisible = Visibility.Hidden;
             if (type == PlanType.VMAT_CSI) RequestedNumberOfIsosVisible = Visibility.Collapsed;
             else RequestedNumberOfIsosVisible = Visibility.Visible;
-            UpdateNumberOfIsocentersCommand = new DelegateCommand(UpdateRequestedNumberOfVMATIsocenters);
-            CreatePlansAndPlaceBeamsCommand = new DelegateCommand(CreatePlansAndPlaceBeams);
+            UpdateNumberOfIsocentersCommand = new RelayCommand(UpdateRequestedNumberOfVMATIsocenters);
+            CreatePlansAndPlaceBeamsCommand = new RelayCommand(CreatePlansAndPlaceBeams);
             _requestedNumberOfVMATIsos = 0;
         }
 
@@ -158,7 +159,7 @@ namespace AutoPlannerHelpers.ViewModels
                 }
             }
             MessageBox.Show( sb.ToString() );
-            _notifyMainVMExecuted.Execute();
+            _notifyMainVMExecuted.Execute(null);
         }
     }
 }

@@ -1,14 +1,15 @@
 ﻿using AutoPlannerHelpers.Models;
 using AutoPlannerHelpers.PlanTemplateModels;
-using Prism.Commands;
-using Prism.Mvvm;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows;
+using System.Windows.Input;
 
 namespace AutoPlannerHelpers.ViewModels
 {
-    public class PrepForTargetsViewModel : BindableBase
+    public class PrepForTargetsViewModel : ObservableObject
     {
         public ObservableCollectionPropertyNotify<RequestedTSStructureModel> RequestedTuningStructures { get; set; }
 
@@ -17,25 +18,25 @@ namespace AutoPlannerHelpers.ViewModels
         #endregion
 
         #region commands
-        public DelegateCommand DisplayInfoCommand { get; set; }
-        public DelegateCommand AddDefaultTSStructuresCommand { get; set; }
-        public DelegateCommand RemoveAllTSStructuresCommand { get; set; }
-        public DelegateCommand<RequestedTSStructureModel> ClearRowCommand { get; set; }
-        private DelegateCommand RunPrepForTargetsCommand { get; set; }
-        private DelegateCommand _notifyMainVMExecuted;
+        public ICommand DisplayInfoCommand { get; set; }
+        public ICommand AddDefaultTSStructuresCommand { get; set; }
+        public ICommand RemoveAllTSStructuresCommand { get; set; }
+        public RelayCommand<RequestedTSStructureModel> ClearRowCommand { get; set; }
+        private ICommand RunPrepForTargetsCommand { get; set; }
+        private ICommand _notifyMainVMExecuted;
         #endregion
 
-        public PrepForTargetsViewModel(DelegateCommand notifyMainVM, List<RequestedTSStructureModel> requestedTargets)
+        public PrepForTargetsViewModel(ICommand notifyMainVM, List<RequestedTSStructureModel> requestedTargets)
         {
             _notifyMainVMExecuted = notifyMainVM;
             _originalRequestedTargets = requestedTargets;
             RequestedTuningStructures = new ObservableCollectionPropertyNotify<RequestedTSStructureModel> { };
             foreach(RequestedTSStructureModel itr in requestedTargets) RequestedTuningStructures.Add(itr);
-            DisplayInfoCommand = new DelegateCommand(DisplayPrepForTargetsInfo);
-            AddDefaultTSStructuresCommand = new DelegateCommand(AddDefaultTSStructures);
-            RemoveAllTSStructuresCommand = new DelegateCommand(RemoveAllTSStructures);
-            ClearRowCommand = new DelegateCommand<RequestedTSStructureModel>(ClearRow);
-            RunPrepForTargetsCommand = new DelegateCommand(RunPrepForTargets);
+            DisplayInfoCommand = new RelayCommand(DisplayPrepForTargetsInfo);
+            AddDefaultTSStructuresCommand = new RelayCommand(AddDefaultTSStructures);
+            RemoveAllTSStructuresCommand = new RelayCommand(RemoveAllTSStructures);
+            ClearRowCommand = new RelayCommand<RequestedTSStructureModel>(ClearRow);
+            RunPrepForTargetsCommand = new RelayCommand(RunPrepForTargets);
         }
 
         private void DisplayPrepForTargetsInfo()
@@ -63,7 +64,7 @@ namespace AutoPlannerHelpers.ViewModels
 
         private void RunPrepForTargets()
         {
-            _notifyMainVMExecuted.Execute();
+            _notifyMainVMExecuted.Execute(null);
         }
     }
 }

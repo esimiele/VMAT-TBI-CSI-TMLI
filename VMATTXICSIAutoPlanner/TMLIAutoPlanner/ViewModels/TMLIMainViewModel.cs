@@ -3,13 +3,11 @@ using AutoPlannerHelpers.Helpers;
 using AutoPlannerHelpers.Logging;
 using AutoPlannerHelpers.Models;
 using AutoPlannerHelpers.PlanTemplateModels;
-using AutoPlannerHelpers.Prompts;
 using AutoPlannerHelpers.ViewModels;
 using AutoPlannerHelpers.Views;
 using CTStitcher.ViewModels;
 using CTStitcher.Views;
 using TMLIAutoPlanner.Settings;
-using Prism.Commands;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,6 +20,8 @@ using AutoPlannerHelpers.UIHelpers;
 using System.Reflection;
 using TMLIAutoPlanner.Core;
 using AutoPlannerHelpers.BaseViewModel;
+using CommunityToolkit.Mvvm.Input;
+using System.Windows.Input;
 
 namespace TMLIAutoPlanner.ViewModels
 {
@@ -50,9 +50,9 @@ namespace TMLIAutoPlanner.ViewModels
         #endregion
 
         #region commands
-        public DelegateCommand QuickStartGuideCommand { get; set; }
-        public DelegateCommand HelpGuideCommand { get; set; }
-        public DelegateCommand PTVMarginInfoCommand { get; set; }
+        public ICommand QuickStartGuideCommand { get; set; }
+        public ICommand HelpGuideCommand { get; set; }
+        public ICommand PTVMarginInfoCommand { get; set; }
         #endregion
 
         public TMLIMainViewModel(string[] args) :
@@ -77,9 +77,9 @@ namespace TMLIAutoPlanner.ViewModels
 
             if (TMLIAutoPlannerSettings.AllBeamsVMAT) _beamPlacementVM.HideRequestedNumberOfIsos();
             
-            QuickStartGuideCommand = new DelegateCommand(LaunchQuickStartGuide);
-            HelpGuideCommand = new DelegateCommand(LaunchHelpGuide);
-            PTVMarginInfoCommand = new DelegateCommand(ShowPTVMarginInfo);
+            QuickStartGuideCommand = new RelayCommand(LaunchQuickStartGuide);
+            HelpGuideCommand = new RelayCommand(LaunchHelpGuide);
+            PTVMarginInfoCommand = new RelayCommand(ShowPTVMarginInfo);
 
             //needs to be initialized after the plan templates are loaded
             ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };

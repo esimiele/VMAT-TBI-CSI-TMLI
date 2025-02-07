@@ -5,7 +5,6 @@ using System.Text;
 using AutoPlannerHelpers.ViewModels;
 using AutoPlannerHelpers.Views;
 using AutoPlannerHelpers.Models;
-using Prism.Commands;
 using CSIAutoPlanner.Core;
 using AutoPlannerHelpers.Context;
 using CSIAutoPlanner.Settings;
@@ -21,6 +20,8 @@ using AutoPlannerHelpers.UIHelpers;
 using PlanType = AutoPlannerHelpers.Enums.PlanType;
 using AutoPlannerHelpers.EnumTypeHelpers;
 using AutoPlannerHelpers.BaseViewModel;
+using CommunityToolkit.Mvvm.Input;
+using System.Windows.Input;
 
 namespace CSIAutoPlanner.ViewModels
 {
@@ -100,10 +101,10 @@ namespace CSIAutoPlanner.ViewModels
         #endregion
 
         #region commands
-        public DelegateCommand QuickStartGuideCommand { get; set; }
-        public DelegateCommand HelpGuideCommand { get; set; }
-        private DelegateCommand NotifyExportCTCommand;
-        private DelegateCommand NotifyPrepForTargetsCommand;
+        public ICommand QuickStartGuideCommand { get; set; }
+        public ICommand HelpGuideCommand { get; set; }
+        private ICommand NotifyExportCTCommand;
+        private ICommand NotifyPrepForTargetsCommand;
         #endregion
 
         public CSIMainViewModel(string[] args) :
@@ -124,11 +125,11 @@ namespace CSIAutoPlanner.ViewModels
                 new ExportCTModel("2", "CT 2", 200, "2019-01-01"),
                 new ExportCTModel("3", "CT 3", 300, "2020-10-10"),
             };
-            NotifyExportCTCommand = new DelegateCommand(ExportCTImage);
+            NotifyExportCTCommand = new RelayCommand(ExportCTImage);
             _ctExportViewModel = new CTExportViewModel(models, NotifyExportCTCommand);
             ExportCT = new CTExportView { DataContext = _ctExportViewModel };
 
-            NotifyPrepForTargetsCommand = new DelegateCommand(PreparePreliminaryTargets);
+            NotifyPrepForTargetsCommand = new RelayCommand(PreparePreliminaryTargets);
             _prepForTargetsVM = new PrepForTargetsViewModel(NotifyPrepForTargetsCommand, CSIAutoPlannerSettings.RequestedPreliminaryTargets);
             PrepForTargets = new PrepForTargetsView { DataContext = _prepForTargetsVM };
 
@@ -138,8 +139,8 @@ namespace CSIAutoPlanner.ViewModels
             _structureCropOverlapVM = new StructureCropOverlapViewModel(_structureIdsPostUnion);
             StructureCropOverlap = new StructureCropOverlapView { DataContext = _structureCropOverlapVM };
 
-            QuickStartGuideCommand = new DelegateCommand(LaunchQuickStartGuide);
-            HelpGuideCommand = new DelegateCommand(LaunchHelpGuide);
+            QuickStartGuideCommand = new RelayCommand(LaunchQuickStartGuide);
+            HelpGuideCommand = new RelayCommand(LaunchHelpGuide);
 
             //needs to be initialized after the plan templates are loaded
             ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };

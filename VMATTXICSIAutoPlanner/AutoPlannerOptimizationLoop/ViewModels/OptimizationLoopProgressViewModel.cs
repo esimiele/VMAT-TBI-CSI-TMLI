@@ -1,6 +1,5 @@
 ﻿using AutoPlannerOptimizationLoop.Helpers;
 using AutoPlannerOptimizationLoop.Views;
-using Prism.Mvvm;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -8,12 +7,14 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
 using AutoPlannerOptimizationLoop.Enums;
-using Prism.Commands;
 using AutoPlannerHelpers.Helpers;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using System.Windows.Input;
 
 namespace AutoPlannerOptimizationLoop.ViewModels
 {
-    public abstract class OptimizationLoopProgressViewModel : BindableBase
+    public abstract class OptimizationLoopProgressViewModel : ObservableObject
     {
         #region properties
         private string _progressInfo;
@@ -85,8 +86,8 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         #endregion
 
         #region commands
-        public DelegateCommand WindowClosingCommand { get; set; }
-        public DelegateCommand AbortRunCommand { get; set; }
+        public ICommand WindowClosingCommand { get; set; }
+        public ICommand AbortRunCommand { get; set; }
         #endregion
 
         private bool isFinished;
@@ -103,8 +104,8 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         public OptimizationLoopProgressViewModel()
         {
             RunStatusBackground = Brushes.White;
-            WindowClosingCommand = new DelegateCommand(WindowClosing);
-            AbortRunCommand = new DelegateCommand(AbortRun);
+            WindowClosingCommand = new RelayCommand(WindowClosing);
+            AbortRunCommand = new RelayCommand(AbortRun);
         }
 
         /// <summary>

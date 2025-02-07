@@ -1,13 +1,14 @@
 ﻿using AutoPlannerHelpers.Models;
-using Prism.Commands;
 using System.Text;
 using System.Windows;
-using Prism.Mvvm;
 using AutoPlannerHelpers.PlanTemplateModels;
+using CommunityToolkit.Mvvm.ComponentModel;
+using System.Windows.Input;
+using CommunityToolkit.Mvvm.Input;
 
 namespace AutoPlannerHelpers.ViewModels
 {
-    public class TSGenerationViewModel : BindableBase
+    public class TSGenerationViewModel : ObservableObject
     {
         public ObservableCollectionPropertyNotify<RequestedTSStructureModel> RequestedTuningStructures { get; set; }
 
@@ -16,19 +17,19 @@ namespace AutoPlannerHelpers.ViewModels
         #endregion
 
         #region commands
-        public DelegateCommand DisplayInfoCommand { get; set; }
-        public DelegateCommand AddDefaultTSStructuresCommand { get; set; }
-        public DelegateCommand RemoveAllTSStructuresCommand { get; set; }
-        public DelegateCommand<RequestedTSStructureModel> ClearRowCommand { get; set; }
+        public ICommand DisplayInfoCommand { get; set; }
+        public ICommand AddDefaultTSStructuresCommand { get; set; }
+        public ICommand RemoveAllTSStructuresCommand { get; set; }
+        public RelayCommand<RequestedTSStructureModel> ClearRowCommand { get; set; }
         #endregion
 
         public TSGenerationViewModel()
         {
             RequestedTuningStructures = new ObservableCollectionPropertyNotify<RequestedTSStructureModel> { };
-            DisplayInfoCommand = new DelegateCommand(DisplayTSGenerationInfo);
-            AddDefaultTSStructuresCommand = new DelegateCommand(AddDefaultTSStructures);
-            RemoveAllTSStructuresCommand = new DelegateCommand(RemoveAllTSStructures);
-            ClearRowCommand = new DelegateCommand<RequestedTSStructureModel>(ClearRow);
+            DisplayInfoCommand = new RelayCommand(DisplayTSGenerationInfo);
+            AddDefaultTSStructuresCommand = new RelayCommand(AddDefaultTSStructures);
+            RemoveAllTSStructuresCommand = new RelayCommand(RemoveAllTSStructures);
+            ClearRowCommand = new RelayCommand<RequestedTSStructureModel>(ClearRow);
         }
 
         private void DisplayTSGenerationInfo()

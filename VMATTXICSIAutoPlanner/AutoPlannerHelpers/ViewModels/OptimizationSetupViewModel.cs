@@ -5,19 +5,20 @@ using AutoPlannerHelpers.Logging;
 using AutoPlannerHelpers.Models;
 using AutoPlannerHelpers.PlanTemplateModels;
 using AutoPlannerHelpers.Prompts;
-using Prism.Commands;
-using Prism.Mvvm;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 using VMS.TPS.Common.Model.API;
 
 namespace AutoPlannerHelpers.ViewModels
 {
-    public class OptimizationSetupViewModel : BindableBase
+    public class OptimizationSetupViewModel : ObservableObject
     {
         public ObservableCollectionPropertyNotify<PlanOptimizationSetupModel> PlanOptimizationConstraints { get; set; }
 
@@ -37,21 +38,21 @@ namespace AutoPlannerHelpers.ViewModels
         #endregion
 
         #region commands
-        private DelegateCommand _notifyMainVMExecuted;
-        public DelegateCommand AddOptimizationConstraintCommand { get; set; }
-        public DelegateCommand AddDefaultOptimizationConstraintsCommand { get; set; }
-        public DelegateCommand ClearOptimizationConstraintListCommand { get; set; }
-        public DelegateCommand<OptimizationConstraintModel> ClearRowCommand { get; set; }
-        public DelegateCommand AssignOptimizationConstraintsCommand { get; set; }
+        private ICommand _notifyMainVMExecuted;
+        public ICommand AddOptimizationConstraintCommand { get; set; }
+        public ICommand AddDefaultOptimizationConstraintsCommand { get; set; }
+        public ICommand ClearOptimizationConstraintListCommand { get; set; }
+        public RelayCommand<OptimizationConstraintModel> ClearRowCommand { get; set; }
+        public ICommand AssignOptimizationConstraintsCommand { get; set; }
         #endregion
 
-        public OptimizationSetupViewModel(List<string> sIds, DelegateCommand notifyMainVMExecuted, PlanType planType)
+        public OptimizationSetupViewModel(List<string> sIds, ICommand notifyMainVMExecuted, PlanType planType)
         {
-            AddOptimizationConstraintCommand = new DelegateCommand(AddOptimizationObjective);
-            AddDefaultOptimizationConstraintsCommand = new DelegateCommand(AddDefaultOptimizationConstraints);
-            ClearOptimizationConstraintListCommand = new DelegateCommand(ClearOptimizationConstraints);
-            ClearRowCommand = new DelegateCommand<OptimizationConstraintModel>(ClearRow);
-            AssignOptimizationConstraintsCommand = new DelegateCommand(AssignOptimizationConstraints);
+            AddOptimizationConstraintCommand = new RelayCommand(AddOptimizationObjective);
+            AddDefaultOptimizationConstraintsCommand = new RelayCommand(AddDefaultOptimizationConstraints);
+            ClearOptimizationConstraintListCommand = new RelayCommand(ClearOptimizationConstraints);
+            ClearRowCommand = new RelayCommand<OptimizationConstraintModel>(ClearRow);
+            AssignOptimizationConstraintsCommand = new RelayCommand(AssignOptimizationConstraints);
             if(sIds.Any()) StructureIds = new List<string>(sIds);
             else StructureIds = new List<string> { "1", "2", "3"};
             PlanOptimizationConstraints = new ObservableCollectionPropertyNotify<PlanOptimizationSetupModel> { };
@@ -143,10 +144,9 @@ namespace AutoPlannerHelpers.ViewModels
                 string message = "Optimization objectives have been successfully set!" + Environment.NewLine + Environment.NewLine + "Please review the generated structures, placed isocenters, placed beams, and optimization parameters!";
                 MessageBox.Show(message);
                 Logger.GetInstance().OptimizationConstraints = PlanOptimizationConstraints.ToList();
-                _notifyMainVMExecuted.Execute();
+                _notifyMainVMExecuted.Execute(null);
             }
             else Logger.GetInstance().LogError("Error! No optimization constraints assigned!");
-            _notifyMainVMExecuted.Execute();
         }
     }
 }

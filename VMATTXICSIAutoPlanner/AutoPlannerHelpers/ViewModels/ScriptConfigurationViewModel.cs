@@ -1,9 +1,9 @@
-﻿using Prism.Mvvm;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System.Text;
 
 namespace AutoPlannerHelpers.ViewModels
 {
-    public class ScriptConfigurationViewModel : BindableBase
+    public class ScriptConfigurationViewModel : ObservableObject
     {
         #region properties
         private string _scriptConfig;

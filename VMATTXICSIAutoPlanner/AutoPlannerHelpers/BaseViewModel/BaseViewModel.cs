@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using System.Windows.Input;
 using AutoPlannerHelpers.Context;
 using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.Helpers;
@@ -9,12 +10,12 @@ using AutoPlannerHelpers.Models;
 using AutoPlannerHelpers.PlanTemplateModels;
 using AutoPlannerHelpers.ViewModels;
 using AutoPlannerHelpers.Views;
-using Prism.Commands;
-using Prism.Mvvm;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace AutoPlannerHelpers.BaseViewModel
 {
-    public abstract class BaseViewModel : BindableBase
+    public abstract class BaseViewModel : ObservableObject
     {
         public ObservableCollection<AutoPlanTemplateBase> PlanTemplates { get; set; }
 
@@ -158,12 +159,12 @@ namespace AutoPlannerHelpers.BaseViewModel
         #endregion
 
         #region commands
-        public DelegateCommand WindowClosingCommand { get; set; }
-        protected DelegateCommand NotifySetTargetsCommand;
-        protected DelegateCommand NotifyGenerateManipulateTuningStructuresCommand;
-        protected DelegateCommand NotifyBeamsPlacedCommand;
-        protected DelegateCommand NotifyAssignOptimizationConstraintsCommand;
-        protected DelegateCommand NotifyPreparePlanForTreatmentCommand;
+        public ICommand WindowClosingCommand { get; set; }
+        protected ICommand NotifySetTargetsCommand;
+        protected ICommand NotifyGenerateManipulateTuningStructuresCommand;
+        protected ICommand NotifyBeamsPlacedCommand;
+        protected ICommand NotifyAssignOptimizationConstraintsCommand;
+        protected ICommand NotifyPreparePlanForTreatmentCommand;
         #endregion
 
         #region fields
@@ -188,31 +189,31 @@ namespace AutoPlannerHelpers.BaseViewModel
                 _structureIdsPostUnion = new List<string> { "lung_l", "lung_r", "kidney_l", "kidney_r", "PTV^Body", "OpticChiasm", "Brainstem" };
             }
 
-            NotifySetTargetsCommand = new DelegateCommand(SetTargets);
+            NotifySetTargetsCommand = new RelayCommand(SetTargets);
             _setTargetsVM = new SetTargetsViewModel(NotifySetTargetsCommand);
             SpecifyTargets = new SpecifyTargetsView { DataContext = _setTargetsVM };
 
             _tsGenerationVM = new TSGenerationViewModel();
             TSGeneration = new TSGenerationView { DataContext = _tsGenerationVM };
 
-            NotifyGenerateManipulateTuningStructuresCommand = new DelegateCommand(PerformTSStructureGenerationManipulation);
+            NotifyGenerateManipulateTuningStructuresCommand = new RelayCommand(PerformTSStructureGenerationManipulation);
             _tsManipulationVM = new TSManipulationViewModel(NotifyGenerateManipulateTuningStructuresCommand, _structureIdsPostUnion);
             TSManipulation = new TSManipulationView { DataContext = _tsManipulationVM };
 
-            NotifyBeamsPlacedCommand = new DelegateCommand(GeneratePlansAndPlaceBeams);
+            NotifyBeamsPlacedCommand = new RelayCommand(GeneratePlansAndPlaceBeams);
             _beamPlacementVM = new BeamPlacementViewModel(NotifyBeamsPlacedCommand, type);
             BeamPlacement = new BeamPlacementView { DataContext = _beamPlacementVM };
 
-            NotifyAssignOptimizationConstraintsCommand = new DelegateCommand(AssignOptimizationConstraints);
+            NotifyAssignOptimizationConstraintsCommand = new RelayCommand(AssignOptimizationConstraints);
             _optimizationSetupVM = new OptimizationSetupViewModel(_structureIdsPostUnion, NotifyAssignOptimizationConstraintsCommand, type);
             OptimizationSetup = new OptimizationSetupView { DataContext = _optimizationSetupVM };
 
-            NotifyPreparePlanForTreatmentCommand = new DelegateCommand(PreparePlanForTreatment);
+            NotifyPreparePlanForTreatmentCommand = new RelayCommand(PreparePlanForTreatment);
             _planPrepVM = new PlanPreparationViewModel(NotifyPreparePlanForTreatmentCommand);
             PlanPreparation = new PlanPreparationView { DataContext = _planPrepVM };
 
             PlanTemplates = new ObservableCollection<AutoPlanTemplateBase>() { };
-            WindowClosingCommand = new DelegateCommand(WindowClosing);
+            WindowClosingCommand = new RelayCommand(WindowClosing);
 
             StructureTuningTabBackground = System.Windows.Media.Brushes.LightGray;
             TSManipulationTabBackground = System.Windows.Media.Brushes.LightGray;

@@ -1,14 +1,15 @@
 ﻿using AutoPlannerHelpers.Models;
 using AutoPlannerHelpers.PlanTemplateModels;
-using Prism.Commands;
-using Prism.Mvvm;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Input;
 
 namespace AutoPlannerHelpers.ViewModels
 {
-    public class RingGenerationViewModel : BindableBase
+    public class RingGenerationViewModel : ObservableObject
     {
         public ObservableCollectionPropertyNotify<TSRingStructureModel> RequestedRingStructures { get; set; }
 
@@ -24,10 +25,10 @@ namespace AutoPlannerHelpers.ViewModels
         #endregion
 
         #region commands
-        public DelegateCommand AddRingCommand { get; set; }
-        public DelegateCommand AddDefaultRingsCommand { get; set; }
-        public DelegateCommand ClearRingListCommand { get; set; }
-        public DelegateCommand<TSRingStructureModel> ClearRowCommand { get; set; }
+        public ICommand AddRingCommand { get; set; }
+        public ICommand AddDefaultRingsCommand { get; set; }
+        public ICommand ClearRingListCommand { get; set; }
+        public RelayCommand<TSRingStructureModel> ClearRowCommand { get; set; }
         #endregion
 
         #region fields
@@ -39,10 +40,10 @@ namespace AutoPlannerHelpers.ViewModels
             _originalStructureIdList = new List<string>(ids);
             StructureIdsPostUnion = new List<string>(ids);
             RequestedRingStructures = new ObservableCollectionPropertyNotify<TSRingStructureModel> { };
-            AddRingCommand = new DelegateCommand(AddRing);
-            AddDefaultRingsCommand = new DelegateCommand(AddDefaultRings);
-            ClearRingListCommand = new DelegateCommand(ClearRingList);
-            ClearRowCommand = new DelegateCommand<TSRingStructureModel>(ClearRow);
+            AddRingCommand = new RelayCommand(AddRing);
+            AddDefaultRingsCommand = new RelayCommand(AddDefaultRings);
+            ClearRingListCommand = new RelayCommand(ClearRingList);
+            ClearRowCommand = new RelayCommand<TSRingStructureModel>(ClearRow);
         }
 
         public void AutoPlanTemplateSelectionChanged(AutoPlanTemplateBase template, bool skipStructureCheck = false)

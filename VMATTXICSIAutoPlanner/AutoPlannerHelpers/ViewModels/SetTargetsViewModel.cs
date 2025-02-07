@@ -3,12 +3,13 @@ using System.Linq;
 using AutoPlannerHelpers.Models;
 using AutoPlannerHelpers.Prompts;
 using AutoPlannerHelpers.PlanTemplateModels;
-using Prism.Commands;
-using Prism.Mvvm;
+using CommunityToolkit.Mvvm.ComponentModel;
+using System.Windows.Input;
+using CommunityToolkit.Mvvm.Input;
 
 namespace AutoPlannerHelpers.ViewModels
 {
-    public class SetTargetsViewModel : BindableBase
+    public class SetTargetsViewModel : ObservableObject
     {
         public ObservableCollectionPropertyNotify<UnstructuredTargetModel> Targets { get; set; }
         public ObservableCollectionPropertyNotify<string> TargetIds { get; set; }
@@ -28,17 +29,17 @@ namespace AutoPlannerHelpers.ViewModels
         #endregion
 
         #region commands
-        public DelegateCommand AddTargetCommand { get; set; }
-        public DelegateCommand AddDefaultTargetsCommand { get; set; }
-        public DelegateCommand RemoveAllTargetsCommand { get; set; }
-        public DelegateCommand<UnstructuredTargetModel> ClearRowCommand { get; set; }
-        public DelegateCommand SetTargetsCommand { get; set; }
-        public DelegateCommand<UnstructuredTargetModel> SelectedTargetChangedCommand { get; set; }
-        public DelegateCommand<UnstructuredTargetModel> SelectedPlanChangedCommand { get; set; }
-        private DelegateCommand _notifyMainVMExecuted;
+        public RelayCommand AddTargetCommand { get; set; }
+        public ICommand AddDefaultTargetsCommand { get; set; }
+        public ICommand RemoveAllTargetsCommand { get; set; }
+        public RelayCommand<UnstructuredTargetModel> ClearRowCommand { get; set; }
+        public ICommand SetTargetsCommand { get; set; }
+        public RelayCommand<UnstructuredTargetModel> SelectedTargetChangedCommand { get; set; }
+        public RelayCommand<UnstructuredTargetModel> SelectedPlanChangedCommand { get; set; }
+        private ICommand _notifyMainVMExecuted;
         #endregion
 
-        public SetTargetsViewModel(DelegateCommand NotifyMainVMExecuted)
+        public SetTargetsViewModel(ICommand NotifyMainVMExecuted)
         {
             _notifyMainVMExecuted = NotifyMainVMExecuted;
             TargetIds = new ObservableCollectionPropertyNotify<string> { "--Add New--", "red", "green", "blue" };
@@ -48,13 +49,13 @@ namespace AutoPlannerHelpers.ViewModels
                 new UnstructuredTargetModel("1", "green", 10),
                 new UnstructuredTargetModel("2", "red", 5)
             };
-            AddTargetCommand = new DelegateCommand(AddEmptyTarget);
-            AddDefaultTargetsCommand = new DelegateCommand(AddDefaultTargets);
-            RemoveAllTargetsCommand = new DelegateCommand(RemoveAllTargets);
-            ClearRowCommand = new DelegateCommand<UnstructuredTargetModel>(ClearRow);
-            SetTargetsCommand = new DelegateCommand(SetTargets);
-            SelectedTargetChangedCommand = new DelegateCommand<UnstructuredTargetModel>(TargetIdSelectionChanged);
-            SelectedPlanChangedCommand = new DelegateCommand<UnstructuredTargetModel>(PlanIdSelectionChanged);
+            AddTargetCommand = new RelayCommand(AddEmptyTarget);
+            AddDefaultTargetsCommand = new RelayCommand(AddDefaultTargets);
+            RemoveAllTargetsCommand = new RelayCommand(RemoveAllTargets);
+            ClearRowCommand = new RelayCommand<UnstructuredTargetModel>(ClearRow);
+            SetTargetsCommand = new RelayCommand(SetTargets);
+            SelectedTargetChangedCommand = new RelayCommand<UnstructuredTargetModel>(TargetIdSelectionChanged);
+            SelectedPlanChangedCommand = new RelayCommand<UnstructuredTargetModel>(PlanIdSelectionChanged);
         }
 
         public void TargetIdSelectionChanged(UnstructuredTargetModel value)
@@ -136,7 +137,7 @@ namespace AutoPlannerHelpers.ViewModels
         public void SetTargets()
         {
             _planTargets = GroupTargetsByPlanIdAndOrderByTargetRx(Targets.ToList());
-            _notifyMainVMExecuted.Execute();
+            _notifyMainVMExecuted.Execute(null);
         }
 
         /// <summary>

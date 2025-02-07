@@ -1,5 +1,4 @@
-﻿using Prism.Mvvm;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using CTStitcher.enums;
@@ -7,7 +6,6 @@ using CTStitcher.Settings;
 using System.IO;
 using System.Reflection;
 using CTStitcher.Helpers;
-using Prism.Commands;
 using CTStitcher.ImageFormatConverters;
 using CTStitcher.Runners;
 using CTStitcher.UIHelpers;
@@ -22,10 +20,12 @@ using AutoPlannerHelpers.Logging;
 using AutoPlannerHelpers.Enums;
 using System.Windows;
 using System.Windows.Forms;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace CTStitcher.ViewModels
 {
-    public class CTStitcherViewModel : BindableBase
+    public class CTStitcherViewModel : ObservableObject
     {
         #region fields
         private bool isInitialized = false;
@@ -139,18 +139,18 @@ namespace CTStitcher.ViewModels
         #endregion
 
         #region Commands
-        public DelegateCommand ReadCTFromDICOMCommand { get; set; }
-        public DelegateCommand StitchCTsCommand { get; set; }
-        public DelegateCommand PushStitchedCTToAriaCommand { get; set; }
-        public DelegateCommand BypassStitchingAndPushToAriaCommand { get; set; }
+        public ICommand ReadCTFromDICOMCommand { get; set; }
+        public ICommand StitchCTsCommand { get; set; }
+        public ICommand PushStitchedCTToAriaCommand { get; set; }
+        public ICommand BypassStitchingAndPushToAriaCommand { get; set; }
         #endregion
 
         public CTStitcherViewModel() 
         {
-            ReadCTFromDICOMCommand = new DelegateCommand(LoadCTFromDICOM);
-            StitchCTsCommand = new DelegateCommand(StitchCTsTogether);
-            PushStitchedCTToAriaCommand = new DelegateCommand(PushStitchedCTToAria);
-            BypassStitchingAndPushToAriaCommand = new DelegateCommand(BypassStitchingAndPushStitchedCTToAria);
+            ReadCTFromDICOMCommand = new RelayCommand(LoadCTFromDICOM);
+            StitchCTsCommand = new RelayCommand(StitchCTsTogether);
+            PushStitchedCTToAriaCommand = new RelayCommand(PushStitchedCTToAria);
+            BypassStitchingAndPushToAriaCommand = new RelayCommand(BypassStitchingAndPushStitchedCTToAria);
             PushToAriaVisibility = Visibility.Hidden;
             if (EclipseContext.GetInstance().IsInitialized && EclipseContext.GetInstance().CTImages.Any()) InitializeImages(EclipseContext.GetInstance().CTImages.Select(x => x.Id).ToList());
         }

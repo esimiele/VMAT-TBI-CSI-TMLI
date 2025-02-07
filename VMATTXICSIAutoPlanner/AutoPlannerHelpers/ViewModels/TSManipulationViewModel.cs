@@ -1,13 +1,14 @@
 ﻿using AutoPlannerHelpers.Models;
 using AutoPlannerHelpers.PlanTemplateModels;
-using Prism.Commands;
-using Prism.Mvvm;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Input;
 
 namespace AutoPlannerHelpers.ViewModels
 {
-    public class TSManipulationViewModel : BindableBase
+    public class TSManipulationViewModel : ObservableObject
     {
         public ObservableCollectionPropertyNotify<RequestedTSManipulationModel> RequestedTSManipulations { get; set; }
 
@@ -25,22 +26,22 @@ namespace AutoPlannerHelpers.ViewModels
         #endregion
 
         #region commands
-        private DelegateCommand _notifyMainVMExecuted;
-        public DelegateCommand AddTSManipulationCommand { get; set; }
-        public DelegateCommand AddDefaultTSManipulationsCommand { get; set; }
-        public DelegateCommand RemoveAllTSManipulationsCommand { get; set; }
-        public DelegateCommand PerformTSGenerationManipulationCommand { get; set; }
-        public DelegateCommand<RequestedTSManipulationModel> ClearRowCommand { get; set; } 
+        private ICommand _notifyMainVMExecuted;
+        public ICommand AddTSManipulationCommand { get; set; }
+        public ICommand AddDefaultTSManipulationsCommand { get; set; }
+        public ICommand RemoveAllTSManipulationsCommand { get; set; }
+        public ICommand PerformTSGenerationManipulationCommand { get; set; }
+        public RelayCommand<RequestedTSManipulationModel> ClearRowCommand { get; set; } 
         #endregion
 
-        public TSManipulationViewModel(DelegateCommand NotifyMainVMExecuted, List<string> structureIds)
+        public TSManipulationViewModel(ICommand NotifyMainVMExecuted, List<string> structureIds)
         {
             _notifyMainVMExecuted = NotifyMainVMExecuted;
-            AddTSManipulationCommand = new DelegateCommand(AddTSManipulation);
-            AddDefaultTSManipulationsCommand = new DelegateCommand(AddDefaultTSManipulations);
-            PerformTSGenerationManipulationCommand = new DelegateCommand(PerformTSGenerationManipulation);
-            RemoveAllTSManipulationsCommand = new DelegateCommand(RemoveAllTSManipulations);
-            ClearRowCommand = new DelegateCommand<RequestedTSManipulationModel>(ClearRow);
+            AddTSManipulationCommand = new RelayCommand(AddTSManipulation);
+            AddDefaultTSManipulationsCommand = new RelayCommand(AddDefaultTSManipulations);
+            PerformTSGenerationManipulationCommand = new RelayCommand(PerformTSGenerationManipulation);
+            RemoveAllTSManipulationsCommand = new RelayCommand(RemoveAllTSManipulations);
+            ClearRowCommand = new RelayCommand<RequestedTSManipulationModel>(ClearRow);
             StructureIdsPostUnion = new List<string>(structureIds);
             RequestedTSManipulations = new ObservableCollectionPropertyNotify<RequestedTSManipulationModel> { };
         }
@@ -97,7 +98,7 @@ namespace AutoPlannerHelpers.ViewModels
 
         public void PerformTSGenerationManipulation()
         {
-            _notifyMainVMExecuted.Execute();
+            _notifyMainVMExecuted.Execute(null);
         }
     }
 }

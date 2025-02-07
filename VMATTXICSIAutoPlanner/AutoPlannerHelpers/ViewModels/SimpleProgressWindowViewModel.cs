@@ -1,22 +1,16 @@
 ﻿using AutoPlannerHelpers.Helpers;
-using AutoPlannerHelpers.Interfaces;
 using AutoPlannerHelpers.Views;
-using Prism.Commands;
-using Prism.Mvvm;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace AutoPlannerHelpers.ViewModels
 {
-    public class SimpleProgressWindowViewModel : BindableBase
+    public class SimpleProgressWindowViewModel : ObservableObject
     {
         #region properties
         private int _taskProgress;

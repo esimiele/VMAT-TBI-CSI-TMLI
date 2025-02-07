@@ -21,7 +21,6 @@ namespace AutoPlannerLauncher.Views
     {
         public LauncherMainView()
         {
-            
             InitializeComponent();
         }
     }

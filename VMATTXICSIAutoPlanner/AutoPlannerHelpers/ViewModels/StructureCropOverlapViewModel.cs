@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Input;
 using AutoPlannerHelpers.PlanTemplateModels;
-using Prism.Commands;
-using Prism.Mvvm;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace AutoPlannerHelpers.ViewModels
 {
-    public class StructureCropOverlapViewModel : BindableBase
+    public class StructureCropOverlapViewModel : ObservableObject
     {
         public ObservableCollectionPropertyNotify<string> CropOverlapStructures { get; set; }
         #region properties
@@ -23,20 +24,20 @@ namespace AutoPlannerHelpers.ViewModels
         #endregion
 
         #region commands
-        public DelegateCommand AddCropOverlapStructureCommand { get; set; }
-        public DelegateCommand AddDefaultCropOverlapStructuresCommand { get; set; }
-        public DelegateCommand ClearCropOverlapStructureListCommand { get; set; }
-        public DelegateCommand<string> RemoveCropOverlapStructureCommand { get; set; }
+        public ICommand AddCropOverlapStructureCommand { get; set; }
+        public ICommand AddDefaultCropOverlapStructuresCommand { get; set; }
+        public ICommand ClearCropOverlapStructureListCommand { get; set; }
+        public RelayCommand<string> RemoveCropOverlapStructureCommand { get; set; }
         #endregion
 
         public StructureCropOverlapViewModel(List<string> structures)
         {
             StructureIdsPostUnion = new List<string>(structures);
             CropOverlapStructures = new ObservableCollectionPropertyNotify<string> { };
-            AddCropOverlapStructureCommand = new DelegateCommand(AddCropOverlapStructure);
-            AddDefaultCropOverlapStructuresCommand = new DelegateCommand(AddDefaultCropOverlapStructures);
-            ClearCropOverlapStructureListCommand = new DelegateCommand(ClearCropOverlapStructureList);
-            RemoveCropOverlapStructureCommand = new DelegateCommand<string>(RemoveCropOverlapStructure);
+            AddCropOverlapStructureCommand = new RelayCommand(AddCropOverlapStructure);
+            AddDefaultCropOverlapStructuresCommand = new RelayCommand(AddDefaultCropOverlapStructures);
+            ClearCropOverlapStructureListCommand = new RelayCommand(ClearCropOverlapStructureList);
+            RemoveCropOverlapStructureCommand = new RelayCommand<string>(RemoveCropOverlapStructure);
         }
 
         public void AddCropOverlapStructure()

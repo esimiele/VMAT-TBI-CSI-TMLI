@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+using System.Text;
 using System.Windows.Input;
+using System.Windows;
 
 namespace AutoPlannerLauncher.ViewModels
 {
@@ -51,9 +49,9 @@ namespace AutoPlannerLauncher.ViewModels
 
         private void LaunchVMATTBI()
         {
-            try 
-            { 
-                VMS.TPS.Common.Model.API.Application app = VMS.TPS.Common.Model.API.Application.CreateApplication(); 
+            try
+            {
+                VMS.TPS.Common.Model.API.Application app = VMS.TPS.Common.Model.API.Application.CreateApplication();
                 MessageBox.Show($"{app.PatientSummaries.First().Id}");
             }
             catch (Exception e) { MessageBox.Show(e.Message); }
@@ -61,13 +59,11 @@ namespace AutoPlannerLauncher.ViewModels
             //LaunchExe("TBIAutoPlanner");
         }
 
-        [RelayCommand]
         public void LaunchVMATCSI()
         {
             LaunchExe("CSIAutoPlanner");
         }
 
-        [RelayCommand]
         public void LaunchVMATTMLI()
         {
             LaunchExe("TMLIAutoPlanner");
@@ -124,3 +120,4 @@ namespace AutoPlannerLauncher.ViewModels
         }
     }
 }
+

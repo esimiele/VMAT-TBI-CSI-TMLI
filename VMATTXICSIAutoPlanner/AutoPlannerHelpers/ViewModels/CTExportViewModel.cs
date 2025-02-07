@@ -1,13 +1,14 @@
 ﻿using AutoPlannerHelpers.Models;
 using System.Collections.Generic;
-using Prism.Mvvm;
-using Prism.Commands;
 using System.Windows;
 using System.Linq;
+using CommunityToolkit.Mvvm.ComponentModel;
+using System.Windows.Input;
+using CommunityToolkit.Mvvm.Input;
 
 namespace AutoPlannerHelpers.ViewModels
 {
-    public class CTExportViewModel :BindableBase
+    public class CTExportViewModel : ObservableObject
     {
         public ObservableCollectionPropertyNotify<ExportCTModel> CTImageList { get; set; }
         #region properties
@@ -15,24 +16,24 @@ namespace AutoPlannerHelpers.ViewModels
         #endregion
 
         #region commands
-        public DelegateCommand ExportCTCommand { get; set; }
-        public DelegateCommand ShowExportCTInfoCommand { get; set; }
-        public DelegateCommand KeyboardTestCommand { get; set; }
-        public DelegateCommand<ExportCTModel> CTImageSelectionChangedCommand { get; set; }
+        public ICommand ExportCTCommand { get; set; }
+        public ICommand ShowExportCTInfoCommand { get; set; }
+        public ICommand KeyboardTestCommand { get; set; }
+        public RelayCommand<ExportCTModel> CTImageSelectionChangedCommand { get; set; }
         #endregion
 
         #region fields
-        private DelegateCommand _notifyMainVMExportCT;
+        private ICommand _notifyMainVMExportCT;
         #endregion
 
-        public CTExportViewModel(List<ExportCTModel> ctImages, DelegateCommand notifyMainVM)
+        public CTExportViewModel(List<ExportCTModel> ctImages, ICommand notifyMainVM)
         {
             CTImageList = new ObservableCollectionPropertyNotify<ExportCTModel> { };
             _notifyMainVMExportCT = notifyMainVM;
             foreach(ExportCTModel itr in ctImages) CTImageList.Add(itr);
-            ShowExportCTInfoCommand = new DelegateCommand(ShowExportCTInfo);
-            CTImageSelectionChangedCommand = new DelegateCommand<ExportCTModel>(CTImageSelectionChanged);
-            ExportCTCommand = new DelegateCommand(ExportCT);
+            ShowExportCTInfoCommand = new RelayCommand(ShowExportCTInfo);
+            CTImageSelectionChangedCommand = new RelayCommand<ExportCTModel>(CTImageSelectionChanged);
+            ExportCTCommand = new RelayCommand(ExportCT);
         }
 
         public void ShowExportCTInfo()
@@ -56,7 +57,7 @@ namespace AutoPlannerHelpers.ViewModels
         {
             if (!CTImageList.Any(x => x.SelectedForExport)) return;
             SelectedCTImage = CTImageList.FirstOrDefault(x => x.SelectedForExport);
-            _notifyMainVMExportCT.Execute();
+            _notifyMainVMExportCT.Execute(null);
         }
     }
 }

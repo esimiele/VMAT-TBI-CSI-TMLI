@@ -3,20 +3,21 @@ using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.Helpers;
 using AutoPlannerHelpers.Logging;
 using AutoPlannerHelpers.Prompts;
-using Prism.Commands;
-using Prism.Mvvm;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 using VMS.TPS.Common.Model.API;
 using VMS.TPS.Common.Model.Types;
 
 namespace AutoPlannerHelpers.ViewModels
 {
-    public class PlanPreparationViewModel : BindableBase
+    public class PlanPreparationViewModel : ObservableObject
     {
         #region properties
         private string _planId;
@@ -99,11 +100,11 @@ namespace AutoPlannerHelpers.ViewModels
         #endregion
 
         #region commands
-        private DelegateCommand _notifyMainVMExecuted;
-        public DelegateCommand RunCommand { get; set; }
+        private ICommand _notifyMainVMExecuted;
+        public ICommand RunCommand { get; set; }
         #endregion
 
-        public PlanPreparationViewModel(DelegateCommand notifyMainVM)
+        public PlanPreparationViewModel(ICommand notifyMainVM)
         {
             _notifyMainVMExecuted = notifyMainVM;
             FieldNaming = "NO";
@@ -113,13 +114,13 @@ namespace AutoPlannerHelpers.ViewModels
             PlanSumCreated = "NO";
             MUQA = "NO";
             BackupPlan = "NO";
-            RunCommand = new DelegateCommand(PreparePlanForTreatment);
+            RunCommand = new RelayCommand(PreparePlanForTreatment);
         }
 
         private void PreparePlanForTreatment()
         {
             //logic needs to be handled by specific plan type classes
-            _notifyMainVMExecuted.Execute();
+            _notifyMainVMExecuted.Execute(null);
         }
 
         public void UpdateUIAllPrepItemsCompleted()
