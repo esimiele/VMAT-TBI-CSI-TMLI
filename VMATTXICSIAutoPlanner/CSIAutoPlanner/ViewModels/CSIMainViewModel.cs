@@ -130,7 +130,8 @@ namespace CSIAutoPlanner.ViewModels
             ExportCT = new CTExportView { DataContext = _ctExportViewModel };
 
             NotifyPrepForTargetsCommand = new RelayCommand(PreparePreliminaryTargets);
-            _prepForTargetsVM = new PrepForTargetsViewModel(NotifyPrepForTargetsCommand, CSIAutoPlannerSettings.RequestedPreliminaryTargets);
+            _prepForTargetsVM = new PrepForTargetsViewModel(NotifyPrepForTargetsCommand);
+            _prepForTargetsVM.UpdateRequestedTargetStructures(CSIAutoPlannerSettings.RequestedPreliminaryTargets);
             PrepForTargets = new PrepForTargetsView { DataContext = _prepForTargetsVM };
 
             _ringGenerationVM = new RingGenerationViewModel(_structureIdsPostUnion);
@@ -196,7 +197,7 @@ namespace CSIAutoPlanner.ViewModels
         private void PreparePreliminaryTargets()
         {
             if (!_prepForTargetsVM.RequestedTuningStructures.Any()) return;
-            GeneratePreliminaryTargets_CSI generateTargets = new GeneratePreliminaryTargets_CSI(_prepForTargetsVM.RequestedTuningStructures.ToList());
+            GeneratePreliminaryTargets_CSI generateTargets = new GeneratePreliminaryTargets_CSI(_prepForTargetsVM.RequestedTuningStructures);
             EclipseContext.GetInstance().Patient.BeginModifications();
             bool result = generateTargets.Execute();
             //grab the log output regardless if it passes or fails
@@ -235,6 +236,24 @@ namespace CSIAutoPlanner.ViewModels
             {
                 Logger.GetInstance().LogError($"Error! More than 2 plan Ids entered! This script is only configured to auto-plan two or less CSI plans!");
                 return true;
+            }
+            foreach (TargetModel target in parsedTargets.SelectMany(x =>x.Targets))
+            {
+                if (!StructureTuningHelper.DoesStructureExistInSS(target.TargetId, EclipseContext.GetInstance().StructureSet, true))
+                {
+                    Logger.GetInstance().LogError($"Error! {target.TargetId} is either NOT present in structure set or is not contoured!");
+                    return true;
+                }
+                else
+                {
+                    //structure is present and contoured
+                    StructureApprovalStatus approvalStatus = StructureTuningHelper.GetStructureFromId(target.TargetId, EclipseContext.GetInstance().StructureSet).ApprovalHistory.First().ApprovalStatus;
+                    if (approvalStatus != StructureApprovalStatus.Approved)
+                    {
+                        Logger.GetInstance().LogError($"Error! {target.TargetId} is NOT approved!" + Environment.NewLine + $"{target.TargetId} approval status: {approvalStatus}");
+                        return true;
+                    }
+                }
             }
             return false;
         }

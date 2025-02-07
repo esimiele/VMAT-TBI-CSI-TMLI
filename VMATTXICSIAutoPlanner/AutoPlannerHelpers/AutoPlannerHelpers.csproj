@@ -174,7 +174,6 @@
     <Compile Include="UIHelpers\ConfigurationUIHelper.cs" />
     <Compile Include="ViewModels\BeamPlacementViewModel.cs" />
     <Compile Include="ViewModels\CTExportViewModel.cs" />
-    <Compile Include="ViewModels\ICommand.cs" />
     <Compile Include="ViewModels\ObservableCollectionPropertyNotify.cs" />
     <Compile Include="ViewModels\OptimizationSetupViewModel.cs" />
     <Compile Include="ViewModels\PlanPreparationViewModel.cs" />

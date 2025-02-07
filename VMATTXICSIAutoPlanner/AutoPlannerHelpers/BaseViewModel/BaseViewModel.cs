@@ -42,7 +42,7 @@ namespace AutoPlannerHelpers.BaseViewModel
         public string StructureSetId
         {
             get { return _structureSetId; }
-            set { _structureSetId = value; }
+            set { SetProperty(ref _structureSetId, value); }
         }
 
         public AutoPlanTemplateBase SelectedTemplate
@@ -180,7 +180,7 @@ namespace AutoPlannerHelpers.BaseViewModel
         {
             _planType = type;
             if (args.Any()) EclipseContextHelper.GenerateEclipseContext(args.ToList());
-            if (EclipseContext.GetInstance().IsInitialized && ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
+            if (EclipseContext.GetInstance().IsInitialized && !ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
             {
                 _structureIdsPostUnion = StructureTuningHelper.GenerateStructureIdListPostUnion(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id).ToList());
             }

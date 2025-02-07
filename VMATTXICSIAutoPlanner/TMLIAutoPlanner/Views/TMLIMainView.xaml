@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:TMLIAutoPlanner.Views"
         xmlns:i="clr-namespace:Microsoft.Xaml.Behaviors;assembly=Microsoft.Xaml.Behaviors"
         mc:Ignorable="d"
-        Title="VMAT TBI Autoplanning" 
+        Title="VMAT TMLI Autoplanning" 
         SizeToContent="WidthAndHeight"
         WindowStartupLocation="CenterScreen">
     <i:Interaction.Triggers>
@@ -84,10 +84,10 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     <Label Content="Patient MRN:" Grid.Column="0" Grid.Row="0" HorizontalAlignment="Right" Margin="0" VerticalAlignment="Center"/>
-                    <Label Content="{Binding PatientMRN}" Grid.Column="1" Grid.Row="0" FontWeight="Bold" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center"/>
+                    <Label Content="{Binding PatientMRN}" Grid.Column="1" Grid.Row="0" FontWeight="Bold" FontSize="12" HorizontalAlignment="Center" HorizontalContentAlignment="Center" Width="140"/>
 
                     <Label Content="Structure Set ID:" Grid.Column="0" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                    <Label Content="{Binding SructureSetId}" Grid.Column="1" Grid.Row="1" HorizontalContentAlignment="Center" HorizontalAlignment="Center" Width="140"/>
+                    <Label Content="{Binding StructureSetId}" Grid.Column="1" Grid.Row="1" HorizontalContentAlignment="Center" HorizontalAlignment="Center" Width="140"/>
                 </Grid>
 
                 <Grid Grid.Column="0" Grid.Row="1" Grid.RowSpan="4" Margin="5,0,0,0">

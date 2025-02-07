@@ -11,6 +11,7 @@ namespace AutoPlannerHelpers.ViewModels
     public class CTExportViewModel : ObservableObject
     {
         public ObservableCollectionPropertyNotify<ExportCTModel> CTImageList { get; set; }
+
         #region properties
         public ExportCTModel SelectedCTImage { get; private set; } = null;
         #endregion

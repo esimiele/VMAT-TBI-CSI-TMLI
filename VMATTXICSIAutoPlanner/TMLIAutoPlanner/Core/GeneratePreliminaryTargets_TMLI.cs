@@ -17,11 +17,11 @@ namespace TMLIAutoPlanner.Core
         private List<string> _requiredStructuresForTarget = new List<string>
         {
             "bones_trunk",
-            "mandible",
+            "bones_face",
             "lymphnodes",
             "spinalcanal",
             "spleen",
-            "bones_extern",
+            "bones_extrem",
             "ribs",
         };
 
@@ -31,7 +31,7 @@ namespace TMLIAutoPlanner.Core
         /// Constructor
         /// </summary>
         /// <param name="tgts"></param>
-        public GeneratePreliminaryTargets_TMLI(List<RequestedTSStructureModel> tgts, List<RequestedTSManipulationModel> manipulations) :
+        public GeneratePreliminaryTargets_TMLI(IEnumerable<RequestedTSStructureModel> tgts, List<RequestedTSManipulationModel> manipulations) :
             base(tgts, TMLIAutoPlannerSettings.CloseProgressWindowOnFinish)
         {
             _manipulations = manipulations;

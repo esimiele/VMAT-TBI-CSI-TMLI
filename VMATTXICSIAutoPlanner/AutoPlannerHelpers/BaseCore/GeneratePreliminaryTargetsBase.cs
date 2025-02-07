@@ -34,7 +34,7 @@ namespace AutoPlannerHelpers.BaseCore
         /// Constructor
         /// </summary>
         /// <param name="tgts"></param>
-        protected GeneratePreliminaryTargetsBase(List<RequestedTSStructureModel> tgts, bool closePWOnFinish)
+        protected GeneratePreliminaryTargetsBase(IEnumerable<RequestedTSStructureModel> tgts, bool closePWOnFinish)
         {
             _createPrelimTargetList = new List<RequestedTSStructureModel>(tgts);
             SetCloseOnFinish(closePWOnFinish, 3000);

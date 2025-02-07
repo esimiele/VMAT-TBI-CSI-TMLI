@@ -31,6 +31,7 @@ namespace TMLIAutoPlanner.ViewModels
         #region properties
         private System.Windows.Media.SolidColorBrush _prepForTargetsBackground;
         private System.Windows.Media.SolidColorBrush _setTargetsTabBackground;
+        private System.Windows.Media.SolidColorBrush _stitchCTTabBackground;
 
         public System.Windows.Media.SolidColorBrush PrepForTargetsBackground
         {
@@ -42,6 +43,12 @@ namespace TMLIAutoPlanner.ViewModels
         {
             get { return _setTargetsTabBackground; }
             set { SetProperty(ref _setTargetsTabBackground, value); }
+        }
+
+        public System.Windows.Media.SolidColorBrush StitchCTTabBackground
+        {
+            get { return _stitchCTTabBackground; }
+            set { SetProperty(ref _stitchCTTabBackground, value); }
         }
         #endregion
 
@@ -97,7 +104,7 @@ namespace TMLIAutoPlanner.ViewModels
             StitchCT = new CTStitcherView { DataContext = _stitcherViewModel };
 
             NotifyPrepForTargetsCommand = new RelayCommand(PreparePreliminaryTargets);
-            _prepForTargetsVM = new PrepForTargetsViewModel(NotifyPrepForTargetsCommand, TMLIAutoPlannerSettings.RequestedPreliminaryTargets);
+            _prepForTargetsVM = new PrepForTargetsViewModel(NotifyPrepForTargetsCommand);
             PrepForTargets = new PrepForTargetsView { DataContext = _prepForTargetsVM };
 
             _ringGenerationVM = new RingGenerationViewModel(_structureIdsPostUnion);
@@ -112,8 +119,10 @@ namespace TMLIAutoPlanner.ViewModels
             //needs to be initialized after the plan templates are loaded
             ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
             SpecifyTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
-            if (EclipseContext.GetInstance().IsInitialized && ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
+            if (EclipseContext.GetInstance().IsInitialized && !ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
             {
+                PatientMRN = EclipseContext.GetInstance().Patient.Id;
+                StructureSetId = EclipseContext.GetInstance().StructureSet.Id;
                 if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => x.ApprovalHistory.Last().ApprovalStatus == StructureApprovalStatus.Approved && x.Id.ToLower().Contains("ptv")))
                 {
                     SetTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
@@ -152,11 +161,10 @@ namespace TMLIAutoPlanner.ViewModels
         #region specify targets
         private void PreparePreliminaryTargets()
         {
-            MessageBox.Show("Hello");
             if (!_prepForTargetsVM.RequestedTuningStructures.Any()) return;
             List<RequestedTSManipulationModel> targetCropOperations = new List<RequestedTSManipulationModel> { };
-            if (!ReferenceEquals(_selectedTemplate, null)) targetCropOperations.AddRange(_selectedTemplate.TSManipulations);
-            GeneratePreliminaryTargets_TMLI generateTargets = new GeneratePreliminaryTargets_TMLI(_prepForTargetsVM.RequestedTuningStructures.ToList(), 
+            if (!ReferenceEquals(_selectedTemplate, null)) targetCropOperations.AddRange(_selectedTemplate.TSManipulations.Where(x => x.ManipulationType == TSManipulationType.CropTargetFromStructure));
+            GeneratePreliminaryTargets_TMLI generateTargets = new GeneratePreliminaryTargets_TMLI(_prepForTargetsVM.RequestedTuningStructures, 
                                                                                                   targetCropOperations);
             EclipseContext.GetInstance().Patient.BeginModifications();
             bool result = generateTargets.Execute();
@@ -177,6 +185,24 @@ namespace TMLIAutoPlanner.ViewModels
             {
                 Logger.GetInstance().LogError($"Error! Multiple plan Ids entered! This script is only configured to auto-plan one TBI plan!");
                 return true;
+            }
+            foreach (TargetModel target in parsedTargets.SelectMany(x => x.Targets))
+            {
+                if (!StructureTuningHelper.DoesStructureExistInSS(target.TargetId, EclipseContext.GetInstance().StructureSet, true))
+                {
+                    Logger.GetInstance().LogError($"Error! {target.TargetId} is either NOT present in structure set or is not contoured!");
+                    return true;
+                }
+                else
+                {
+                    //structure is present and contoured
+                    StructureApprovalStatus approvalStatus = StructureTuningHelper.GetStructureFromId(target.TargetId, EclipseContext.GetInstance().StructureSet).ApprovalHistory.First().ApprovalStatus;
+                    if (approvalStatus != StructureApprovalStatus.Approved)
+                    {
+                        Logger.GetInstance().LogError($"Error! {target.TargetId} is NOT approved!" + Environment.NewLine + $"{target.TargetId} approval status: {approvalStatus}");
+                        return true;
+                    }
+                }
             }
             return false;
         }
@@ -328,6 +354,7 @@ namespace TMLIAutoPlanner.ViewModels
 
             InitialDosePerFraction = (_selectedTemplate as TMLIAutoPlanTemplate).InitialRxDosePerFx;
             InitialNumberOfFractions = (_selectedTemplate as TMLIAutoPlanTemplate).InitialRxNumberOfFractions;
+            _prepForTargetsVM.UpdateRequestedTargetStructures((_selectedTemplate as TMLIAutoPlanTemplate).RequestedPreliminaryTargets);
             _setTargetsVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
             _tsGenerationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
             _ringGenerationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);

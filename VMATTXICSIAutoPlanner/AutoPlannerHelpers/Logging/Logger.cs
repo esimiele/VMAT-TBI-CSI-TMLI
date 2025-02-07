@@ -24,6 +24,7 @@ namespace AutoPlannerHelpers.Logging
             if (_instance != null) return _instance;
             else return _instance = new Logger();
         }
+
         #region properties
         //general patient info
         public string MRN { set => mrn = value; }
@@ -81,6 +82,7 @@ namespace AutoPlannerHelpers.Logging
         /// </summary>
         public Logger()
         {
+            _logPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "\\logs\\");
         }
 
         /// <summary>

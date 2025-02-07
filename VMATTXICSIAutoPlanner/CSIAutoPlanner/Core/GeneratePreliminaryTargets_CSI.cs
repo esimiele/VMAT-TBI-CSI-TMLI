@@ -18,7 +18,7 @@ namespace CSIAutoPlanner.Core
         /// Constructor
         /// </summary>
         /// <param name="tgts"></param>
-        public GeneratePreliminaryTargets_CSI(List<RequestedTSStructureModel> tgts) :
+        public GeneratePreliminaryTargets_CSI(IEnumerable<RequestedTSStructureModel> tgts) :
             base(tgts, CSIAutoPlannerSettings.CloseProgressWindowOnFinish)
         {
         }

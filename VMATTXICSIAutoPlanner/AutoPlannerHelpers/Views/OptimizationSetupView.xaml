@@ -182,7 +182,7 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
-                <Button Content="Set Optimization Constraints" FontWeight="Bold" Width="190" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,10,0,0" Command="{Binding AssignOptimizationConstraintCommand}"></Button>
+                <Button Content="Set Optimization Constraints" FontWeight="Bold" Width="190" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,10,0,0" Command="{Binding AssignOptimizationConstraintsCommand}"></Button>
             </StackPanel>
         </Border>
     </Grid>

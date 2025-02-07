@@ -26,17 +26,22 @@ namespace AutoPlannerHelpers.ViewModels
         private ICommand _notifyMainVMExecuted;
         #endregion
 
-        public PrepForTargetsViewModel(ICommand notifyMainVM, List<RequestedTSStructureModel> requestedTargets)
+        public PrepForTargetsViewModel(ICommand notifyMainVM)
         {
             _notifyMainVMExecuted = notifyMainVM;
-            _originalRequestedTargets = requestedTargets;
             RequestedTuningStructures = new ObservableCollectionPropertyNotify<RequestedTSStructureModel> { };
-            foreach(RequestedTSStructureModel itr in requestedTargets) RequestedTuningStructures.Add(itr);
             DisplayInfoCommand = new RelayCommand(DisplayPrepForTargetsInfo);
             AddDefaultTSStructuresCommand = new RelayCommand(AddDefaultTSStructures);
             RemoveAllTSStructuresCommand = new RelayCommand(RemoveAllTSStructures);
             ClearRowCommand = new RelayCommand<RequestedTSStructureModel>(ClearRow);
             RunPrepForTargetsCommand = new RelayCommand(RunPrepForTargets);
+        }
+
+        public void UpdateRequestedTargetStructures(List<RequestedTSStructureModel> targets)
+        {
+            RequestedTuningStructures.Clear();
+            _originalRequestedTargets = new List<RequestedTSStructureModel>(targets);
+            foreach (RequestedTSStructureModel itr in _originalRequestedTargets) RequestedTuningStructures.Add(itr);
         }
 
         private void DisplayPrepForTargetsInfo()

@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Text;
 using System.Windows.Input;
 using System.Windows;
+using VMS.TPS.Common.Model.API;
 
 namespace AutoPlannerLauncher.ViewModels
 {
@@ -49,14 +50,7 @@ namespace AutoPlannerLauncher.ViewModels
 
         private void LaunchVMATTBI()
         {
-            try
-            {
-                VMS.TPS.Common.Model.API.Application app = VMS.TPS.Common.Model.API.Application.CreateApplication();
-                MessageBox.Show($"{app.PatientSummaries.First().Id}");
-            }
-            catch (Exception e) { MessageBox.Show(e.Message); }
-
-            //LaunchExe("TBIAutoPlanner");
+            LaunchExe("TBIAutoPlanner");
         }
 
         public void LaunchVMATCSI()

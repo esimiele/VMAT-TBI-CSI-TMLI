@@ -11,6 +11,7 @@ namespace AutoPlannerHelpers.PlanTemplateModels
         public int InitialRxNumberOfFractions { get; set; } = 1;
         public List<OptimizationConstraintModel> InitialOptimizationConstraints { get; set; } = new List<OptimizationConstraintModel> { };
         public List<TSRingStructureModel> Rings { get; set; } = new List<TSRingStructureModel>();
+        public List<RequestedTSStructureModel> RequestedPreliminaryTargets { get; set; } = new List<RequestedTSStructureModel> { };
         #endregion
 
         /// <summary>
