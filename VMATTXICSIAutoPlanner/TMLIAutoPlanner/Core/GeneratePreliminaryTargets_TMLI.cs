@@ -21,7 +21,7 @@ namespace TMLIAutoPlanner.Core
             "spinalcanal",
             "spleen",
             "bones_extrem",
-            "ribs",
+            //"ribs",
         };
 
         private List<RequestedTSManipulationModel> _manipulations;
@@ -120,12 +120,12 @@ namespace TMLIAutoPlanner.Core
                 StructureTuningHelper.GetStructureFromId("spleen", ss),
             };
             //need to know target dosing
-            if (string.Equals(EclipseContext.GetInstance().Patient.Sex, "male", System.StringComparison.OrdinalIgnoreCase)) structures.Add(StructureTuningHelper.GetStructureFromId("spleen", ss));
+            if (StructureTuningHelper.DoesStructureExistInSS("testes", EclipseContext.GetInstance().StructureSet, true)) structures.Add(StructureTuningHelper.GetStructureFromId("testes", ss));
 
             ContourHelper.ContourUnion(structures, ptv);
             ptv.SegmentVolume = ptv.Margin(5.0);
 
-            ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("ribs", ss).Margin(5.0), ptv, 0.0);
+            //ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("ribs", ss).Margin(5.0), ptv, 0.0);
             ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("bones_extrem", ss).Margin(10.0), ptv, 0.0);
             //ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("lungs", ss).Margin(5.0), 0.0);
             //ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("kidneys", ss).Margin(5.0), 0.0);

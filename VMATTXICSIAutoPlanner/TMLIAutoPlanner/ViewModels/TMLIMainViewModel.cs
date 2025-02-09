@@ -187,7 +187,7 @@ namespace TMLIAutoPlanner.ViewModels
             if (!ReferenceEquals(_selectedTemplate, null))
             {
                 targetCropOperations.AddRange(_selectedTemplate.TSManipulations.Where(x => x.ManipulationType == TSManipulationType.CropTargetFromStructure));
-                if(_selectedTemplate.PlanTargets.Any() && _selectedTemplate.PlanTargets.SelectMany(x => x.Targets).OrderByDescending(x => x.TargetRxDose).First().TargetRxDose > 200) includeTestesInPTV = false;
+                if(_selectedTemplate.PlanTargets.Any() && _selectedTemplate.PlanTargets.SelectMany(x => x.Targets).OrderByDescending(x => x.TargetRxDose).First().TargetRxDose <= 200) includeTestesInPTV = false;
             }
             GeneratePreliminaryTargets_TMLI generateTargets = new GeneratePreliminaryTargets_TMLI(_prepForTargetsVM.RequestedTuningStructures, 
                                                                                                   targetCropOperations,

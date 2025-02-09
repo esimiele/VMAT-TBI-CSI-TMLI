@@ -7,6 +7,7 @@ using AutoPlannerHelpers.Context;
 using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.Helpers;
 using AutoPlannerHelpers.Models;
+using AutoPlannerHelpers.Logging;
 using AutoPlannerHelpers.PlanTemplateModels;
 using AutoPlannerHelpers.ViewModels;
 using AutoPlannerHelpers.Views;
@@ -179,6 +180,7 @@ namespace AutoPlannerHelpers.BaseViewModel
         public BaseViewModel(PlanType type, string[] args)
         {
             _planType = type;
+            Logger.GetInstance().PlanType = _planType;
             if (args.Any()) EclipseContextHelper.GenerateEclipseContext(args.ToList());
             if (EclipseContext.GetInstance().IsInitialized && !ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
             {

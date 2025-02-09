@@ -82,7 +82,7 @@ namespace AutoPlannerHelpers.Logging
         /// </summary>
         public Logger()
         {
-            _logPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "\\logs\\");
+            _logPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\logs";
         }
 
         /// <summary>
@@ -149,14 +149,15 @@ namespace AutoPlannerHelpers.Logging
         {
             string type;
             if (planType == PlanType.VMAT_TBI) type = "TBI";
-            else type = "CSI";
+            else if (planType == PlanType.VMAT_CSI) type = "CSI";
+            else type = "TMLI";
 
             if (string.IsNullOrEmpty(_logPath))
             {
                 LogError("Log file path not set during script configuration! Please select a folder to write the log file!");
                 FolderBrowserDialog FBD = new FolderBrowserDialog
                 {
-                    SelectedPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
+                    SelectedPath = Path.GetFullPath(Assembly.GetExecutingAssembly().Location)
                 };
                 if (FBD.ShowDialog() == DialogResult.OK)
                 {
