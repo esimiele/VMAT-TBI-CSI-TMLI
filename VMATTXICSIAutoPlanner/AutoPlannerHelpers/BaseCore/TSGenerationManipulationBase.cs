@@ -139,6 +139,57 @@ namespace AutoPlannerHelpers.BaseCore
         }
 
         /// <summary>
+        /// Helper method to create and contour the requested ring structure (with user-supplied margin, thickness, and dose level)
+        /// </summary>
+        /// <returns></returns>
+        protected List<TSRingStructureModel> GenerateRings(List<TSRingStructureModel> requestedRings)
+        {
+            List<TSRingStructureModel> addedRings = new List<TSRingStructureModel>();
+            UpdateUILabel("Generating rings:");
+            ProvideUIUpdate("Generating requested ring structures for targets!");
+            int percentCompletion = 0;
+            int calcItems = 3 * requestedRings.Count();
+            foreach (TSRingStructureModel itr in requestedRings)
+            {
+                Structure target = StructureTuningHelper.GetStructureFromId(itr.TargetId, EclipseContext.GetInstance().StructureSet);
+                if (target != null)
+                {
+                    ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Retrieved target: {target.Id}");
+                    string ringName = $"TS_ring{itr.DoseLevel}";
+                    if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => string.Equals(x.Id, ringName)))
+                    {
+                        ProvideUIUpdate($"Warning! Structure Id is taken: {ringName}! Attempting to update Id!");
+                        ringName += "_1";
+                        if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => string.Equals(x.Id, ringName)))
+                        {
+                            ProvideUIUpdate($"Error! Unable to update ring structure Id to: {ringName}! Exiting", true);
+                            return new List<TSRingStructureModel> { };
+                        }
+                    }
+
+                    Structure ring = AddTSStructures(new RequestedTSStructureModel("CONTROL", ringName));
+                    if (ReferenceEquals(ring, null)) return new List<TSRingStructureModel> { };
+                    ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Created empty ring: {ring.Id}");
+
+                    ProvideUIUpdate($"Contouring ring: {ring.Id}");
+                    (bool fail, StringBuilder errorMessage) = ContourHelper.CreateRing(target, ring, EclipseContext.GetInstance().StructureSet, itr.MarginFromTargetInCM, itr.RingThicknessInCM);
+                    if (fail)
+                    {
+                        ProvideUIUpdate(errorMessage.ToString(), true);
+                        return new List<TSRingStructureModel> { };
+                    }
+                    TSRingStructureModel ringModel = new TSRingStructureModel(itr);
+                    ringModel.RingId = ring.Id;
+                    addedRings.Add(ringModel);
+                    ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Finished contouring ring: {itr}");
+                }
+                else ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Could NOT retrieve target: {itr.TargetId}! Skipping ring: TS_ring{itr.DoseLevel}");
+            }
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
+            return addedRings;
+        }
+
+        /// <summary>
         /// Helper method to create an overlap structure, copy the OAR onto the overlap structure, then contour the overlap between overlap structure 
         /// and the target. Once contoured a check is performed to ensure that the overlap structure is not empty
         /// </summary>

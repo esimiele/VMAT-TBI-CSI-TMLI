@@ -14,7 +14,7 @@ using VMS.TPS.Common.Model.Types;
 
 namespace CSIAutoPlanner.Core
 {
-    class TSGenerationManipulation_CSI : TSGenerationManipulationBase
+    internal class TSGenerationManipulation_CSI : TSGenerationManipulationBase
     {
         public int NumberofIsocenters { get; private set; } = -1;
         public int NumberofVMATIsocenters { get; private set; } = -1;
@@ -27,7 +27,7 @@ namespace CSIAutoPlanner.Core
         private List<RequestedTSStructureModel> createTSStructureList;
         //plan id, structure id, num fx, dose per fx, cumulative dose
         private List<PrescriptionModel> prescriptions;
-        private List<TSRingStructureModel> requestedRings;
+        private List<TSRingStructureModel> _requestedRings;
         //plan id, normalization volume
         //structure id of oars requested for crop/overlap eval with targets
         private List<string> cropAndOverlapStructures = new List<string> { };
@@ -47,7 +47,7 @@ namespace CSIAutoPlanner.Core
                                             List<string> cropStructs)
         {
             createTSStructureList = new List<RequestedTSStructureModel>(ts);
-            requestedRings = new List<TSRingStructureModel>(tgtRings);
+            _requestedRings = new List<TSRingStructureModel>(tgtRings);
             TSManipulationList = new List<RequestedTSManipulationModel>(manipulations);
             prescriptions = new List<PrescriptionModel>(presc);
             cropAndOverlapStructures = new List<string>(cropStructs);
@@ -76,7 +76,11 @@ namespace CSIAutoPlanner.Core
                 {
                     if (CropAndContourOverlapWithTargets()) return true;
                 }
-                if (GenerateRings()) return true;
+                if (_requestedRings.Any())
+                {
+                    AddedRings = new List<TSRingStructureModel>(GenerateRings(_requestedRings));
+                    if(!AddedRings.Any()) return true;
+                }
                 if (RegeneratePTVBrainSpine()) return true;
                 if (CalculateNumIsos()) return true;
                 UpdateUILabel("Finished!");
@@ -130,59 +134,7 @@ namespace CSIAutoPlanner.Core
         #endregion
 
         #region TS Structure Creation and Manipulation
-        /// <summary>
-        /// Helper method to create and contour the requested ring structure (with user-supplied margin, thickness, and dose level)
-        /// </summary>
-        /// <returns></returns>
-        private bool GenerateRings()
-        {
-            if (requestedRings.Any())
-            {
-                UpdateUILabel("Generating rings:");
-                ProvideUIUpdate("Generating requested ring structures for targets!");
-                int percentCompletion = 0;
-                int calcItems = 3 * requestedRings.Count();
-                foreach (TSRingStructureModel itr in requestedRings)
-                {
-                    Structure target = StructureTuningHelper.GetStructureFromId(itr.TargetId, EclipseContext.GetInstance().StructureSet);
-                    if (target != null)
-                    {
-                        ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Retrieved target: {target.Id}");
-                        string ringName = $"TS_ring{itr.DoseLevel}";
-                        if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => string.Equals(x.Id, ringName)))
-                        {
-                            ProvideUIUpdate($"Warning! Structure Id is taken: {ringName}! Attempting to update Id!");
-                            ringName += "_1";
-                            if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => string.Equals(x.Id, ringName)))
-                            {
-                                ProvideUIUpdate($"Error! Unable to update ring structure Id to: {ringName}! Exiting", true);
-                                return true;
-                            }
-                        }
-
-                        Structure ring = AddTSStructures(new RequestedTSStructureModel("CONTROL", ringName));
-                        if (ring == null) return true;
-                        ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Created empty ring: {ring.Id}");
-
-                        ProvideUIUpdate($"Contouring ring: {ring.Id}");
-                        (bool fail, StringBuilder errorMessage) = ContourHelper.CreateRing(target, ring, EclipseContext.GetInstance().StructureSet, itr.MarginFromTargetInCM, itr.RingThicknessInCM);
-                        if (fail)
-                        {
-                            ProvideUIUpdate(errorMessage.ToString(), true);
-                            return true;
-                        }
-                        TSRingStructureModel addRing = new TSRingStructureModel(itr);
-                        addRing.RingId = ring.Id;
-                        AddedRings.Add(addRing);
-                        ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Finished contouring ring: {itr}");
-                    }
-                    else ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Could NOT retrieve target: {itr.TargetId}! Skipping ring: TS_ring{itr.DoseLevel}");
-                }
-            }
-            else ProvideUIUpdate("No ring structures requested!");
-            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
-            return false;
-        }
+        
 
         /// <summary>
         /// Custom method to create a ring structure on a give CT slice. This method is used in the generation of TS_Eyes and TS_Lenses to avoid

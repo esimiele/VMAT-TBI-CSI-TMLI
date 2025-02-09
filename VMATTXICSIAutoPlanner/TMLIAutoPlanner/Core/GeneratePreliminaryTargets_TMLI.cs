@@ -74,7 +74,7 @@ namespace TMLIAutoPlanner.Core
             ProvideUIUpdate(100 * ++counter / calcItems, "Check and converted any high res base targets");
 
             ProvideUIUpdate(100, "Preliminary checks complete!");
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
         #endregion
@@ -86,8 +86,10 @@ namespace TMLIAutoPlanner.Core
         /// <returns></returns>
         protected override bool ContourTargetStructures()
         {
+
             int counter = 0;
             int calcItems = _addedTargetIds.Count + 2;
+            if (UnionLRStructures()) return true;
             foreach (string itr in _addedTargetIds.OrderBy(x => x.ElementAt(0)))
             {
                 ProvideUIUpdate(100 * ++counter / calcItems, $"Contouring target: {itr}");
@@ -104,7 +106,33 @@ namespace TMLIAutoPlanner.Core
             }
             
             ProvideUIUpdate(100, "Targets added and contoured!");
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
+            return false;
+        }
+
+        private bool UnionLRStructures()
+        {
+            UpdateUILabel("Unioning Structures: ");
+            ProvideUIUpdate(0, "Checking for L and R structures to union!");
+            List<UnionStructureModel> structuresToUnion = StructureTuningHelper.CheckStructuresToUnion(EclipseContext.GetInstance().StructureSet);
+            if (structuresToUnion.Any())
+            {
+                int calcItems = structuresToUnion.Count;
+                int numUnioned = 0;
+                foreach (UnionStructureModel itr in structuresToUnion)
+                {
+                    (bool fail, StringBuilder output) = StructureTuningHelper.UnionLRStructures(itr, EclipseContext.GetInstance().StructureSet);
+                    if (!fail) ProvideUIUpdate(100 * ++numUnioned / calcItems, $"Unioned {itr.ProposedUnionStructureId}");
+                    else
+                    {
+                        ProvideUIUpdate(output.ToString(), true);
+                        return true;
+                    }
+                }
+                ProvideUIUpdate(100, "Structures unioned successfully!");
+            }
+            else ProvideUIUpdate(100, "No structures to union!");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
 

@@ -201,7 +201,7 @@ namespace CSIAutoPlanner.ViewModels
             EclipseContext.GetInstance().Patient.BeginModifications();
             bool result = generateTargets.Execute();
             //grab the log output regardless if it passes or fails
-            Logger.GetInstance().AppendLogOutput("Preliminary target generation output:", generateTargets.GetLogOutput());
+            Logger.GetInstance().AppendLogOutput("Preliminary target generation output:", generateTargets.LogOutput);
             Logger.GetInstance().OpType = ScriptOperationType.GeneratePrelimTargets;
             if (result) return;
             Logger.GetInstance().AddedPrelimTargetsStructures = generateTargets.GetAddedTargetStructures();

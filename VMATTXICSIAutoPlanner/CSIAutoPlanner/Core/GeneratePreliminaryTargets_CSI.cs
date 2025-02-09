@@ -56,7 +56,7 @@ namespace CSIAutoPlanner.Core
             ProvideUIUpdate(100 * ++counter / calcItems, "Check and converted any high res base targets");
 
             ProvideUIUpdate(100, "Preliminary checks complete!");
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
         #endregion
@@ -144,7 +144,7 @@ namespace CSIAutoPlanner.Core
                 ProvideUIUpdate(100 * ++counter / calcItems, "PTV_CSI already exists in the structure set! Skipping!");
             }
             ProvideUIUpdate(100, "Targets added and contoured!");
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
 
@@ -175,7 +175,7 @@ namespace CSIAutoPlanner.Core
                 return true;
             }
             ProvideUIUpdate(100 * ++counter / calcItems, "PTV_CSI cropped from body with 3 mm inner margin");
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
         #endregion

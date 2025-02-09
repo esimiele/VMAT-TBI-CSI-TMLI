@@ -57,7 +57,11 @@ namespace TMLIAutoPlanner.Core
                 if (TSManipulationList.Any()) if (CheckHighResolution()) return true;
                 if (CreateTSStructures()) return true;
                 if (PerformTSStructureManipulation()) return true;
-                if (GenerateRings()) return true;
+                if (_requestedRings.Any())
+                {
+                    AddedRings = new List<TSRingStructureModel>(GenerateRings(_requestedRings));
+                    if (!AddedRings.Any()) return true;
+                }
                 if (CalculateNumIsos()) return true; 
                 UpdateUILabel("Finished!");
                 ProvideUIUpdate(100, "Finished Structure Tuning!");
@@ -169,19 +173,10 @@ namespace TMLIAutoPlanner.Core
             //prescriptions are inherently sorted by increasing cumulative Rx to targets
             foreach (PrescriptionModel itr in prescriptions)
             {
-                Structure target = null;
-                //special logic. We want to actually manipulate ptv_body itself rather than a TS_PTV_Body structure
-                if (string.Equals(itr.TargetId.ToLower(), "ptv_tmli"))
-                {
-                    target = StructureTuningHelper.GetStructureFromId(itr.TargetId, EclipseContext.GetInstance().StructureSet);
-                }
-                else
-                {
-                    //target Id is not ptv_tmli, generate a new TSTarget
-                    target = GetTSTarget(itr.TargetId);
-                    tmpTSTargetList.Add(new TargetModel(itr.TargetId, itr.CumulativeDoseToTarget, target.Id));
-                }
-                if (ReferenceEquals(target, null) || target.IsEmpty)
+                //Generate a new TSTarget
+                Structure addedTSTarget = GetTSTarget(itr.TargetId);
+                tmpTSTargetList.Add(new TargetModel(itr.TargetId, itr.CumulativeDoseToTarget, addedTSTarget.Id));
+                if (ReferenceEquals(addedTSTarget, null) || addedTSTarget.IsEmpty)
                 {
                     ProvideUIUpdate($"Error! Target structure: {itr.TargetId} is null or empty! Cannot perform tuning structure manipulations! Exiting!", true);
                     return true;
@@ -191,7 +186,7 @@ namespace TMLIAutoPlanner.Core
                     //perform all relevant TS manipulations for the specified target
                     foreach (RequestedTSManipulationModel itr1 in TSManipulationList)
                     {
-                        if (ManipulateTuningStructures(itr1, target)) return true;
+                        if (ManipulateTuningStructures(itr1, addedTSTarget)) return true;
                         ProvideUIUpdate(100 * ++counter / calcItems);
                     }
                 }
@@ -199,7 +194,7 @@ namespace TMLIAutoPlanner.Core
                 if (string.Equals(itr.TargetId.ToLower(), "ptv_tmli"))
                 {
                     //ts_ptv_vmat needs to be handled AFTER ts manipulation because ptv_body itself needs to be cropped from all the relevant structures
-                    (bool fail, string tsPTVVMATId) = GenerateTSPTVTarget(target, "TS_PTV_TMLI");
+                    (bool fail, string tsPTVVMATId) = GenerateTSPTVTarget(addedTSTarget, "TS_PTV_TMLI");
                     if (fail) return true;
                     tmpTSTargetList.Add(new TargetModel(itr.TargetId, itr.CumulativeDoseToTarget, tsPTVVMATId));
                 }
@@ -208,60 +203,6 @@ namespace TMLIAutoPlanner.Core
             NormalizationVolumes.Add(prescriptions.Last().PlanId, tmpTSTargetList.OrderByDescending(x => x.TargetRxDose).First().TsTargetId);
             PlanTargets.Add(new PlanTargetsModel(prescriptions.Last().PlanId, new List<TargetModel>(tmpTSTargetList)));
 
-            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
-            return false;
-        }
-
-        /// <summary>
-        /// Helper method to create and contour the requested ring structure (with user-supplied margin, thickness, and dose level)
-        /// </summary>
-        /// <returns></returns>
-        private bool GenerateRings()
-        {
-            if (_requestedRings.Any())
-            {
-                UpdateUILabel("Generating rings:");
-                ProvideUIUpdate("Generating requested ring structures for targets!");
-                int percentCompletion = 0;
-                int calcItems = 3 * _requestedRings.Count();
-                foreach (TSRingStructureModel itr in _requestedRings)
-                {
-                    Structure target = StructureTuningHelper.GetStructureFromId(itr.TargetId, EclipseContext.GetInstance().StructureSet);
-                    if (target != null)
-                    {
-                        ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Retrieved target: {target.Id}");
-                        string ringName = $"TS_ring{itr.DoseLevel}";
-                        if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => string.Equals(x.Id, ringName)))
-                        {
-                            ProvideUIUpdate($"Warning! Structure Id is taken: {ringName}! Attempting to update Id!");
-                            ringName += "_1";
-                            if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => string.Equals(x.Id, ringName)))
-                            {
-                                ProvideUIUpdate($"Error! Unable to update ring structure Id to: {ringName}! Exiting", true);
-                                return true;
-                            }
-                        }
-
-                        Structure ring = AddTSStructures(new RequestedTSStructureModel("CONTROL", ringName));
-                        if (ReferenceEquals(ring, null)) return true;
-                        ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Created empty ring: {ring.Id}");
-
-                        ProvideUIUpdate($"Contouring ring: {ring.Id}");
-                        (bool fail, StringBuilder errorMessage) = ContourHelper.CreateRing(target, ring, EclipseContext.GetInstance().StructureSet, itr.MarginFromTargetInCM, itr.RingThicknessInCM);
-                        if (fail)
-                        {
-                            ProvideUIUpdate(errorMessage.ToString(), true);
-                            return true;
-                        }
-                        TSRingStructureModel addRing = new TSRingStructureModel(itr);
-                        addRing.RingId = ring.Id;
-                        AddedRings.Add(addRing);
-                        ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Finished contouring ring: {itr}");
-                    }
-                    else ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Could NOT retrieve target: {itr.TargetId}! Skipping ring: TS_ring{itr.DoseLevel}");
-                }
-            }
-            else ProvideUIUpdate("No ring structures requested!");
             ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }

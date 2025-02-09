@@ -2,10 +2,12 @@
 using AutoPlannerHelpers.Delegates;
 using AutoPlannerHelpers.Helpers;
 using AutoPlannerHelpers.Models;
+using AutoPlannerHelpers.ViewModels;
 using SimpleProgressWindow;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading.Tasks;
 using VMS.TPS.Common.Model.API;
@@ -13,7 +15,7 @@ using VMS.TPS.Common.Model.Types;
 
 namespace AutoPlannerHelpers.BaseCore
 {
-    public abstract class GeneratePreliminaryTargetsBase : SimpleMTbase
+    public abstract class GeneratePreliminaryTargetsBase : SimpleProgressWindowViewModel
     {
         // Get methods
         public List<string> GetAddedTargetStructures() { return _addedTargetIds; }
@@ -34,7 +36,7 @@ namespace AutoPlannerHelpers.BaseCore
         /// Constructor
         /// </summary>
         /// <param name="tgts"></param>
-        protected GeneratePreliminaryTargetsBase(IEnumerable<RequestedTSStructureModel> tgts, bool closePWOnFinish)
+        public GeneratePreliminaryTargetsBase(IEnumerable<RequestedTSStructureModel> tgts, bool closePWOnFinish)
         {
             _createPrelimTargetList = new List<RequestedTSStructureModel>(tgts);
             SetCloseOnFinish(closePWOnFinish, 3000);
@@ -44,7 +46,9 @@ namespace AutoPlannerHelpers.BaseCore
         /// Run control
         /// </summary>
         /// <returns></returns>
-        public override bool Run()
+        /// //to handle system access exception violation
+        [HandleProcessCorruptedStateExceptions]
+        protected override bool Run()
         {
             try
             {
@@ -64,7 +68,7 @@ namespace AutoPlannerHelpers.BaseCore
 
                 UpdateUILabel("Finished!");
                 ProvideUIUpdate(100, "Finished Preparing Structure Set for Targets!");
-                ProvideUIUpdate($"Run time: {GetElapsedTime()} (mm:ss)");
+                ProvideUIUpdate($"Run time: {ElapsedRunTime} (mm:ss)");
                 return false;
             }
             catch (Exception e)
@@ -134,7 +138,7 @@ namespace AutoPlannerHelpers.BaseCore
                 else ProvideUIUpdate($"Target: {itr.StructureId} is exists and is contoured");
                 ProvideUIUpdate(100 * ++counter / calcItems);
             }
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
 
@@ -164,7 +168,7 @@ namespace AutoPlannerHelpers.BaseCore
                     return true;
                 }
             }
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
 
