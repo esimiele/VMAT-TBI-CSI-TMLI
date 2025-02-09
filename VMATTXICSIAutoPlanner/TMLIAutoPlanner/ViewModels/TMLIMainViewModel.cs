@@ -23,6 +23,7 @@ using AutoPlannerHelpers.BaseViewModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Windows.Input;
 using AutoPlannerHelpers.Enums;
+using System.Windows.Media;
 
 namespace TMLIAutoPlanner.ViewModels
 {
@@ -32,7 +33,8 @@ namespace TMLIAutoPlanner.ViewModels
         private System.Windows.Media.SolidColorBrush _prepForTargetsBackground;
         private System.Windows.Media.SolidColorBrush _setTargetsTabBackground;
         private System.Windows.Media.SolidColorBrush _stitchCTTabBackground;
-
+        private Visibility _stitchCTTabVisible;
+        private int _initialTabSelected;
         public System.Windows.Media.SolidColorBrush PrepForTargetsBackground
         {
             get { return _prepForTargetsBackground; }
@@ -49,6 +51,18 @@ namespace TMLIAutoPlanner.ViewModels
         {
             get { return _stitchCTTabBackground; }
             set { SetProperty(ref _stitchCTTabBackground, value); }
+        }
+
+        public Visibility StitchCTTabVisible
+        {
+            get { return _stitchCTTabVisible; }
+            set { SetProperty(ref _stitchCTTabVisible, value); }
+        }
+
+        public int InitialTabSelected
+        {
+            get { return _initialTabSelected; }
+            set { SetProperty(ref _initialTabSelected, value); }
         }
         #endregion
 
@@ -102,6 +116,12 @@ namespace TMLIAutoPlanner.ViewModels
 
             _stitcherViewModel = new CTStitcherViewModel();
             StitchCT = new CTStitcherView { DataContext = _stitcherViewModel };
+            StitchCTTabBackground = Brushes.LightGray;
+            if (!TMLIAutoPlannerSettings.ShowStitchCTTab)
+            {
+                StitchCTTabVisible = Visibility.Collapsed;
+                InitialTabSelected = 1;
+            }
 
             NotifyPrepForTargetsCommand = new RelayCommand(PreparePreliminaryTargets);
             _prepForTargetsVM = new PrepForTargetsViewModel(NotifyPrepForTargetsCommand);
@@ -161,11 +181,17 @@ namespace TMLIAutoPlanner.ViewModels
         #region specify targets
         private void PreparePreliminaryTargets()
         {
-            if (!_prepForTargetsVM.RequestedTuningStructures.Any()) return;
+            if (!EclipseContext.GetInstance().IsInitialized || !_prepForTargetsVM.RequestedTuningStructures.Any()) return;
             List<RequestedTSManipulationModel> targetCropOperations = new List<RequestedTSManipulationModel> { };
-            if (!ReferenceEquals(_selectedTemplate, null)) targetCropOperations.AddRange(_selectedTemplate.TSManipulations.Where(x => x.ManipulationType == TSManipulationType.CropTargetFromStructure));
+            bool includeTestesInPTV = true;
+            if (!ReferenceEquals(_selectedTemplate, null))
+            {
+                targetCropOperations.AddRange(_selectedTemplate.TSManipulations.Where(x => x.ManipulationType == TSManipulationType.CropTargetFromStructure));
+                if(_selectedTemplate.PlanTargets.Any() && _selectedTemplate.PlanTargets.SelectMany(x => x.Targets).OrderByDescending(x => x.TargetRxDose).First().TargetRxDose > 200) includeTestesInPTV = false;
+            }
             GeneratePreliminaryTargets_TMLI generateTargets = new GeneratePreliminaryTargets_TMLI(_prepForTargetsVM.RequestedTuningStructures, 
-                                                                                                  targetCropOperations);
+                                                                                                  targetCropOperations,
+                                                                                                  includeTestesInPTV);
             EclipseContext.GetInstance().Patient.BeginModifications();
             bool result = generateTargets.Execute();
             //grab the log output regardless if it passes or fails

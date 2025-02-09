@@ -4,7 +4,6 @@ using AutoPlannerHelpers.Models;
 using System.Collections.Generic;
 using System.Linq;
 using VMS.TPS.Common.Model.API;
-using VMS.TPS.Common.Model.Types;
 using TMLIAutoPlanner.Settings;
 using AutoPlannerHelpers.BaseCore;
 using AutoPlannerHelpers.Enums;
@@ -31,7 +30,9 @@ namespace TMLIAutoPlanner.Core
         /// Constructor
         /// </summary>
         /// <param name="tgts"></param>
-        public GeneratePreliminaryTargets_TMLI(IEnumerable<RequestedTSStructureModel> tgts, List<RequestedTSManipulationModel> manipulations) :
+        public GeneratePreliminaryTargets_TMLI(IEnumerable<RequestedTSStructureModel> tgts, 
+                                               List<RequestedTSManipulationModel> manipulations, 
+                                               bool includeTestesInPTV) :
             base(tgts, TMLIAutoPlannerSettings.CloseProgressWindowOnFinish)
         {
             _manipulations = manipulations;
@@ -116,8 +117,11 @@ namespace TMLIAutoPlanner.Core
             {
                 StructureTuningHelper.GetStructureFromId("lymphnodes", ss),
                 StructureTuningHelper.GetStructureFromId("spinalcanal", ss),
-                StructureTuningHelper.GetStructureFromId("spleen", ss)
+                StructureTuningHelper.GetStructureFromId("spleen", ss),
             };
+            //need to know target dosing
+            if (string.Equals(EclipseContext.GetInstance().Patient.Sex, "male", System.StringComparison.OrdinalIgnoreCase)) structures.Add(StructureTuningHelper.GetStructureFromId("spleen", ss));
+
             ContourHelper.ContourUnion(structures, ptv);
             ptv.SegmentVolume = ptv.Margin(5.0);
 
@@ -153,6 +157,7 @@ namespace TMLIAutoPlanner.Core
                     ProvideUIUpdate($"Normal structure {manipulationItem.StructureId} is null or empty! Skipping manipulation");
                 }
             }
+            ContourHelper.CropStructureFromBody(target, EclipseContext.GetInstance().StructureSet, -0.3);
             return false;
         }
 

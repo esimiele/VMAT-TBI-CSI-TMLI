@@ -22,6 +22,7 @@ using PlanType = AutoPlannerHelpers.Enums.PlanType;
 using AutoPlannerHelpers.BaseViewModel;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
+using System.Windows.Media;
 
 namespace TBIAutoPlanner.ViewModels
 {
@@ -33,6 +34,7 @@ namespace TBIAutoPlanner.ViewModels
         private double _flashMargin;
         private double _ptvMarginFromBody;
         private Visibility _stitchCTTabVisible;
+        private System.Windows.Media.SolidColorBrush _stitchCTTabBackground;
         private int _initialTabSelected;
 
         public bool UseFlash
@@ -57,6 +59,12 @@ namespace TBIAutoPlanner.ViewModels
         {
             get { return _ptvMarginFromBody; }
             set { SetProperty(ref _ptvMarginFromBody, value); }
+        }
+
+        public System.Windows.Media.SolidColorBrush StitchCTTabBackground
+        {
+            get { return _stitchCTTabBackground; }
+            set { SetProperty(ref _stitchCTTabBackground, value); }
         }
 
         public Visibility StitchCTTabVisible
@@ -107,6 +115,7 @@ namespace TBIAutoPlanner.ViewModels
 
             _stitcherViewModel = new CTStitcherViewModel();
             StitchCT = new CTStitcherView { DataContext = _stitcherViewModel };
+            StitchCTTabBackground = Brushes.LightGray;
 
             if (!TBIAutoPlannerSettings.ShowStitchCTTab)
             {

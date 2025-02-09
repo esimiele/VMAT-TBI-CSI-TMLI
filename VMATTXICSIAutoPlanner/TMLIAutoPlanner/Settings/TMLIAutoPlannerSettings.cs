@@ -32,6 +32,5 @@ namespace TMLIAutoPlanner.Settings
         internal static double MinFieldOverlap = 20.0; //in mm
         internal static bool AllBeamsVMAT = false;
         internal static ImportExportDataModel ImportExportData { get; set; } = new ImportExportDataModel();
-
     }
 }

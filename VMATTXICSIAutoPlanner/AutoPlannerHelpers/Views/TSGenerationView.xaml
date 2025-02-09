@@ -166,7 +166,7 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
                                     <Label Grid.Column="0" HorizontalAlignment="Center" Content="{Binding DICOMType}"/>
-                                    <Label Grid.Column="1" HorizontalAlignment="Center" Content="{Binding StructureId}"/>
+                                    <TextBlock Grid.Column="1" HorizontalAlignment="Center" Text="{Binding StructureId}" Margin="0,5,0,0"/>
                                     <Button Content="Clear" Grid.Column="3" Command="{Binding Path=DataContext.ClearRowCommand, ElementName=TSStructureSP}" CommandParameter="{Binding}" Width="90" Margin="1"/>
                                 </Grid>
                             </DataTemplate>
