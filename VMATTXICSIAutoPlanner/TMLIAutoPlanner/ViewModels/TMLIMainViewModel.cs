@@ -230,6 +230,14 @@ namespace TMLIAutoPlanner.ViewModels
                     }
                 }
             }
+
+            if(!ReferenceEquals(_selectedTemplate, null))
+            {
+                _tsGenerationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
+                _ringGenerationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
+                _tsManipulationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
+            }
+            
             return false;
         }
         #endregion
@@ -259,8 +267,10 @@ namespace TMLIAutoPlanner.ViewModels
                 _tsManipulationVM.UpdateTSManipulationList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id), generateTS.TSManipulationList);
             }
             _planIsocenters = generateTS.PlanIsocentersList;
+            InjectNumBeamsPerIso();
 
             _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters, TMLIAutoPlannerSettings.AvailableLinacs, TMLIAutoPlannerSettings.AvailableEnergies);
+            _optimizationSetupVM.UpdateStructureIdList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id));
             _planOptimizationSetup = UpdateOptimizationConstraintsWithRings(generateTS.AddedRings, _planOptimizationSetup);
             _planOptimizationSetup = UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
 
@@ -276,6 +286,17 @@ namespace TMLIAutoPlanner.ViewModels
 
             //_planIsocenters.Add(new PlanIsocenterModel("test", new List<IsocenterModel> { new IsocenterModel("1", 2, BeamType.VMAT), new IsocenterModel("2", 3, BeamType.VMAT), new IsocenterModel("3", 4, BeamType.VMAT) }));
             //_planIsocenters.Add(new PlanIsocenterModel("doubleTest", new List<IsocenterModel> { new IsocenterModel("4", 2, BeamType.APPA) }));
+        }
+
+        private void InjectNumBeamsPerIso()
+        {
+            foreach(PlanIsocenterModel planIso in _planIsocenters)
+            {
+                for(int i = 0; i < planIso.Isocenters.Count(); i++)
+                {
+                    planIso.Isocenters.ElementAt(i).NumberOfBeams = TMLIAutoPlannerSettings.BeamsPerIsocenter.ElementAt(i);
+                }
+            }
         }
         #endregion
 
@@ -382,9 +403,7 @@ namespace TMLIAutoPlanner.ViewModels
             InitialNumberOfFractions = (_selectedTemplate as TMLIAutoPlanTemplate).InitialRxNumberOfFractions;
             _prepForTargetsVM.UpdateRequestedTargetStructures((_selectedTemplate as TMLIAutoPlanTemplate).RequestedPreliminaryTargets);
             _setTargetsVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
-            _tsGenerationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
-            _ringGenerationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
-            _tsManipulationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
+            
         }
 
         #region script configuration

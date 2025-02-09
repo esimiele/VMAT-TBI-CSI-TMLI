@@ -41,6 +41,7 @@ namespace TMLIAutoPlanner.Core
                                                List<PrescriptionModel> presc)
         {
             TS_structures = new List<RequestedTSStructureModel>(ts);
+            TSManipulationList = new List<RequestedTSManipulationModel>(manipulations);
             _requestedRings = new List<TSRingStructureModel>(rings);
             prescriptions = new List<PrescriptionModel>(presc);
             SetCloseOnFinish(TMLIAutoPlannerSettings.CloseProgressWindowOnFinish, 3000);
@@ -191,12 +192,16 @@ namespace TMLIAutoPlanner.Core
                     }
                 }
                 else ProvideUIUpdate("No TS manipulations requested!");
-                if (string.Equals(itr.TargetId.ToLower(), "ptv_tmli"))
+                if (string.Equals(itr.TargetId.ToLower(), "ptv_tmli") && !TMLIAutoPlannerSettings.AllBeamsVMAT && StructureTuningHelper.DoesStructureExistInSS("matchline", EclipseContext.GetInstance().StructureSet, true))
                 {
-                    //ts_ptv_vmat needs to be handled AFTER ts manipulation because ptv_body itself needs to be cropped from all the relevant structures
-                    (bool fail, string tsPTVVMATId) = GenerateTSPTVTarget(addedTSTarget, "TS_PTV_TMLI");
-                    if (fail) return true;
-                    tmpTSTargetList.Add(new TargetModel(itr.TargetId, itr.CumulativeDoseToTarget, tsPTVVMATId));
+                    ProvideUIUpdate($"Cutting {addedTSTarget} at the matchline!");
+
+                    //find the image plane where the matchline is location. Record this value and break the loop. Also find the first slice where the ptv_body contour starts and record this value
+                    Structure matchline = StructureTuningHelper.GetStructureFromId("matchline", EclipseContext.GetInstance().StructureSet);
+                    ProvideUIUpdate($"Retrieved matchline structure: {matchline.Id}");
+
+                    if (ContourTSLegs("TS_PTV_Legs", matchline, addedTSTarget)) return true;
+                    if (CutTSPTVAtMatchline(addedTSTarget, matchline)) return true;
                 }
             }
             //only one plan is allowed for the prescriptions --> last item is the highest Rx target for this plan and needs to be set as the normalization volume
@@ -205,33 +210,6 @@ namespace TMLIAutoPlanner.Core
 
             ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
-        }
-
-        private (bool fail, string tsPTVVMATId) GenerateTSPTVTarget(Structure baseTarget, string requestedTsTargetId)
-        {
-            UpdateUILabel($"Create {requestedTsTargetId}:");
-            int percentComplete = 0;
-            int calcItems = 2;
-            Structure addedTSTarget = GetTSTarget(baseTarget.Id, requestedTsTargetId);
-            ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Contoured TS target: {addedTSTarget.Id}");
-
-            if(TMLIAutoPlannerSettings.AllBeamsVMAT)
-            {
-                ProvideUIUpdate("All beams requested as VMAT. Skipping splitting of TS_PTV_TMLI at matchline");
-                return (false, addedTSTarget.Id);
-            }
-            if (StructureTuningHelper.DoesStructureExistInSS("matchline", EclipseContext.GetInstance().StructureSet, true))
-            {
-                ProvideUIUpdate($"Cutting {addedTSTarget} at the matchline!");
-
-                //find the image plane where the matchline is location. Record this value and break the loop. Also find the first slice where the ptv_body contour starts and record this value
-                Structure matchline = StructureTuningHelper.GetStructureFromId("matchline", EclipseContext.GetInstance().StructureSet);
-                ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved matchline structure: {matchline.Id}");
-
-                if (ContourTSLegs("TS_PTV_Legs", matchline, addedTSTarget)) return (true, addedTSTarget.Id);
-                if (CutTSPTVAtMatchline(addedTSTarget, matchline)) return (true, addedTSTarget.Id);
-            }
-            return (false, addedTSTarget.Id);
         }
 
         private bool ContourTSLegs(string TSLegsId, Structure matchline, Structure target)

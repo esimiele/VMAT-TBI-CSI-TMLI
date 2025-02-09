@@ -60,6 +60,12 @@ namespace AutoPlannerHelpers.ViewModels
             _planType = planType;
         }
 
+        public void UpdateStructureIdList(IEnumerable<string> newIds)
+        {
+            StructureIds.Clear();
+            StructureIds.AddRange(newIds);
+        }
+
         public void UpdateUIWithPlanOptimizationSetupList(List<PlanOptimizationSetupModel> planOptSetup)
         {
             if (!planOptSetup.Any()) return;
@@ -101,7 +107,20 @@ namespace AutoPlannerHelpers.ViewModels
             if (!_defaultPlanOptSetup.Any()) return;
 
             PlanOptimizationConstraints.Clear();
-            foreach (PlanOptimizationSetupModel itr in _defaultPlanOptSetup) PlanOptimizationConstraints.Add(itr);
+            foreach (PlanOptimizationSetupModel itr in _defaultPlanOptSetup)
+            {
+                List<OptimizationConstraintModel> constraints = new List<OptimizationConstraintModel>();
+                foreach(OptimizationConstraintModel optModel in itr.OptimizationConstraints)
+                {
+                    if (_structureIds.Any(x => string.Equals(x, optModel.StructureId, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        optModel.StructureId = _structureIds.First(x => string.Equals(x, optModel.StructureId, System.StringComparison.OrdinalIgnoreCase));
+                        constraints.Add(new OptimizationConstraintModel(optModel));
+                    }
+                }
+
+                PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel(itr.PlanId, constraints));
+            }
         }
 
         private void ClearOptimizationConstraints()

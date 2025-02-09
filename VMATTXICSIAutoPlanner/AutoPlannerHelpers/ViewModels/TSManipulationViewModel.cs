@@ -70,7 +70,8 @@ namespace AutoPlannerHelpers.ViewModels
                 else if (StructureIdsPostUnion.Any(x => string.Equals(x, itr.StructureId, System.StringComparison.OrdinalIgnoreCase)))
                 {
                     //only add it they base structure exists in the structure set
-                    RequestedTSManipulations.Add(itr);
+                    string structureId = StructureIdsPostUnion.First(x => string.Equals(x, itr.StructureId, System.StringComparison.OrdinalIgnoreCase));
+                    RequestedTSManipulations.Add(new RequestedTSManipulationModel(structureId, itr.ManipulationType, itr.MarginInCM));
                 }
             }
         }

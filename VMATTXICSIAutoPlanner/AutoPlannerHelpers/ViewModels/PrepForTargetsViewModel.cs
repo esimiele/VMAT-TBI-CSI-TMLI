@@ -29,6 +29,7 @@ namespace AutoPlannerHelpers.ViewModels
         public PrepForTargetsViewModel(ICommand notifyMainVM)
         {
             _notifyMainVMExecuted = notifyMainVM;
+            _originalRequestedTargets = new List<RequestedTSStructureModel> { };
             RequestedTuningStructures = new ObservableCollectionPropertyNotify<RequestedTSStructureModel> { };
             DisplayInfoCommand = new RelayCommand(DisplayPrepForTargetsInfo);
             AddDefaultTSStructuresCommand = new RelayCommand(AddDefaultTSStructures);

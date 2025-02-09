@@ -99,6 +99,9 @@ namespace AutoPlannerHelpers.ViewModels
             else RequestedNumberOfIsosVisible = Visibility.Visible;
             UpdateNumberOfIsocentersCommand = new RelayCommand(UpdateRequestedNumberOfVMATIsocenters);
             CreatePlansAndPlaceBeamsCommand = new RelayCommand(CreatePlansAndPlaceBeams);
+            PlanIsocenterList = new ObservableCollectionPropertyNotify<PlanIsocenterModel> { };
+            AvailableEnergies = new List<string> { };
+            AvailableLinacs = new List<string> { };
             _requestedNumberOfVMATIsos = 0;
         }
 
@@ -115,11 +118,15 @@ namespace AutoPlannerHelpers.ViewModels
 
         public void PopulateBeamPlacementUI(List<PlanIsocenterModel> isos, List<string> linacs, List<string> energies)
         {
-            _requestedNumberOfVMATIsos = isos.First().Isocenters.Count(x => x.BeamType == BeamType.VMAT);
-            PlanIsocenterList = new ObservableCollectionPropertyNotify<PlanIsocenterModel> { };
+            RequestedNumberOfVMATIsos = isos.First().Isocenters.Count(x => x.BeamType == BeamType.VMAT);
+            PlanIsocenterList.Clear();
             foreach(PlanIsocenterModel itr in isos) PlanIsocenterList.Add(itr);
-            AvailableLinacs = new List<string>(linacs);
-            AvailableEnergies = new List<string>(energies);
+            AvailableEnergies.Clear();
+            AvailableEnergies.AddRange(energies);
+            SelectedEnergy = energies.First();
+            AvailableLinacs.Clear();
+            AvailableLinacs.AddRange(linacs);
+            SelectedLinac = linacs.First();
         }
 
         public void UpdateRequestedNumberOfVMATIsocenters() 
