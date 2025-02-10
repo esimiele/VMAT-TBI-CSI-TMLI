@@ -9,6 +9,7 @@ using AutoPlannerHelpers.BaseCore;
 using AutoPlannerHelpers.Enums;
 using System.Text;
 using VMS.TPS.Common.Model.Types;
+using System;
 
 namespace TMLIAutoPlanner.Core
 {
@@ -179,13 +180,48 @@ namespace TMLIAutoPlanner.Core
                                                                     EclipseContext.GetInstance().StructureSet.Image.Origin.z,
                                                                     EclipseContext.GetInstance().StructureSet.Image.ZRes);
 
-            for(int i = supOralCavitySlice; i <= supBodySlice; i++)
+            Structure tmpTarget = EclipseContext.GetInstance().StructureSet.AddStructure("CONTROL", "_tmpTarget");
+            ContourHelper.CopyStructureOntoStructure(target, tmpTarget);
+
+            for (int i = supOralCavitySlice; i <= supBodySlice; i++)
             {
-                VVector[][] ptvPoints = target.GetContoursOnImagePlane(i);
-                VVector[] expandedBrainPoints = expandedBrain.GetContoursOnImagePlane(i)[0];
+                VVector[][] ptvPoints = tmpTarget.GetContoursOnImagePlane(i);
+                tmpTarget.ClearAllContoursOnImagePlane(i);
+                List<VVector> expandedBrainPoints = expandedBrain.GetContoursOnImagePlane(i)[0].ToList();
                 for(int j = 0; j < ptvPoints.Count(); j ++)
                 {
-
+                    List<VVector> ptvContourPoints = ptvPoints[j].ToList();
+                    if (ptvContourPoints.Any(x => expandedBrain.IsPointInsideSegment(x)))
+                    {
+                        if (ptvContourPoints.Any(x => tmpTarget.IsPointInsideSegment(x)))
+                        {
+                            //all points inside ptv contour --> subtract this segment
+                            tmpTarget.SubtractContourOnImagePlane(ptvPoints[j], i);
+                        }
+                        else
+                        {
+                            //not all points inside ptv contour --> island segment
+                            //need to check if all points are inside expanded brain
+                            if (ptvContourPoints.All(x => expandedBrain.IsPointInsideSegment(x)))
+                            {
+                                //all points inside expanded brain contour --> add this segment
+                                tmpTarget.AddContourOnImagePlane(ptvPoints[j], i);
+                            }
+                            else
+                            {
+                                //not all points inside expanded brain --> need to grab the points that are not inside and crop them
+                                for(int k = 0; k < ptvContourPoints.Count(); k ++)
+                                {
+                                    if(!expandedBrain.IsPointInsideSegment(ptvContourPoints[k]))
+                                    {
+                                        VVector point = ptvContourPoints[k];
+                                        ptvContourPoints[k] = expandedBrainPoints.OrderBy(x => Math.Sqrt(Math.Pow(x.x - point.x, 2) + Math.Pow(x.y - point.y, 2))).First();
+                                    }
+                                }
+                                tmpTarget.AddContourOnImagePlane(ptvContourPoints.ToArray(), i);
+                            }
+                        }
+                    }
                 }
             }
             return false;
