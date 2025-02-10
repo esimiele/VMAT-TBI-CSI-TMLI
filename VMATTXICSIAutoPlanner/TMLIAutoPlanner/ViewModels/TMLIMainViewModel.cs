@@ -30,24 +30,24 @@ namespace TMLIAutoPlanner.ViewModels
     public class TMLIMainViewModel : BaseViewModel
     {
         #region properties
-        private System.Windows.Media.SolidColorBrush _prepForTargetsBackground;
-        private System.Windows.Media.SolidColorBrush _setTargetsTabBackground;
-        private System.Windows.Media.SolidColorBrush _stitchCTTabBackground;
+        private SolidColorBrush _prepForTargetsBackground;
+        private SolidColorBrush _setTargetsTabBackground;
+        private SolidColorBrush _stitchCTTabBackground;
         private Visibility _stitchCTTabVisible;
         private int _initialTabSelected;
-        public System.Windows.Media.SolidColorBrush PrepForTargetsBackground
+        public SolidColorBrush PrepForTargetsBackground
         {
             get { return _prepForTargetsBackground; }
             set { SetProperty(ref _prepForTargetsBackground, value); }
         }
 
-        public System.Windows.Media.SolidColorBrush SetTargetsTabBackground
+        public SolidColorBrush SetTargetsTabBackground
         {
             get { return _setTargetsTabBackground; }
             set { SetProperty(ref _setTargetsTabBackground, value); }
         }
 
-        public System.Windows.Media.SolidColorBrush StitchCTTabBackground
+        public SolidColorBrush StitchCTTabBackground
         {
             get { return _stitchCTTabBackground; }
             set { SetProperty(ref _stitchCTTabBackground, value); }
@@ -139,26 +139,26 @@ namespace TMLIAutoPlanner.ViewModels
 
             //needs to be initialized after the plan templates are loaded
             ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
-            SpecifyTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
+            SpecifyTargetsTabBackground = Brushes.PaleVioletRed;
             if (EclipseContext.GetInstance().IsInitialized && !ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
             {
                 PatientMRN = EclipseContext.GetInstance().Patient.Id;
                 StructureSetId = EclipseContext.GetInstance().StructureSet.Id;
-                if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => x.ApprovalHistory.Last().ApprovalStatus == StructureApprovalStatus.Approved && x.Id.ToLower().Contains("ptv")))
+                if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => x.ApprovalHistory.First().ApprovalStatus == StructureApprovalStatus.Approved && x.Id.ToLower().Contains("ptv")))
                 {
-                    SetTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
-                    PrepForTargetsBackground = System.Windows.Media.Brushes.LightGray;
+                    SetTargetsTabBackground = Brushes.PaleVioletRed;
+                    PrepForTargetsBackground = Brushes.LightGray;
                 }
                 else
                 {
-                    PrepForTargetsBackground = System.Windows.Media.Brushes.PaleVioletRed;
-                    SetTargetsTabBackground = System.Windows.Media.Brushes.LightGray;
+                    PrepForTargetsBackground = Brushes.PaleVioletRed;
+                    SetTargetsTabBackground = Brushes.LightGray;
                 }
             }
             else
             {
-                PrepForTargetsBackground = System.Windows.Media.Brushes.LightGray;
-                SetTargetsTabBackground = System.Windows.Media.Brushes.LightGray;
+                PrepForTargetsBackground = Brushes.LightGray;
+                SetTargetsTabBackground = Brushes.LightGray;
             }
         }
 
@@ -182,7 +182,7 @@ namespace TMLIAutoPlanner.ViewModels
         #region specify targets
         private void PreparePreliminaryTargets()
         {
-            if (!EclipseContext.GetInstance().IsInitialized || !_prepForTargetsVM.RequestedTuningStructures.Any()) return;
+            if (!EclipseContext.GetInstance().IsInitialized || !_prepForTargetsVM.RequestedPreliminaryTargets.Any()) return;
             List<RequestedTSManipulationModel> targetCropOperations = new List<RequestedTSManipulationModel> { };
             bool includeTestesInPTV = true;
             if (!ReferenceEquals(_selectedTemplate, null))
@@ -190,7 +190,7 @@ namespace TMLIAutoPlanner.ViewModels
                 targetCropOperations.AddRange(_selectedTemplate.TSManipulations.Where(x => x.ManipulationType == TSManipulationType.CropTargetFromStructure));
                 if(_selectedTemplate.PlanTargets.Any() && _selectedTemplate.PlanTargets.SelectMany(x => x.Targets).OrderByDescending(x => x.TargetRxDose).First().TargetRxDose <= 200) includeTestesInPTV = false;
             }
-            GeneratePreliminaryTargets_TMLI generateTargets = new GeneratePreliminaryTargets_TMLI(_prepForTargetsVM.RequestedTuningStructures, 
+            GeneratePreliminaryTargets_TMLI generateTargets = new GeneratePreliminaryTargets_TMLI(_prepForTargetsVM.RequestedPreliminaryTargets, 
                                                                                                   targetCropOperations,
                                                                                                   includeTestesInPTV);
             EclipseContext.GetInstance().Patient.BeginModifications();
@@ -200,7 +200,7 @@ namespace TMLIAutoPlanner.ViewModels
             Logger.GetInstance().OpType = ScriptOperationType.GeneratePrelimTargets;
             if (result) return;
             Logger.GetInstance().AddedPrelimTargetsStructures = generateTargets.GetAddedTargetStructures();
-            PrepForTargetsBackground = System.Windows.Media.Brushes.ForestGreen;
+            PrepForTargetsBackground = Brushes.ForestGreen;
             MessageBox.Show("Structure set is prepared and ready for physician to review targets!");
         }
         protected override bool VerifyTargetsIntegrity(List<PlanTargetsModel> parsedTargets)
@@ -268,16 +268,15 @@ namespace TMLIAutoPlanner.ViewModels
                 _tsManipulationVM.UpdateTSManipulationList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id), generateTS.TSManipulationList);
             }
             _planIsocenters = generateTS.PlanIsocentersList;
-            InjectNumBeamsPerIso();
 
-            _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters, TMLIAutoPlannerSettings.AvailableLinacs, TMLIAutoPlannerSettings.AvailableEnergies);
+            _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters, TMLIAutoPlannerSettings.AvailableLinacs, TMLIAutoPlannerSettings.AvailableEnergies, TMLIAutoPlannerSettings.ContourFieldOverlap, TMLIAutoPlannerSettings.ContourFieldOverlapMarginInCM);
             _optimizationSetupVM.UpdateStructureIdList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id));
             _planOptimizationSetup = UpdateOptimizationConstraintsWithRings(generateTS.AddedRings, _planOptimizationSetup);
             _planOptimizationSetup = UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
 
-            StructureTuningTabBackground = System.Windows.Media.Brushes.ForestGreen;
-            TSManipulationTabBackground = System.Windows.Media.Brushes.ForestGreen;
-            BeamPlacementTabBackground = System.Windows.Media.Brushes.ForestGreen;
+            StructureTuningTabBackground = Brushes.ForestGreen;
+            TSManipulationTabBackground = Brushes.ForestGreen;
+            BeamPlacementTabBackground = Brushes.PaleVioletRed;
 
             Logger.GetInstance().AddedStructures = generateTS.AddedStructureIds;
             Logger.GetInstance().StructureManipulations = tsManipulations;
@@ -287,11 +286,6 @@ namespace TMLIAutoPlanner.ViewModels
 
             //_planIsocenters.Add(new PlanIsocenterModel("test", new List<IsocenterModel> { new IsocenterModel("1", 2, BeamType.VMAT), new IsocenterModel("2", 3, BeamType.VMAT), new IsocenterModel("3", 4, BeamType.VMAT) }));
             //_planIsocenters.Add(new PlanIsocenterModel("doubleTest", new List<IsocenterModel> { new IsocenterModel("4", 2, BeamType.APPA) }));
-        }
-
-        private void InjectNumBeamsPerIso()
-        {
-            
         }
         #endregion
 
@@ -309,11 +303,15 @@ namespace TMLIAutoPlanner.ViewModels
             Logger.GetInstance().AppendLogOutput("Generate plans and place beams output:", placeBeams.GetLogOutput());
             if (failed) return;
             if (placeBeams.VMATPlans.Any()) EclipseContext.GetInstance().VMATPlans = placeBeams.VMATPlans;
-            _planOptimizationSetup = UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions, _planOptimizationSetup);
+            if(placeBeams.FieldJunctions.Any())
+            {
+                _planOptimizationSetup = UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions, _planOptimizationSetup);
+                _optimizationSetupVM.UpdateStructureIdList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id));
+            }
             _optimizationSetupVM.UpdateUIWithPlanOptimizationSetupList(_planOptimizationSetup);
 
-            BeamPlacementTabBackground = System.Windows.Media.Brushes.ForestGreen;
-            OptimizationSetupTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
+            BeamPlacementTabBackground = Brushes.ForestGreen;
+            OptimizationSetupTabBackground = Brushes.PaleVioletRed;
         }
         #endregion
 

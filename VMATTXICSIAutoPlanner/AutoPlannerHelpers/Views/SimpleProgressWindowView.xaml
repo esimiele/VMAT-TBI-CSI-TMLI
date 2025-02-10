@@ -12,8 +12,8 @@
                 <TextBlock Text="{Binding TaskId}" FontWeight="Bold" Width="300" TextAlignment="Center" VerticalAlignment="Top" Height="18" HorizontalAlignment="Right" Margin="5"/>
             </Grid>
             <Grid Width="340" Height="26" VerticalAlignment="Top" HorizontalAlignment="Center">
-                <ProgressBar BorderThickness="1" BorderBrush="Black" HorizontalAlignment="Center" Height="20" Margin="0,0,5,0" VerticalAlignment="Top" Width="325" Minimum="0" Maximum="100" Foreground="ForestGreen" Value="{Binding TaskProgress}"/>
-                <TextBlock Text="{Binding TaskProgress, StringFormat={}{0:0}%}" Background="{Binding TaskProgressBackground}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,2,5,0" />
+                <ProgressBar BorderThickness="1" BorderBrush="Black" HorizontalAlignment="Center" Height="20" Margin="0,0,5,0" VerticalAlignment="Top" Width="325" Minimum="0" Maximum="100" Foreground="{Binding TaskProgressBackground}" Value="{Binding TaskProgress}"/>
+                <TextBlock Text="{Binding TaskProgress, StringFormat={}{0:0}%}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,2,5,0" />
             </Grid>
             <Grid>
                 <Expander VerticalAlignment="Bottom" Header="Details" Margin="5,0,5,5">

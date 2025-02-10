@@ -11,7 +11,7 @@ namespace AutoPlannerHelpers.ViewModels
 {
     public class PrepForTargetsViewModel : ObservableObject
     {
-        public ObservableCollectionPropertyNotify<RequestedTSStructureModel> RequestedTuningStructures { get; set; }
+        public ObservableCollectionPropertyNotify<RequestedTSStructureModel> RequestedPreliminaryTargets { get; set; }
 
         #region fields
         private List<RequestedTSStructureModel> _originalRequestedTargets;
@@ -30,7 +30,7 @@ namespace AutoPlannerHelpers.ViewModels
         {
             _notifyMainVMExecuted = notifyMainVM;
             _originalRequestedTargets = new List<RequestedTSStructureModel> { };
-            RequestedTuningStructures = new ObservableCollectionPropertyNotify<RequestedTSStructureModel> { };
+            RequestedPreliminaryTargets = new ObservableCollectionPropertyNotify<RequestedTSStructureModel> { };
             DisplayInfoCommand = new RelayCommand(DisplayPrepForTargetsInfo);
             AddDefaultTSStructuresCommand = new RelayCommand(AddDefaultTSStructures);
             RemoveAllTSStructuresCommand = new RelayCommand(RemoveAllTSStructures);
@@ -40,9 +40,9 @@ namespace AutoPlannerHelpers.ViewModels
 
         public void UpdateRequestedTargetStructures(List<RequestedTSStructureModel> targets)
         {
-            RequestedTuningStructures.Clear();
+            RequestedPreliminaryTargets.Clear();
             _originalRequestedTargets = new List<RequestedTSStructureModel>(targets);
-            foreach (RequestedTSStructureModel itr in _originalRequestedTargets) RequestedTuningStructures.Add(itr);
+            foreach (RequestedTSStructureModel itr in _originalRequestedTargets) RequestedPreliminaryTargets.Add(itr);
         }
 
         private void DisplayPrepForTargetsInfo()
@@ -54,18 +54,18 @@ namespace AutoPlannerHelpers.ViewModels
 
         public void AddDefaultTSStructures()
         {
-            RequestedTuningStructures.Clear();
-            foreach (RequestedTSStructureModel itr in _originalRequestedTargets) RequestedTuningStructures.Add(itr);
+            RequestedPreliminaryTargets.Clear();
+            foreach (RequestedTSStructureModel itr in _originalRequestedTargets) RequestedPreliminaryTargets.Add(itr);
         }
 
         public void ClearRow(RequestedTSStructureModel o)
         {
-            RequestedTuningStructures.Remove(o);
+            RequestedPreliminaryTargets.Remove(o);
         }
 
         private void RemoveAllTSStructures()
         {
-            RequestedTuningStructures.Clear();
+            RequestedPreliminaryTargets.Clear();
         }
 
         private void RunPrepForTargets()

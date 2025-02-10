@@ -103,6 +103,7 @@ namespace AutoPlannerHelpers.ViewModels
             PlanIsocenterList = new ObservableCollectionPropertyNotify<PlanIsocenterModel> { };
             AvailableEnergies = new List<string> { };
             AvailableLinacs = new List<string> { };
+            FieldOverlapMargin = 0.0;
             _requestedNumberOfVMATIsos = 0;
         }
 
@@ -123,7 +124,7 @@ namespace AutoPlannerHelpers.ViewModels
             _fieldsPerIso.AddRange(fieldsIso);
         }
 
-        public void PopulateBeamPlacementUI(List<PlanIsocenterModel> isos, List<string> linacs, List<string> energies)
+        public void PopulateBeamPlacementUI(List<PlanIsocenterModel> isos, List<string> linacs, List<string> energies, bool contourOverlap, double overlapMargin)
         {
             RequestedNumberOfVMATIsos = isos.First().Isocenters.Count(x => x.BeamType == BeamType.VMAT);
             PlanIsocenterList.Clear();
@@ -141,6 +142,11 @@ namespace AutoPlannerHelpers.ViewModels
             AvailableLinacs.Clear();
             AvailableLinacs.AddRange(linacs);
             SelectedLinac = linacs.First();
+            if(contourOverlap)
+            {
+                ContourFieldOverlapChecked = true;
+                FieldOverlapMargin = overlapMargin;
+            }
         }
 
         public void UpdateRequestedNumberOfVMATIsocenters() 
@@ -176,16 +182,16 @@ namespace AutoPlannerHelpers.ViewModels
 
         public void CreatePlansAndPlaceBeams()
         {
-            StringBuilder sb = new StringBuilder();
-            foreach(PlanIsocenterModel itr in PlanIsocenterList)
-            {
-                sb.AppendLine($"Plan Id: {itr.PlanId}");
-                foreach(IsocenterModel iso in itr.Isocenters)
-                {
-                    sb.AppendLine($"Isocenter {iso.IsocenterId}: {iso.NumberOfBeams}");
-                }
-            }
-            MessageBox.Show( sb.ToString() );
+            //StringBuilder sb = new StringBuilder();
+            //foreach(PlanIsocenterModel itr in PlanIsocenterList)
+            //{
+            //    sb.AppendLine($"Plan Id: {itr.PlanId}");
+            //    foreach(IsocenterModel iso in itr.Isocenters)
+            //    {
+            //        sb.AppendLine($"Isocenter {iso.IsocenterId}: {iso.NumberOfBeams}");
+            //    }
+            //}
+            //MessageBox.Show( sb.ToString() );
             _notifyMainVMExecuted.Execute(null);
         }
     }

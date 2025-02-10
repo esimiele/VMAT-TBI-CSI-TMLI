@@ -339,7 +339,7 @@ namespace TMLIAutoPlanner.Core
                 //no matchline implying that this patient will be treated with VMAT only. For these cases the maximum number of allowed isocenters is 3.
                 //the reason for the explicit statements calculating the number of isos and then truncating them to 3 was to account for patients requiring < 3 isos and if, later on, we want to remove the restriction of 3 isos
                 NumberofIsocenters = NumberofVMATIsocenters = (int)Math.Ceiling(bodyExtent / (TMLIAutoPlannerSettings.MaxFieldYExtent - TMLIAutoPlannerSettings.MinFieldOverlap));
-                if (NumberofIsocenters > 3) NumberofIsocenters = NumberofVMATIsocenters = 3;
+                if (NumberofIsocenters > 4) NumberofIsocenters = NumberofVMATIsocenters = 4;
                 ProvideUIUpdate(100 * ++percentComplete / calcItems);
             }
             else
@@ -353,7 +353,7 @@ namespace TMLIAutoPlanner.Core
 
                     //continue and ignore the empty matchline structure (same calculation as VMAT only)
                     NumberofIsocenters = NumberofVMATIsocenters = (int)Math.Ceiling(bodyExtent / (TMLIAutoPlannerSettings.MaxFieldYExtent - TMLIAutoPlannerSettings.MinFieldOverlap));
-                    if (NumberofIsocenters > 3) NumberofIsocenters = NumberofVMATIsocenters = 3;
+                    if (NumberofIsocenters > 4) NumberofIsocenters = NumberofVMATIsocenters = 4;
                     ProvideUIUpdate(100 * ++percentComplete / calcItems);
 
                 }

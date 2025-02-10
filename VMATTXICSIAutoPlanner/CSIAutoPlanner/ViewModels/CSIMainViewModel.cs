@@ -151,7 +151,7 @@ namespace CSIAutoPlanner.ViewModels
             SpecifyTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
             if (EclipseContext.GetInstance().IsInitialized && ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
             {
-                if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => x.ApprovalHistory.Last().ApprovalStatus == StructureApprovalStatus.Approved && x.Id.ToLower().Contains("ptv")))
+                if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => x.ApprovalHistory.First().ApprovalStatus == StructureApprovalStatus.Approved && x.Id.ToLower().Contains("ptv")))
                 {
                     SetTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
                     PrepForTargetsBackground = System.Windows.Media.Brushes.LightGray;
@@ -198,8 +198,8 @@ namespace CSIAutoPlanner.ViewModels
         #region specify targets
         private void PreparePreliminaryTargets()
         {
-            if (!_prepForTargetsVM.RequestedTuningStructures.Any()) return;
-            GeneratePreliminaryTargets_CSI generateTargets = new GeneratePreliminaryTargets_CSI(_prepForTargetsVM.RequestedTuningStructures);
+            if (!EclipseContext.GetInstance().IsInitialized || !_prepForTargetsVM.RequestedPreliminaryTargets.Any()) return;
+            GeneratePreliminaryTargets_CSI generateTargets = new GeneratePreliminaryTargets_CSI(_prepForTargetsVM.RequestedPreliminaryTargets);
             EclipseContext.GetInstance().Patient.BeginModifications();
             bool result = generateTargets.Execute();
             //grab the log output regardless if it passes or fails
@@ -289,14 +289,14 @@ namespace CSIAutoPlanner.ViewModels
             }
             _planIsocenters = generateTS.PlanIsocentersList;
 
-            _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters, CSIAutoPlannerSettings.AvailableLinacs, CSIAutoPlannerSettings.AvailableEnergies);
+            _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters, CSIAutoPlannerSettings.AvailableLinacs, CSIAutoPlannerSettings.AvailableEnergies, CSIAutoPlannerSettings.ContourFieldOverlap, CSIAutoPlannerSettings.ContourFieldOverlapMarginInCM);
             _planOptimizationSetup = UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
             _planOptimizationSetup = UpdateOptimizationConstraintsWithRings(generateTS.AddedRings, _planOptimizationSetup);
             _planOptimizationSetup = UpdateOptimizationConstraintsWithCropOverlapStructures(generateTS.TargetCropOverlapManipulations, _planOptimizationSetup);
 
             StructureTuningTabBackground = System.Windows.Media.Brushes.ForestGreen;
             TSManipulationTabBackground = System.Windows.Media.Brushes.ForestGreen;
-            BeamPlacementTabBackground = System.Windows.Media.Brushes.ForestGreen;
+            BeamPlacementTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
 
             Logger.GetInstance().AddedStructures = generateTS.AddedStructureIds;
             Logger.GetInstance().StructureManipulations = tsManipulations;

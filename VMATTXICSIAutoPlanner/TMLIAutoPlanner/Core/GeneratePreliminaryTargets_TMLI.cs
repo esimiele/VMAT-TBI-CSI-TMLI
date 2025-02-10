@@ -165,7 +165,7 @@ namespace TMLIAutoPlanner.Core
             //ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("ribs", ss).Margin(5.0), ptv, 0.0);
             ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("bones_extrem", ss).Margin(10.0), ptv, 0.0);
             ProvideUIUpdate($"Unioned bones_extrem with PTV_TMLI with 10 mm outer margin");
-            //PostProcessPTVTMLI(ptv);
+            PostProcessPTVTMLI(ptv);
             return false;
         }
 
@@ -176,54 +176,44 @@ namespace TMLIAutoPlanner.Core
             int supOralCavitySlice = CalculationHelper.ComputeSlice(StructureTuningHelper.GetStructureFromId("oralcavity", EclipseContext.GetInstance().StructureSet).MeshGeometry.Positions.Max(p => p.Z),
                                                                     EclipseContext.GetInstance().StructureSet.Image.Origin.z,
                                                                     EclipseContext.GetInstance().StructureSet.Image.ZRes);
-            int supBodySlice = CalculationHelper.ComputeSlice(StructureTuningHelper.GetStructureFromId("body", EclipseContext.GetInstance().StructureSet).MeshGeometry.Positions.Max(p => p.Z),
+            int supSlice = CalculationHelper.ComputeSlice(StructureTuningHelper.GetStructureFromId("eyes", EclipseContext.GetInstance().StructureSet).MeshGeometry.Positions.Max(p => p.Z) + 15.0,
                                                                     EclipseContext.GetInstance().StructureSet.Image.Origin.z,
                                                                     EclipseContext.GetInstance().StructureSet.Image.ZRes);
 
-            Structure tmpTarget = EclipseContext.GetInstance().StructureSet.AddStructure("CONTROL", "_tmpTarget");
-            ContourHelper.CopyStructureOntoStructure(target, tmpTarget);
+            double zPos = StructureTuningHelper.GetStructureFromId("eyes", EclipseContext.GetInstance().StructureSet).MeshGeometry.Positions.OrderByDescending(x => x.Z).First().Z + 15.0 - EclipseContext.GetInstance().StructureSet.Image.UserOrigin.z;
+            ProvideUIUpdate($"{zPos}");
 
-            for (int i = supOralCavitySlice; i <= supBodySlice; i++)
+            //Structure tmpTarget = EclipseContext.GetInstance().StructureSet.AddStructure("CONTROL", "_tmpTarget");
+            //ContourHelper.CopyStructureOntoStructure(target, tmpTarget);
+
+            Structure tmp = EclipseContext.GetInstance().StructureSet.AddStructure("CONTROL", "_tmp");
+
+            int percentComplete = 0;
+            int calcItems = supSlice - supOralCavitySlice + 1;
+            for (int i = supOralCavitySlice; i <= supSlice; i++)
             {
-                VVector[][] ptvPoints = tmpTarget.GetContoursOnImagePlane(i);
-                tmpTarget.ClearAllContoursOnImagePlane(i);
-                List<VVector> expandedBrainPoints = expandedBrain.GetContoursOnImagePlane(i)[0].ToList();
+                VVector[][] ptvPoints = target.GetContoursOnImagePlane(i);
+                target.ClearAllContoursOnImagePlane(i);
                 for(int j = 0; j < ptvPoints.Count(); j ++)
                 {
                     List<VVector> ptvContourPoints = ptvPoints[j].ToList();
-                    if (ptvContourPoints.Any(x => expandedBrain.IsPointInsideSegment(x)))
+                    if (ptvContourPoints.Any(x => tmp.IsPointInsideSegment(x)))
                     {
-                        if (ptvContourPoints.Any(x => tmpTarget.IsPointInsideSegment(x)))
-                        {
-                            //all points inside ptv contour --> subtract this segment
-                            tmpTarget.SubtractContourOnImagePlane(ptvPoints[j], i);
-                        }
-                        else
-                        {
-                            //not all points inside ptv contour --> island segment
-                            //need to check if all points are inside expanded brain
-                            if (ptvContourPoints.All(x => expandedBrain.IsPointInsideSegment(x)))
-                            {
-                                //all points inside expanded brain contour --> add this segment
-                                tmpTarget.AddContourOnImagePlane(ptvPoints[j], i);
-                            }
-                            else
-                            {
-                                //not all points inside expanded brain --> need to grab the points that are not inside and crop them
-                                for(int k = 0; k < ptvContourPoints.Count(); k ++)
-                                {
-                                    if(!expandedBrain.IsPointInsideSegment(ptvContourPoints[k]))
-                                    {
-                                        VVector point = ptvContourPoints[k];
-                                        ptvContourPoints[k] = expandedBrainPoints.OrderBy(x => Math.Sqrt(Math.Pow(x.x - point.x, 2) + Math.Pow(x.y - point.y, 2))).First();
-                                    }
-                                }
-                                tmpTarget.AddContourOnImagePlane(ptvContourPoints.ToArray(), i);
-                            }
-                        }
+                        //points inside ptv contour --> subtract this segment
+                        tmp.SubtractContourOnImagePlane(ptvPoints[j], i);
+                        ProvideUIUpdate($"Points inside ptv. Subtracting contours from image slice: {i}");
+                    }
+                    else
+                    {
+                        tmp.AddContourOnImagePlane(ptvPoints[j], i);
+                        ProvideUIUpdate($"Adding contours on image slice: {i}");
                     }
                 }
+                ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Image slice: {i}");
             }
+
+            ContourHelper.ContourOverlapAndUnion(expandedBrain, tmp, target, EclipseContext.GetInstance().StructureSet, 0.0);
+            EclipseContext.GetInstance().StructureSet.RemoveStructure(tmp);
             return false;
         }
 

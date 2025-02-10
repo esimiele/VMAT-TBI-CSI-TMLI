@@ -19,7 +19,7 @@
                     <Label Grid.Column="0" Content="Contour overlap between VMAT isocenters:" FontSize="13" FontStyle="Normal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,0,0"></Label>
                     <CheckBox IsChecked="{Binding ContourFieldOverlapChecked}" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,3,0,0"/>
                     <Label Grid.Column="2" Content="Added Margin (cm):" FontSize="13" FontStyle="Normal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,0,0" Visibility="{Binding ContourOverlapMarginVisible}"></Label>
-                    <TextBox Grid.Column="3" FontSize="12" TextAlignment="Center" HorizontalAlignment="Left" VerticalAlignment="Center" Width="35" Height="20" Margin="0,2,0,0" Visibility="{Binding ContourOverlapMarginVisible}"></TextBox>
+                    <TextBox Grid.Column="3" FontSize="12" TextAlignment="Center" HorizontalAlignment="Left" VerticalAlignment="Center" Width="35" Height="20" Margin="0,2,0,0" Text="{Binding FieldOverlapMargin}" Visibility="{Binding ContourOverlapMarginVisible}"></TextBox>
                     <Button Grid.Column="4" Content="?" HorizontalAlignment="Right" VerticalAlignment="Center" Width="30" Height="20" Margin="0,2,0,0"></Button>
                 </Grid>
 

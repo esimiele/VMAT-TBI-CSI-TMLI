@@ -125,7 +125,7 @@ namespace AutoPlannerHelpers.BaseCore
             foreach (RequestedTSStructureModel itr in _createPrelimTargetList)
             {
                 Structure tmp = StructureTuningHelper.GetStructureFromId(itr.StructureId, EclipseContext.GetInstance().StructureSet);
-                if (tmp == null)
+                if (ReferenceEquals(tmp, null))
                 {
                     ProvideUIUpdate($"Target: {itr.StructureId} is missing");
                     _missingTargets.Add(itr);

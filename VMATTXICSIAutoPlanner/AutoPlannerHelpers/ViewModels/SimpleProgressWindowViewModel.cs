@@ -63,6 +63,11 @@ namespace AutoPlannerHelpers.ViewModels
         #region commands
         #endregion
 
+        public SimpleProgressWindowViewModel()
+        {
+            TaskProgressBackground = Brushes.ForestGreen;
+        }
+
         public void DoStuff(ESAPIWorker slave)
         {
             slave.DoWork(() =>
