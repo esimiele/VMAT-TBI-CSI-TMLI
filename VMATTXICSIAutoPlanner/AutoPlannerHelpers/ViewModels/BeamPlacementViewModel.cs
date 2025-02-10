@@ -89,6 +89,7 @@ namespace AutoPlannerHelpers.ViewModels
         #endregion
 
         #region fields
+        private List<int> _fieldsPerIso = new List<int> { 0,0,0,0,0,0,0};
         #endregion
 
         public BeamPlacementViewModel(ICommand NotifyMainVMExecuted, PlanType type)
@@ -116,11 +117,24 @@ namespace AutoPlannerHelpers.ViewModels
             else ContourOverlapMarginVisible = Visibility.Hidden;
         }
 
+        public void UpdateBeamsPerIso(IEnumerable<int> fieldsIso)
+        {
+            _fieldsPerIso.Clear();
+            _fieldsPerIso.AddRange(fieldsIso);
+        }
+
         public void PopulateBeamPlacementUI(List<PlanIsocenterModel> isos, List<string> linacs, List<string> energies)
         {
             RequestedNumberOfVMATIsos = isos.First().Isocenters.Count(x => x.BeamType == BeamType.VMAT);
             PlanIsocenterList.Clear();
-            foreach(PlanIsocenterModel itr in isos) PlanIsocenterList.Add(itr);
+            foreach (PlanIsocenterModel itr in isos)
+            {
+                for (int i = 0; i < itr.Isocenters.Count(); i++)
+                {
+                    itr.Isocenters.ElementAt(i).NumberOfBeams = _fieldsPerIso.ElementAt(i);
+                }
+                PlanIsocenterList.Add(itr);
+            }
             AvailableEnergies.Clear();
             AvailableEnergies.AddRange(energies);
             SelectedEnergy = energies.First();
@@ -142,7 +156,13 @@ namespace AutoPlannerHelpers.ViewModels
                 string planId = PlanIsocenterList.First().PlanId;
                 int totalNumIsos = _requestedNumberOfVMATIsos + PlanIsocenterList.SelectMany(x => x.Isocenters).Count(x => x.BeamType == BeamType.APPA);
                 PlanIsocenterList.Clear();
-                PlanIsocenterList.Add(new PlanIsocenterModel(planId, IsoNameHelper.GetTBIVMATIsoNames(_requestedNumberOfVMATIsos, totalNumIsos)));
+                List<IsocenterModel> newIsos = IsoNameHelper.GetTBIVMATIsoNames(_requestedNumberOfVMATIsos, totalNumIsos);
+                for (int i = 0; i < newIsos.Count(); i++)
+                {
+                    newIsos.ElementAt(i).NumberOfBeams = _fieldsPerIso.ElementAt(i);
+                }
+
+                PlanIsocenterList.Add(new PlanIsocenterModel(planId, newIsos));
                 if(totalNumIsos > _requestedNumberOfVMATIsos)
                 {
                     PlanIsocenterList.Add(new PlanIsocenterModel("AP / PA upper legs", new IsocenterModel("AP / PA upper legs")));

@@ -140,6 +140,8 @@ namespace CSIAutoPlanner.ViewModels
             _structureCropOverlapVM = new StructureCropOverlapViewModel(_structureIdsPostUnion);
             StructureCropOverlap = new StructureCropOverlapView { DataContext = _structureCropOverlapVM };
 
+            _beamPlacementVM.UpdateBeamsPerIso(CSIAutoPlannerSettings.BeamsPerIsocenter);
+
             QuickStartGuideCommand = new RelayCommand(LaunchQuickStartGuide);
             HelpGuideCommand = new RelayCommand(LaunchHelpGuide);
 

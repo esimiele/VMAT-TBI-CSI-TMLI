@@ -122,6 +122,7 @@ namespace TBIAutoPlanner.ViewModels
                 StitchCTTabVisible = Visibility.Collapsed;
                 InitialTabSelected = 1;
             }
+
             PTVMarginFromBody = TBIAutoPlannerSettings.PTVInnerMarginFromBodyInCM;
             UseFlash = TBIAutoPlannerSettings.UseFlash;
             if (!TBIAutoPlannerSettings.UseFlash) FlashMarginVisible = Visibility.Hidden;
@@ -131,11 +132,11 @@ namespace TBIAutoPlanner.ViewModels
             HelpGuideCommand = new RelayCommand(LaunchHelpGuide);
             PTVMarginInfoCommand = new RelayCommand(ShowPTVMarginInfo);
 
+            _beamPlacementVM.UpdateBeamsPerIso(TBIAutoPlannerSettings.BeamsPerIsocenter);
+
             //needs to be initialized after the plan templates are loaded
             ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
-
             SpecifyTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
-
         }
 
         #region information and help guides

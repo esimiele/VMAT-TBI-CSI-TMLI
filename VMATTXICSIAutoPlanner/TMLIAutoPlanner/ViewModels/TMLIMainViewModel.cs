@@ -131,7 +131,8 @@ namespace TMLIAutoPlanner.ViewModels
             RingGeneration = new RingGenerationView { DataContext = _ringGenerationVM };
 
             if (TMLIAutoPlannerSettings.AllBeamsVMAT) _beamPlacementVM.HideRequestedNumberOfIsos();
-            
+            _beamPlacementVM.UpdateBeamsPerIso(TMLIAutoPlannerSettings.BeamsPerIsocenter);
+
             QuickStartGuideCommand = new RelayCommand(LaunchQuickStartGuide);
             HelpGuideCommand = new RelayCommand(LaunchHelpGuide);
             PTVMarginInfoCommand = new RelayCommand(ShowPTVMarginInfo);
@@ -290,13 +291,7 @@ namespace TMLIAutoPlanner.ViewModels
 
         private void InjectNumBeamsPerIso()
         {
-            foreach(PlanIsocenterModel planIso in _planIsocenters)
-            {
-                for(int i = 0; i < planIso.Isocenters.Count(); i++)
-                {
-                    planIso.Isocenters.ElementAt(i).NumberOfBeams = TMLIAutoPlannerSettings.BeamsPerIsocenter.ElementAt(i);
-                }
-            }
+            
         }
         #endregion
 
