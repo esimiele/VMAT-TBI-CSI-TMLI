@@ -44,6 +44,7 @@ namespace AutoPlannerHelpers.Context
                         if (!string.IsNullOrEmpty(StructureSetUID))
                         {
                             EclipseContext.GetInstance().StructureSet = EclipseContext.GetInstance().Patient.StructureSets.FirstOrDefault(x => string.Equals(StructureSetUID, x.UID));
+                            if (!ReferenceEquals(EclipseContext.GetInstance().StructureSet, null)) Logger.GetInstance().StructureSet = StructureSetUID;
                         }
                         EclipseContext.GetInstance().ImageFOR = ImageFOR;
                         if (!string.IsNullOrEmpty(PlanUID))
@@ -58,11 +59,7 @@ namespace AutoPlannerHelpers.Context
                         }
                     }
                 }
-                else
-                {
-                    Logger.GetInstance().LogError($"Error! Patient Id ({PatientId}) not found! Exiting!");
-                    return true;
-                }
+                else return true;
                 return false;
             }
             catch (Exception e)

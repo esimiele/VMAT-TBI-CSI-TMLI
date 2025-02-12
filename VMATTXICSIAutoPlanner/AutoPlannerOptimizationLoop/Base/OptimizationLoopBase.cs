@@ -30,10 +30,11 @@ namespace AutoPlannerOptimizationLoop.Base
         /// </summary>
         protected void InitializeLogPathAndName()
         {
-            logPath = _data.LogFilePath + "\\optimization\\" + _data.MRN + "\\";
+            string path = _data.LogFilePath + "\\optimization\\" + _data.MRN + "\\";
             string currentDateTime = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-            fileName = logPath + currentDateTime + ".txt";
-            fileNameErrorsWarnings = logPath + currentDateTime + "-EWs" + ".txt";
+            string logFileName = path + currentDateTime + ".txt";
+            string errorsWarningsFile = path + currentDateTime + "-EWs" + ".txt";
+            InitializeLogFile(path, logFileName, errorsWarningsFile);
             /*
              * prelimiary check
              * coverage check ?
@@ -178,7 +179,7 @@ namespace AutoPlannerOptimizationLoop.Base
 
             foreach (ExternalPlanSetup itr in plans)
             {
-                if (itr.Beams.Any(x => !x.IsSetupField))
+                if (!itr.Beams.Any(x => !x.IsSetupField))
                 {
                     ProvideUIUpdate($"No beams present in plan: {itr.Id}!", true);
                     return true;

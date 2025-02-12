@@ -130,9 +130,12 @@ namespace AutoPlannerHelpers.ViewModels
             PlanIsocenterList.Clear();
             foreach (PlanIsocenterModel itr in isos)
             {
-                for (int i = 0; i < itr.Isocenters.Count(); i++)
+                if(itr.Isocenters.Any(x => x.NumberOfBeams == -1))
                 {
-                    itr.Isocenters.ElementAt(i).NumberOfBeams = _fieldsPerIso.ElementAt(i);
+                    for (int i = 0; i < itr.Isocenters.Count(); i++)
+                    {
+                        if (itr.Isocenters.ElementAt(i).NumberOfBeams == -1) itr.Isocenters.ElementAt(i).NumberOfBeams = _fieldsPerIso.ElementAt(i);
+                    }
                 }
                 PlanIsocenterList.Add(itr);
             }

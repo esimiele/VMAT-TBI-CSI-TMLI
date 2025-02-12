@@ -54,9 +54,13 @@
     <ErrorReport>prompt</ErrorReport>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>AutoPlannerOptimizationLoop.App</StartupObject>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Windows" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -107,6 +111,12 @@
     <Compile Include="ViewModels\OptimizationLoopMainViewModel.cs" />
     <Compile Include="ViewModels\OptimizationLoopProgressViewModel.cs" />
     <Compile Include="Views\EnumBindingSourceExtension.cs" />
+    <Compile Include="Views\OptimizationLoopMainView.xaml.cs">
+      <DependentUpon>OptimizationLoopMainView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\OptimizationLoopProgressView.xaml.cs">
+      <DependentUpon>OptimizationLoopProgressView.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Base\OptimizationLoopBase.cs" />
@@ -139,6 +149,7 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="Configuration\CSI_optimization_config.ini" />
+    <None Include="Configuration\TMLI_optimization_config.ini" />
     <None Include="Configuration\TBI_optimization_config.ini" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -147,12 +158,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\AutoPlannerHelpers\AutoPlannerHelpers.csproj">
-      <Project>{75860997-c5f3-4d38-a945-f63771fe5625}</Project>
-      <Name>AutoPlannerHelpers</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\StanfordMedicine1.png" />
@@ -167,12 +172,12 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\OptimizationLoopMainView.xaml">
-      <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\OptimizationLoopProgressView.xaml">
-      <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>
@@ -183,5 +188,14 @@
       <Version>1.1.135</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AutoPlannerHelpers\AutoPlannerHelpers.csproj">
+      <Project>{75860997-c5f3-4d38-a945-f63771fe5625}</Project>
+      <Name>AutoPlannerHelpers</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy "$(ProjectDir)Configuration\*" "$(ProjectDir)$(OutDir)\configuration"</PostBuildEvent>
+  </PropertyGroup>
 </Project>

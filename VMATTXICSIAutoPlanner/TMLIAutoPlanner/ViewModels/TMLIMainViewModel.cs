@@ -302,7 +302,11 @@ namespace TMLIAutoPlanner.ViewModels
             bool failed = placeBeams.Execute();
             Logger.GetInstance().AppendLogOutput("Generate plans and place beams output:", placeBeams.GetLogOutput());
             if (failed) return;
-            if (placeBeams.VMATPlans.Any()) EclipseContext.GetInstance().VMATPlans = placeBeams.VMATPlans;
+            if (placeBeams.VMATPlans.Any())
+            {
+                EclipseContext.GetInstance().VMATPlans = placeBeams.VMATPlans;
+                Logger.GetInstance().PlanUIDs = placeBeams.VMATPlans.Select(x => x.UID).ToList();
+            }
             if(placeBeams.FieldJunctions.Any())
             {
                 _planOptimizationSetup = UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions, _planOptimizationSetup);
@@ -391,12 +395,11 @@ namespace TMLIAutoPlanner.ViewModels
         protected override void UpdateUIWithSelectedPlanTemplate()
         {
             if (ReferenceEquals(_selectedTemplate, null)) return;
-
             InitialDosePerFraction = (_selectedTemplate as TMLIAutoPlanTemplate).InitialRxDosePerFx;
             InitialNumberOfFractions = (_selectedTemplate as TMLIAutoPlanTemplate).InitialRxNumberOfFractions;
             _prepForTargetsVM.UpdateRequestedTargetStructures((_selectedTemplate as TMLIAutoPlanTemplate).RequestedPreliminaryTargets);
             _setTargetsVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
-            
+            Logger.GetInstance().Template = _selectedTemplate.TemplateName;
         }
 
         #region script configuration

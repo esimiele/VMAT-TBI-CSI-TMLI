@@ -156,7 +156,7 @@
                     <Button Grid.Column="2" Content="Clear List" Width="100" HorizontalAlignment="Center" VerticalAlignment="Top" Command="{Binding RemoveAllTSStructuresCommand}"/>
                 </Grid>
                 <ScrollViewer Height="320" Width="400" Margin="5,5,0,0" HorizontalAlignment="Center" VerticalAlignment="Bottom" Style="{StaticResource ScrollViewerStyle}">
-                    <ItemsControl x:Name="TSStructureSP" ItemsSource="{Binding RequestedTuningStructures}">
+                    <ItemsControl x:Name="PrelimTargetsSP" ItemsSource="{Binding RequestedPreliminaryTargets}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Grid>
@@ -167,7 +167,7 @@
                                     </Grid.ColumnDefinitions>
                                     <Label Grid.Column="0" HorizontalAlignment="Center" Content="{Binding DICOMType}"/>
                                     <TextBlock Grid.Column="1" HorizontalAlignment="Center" Text="{Binding StructureId}" Margin="0,5,0,0"/>
-                                    <Button Content="Clear" Grid.Column="3" Command="{Binding Path=DataContext.ClearRowCommand, ElementName=TSStructureSP}" CommandParameter="{Binding}" Width="90" Margin="1"/>
+                                    <Button Content="Clear" Grid.Column="3" Command="{Binding Path=DataContext.ClearRowCommand, ElementName=PrelimTargetsSP}" CommandParameter="{Binding}" Width="90" Margin="1"/>
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>

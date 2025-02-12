@@ -228,6 +228,7 @@ namespace AutoPlannerHelpers.BaseViewModel
             if (VerifyTargetsIntegrity(_setTargetsVM.PlanTargets)) return;
             _prescriptions = TargetsHelper.BuildPrescriptionList(_setTargetsVM.PlanTargets, _initialDosePerFraction, _initialNumberOfFractions, _initialPlanTotalDose);
             if (!_prescriptions.Any()) return;
+            Logger.GetInstance().Prescriptions = _prescriptions;
             _planOptimizationSetup = BuildPlanOptimizationSetupList();
             SpecifyTargetsTabBackground = System.Windows.Media.Brushes.ForestGreen;
             StructureTuningTabBackground = System.Windows.Media.Brushes.PaleVioletRed;

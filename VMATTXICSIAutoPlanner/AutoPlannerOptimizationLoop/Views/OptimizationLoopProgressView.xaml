@@ -32,13 +32,13 @@
 
                 <TextBlock Text="{Binding TaskId}" Grid.Column="0" Grid.Row="0" FontWeight="Bold" Width="250" TextAlignment="Center" Height="18" HorizontalAlignment="Right" Margin="0"/>
                 <Grid Grid.Column="1" Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Center">
-                    <ProgressBar Height="20" Margin="0,0,0,0" Width="220" Minimum="0" Maximum="100" Foreground="LimeGreen" Value="{Binding TaskProgress}"/>
-                    <TextBlock Text="{Binding TaskProgress, StringFormat={}{0:0}%}" Background="{Binding TaskProgressBackground}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,0" />
+                    <ProgressBar Height="20" Margin="0,0,0,0" Width="220" Minimum="0" Maximum="100" Foreground="{Binding TaskProgressBackground}" Value="{Binding TaskProgress}"/>
+                    <TextBlock Text="{Binding TaskProgress, StringFormat={}{0:0}%}"  HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,0" />
                 </Grid>
                 <Grid Grid.Column="2" Grid.Row="0" >
                     <Label Content="Overall Progress: " HorizontalAlignment="Left" Margin="2,0,0,0"></Label>
-                    <ProgressBar HorizontalAlignment="Right" Height="20" Margin="0,0,0,0" Width="190" Minimum="0" Maximum="100" Foreground="LimeGreen" Value="{Binding OverallProgress}"/>
-                    <TextBlock Text="{Binding OverallProgress, StringFormat={}{0:0}%}" Background="{Binding OverallProgressBackground}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,85,0" />
+                    <ProgressBar HorizontalAlignment="Right" Height="20" Margin="0,0,0,0" Width="190" Minimum="0" Maximum="100" Foreground="{Binding OverallProgressBackground}" Value="{Binding OverallProgress}"/>
+                    <TextBlock Text="{Binding OverallProgress, StringFormat={}{0:0}%}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,85,0" />
                 </Grid>
 
                 <Grid Grid.Column="0" Grid.Row="1" VerticalAlignment="Center" Margin="5">

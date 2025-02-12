@@ -201,7 +201,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             PlanOptimizationConstraints = new ObservableCollectionPropertyNotify<PlanOptimizationSetupModel> { };
             ClearRowCommand = new RelayCommand<object>(ClearRow);
             StartOptimizationCommand = new RelayCommand(StartOptimization);
-            if (args.Any()) EclipseContextHelper.GenerateEclipseContext(args.ToList());
+            EclipseContextHelper.GenerateEclipseContext(args.ToList());
             Initialize();
             ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
         }
@@ -329,9 +329,9 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                     theCourse = courses.FirstOrDefault(x => string.Equals(x.Id, SIP.GetSelectedItem()));
                 }
                 else theCourse = courses.First();
-                if (theCourse.Id.ToLower().Contains("csi")) _planType = PlanType.VMAT_CSI;
-                else if (theCourse.Id.ToLower().Contains("tbi")) _planType = PlanType.VMAT_TBI;
-                else _planType = PlanType.VMAT_TMLI;
+                if (theCourse.Id.ToLower().Contains("csi")) PlanType = PlanType.VMAT_CSI;
+                else if (theCourse.Id.ToLower().Contains("tbi")) PlanType = PlanType.VMAT_TBI;
+                else PlanType = PlanType.VMAT_TMLI;
 
                 List<ExternalPlanSetup> thePlans = theCourse.ExternalPlanSetups.OrderBy(x => x.CreationDateTime).ToList();
                 if (thePlans.Count > 2)
@@ -507,47 +507,50 @@ namespace AutoPlannerOptimizationLoop.ViewModels
 
         public void StartOptimization()
         {
-            //if (!EclipseContext.GetInstance().IsInitialized)
-            //{
-            //    Logger.GetInstance().LogError("Script is not initialized! Unable to generate AP/PA plan for TBI patient!");
-            //    return;
-            //}
-            //if (ReferenceEquals(EclipseContext.GetInstance().Patient, null) || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null) || !EclipseContext.GetInstance().VMATPlans.Any())
-            //{
-            //    Logger.GetInstance().LogError("Error! Patient, structure set, or plan are null! Unable to proceed!");
-            //    return;
-            //}
-            //Logger.GetInstance().AppendLogOutput("Checking for valid constraints and objectives");
-
-            StringBuilder sb = new StringBuilder();
-            if (PlanObjectives.Any())
+            if (!EclipseContext.GetInstance().IsInitialized)
             {
-                foreach (PlanObjectiveModel itr in PlanObjectives)
-                {
-                    sb.AppendLine($"{itr.StructureId}, {itr.ConstraintType}, {itr.QueryVolume}, {itr.QueryDose}, {itr.QueryDoseUnits}");
-                }
+                Logger.GetInstance().LogError("Script is not initialized! Unable to generate AP/PA plan for TBI patient!");
+                return;
             }
-            else sb.AppendLine("No plan objectives in list");
-            sb.AppendLine(" ");
-            if (PlanOptimizationConstraints.Any())
+            if (ReferenceEquals(EclipseContext.GetInstance().Patient, null) || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null) || !EclipseContext.GetInstance().VMATPlans.Any())
             {
-                foreach(PlanOptimizationSetupModel planopt in PlanOptimizationConstraints)
-                {
-                    sb.AppendLine($"Plan: {planopt.PlanId}");
-                    foreach (OptimizationConstraintModel itr in planopt.OptimizationConstraints)
-                    {
-                        sb.AppendLine($"{itr.StructureId}, {itr.ConstraintType}, {itr.QueryDose}, {itr.QueryDoseUnits}, {itr.QueryVolume}, {itr.QueryVolumeUnits}, {itr.Priority}");
-                    }
-                }
+                Logger.GetInstance().LogError("Error! Patient, structure set, or plan are null! Unable to proceed!");
+                return;
             }
-            else sb.AppendLine("No optimization constraints in list");
-            MessageBox.Show(sb.ToString());
+            Logger.GetInstance().AppendLogOutput("Checking for valid constraints and objectives");
 
+            //StringBuilder sb = new StringBuilder();
+            //if (PlanObjectives.Any())
+            //{
+            //    foreach (PlanObjectiveModel itr in PlanObjectives)
+            //    {
+            //        sb.AppendLine($"{itr.StructureId}, {itr.ConstraintType}, {itr.QueryVolume}, {itr.QueryDose}, {itr.QueryDoseUnits}");
+            //    }
+            //}
+            //else sb.AppendLine("No plan objectives in list");
+            //sb.AppendLine(" ");
+            //if (PlanOptimizationConstraints.Any())
+            //{
+            //    foreach(PlanOptimizationSetupModel planopt in PlanOptimizationConstraints)
+            //    {
+            //        sb.AppendLine($"Plan: {planopt.PlanId}");
+            //        foreach (OptimizationConstraintModel itr in planopt.OptimizationConstraints)
+            //        {
+            //            sb.AppendLine($"{itr.StructureId}, {itr.ConstraintType}, {itr.QueryDose}, {itr.QueryDoseUnits}, {itr.QueryVolume}, {itr.QueryVolumeUnits}, {itr.Priority}");
+            //        }
+            //    }
+            //}
+            //else sb.AppendLine("No optimization constraints in list");
+            //MessageBox.Show(sb.ToString());
+
+            EclipseContext.GetInstance().Patient.BeginModifications();
             if(PlanOptimizationConstraints.Any())
             {
                 foreach(PlanOptimizationSetupModel itr in PlanOptimizationConstraints)
                 {
-                    OptimizationSetupHelper.AssignOptConstraints(itr.OptimizationConstraints.Where(x => x.IsValidConstraint).ToList(), EclipseContext.GetInstance().VMATPlans.First(x => string.Equals(x.Id, itr.PlanId)), false, 0.0);
+                    ExternalPlanSetup plan = EclipseContext.GetInstance().VMATPlans.First(x => string.Equals(x.Id, itr.PlanId));
+                    OptimizationSetupHelper.RemoveOptimizationConstraintsFromPLan(plan);
+                    OptimizationSetupHelper.AssignOptConstraints(itr.OptimizationConstraints.Where(x => x.IsValidConstraint).ToList(), plan, false, 0.0);
                 }
             }
             OptDataContainer _data = GenerateOptimizationDataContainer();

@@ -94,8 +94,8 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         private bool canClose;
         //used to copy the instances of the background thread and the optimizationLoop class
         //path to where the log files should be written
-        protected string logPath;
-        protected string fileName;
+        private string logPath;
+        private string fileName;
         protected string fileNameErrorsWarnings;
         //get instances of the stopwatch and dispatch timer to report how long the calculation takes at each reporting interval
         private Stopwatch sw = new Stopwatch();
@@ -104,6 +104,8 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         public OptimizationLoopProgressViewModel()
         {
             RunStatusBackground = Brushes.White;
+            TaskProgressBackground = Brushes.LimeGreen;
+            OverallProgressBackground = Brushes.LimeGreen;
             WindowClosingCommand = new RelayCommand(WindowClosing);
             AbortRunCommand = new RelayCommand(AbortRun);
         }
@@ -190,7 +192,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             if (!string.IsNullOrEmpty(message))
             {
                 ProgressInfo += message + Environment.NewLine;
-                //UpdateLogFile(message);
+                UpdateLogFile(message);
             }
         }
 
@@ -267,15 +269,15 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         private void UpdateLogFile(string output)
         {
             //verify the directory exists prior to writing the log
-            //if (Directory.Exists(logPath))
-            //{
-            //    output += Environment.NewLine;
-            //    File.AppendAllText(fileName, output);
-            //}
-            //else
-            //{
-            //    ProvideUIUpdate($"Warning! {logPath} does not exist! Could not write to log file!", false);
-            //}
+            if (Directory.Exists(logPath))
+            {
+                output += Environment.NewLine;
+                File.AppendAllText(fileName, output);
+            }
+            else
+            {
+                ProvideUIUpdate($"Warning! {logPath} does not exist! Could not write to log file!", false);
+            }
         }
         #endregion
 
