@@ -128,6 +128,7 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="Configuration\VMAT_TMLI_config.ini" />
+    <None Include="PlanTemplates\TMLI_2Gy.ini" />
     <None Include="PlanTemplates\TMLI_12Gy.ini" />
     <None Include="PlanTemplates\TMLI_NonMyeloablative.ini" />
     <None Include="PlanTemplates\TMLI_SclerodermaTrial.ini" />

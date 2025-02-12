@@ -162,7 +162,7 @@ namespace TMLIAutoPlanner.Core
             ptv.SegmentVolume = ptv.Margin(5.0);
             ProvideUIUpdate("Expanded PTV_TMLI with uniform 5mm margin");
 
-            //ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("ribs", ss).Margin(5.0), ptv, 0.0);
+            //ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("rib", ss).Margin(5.0), ptv, 0.0);
             ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("bones_extrem", ss).Margin(10.0), ptv, 0.0);
             ProvideUIUpdate($"Unioned bones_extrem with PTV_TMLI with 10 mm outer margin");
             PostProcessPTVTMLI(ptv);
