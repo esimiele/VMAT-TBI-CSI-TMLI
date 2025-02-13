@@ -1,0 +1,171 @@
+2/10/2025 8:43:50 AM
+User=Eric Simiele (enterprise\s0302146)
+Patient=$TMLI_test1
+Plan type=VMAT_TMLI
+Structure set=
+Template=
+
+Prescriptions:
+
+Added TS structures:
+    TS_PTV_TMLI
+    Lungs-1.0cm
+    Lungs-2.0cm
+    Kidneys-1.0cm
+    Liver-1.0cm
+    Liver-2.0cm
+    Brain-1.0cm
+    Brain-2.0cm
+    Heart-1.0cm
+    Heart-2.0cm
+    TS_ring600
+
+Structure manipulations:
+    {eyes,CropTargetFromStructure,0.3}
+    {Lungs,CropTargetFromStructure,0.3}
+    {Kidneys,CropTargetFromStructure,0.3}
+    {Lungs,ContourSubStructure,-1}
+    {Lungs,ContourSubStructure,-2}
+    {Kidneys,ContourSubStructure,-1}
+    {Liver,ContourSubStructure,-1}
+    {Liver,ContourSubStructure,-2}
+    {Brain,ContourSubStructure,-1}
+    {Brain,ContourSubStructure,-2}
+    {Heart,ContourSubStructure,-1}
+    {Heart,ContourSubStructure,-2}
+
+Isocenter names:
+    VMAT-TMLI
+        Head
+        Chest
+        Pelvis
+        Legs
+
+Plan UIDs:
+
+TS Targets:
+    {PTV_TMLI,TS_PTV_TMLI}
+
+Normalization volumes:
+    {VMAT-TMLI,TS_PTV_TMLI}
+
+Optimization constraints:
+
+Errors and warnings:
+
+Detailed log output:
+TS Generation and manipulation output:
+Body structure exists and is not empty
+User origin is inside body
+Body extent (1202.94472885132 mm) is greater than 116.0 cm and no matchline structure was found!
+Body structure exists and matchline appropriate
+Preliminary checks complete!
+Elapsed time: 00:00:02
+Checking for L and R structures to union!
+No structures to union!
+Elapsed time: 00:00:02
+Checking for high resolution structures in structure set: 
+No high resolution structures in the structure set!
+Elapsed time: 00:00:02
+Adding remaining tuning structures to stack!
+Removing prior tuning structures
+Adding any remaining tuning structures to the stack
+Verifying requested TS structures can be added to the structure set!
+Prior tuning structures successfully removed!
+Elapsed time: 00:00:02
+Finished adding tuning structures!
+Contouring tuning structures!
+Elapsed time: 00:00:02
+Retrieving TS target: TS_PTV_TMLI
+TS target TS_PTV_TMLI does not exist. Creating it now!
+Copying target PTV_TMLI contours onto TS_PTV_TMLI
+Cropping target TS_PTV_TMLI from eyes with margin 0.3 cm
+Cropping target TS_PTV_TMLI from Lungs with margin 0.3 cm
+Cropping target TS_PTV_TMLI from Kidneys with margin 0.3 cm
+Creating sub structure!
+Verifying requested TS structures can be added to the structure set!
+Finished contouring Lungs-1.0cm
+Creating sub structure!
+Verifying requested TS structures can be added to the structure set!
+Attempted to read or write protected memory. This is often an indication that other memory is corrupt.
+
+TS Generation and manipulation output:
+Body structure exists and is not empty
+User origin is inside body
+Body extent (1202.94472885132 mm) is greater than 116.0 cm and no matchline structure was found!
+Body structure exists and matchline appropriate
+Preliminary checks complete!
+Elapsed time: 00:00:01
+Checking for L and R structures to union!
+No structures to union!
+Elapsed time: 00:00:01
+Checking for high resolution structures in structure set: 
+No high resolution structures in the structure set!
+Elapsed time: 00:00:01
+Adding remaining tuning structures to stack!
+Removing prior tuning structures
+Adding any remaining tuning structures to the stack
+Removing: TS_PTV_TMLI
+Verifying requested TS structures can be added to the structure set!
+Prior tuning structures successfully removed!
+Elapsed time: 00:00:01
+Finished adding tuning structures!
+Contouring tuning structures!
+Elapsed time: 00:00:01
+Retrieving TS target: TS_PTV_TMLI
+TS target TS_PTV_TMLI does not exist. Creating it now!
+Copying target PTV_TMLI contours onto TS_PTV_TMLI
+Cropping target TS_PTV_TMLI from eyes with margin 0.3 cm
+Cropping target TS_PTV_TMLI from Lungs with margin 0.3 cm
+Cropping target TS_PTV_TMLI from Kidneys with margin 0.3 cm
+Creating sub structure!
+Verifying requested TS structures can be added to the structure set!
+Finished contouring Lungs-1.0cm
+Creating sub structure!
+Verifying requested TS structures can be added to the structure set!
+Finished contouring Lungs-2.0cm
+Creating sub structure!
+Verifying requested TS structures can be added to the structure set!
+Finished contouring Kidneys-1.0cm
+Creating sub structure!
+Verifying requested TS structures can be added to the structure set!
+Finished contouring Liver-1.0cm
+Creating sub structure!
+Verifying requested TS structures can be added to the structure set!
+Finished contouring Liver-2.0cm
+Creating sub structure!
+Verifying requested TS structures can be added to the structure set!
+Finished contouring Brain-1.0cm
+Creating sub structure!
+Verifying requested TS structures can be added to the structure set!
+Finished contouring Brain-2.0cm
+Creating sub structure!
+Verifying requested TS structures can be added to the structure set!
+Finished contouring Heart-1.0cm
+Creating sub structure!
+Verifying requested TS structures can be added to the structure set!
+Finished contouring Heart-2.0cm
+Elapsed time: 00:00:04
+Generating requested ring structures for targets!
+Retrieved target: PTV_TMLI
+Created empty ring: TS_ring600
+Contouring ring: TS_ring600
+Finished contouring ring: AutoPlannerHelpers.Models.TSRingStructureModel
+Elapsed time: 00:00:08
+Retrieved body structure
+Calculated maximum extent of body: 1202.9 mm
+matchline structure not present in structure set
+Calculated required number of VMAT Isos: 4
+Calculated total number of Isos: 4
+Retrieved appropriate isocenter names:
+Plan Id: VMAT-TMLI
+ Head
+ Chest
+ Pelvis
+ Legs
+Finished Structure Tuning!
+Run time: 00:00:08 (mm:ss)
+
+Modifications NOT saved to database!
+
+

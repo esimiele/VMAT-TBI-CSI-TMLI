@@ -1,0 +1,144 @@
+---------------------------------------------------------------------------------------------------------
+Date: 2/13/2025 7:55:23 AM
+Plan type: VMAT_TMLI
+Optimization loop settings:
+Run coverage check: False
+Max number of optimizations: 2
+Run additional optimization to lower hotspots: True
+Copy and save each optimized plan: False
+Plan normalization:
+     Plan: VMAT-TMLI, PTV V200cGy = 90.0%
+     Plan: VMAT-TMLI, PTV V200cGy = 90.0%
+
+Plan objectives:
+--------------------------------------------------------------------------
+structure Id     | constraint type  | dose       | volume (%) | dose units |
+--------------------------------------------------------------------------
+PTV_TMLI         | Lower            | 100.0      | 90.0       | Percent   |
+PTV_TMLI         | Upper            | 120.0      | 0.0        | Percent   |
+PTV_TMLI         | Upper            | 110.0      | 5.0        | Percent   |
+Brain            | Mean             | 55.0       | 0.0        | Percent   |
+Liver            | Mean             | 60.0       | 0.0        | Percent   |
+Bladder          | Mean             | 63.0       | 0.0        | Percent   |
+Esophagus        | Mean             | 40.0       | 0.0        | Percent   |
+Heart            | Mean             | 50.0       | 0.0        | Percent   |
+Bag_Bowel        | Mean             | 50.0       | 0.0        | Percent   |
+Kidneys          | Mean             | 50.0       | 0.0        | Percent   |
+Larynx           | Mean             | 40.0       | 0.0        | Percent   |
+Lenses           | Mean             | 18.0       | 0.0        | Percent   |
+Lungs            | Mean             | 50.0       | 0.0        | Percent   |
+OralCavity       | Mean             | 25.0       | 0.0        | Percent   |
+Rectum           | Mean             | 40.0       | 0.0        | Percent   |
+Rectum           | Mean             | 40.0       | 0.0        | Percent   |
+Thyroid          | Mean             | 50.0       | 0.0        | Percent   |
+
+
+Requested tuning structures:
+--------------------------------------------------------------------------
+structure Id     | low D (%) | high D (%) | V (%) | priority | constraint |
+--------------------------------------------------------------------------
+ TS_cooler120    |           | 110.0      | 0.0   | 80       | Dmax GreaterThan 130Percent |
+ TS_cooler110    |           | 110.0      | 0.0   | 70       | Dmax GreaterThan 120Percent |
+ TS_cooler105    |           | 105.0      | 0.0   | 60       | FinalOpt   |
+                                                             | Dmax GreaterThan 110Percent |
+ TS_cooler102    |           | 105.0      | 0.0   | 60       | FinalOpt   |
+ TS_heater90     | 90.0      | 100.0      | 100.0 | 60       | none       |
+ TS_heater80     | 80.0      | 90.0       | 100.0 | 70       | Dmax GreaterThan 120Percent |
+ TS_heater70     | 70.0      | 80.0       | 100.0 | 80       | Dmax GreaterThan 130Percent |
+
+
+
+Imaging device Id: Def_CTScanner
+User origin assigned and located within body structure
+Target: PTV_TMLI is in structure set and is not null
+Beams present in plan: VMAT-TMLI
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, 230)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, 230)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, 230)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, 230)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, -40)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, -40)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, -40)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, -40)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, -310)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, -310)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, -310)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, -310)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, -580)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, -580)
+Adding calculated isocenter position to stack!
+Set automatic NTO priority to 0 for plan: VMAT-TMLI
+Set dose value presentation to absolute for plan: VMAT-TMLI
+Beams present in plan: VMAT-TMLI
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, 230)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, 230)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, 230)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, 230)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, -40)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, -40)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, -40)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, -40)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, -310)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, -310)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, -310)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, -310)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, -580)
+Adding calculated isocenter position to stack!
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, -580)
+Adding calculated isocenter position to stack!
+Set automatic NTO priority to 0 for plan: VMAT-TMLI
+Set dose value presentation to absolute for plan: VMAT-TMLI
+ Commencing optimization loop!

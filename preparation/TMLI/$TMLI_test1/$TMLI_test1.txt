@@ -1,0 +1,333 @@
+2/13/2025 7:37:34 AM
+User=Eric Simiele (enterprise\s0302146)
+Patient=$TMLI_test1
+Plan type=VMAT_TMLI
+Structure set=1.2.246.352.71.4.251621835082.762213.20250213072816
+Template=TMLI (200 cGy)
+
+Prescriptions:
+    {VMAT-TMLI,PTV_TMLI,1,200,200}
+
+Added TS structures:
+    TS_PTV_TMLI
+    Lungs-1.0cm
+    Lungs-2.0cm
+    Kidneys-1.0cm
+    Liver-1.0cm
+    Liver-2.0cm
+    Brain-1.0cm
+    Brain-2.0cm
+    Heart-1.0cm
+    Heart-2.0cm
+    Testes-1.0cm
+    TS_ring100
+
+Structure manipulations:
+    {eyes,CropTargetFromStructure,0.3}
+    {Lungs,CropTargetFromStructure,0.3}
+    {Kidneys,CropTargetFromStructure,0.3}
+    {Heart,CropTargetFromStructure,0.3}
+    {Thyroid,CropTargetFromStructure,0.3}
+    {Testes,CropTargetFromStructure,2}
+    {Lungs,ContourSubStructure,-1}
+    {Lungs,ContourSubStructure,-2}
+    {Kidneys,ContourSubStructure,-1}
+    {Liver,ContourSubStructure,-1}
+    {Liver,ContourSubStructure,-2}
+    {Brain,ContourSubStructure,-1}
+    {Brain,ContourSubStructure,-2}
+    {Heart,ContourSubStructure,-1}
+    {Heart,ContourSubStructure,-2}
+    {Testes,ContourSubStructure,-1}
+
+Isocenter names:
+    VMAT-TMLI
+        Head
+        Chest
+        Pelvis
+        Legs
+
+Plan UIDs:
+    1.2.246.352.71.5.251621835082.1763311.20250213073642
+
+TS Targets:
+    {PTV_TMLI,TS_PTV_TMLI}
+
+Normalization volumes:
+    {VMAT-TMLI,TS_PTV_TMLI}
+
+Optimization constraints:
+    VMAT-TMLI
+        {TS_jnx3,Lower,200,100,100}
+        {TS_jnx3,Upper,204,0,100}
+        {TS_jnx2,Lower,200,100,100}
+        {TS_jnx2,Upper,204,0,100}
+        {TS_jnx1,Lower,200,100,100}
+        {TS_jnx1,Upper,204,0,100}
+        {TS_ring100,Upper,100,0,80}
+        {TS_PTV_TMLI,Lower,200,100,100}
+        {TS_PTV_TMLI,Upper,210,0,100}
+        {TS_PTV_TMLI,Lower,201,98,100}
+        {Brain,Mean,100,0,60}
+        {Brain-1.0cm,Mean,750,0,50}
+        {Brain-2.0cm,Mean,50,0,50}
+        {Liver,Mean,90,0,50}
+        {Liver-1.0cm,Mean,75,0,50}
+        {Liver-2.0cm,Mean,50,0,50}
+        {Bladder,Mean,80,0,50}
+        {Esophagus,Upper,205,0,50}
+        {eyes,Mean,100,0,50}
+        {Heart,Mean,90,0,70}
+        {Bag_Bowel,Upper,205,0,50}
+        {Bag_Bowel,Mean,100,0,50}
+        {Kidneys,Mean,90,0,65}
+        {Kidneys-1.0cm,Mean,75,0,65}
+        {Larynx,Mean,125,0,50}
+        {Lenses,Upper,75,0,50}
+        {Lenses,Mean,50,0,60}
+        {Lungs,Mean,75,0,75}
+        {Lungs-1.0cm,Mean,50,0,75}
+        {Lungs-2.0cm,Mean,25,0,75}
+        {opticnrvs,Mean,550,0,50}
+        {OralCavity,Mean,25,0,50}
+        {Testes,Mean,50,0,75}
+        {Testes,Upper,80,0,75}
+        {Testes-1.0cm,Mean,25,0,50}
+        {parotids,Mean,90,0,50}
+        {Rectum,Mean,90,0,50}
+        {Stomach,Mean,80,0,50}
+        {Thyroid,Mean,90,0,50}
+
+Errors and warnings:
+
+Detailed log output:
+TS Generation and manipulation output:
+Body structure exists and is not empty
+User origin is inside body
+Body extent (1202.94472885132 mm) is greater than 116.0 cm and no matchline structure was found!
+Body structure exists and matchline appropriate
+Preliminary checks complete!
+Elapsed time: 00:00:02
+Checking for L and R structures to union!
+No structures to union!
+Elapsed time: 00:00:02
+Checking for high resolution structures in structure set: 
+No high resolution structures in the structure set!
+Elapsed time: 00:00:02
+Adding remaining tuning structures to stack!
+Removing prior tuning structures
+Adding any remaining tuning structures to the stack
+Verifying requested TS structures can be added to the structure set!
+Prior tuning structures successfully removed!
+Elapsed time: 00:00:02
+Finished adding tuning structures!
+Contouring tuning structures!
+Elapsed time: 00:00:02
+Retrieving TS target: TS_PTV_TMLI
+TS target TS_PTV_TMLI does not exist. Creating it now!
+Copying target PTV_TMLI contours onto TS_PTV_TMLI
+Cropping target TS_PTV_TMLI from eyes with margin 0.3 cm
+Cropping target TS_PTV_TMLI from Lungs with margin 0.3 cm
+Cropping target TS_PTV_TMLI from Kidneys with margin 0.3 cm
+Cropping target TS_PTV_TMLI from Heart with margin 0.3 cm
+Cropping target TS_PTV_TMLI from Thyroid with margin 0.3 cm
+Cropping target TS_PTV_TMLI from Testes with margin 2 cm
+Creating sub structure!
+Verifying requested TS structures can be added to the structure set!
+Finished contouring Lungs-1.0cm
+Creating sub structure!
+Verifying requested TS structures can be added to the structure set!
+Finished contouring Lungs-2.0cm
+Creating sub structure!
+Verifying requested TS structures can be added to the structure set!
+Finished contouring Kidneys-1.0cm
+Creating sub structure!
+Verifying requested TS structures can be added to the structure set!
+Finished contouring Liver-1.0cm
+Creating sub structure!
+Verifying requested TS structures can be added to the structure set!
+Finished contouring Liver-2.0cm
+Creating sub structure!
+Verifying requested TS structures can be added to the structure set!
+Finished contouring Brain-1.0cm
+Creating sub structure!
+Verifying requested TS structures can be added to the structure set!
+Finished contouring Brain-2.0cm
+Creating sub structure!
+Verifying requested TS structures can be added to the structure set!
+Finished contouring Heart-1.0cm
+Creating sub structure!
+Verifying requested TS structures can be added to the structure set!
+Finished contouring Heart-2.0cm
+Creating sub structure!
+Verifying requested TS structures can be added to the structure set!
+Finished contouring Testes-1.0cm
+Elapsed time: 00:00:06
+Generating requested ring structures for targets!
+Retrieved target: PTV_TMLI
+Created empty ring: TS_ring100
+Contouring ring: TS_ring100
+Finished contouring ring: AutoPlannerHelpers.Models.TSRingStructureModel
+Elapsed time: 00:00:10
+Retrieved body structure
+Calculated maximum extent of body: 1202.9 mm
+matchline structure not present in structure set
+Calculated required number of VMAT Isos: 4
+Calculated total number of Isos: 4
+Retrieved appropriate isocenter names:
+Plan Id: VMAT-TMLI
+ Head
+ Chest
+ Pelvis
+ Legs
+Finished Structure Tuning!
+Run time: 00:00:10 (mm:ss)
+
+Generate plans and place beams output:
+Check course: 
+Checking for existing course VMAT TMLI
+Course  VMAT TMLI does not exist. Creating now!
+Course VMAT TMLI retrieved!
+Elapsed time: 00:00
+Checking for existing plans: 
+Plan VMAT-TMLI does not exist in course VMAT TMLI
+No plans currently exist in course VMAT TMLI!
+Elapsed time: 00:00
+Creating VMAT plans: 
+Creating plan VMAT-TMLI
+Created plan VMAT-TMLI
+Set prescription for plan VMAT-TMLI
+Set plan Id for VMAT-TMLI
+Set calculation model to AAA_15605
+Set optimization model to PO_15605
+Calculation options for PO_15605:
+AirCavityCorrection, Off
+ApertureShapeController, Off
+AutoFeathering, On
+ConvergenceMode, Off
+DoseCalculationResolution, Normal
+DoseCalculationResolutionForSRSAndHyperarc, High
+FieldGroupingZThreshold, 3.0
+InhomogeneityCorrection, On
+MRLevelAtRestart, MR3
+SmoothX, 40
+SmoothY, 30
+UseGPU, No
+Set GPU option for dose calculation to No
+MR restart level set to MR3
+Set GPU option for optimization to No
+Assigned calculation options for plan: VMAT-TMLI
+Added plan VMAT-TMLI to stack!
+Finished creating and initializing plans!
+Elapsed time: 00:01
+Checking for potential couch collision
+Couch surface structure retrieved
+User origin to Table Top distance: 7.9 cm
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, 230)
+Adding calculated isocenter position to stack!
+Calculated isocenter position 1
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, -40)
+Adding calculated isocenter position to stack!
+Calculated isocenter position 2
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, -310)
+Adding calculated isocenter position to stack!
+Calculated isocenter position 3
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, -580)
+Adding calculated isocenter position to stack!
+Calculated isocenter position 4
+Assigning isocenters and beams: 
+Preparing to set isocenters for plan: VMAT-TMLI
+Created default DRR parameters
+Preparation complete!
+Assigning isocenter: 1
+Added arc beam to iso: 1
+Assigned beam id: 1 CCW Head
+Assigned DRR to beam: 1 CCW Head
+Added arc beam to iso: 1
+Assigned beam id: 2 CW Head
+Assigned DRR to beam: 2 CW Head
+Added arc beam to iso: 1
+Assigned beam id: 3 CCW Head90
+Assigned DRR to beam: 3 CCW Head90
+Added arc beam to iso: 1
+Assigned beam id: 4 CW Head90
+Assigned DRR to beam: 4 CW Head90
+Assigning isocenter: 2
+Added arc beam to iso: 2
+Assigned beam id: 5 CCW Chest
+Assigned DRR to beam: 5 CCW Chest
+Added arc beam to iso: 2
+Assigned beam id: 6 CW Chest
+Assigned DRR to beam: 6 CW Chest
+Added arc beam to iso: 2
+Assigned beam id: 7 CCW Chest90
+Assigned DRR to beam: 7 CCW Chest90
+Added arc beam to iso: 2
+Assigned beam id: 8 CW Chest90
+Assigned DRR to beam: 8 CW Chest90
+Assigning isocenter: 3
+Added arc beam to iso: 3
+Assigned beam id: 9 CCW Pelvis
+Assigned DRR to beam: 9 CCW Pelvis
+Added arc beam to iso: 3
+Assigned beam id: 10 CW Pelvis
+Assigned DRR to beam: 10 CW Pelvis
+Added arc beam to iso: 3
+Assigned beam id: 11 CCW Pelvis90
+Assigned DRR to beam: 11 CCW Pelvis90
+Added arc beam to iso: 3
+Assigned beam id: 12 CW Pelvis90
+Assigned DRR to beam: 12 CW Pelvis90
+Assigning isocenter: 4
+Added arc beam to iso: 4
+Assigned beam id: 13 CCW Legs
+Assigned DRR to beam: 13 CCW Legs
+Added arc beam to iso: 4
+Assigned beam id: 14 CW Legs
+Assigned DRR to beam: 14 CW Legs
+Elapsed time: 00:18
+Contour field overlap:
+Contour overlap margin: 1.0 cm
+Contour overlap margin: 10.00 mm
+Retrieved target: PTV_TMLI for plan: VMAT-TMLI
+Retrived image: auto
+Z resolution: 5 mm
+DICOM origin: (-389.24, -513.24, -1118.00) mm
+Junction: 1
+First beam in isocenter 0: 1 CCW Head
+First beam in isocenter 1: 5 CCW Chest
+Field length (1 CCW Head Y1 + 5 CCW Chest Y2): 400 mm
+Number of slices to contour: 28
+Overlap center position: -218.00 mm
+Starting slice to contour: 166
+Added TS junction to stack: TS_jnx1
+Junction: 2
+First beam in isocenter 1: 5 CCW Chest
+First beam in isocenter 2: 9 CCW Pelvis
+Field length (5 CCW Chest Y1 + 9 CCW Pelvis Y2): 400 mm
+Number of slices to contour: 28
+Overlap center position: -488.00 mm
+Starting slice to contour: 112
+Added TS junction to stack: TS_jnx1
+Junction: 3
+First beam in isocenter 2: 9 CCW Pelvis
+First beam in isocenter 3: 13 CCW Legs
+Field length (9 CCW Pelvis Y1 + 13 CCW Legs Y2): 400 mm
+Number of slices to contour: 28
+Overlap center position: -758.00 mm
+Starting slice to contour: 58
+Added TS junction to stack: TS_jnx1
+Created target bounding box for contouring overlap
+Contouring junction: TS_jnx1
+Contouring junction: TS_jnx2
+Contouring junction: TS_jnx3
+Elapsed time: 00:23
+Finished!
+
+Modifications saved to database!
+
+

@@ -1,0 +1,60 @@
+2/10/2025 7:16:20 AM
+User=Eric Simiele (enterprise\s0302146)
+Patient=$TMLI_test1
+Plan type=VMAT_TMLI
+Added preliminary targets:
+
+Errors and warnings:
+
+Detailed log output:
+Preliminary target generation output:
+All structures necessary for target creation present and not empty
+Checking for high res structures:
+Checking if BODY is high resolution
+BODY is already defualt resolution
+Checking if Bones_Trunk is high resolution
+Bones_Trunk is already defualt resolution
+Checking if Bones_Face is high resolution
+Bones_Face is already defualt resolution
+Checking if LymphNodes is high resolution
+LymphNodes is already defualt resolution
+Checking if SpinalCanal is high resolution
+SpinalCanal is already defualt resolution
+Checking if Spleen is high resolution
+Spleen is already defualt resolution
+Checking if Bones_Extrem is high resolution
+Bones_Extrem is already defualt resolution
+Checking if Brain is high resolution
+Brain is already defualt resolution
+Checking if OralCavity is high resolution
+OralCavity is already defualt resolution
+Check and converted any high res base targets
+Preliminary checks complete!
+Elapsed time: 00:00:00
+Checking for missing target structures!
+Target: PTV_TMLI is missing
+Elapsed time: 00:00:00
+Preliminary Targets missing from the structure set! Creating them now!
+Creating missing target structures!
+Added target: PTV_TMLI
+Elapsed time: 00:00:00
+Contouring targets now
+Checking for L and R structures to union!
+No structures to union!
+Elapsed time: 00:00:00
+Contouring target: PTV_TMLI
+Unioned bones_trunk with PTV_TMLI
+Cropped bones_face from PTV_TMLI
+Unioned LymphNodes with PTV_TMLI
+Unioned SpinalCanal with PTV_TMLI
+Unioned Spleen with PTV_TMLI
+Unioned Testes with PTV_TMLI
+Expanded PTV_TMLI with uniform 5mm margin
+Unioned bones_extrem with PTV_TMLI with 10 mm outer margin
+375.817016601563
+Some points inside expanded brain. Evaluating correcting contours to add on image slice: 223
+Sequence contains no elements
+
+Modifications NOT saved to database!
+
+

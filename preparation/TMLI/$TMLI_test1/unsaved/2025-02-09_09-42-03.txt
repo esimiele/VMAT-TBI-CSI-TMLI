@@ -1,0 +1,53 @@
+2/9/2025 9:42:03 AM
+User=Eric Simiele (enterprise\s0302146)
+Patient=$TMLI_test1
+Plan type=VMAT_TMLI
+Added preliminary targets:
+    PTV_TMLI
+
+Errors and warnings:
+
+Detailed log output:
+Preliminary target generation output:
+Performing Preliminary Checks: 
+All structures necessary for target creation present and not empty
+Checking for high res structures:
+Checking if Bones_Trunk is high resolution
+Bones_Trunk is already defualt resolution
+Checking if Bones_Face is high resolution
+Bones_Face is already defualt resolution
+Checking if LymphNodes is high resolution
+LymphNodes is already defualt resolution
+Checking if SpinalCanal is high resolution
+SpinalCanal is already defualt resolution
+Checking if Spleen is high resolution
+Spleen is already defualt resolution
+Checking if Bones_Extrem is high resolution
+Bones_Extrem is already defualt resolution
+Check and converted any high res base targets
+Preliminary checks complete!
+Elapsed time: 00:00
+Checking For Missing Target Structures: 
+Checking for missing target structures!
+Target: PTV_TMLI is missing
+Elapsed time: 00:00
+Preliminary Targets missing from the structure set! Creating them now!
+Create Missing Target Structures: 
+Creating missing target structures!
+Added target: PTV_TMLI
+Elapsed time: 00:00
+Contouring targets now
+Contouring target: PTV_TMLI
+Normal structure Eyes is null or empty! Skipping manipulation
+Cropping target PTV_TMLI from Lungs with margin 0.3 cm
+Normal structure Kidneys is null or empty! Skipping manipulation
+Normal structure Ovaries is null or empty! Skipping manipulation
+Targets added and contoured!
+Elapsed time: 00:02
+Finished!
+Finished Preparing Structure Set for Targets!
+Run time: 00:02 (mm:ss)
+
+Modifications NOT saved to database!
+
+

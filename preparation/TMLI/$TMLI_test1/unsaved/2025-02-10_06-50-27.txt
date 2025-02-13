@@ -1,0 +1,144 @@
+2/10/2025 6:50:27 AM
+User=Eric Simiele (enterprise\s0302146)
+Patient=$TMLI_test1
+Plan type=VMAT_TMLI
+Added preliminary targets:
+    PTV_TMLI
+
+Errors and warnings:
+
+Detailed log output:
+Preliminary target generation output:
+All structures necessary for target creation present and not empty
+Checking for high res structures:
+Checking if BODY is high resolution
+BODY is already defualt resolution
+Checking if Bones_Trunk is high resolution
+Bones_Trunk is already defualt resolution
+Checking if Bones_Face is high resolution
+Bones_Face is already defualt resolution
+Checking if LymphNodes is high resolution
+LymphNodes is already defualt resolution
+Checking if SpinalCanal is high resolution
+SpinalCanal is already defualt resolution
+Checking if Spleen is high resolution
+Spleen is already defualt resolution
+Checking if Bones_Extrem is high resolution
+Bones_Extrem is already defualt resolution
+Checking if Brain is high resolution
+Brain is already defualt resolution
+Checking if OralCavity is high resolution
+OralCavity is already defualt resolution
+Check and converted any high res base targets
+Preliminary checks complete!
+Elapsed time: 00:00:00
+Checking for missing target structures!
+Target: PTV_TMLI is missing
+Elapsed time: 00:00:00
+Preliminary Targets missing from the structure set! Creating them now!
+Creating missing target structures!
+Added target: PTV_TMLI
+Elapsed time: 00:00:00
+Contouring targets now
+Checking for L and R structures to union!
+No structures to union!
+Elapsed time: 00:00:00
+Contouring target: PTV_TMLI
+Unioned bones_trunk with PTV_TMLI
+Cropped bones_face from PTV_TMLI
+Unioned LymphNodes with PTV_TMLI
+Unioned SpinalCanal with PTV_TMLI
+Unioned Spleen with PTV_TMLI
+Unioned Testes with PTV_TMLI
+Expanded PTV_TMLI with uniform 5mm margin
+Unioned bones_extrem with PTV_TMLI with 10 mm outer margin
+436.995361328125
+Some points inside expanded brain. Evaluating which contours to add on image slice: 223
+Points inside ptv. Subtracting contours from image slice: 223
+Image slice: 223
+Some points inside expanded brain. Evaluating which contours to add on image slice: 224
+Points inside ptv. Subtracting contours from image slice: 224
+Image slice: 224
+Some points inside expanded brain. Evaluating which contours to add on image slice: 225
+Points inside ptv. Subtracting contours from image slice: 225
+Image slice: 225
+Some points inside expanded brain. Evaluating which contours to add on image slice: 226
+Points inside ptv. Subtracting contours from image slice: 226
+Image slice: 226
+Some points inside expanded brain. Evaluating which contours to add on image slice: 227
+Points inside ptv. Subtracting contours from image slice: 227
+Points inside ptv. Subtracting contours from image slice: 227
+Points inside ptv. Subtracting contours from image slice: 227
+Image slice: 227
+Some points inside expanded brain. Evaluating which contours to add on image slice: 228
+Points inside ptv. Subtracting contours from image slice: 228
+Points inside ptv. Subtracting contours from image slice: 228
+Image slice: 228
+Some points inside expanded brain. Evaluating which contours to add on image slice: 229
+Points inside ptv. Subtracting contours from image slice: 229
+Points inside ptv. Subtracting contours from image slice: 229
+Points inside ptv. Subtracting contours from image slice: 229
+Image slice: 229
+Some points inside expanded brain. Evaluating which contours to add on image slice: 230
+Points inside ptv. Subtracting contours from image slice: 230
+Image slice: 230
+Some points inside expanded brain. Evaluating which contours to add on image slice: 231
+Points inside ptv. Subtracting contours from image slice: 231
+Image slice: 231
+Some points inside expanded brain. Evaluating which contours to add on image slice: 232
+Points inside ptv. Subtracting contours from image slice: 232
+Image slice: 232
+Some points inside expanded brain. Evaluating which contours to add on image slice: 233
+Points inside ptv. Subtracting contours from image slice: 233
+Image slice: 233
+Some points inside expanded brain. Evaluating which contours to add on image slice: 234
+Points inside ptv. Subtracting contours from image slice: 234
+Image slice: 234
+Some points inside expanded brain. Evaluating which contours to add on image slice: 235
+Points inside ptv. Subtracting contours from image slice: 235
+Image slice: 235
+Some points inside expanded brain. Evaluating which contours to add on image slice: 236
+Points inside ptv. Subtracting contours from image slice: 236
+Image slice: 236
+Some points inside expanded brain. Evaluating which contours to add on image slice: 237
+Points inside ptv. Subtracting contours from image slice: 237
+Image slice: 237
+Some points inside expanded brain. Evaluating which contours to add on image slice: 238
+Points inside ptv. Subtracting contours from image slice: 238
+Image slice: 238
+Some points inside expanded brain. Evaluating which contours to add on image slice: 239
+Points inside ptv. Subtracting contours from image slice: 239
+Image slice: 239
+Some points inside expanded brain. Evaluating which contours to add on image slice: 240
+Points inside ptv. Subtracting contours from image slice: 240
+Image slice: 240
+Some points inside expanded brain. Evaluating which contours to add on image slice: 241
+Points inside ptv. Subtracting contours from image slice: 241
+Image slice: 241
+Some points inside expanded brain. Evaluating which contours to add on image slice: 242
+Points inside ptv. Subtracting contours from image slice: 242
+Image slice: 242
+Some points inside expanded brain. Evaluating which contours to add on image slice: 243
+Points inside ptv. Subtracting contours from image slice: 243
+Image slice: 243
+Some points inside expanded brain. Evaluating which contours to add on image slice: 244
+Points inside ptv. Subtracting contours from image slice: 244
+Image slice: 244
+Some points inside expanded brain. Evaluating which contours to add on image slice: 245
+Points inside ptv. Subtracting contours from image slice: 245
+Image slice: 245
+Image slice: 246
+Image slice: 247
+Image slice: 248
+Cropping target PTV_TMLI from Eyes with margin 0.3 cm
+Cropping target PTV_TMLI from Lungs with margin 0.3 cm
+Cropping target PTV_TMLI from Kidneys with margin 0.3 cm
+Normal structure Ovaries is null or empty! Skipping manipulation
+Targets added and contoured!
+Elapsed time: 00:00:07
+Finished Preparing Structure Set for Targets!
+Run time: 00:00:07 (mm:ss)
+
+Modifications NOT saved to database!
+
+

@@ -1,0 +1,36 @@
+2/12/2025 1:49:05 PM
+User=Eric Simiele (enterprise\s0302146)
+Patient=$TMLI_test5
+Plan type=VMAT_TMLI
+Structure set=1.2.246.352.71.4.251621835082.762217.20250210112230
+Template=TMLI (200 cGy)
+
+Prescriptions:
+    {VMAT-TMLI,PTV_TMLI,1,200,200}
+
+Added TS structures:
+
+Structure manipulations:
+
+Isocenter names:
+
+Plan UIDs:
+
+TS Targets:
+
+Normalization volumes:
+
+Optimization constraints:
+
+Errors and warnings:
+
+Detailed log output:
+TS Generation and manipulation output:
+Body structure exists and is not empty
+Did you forget to set the user origin? 
+User origin is NOT inside body contour! 
+Please fix and try again!
+
+No modifications made to database objects!
+
+

@@ -1,0 +1,29 @@
+2/12/2025 10:30:24 AM
+User=Eric Simiele (enterprise\s0302146)
+Patient=$TMLI_test1
+Plan type=VMAT_TMLI
+Structure set=1.2.246.352.71.4.251621835082.762213.20250212102927
+Template=TMLI (1200 cGy)
+
+Prescriptions:
+
+Added TS structures:
+
+Structure manipulations:
+
+Isocenter names:
+
+Plan UIDs:
+
+TS Targets:
+
+Normalization volumes:
+
+Optimization constraints:
+
+Errors and warnings:
+
+Detailed log output:
+No modifications made to database objects!
+
+

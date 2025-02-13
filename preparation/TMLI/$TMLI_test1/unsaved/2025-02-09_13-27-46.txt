@@ -1,0 +1,184 @@
+2/9/2025 1:27:46 PM
+User=Eric Simiele (enterprise\s0302146)
+Patient=$TMLI_test1
+Plan type=VMAT_TMLI
+Structure set=
+Template=
+
+Prescriptions:
+
+Added TS structures:
+    TS_PTV_TMLI
+    TS_ring600
+
+Structure manipulations:
+    {eyes,CropTargetFromStructure,0.3}
+    {Lungs,CropTargetFromStructure,0.3}
+    {Kidneys,CropTargetFromStructure,0.3}
+    {Lungs,ContourSubStructure,-1}
+    {Lungs,ContourSubStructure,-2}
+    {Kidneys,ContourSubStructure,-1}
+    {Liver,ContourSubStructure,-1}
+    {Liver,ContourSubStructure,-2}
+    {Brain,ContourSubStructure,-1}
+    {Brain,ContourSubStructure,-2}
+    {Heart,ContourSubStructure,-1}
+    {Heart,ContourSubStructure,-2}
+
+Isocenter names:
+    VMAT-TMLI
+        Head
+        Chest
+        Legs
+
+Plan UIDs:
+
+TS Targets:
+    {PTV_TMLI,TS_PTV_TMLI}
+
+Normalization volumes:
+    {VMAT-TMLI,TS_PTV_TMLI}
+
+Optimization constraints:
+
+Errors and warnings:
+
+Detailed log output:
+TS Generation and manipulation output:
+Body structure exists and is not empty
+User origin is inside body
+Body extent (1202.94472885132 mm) is greater than 116.0 cm and no matchline structure was found!
+Body structure exists and matchline appropriate
+Preliminary checks complete!
+Elapsed time: 00:00:01
+Checking for L and R structures to union!
+No structures to union!
+Elapsed time: 00:00:01
+Adding remaining tuning structures to stack!
+Removing prior tuning structures
+Adding any remaining tuning structures to the stack
+Verifying requested TS structures can be added to the structure set!
+Prior tuning structures successfully removed!
+Elapsed time: 00:00:01
+Finished adding tuning structures!
+Contouring tuning structures!
+Elapsed time: 00:00:01
+Retrieving TS target: TS_PTV_TMLI
+TS target TS_PTV_TMLI does not exist. Creating it now!
+Copying target PTV_TMLI contours onto TS_PTV_TMLI
+No TS manipulations requested!
+Elapsed time: 00:00:01
+Generating requested ring structures for targets!
+Retrieved target: PTV_TMLI
+Created empty ring: TS_ring600
+Contouring ring: TS_ring600
+Finished contouring ring: AutoPlannerHelpers.Models.TSRingStructureModel
+Elapsed time: 00:00:06
+Retrieved body structure
+Calculated maximum extent of body: 1202.9 mm
+matchline structure not present in structure set
+Calculated required number of VMAT Isos: 3
+Calculated total number of Isos: 3
+Retrieved appropriate isocenter names:
+Plan Id: VMAT-TMLI
+ Head
+ Chest
+ Legs
+Finished Structure Tuning!
+Run time: 00:00:06 (mm:ss)
+
+Generate plans and place beams output:
+Check course: 
+Checking for existing course VMAT TMLI
+Course  VMAT TMLI does not exist. Creating now!
+Course VMAT TMLI retrieved!
+Elapsed time: 00:00
+Checking for existing plans: 
+Plan VMAT-TMLI does not exist in course VMAT TMLI
+No plans currently exist in course VMAT TMLI!
+Elapsed time: 00:00
+Creating VMAT plans: 
+Creating plan VMAT-TMLI
+Created plan VMAT-TMLI
+Set prescription for plan VMAT-TMLI
+Set plan Id for VMAT-TMLI
+Set calculation model to AAA_15605
+Set optimization model to PO_15605
+Calculation options for PO_15605:
+AirCavityCorrection, Off
+ApertureShapeController, Off
+AutoFeathering, On
+ConvergenceMode, Off
+DoseCalculationResolution, Normal
+DoseCalculationResolutionForSRSAndHyperarc, High
+FieldGroupingZThreshold, 3.0
+InhomogeneityCorrection, On
+MRLevelAtRestart, MR3
+SmoothX, 40
+SmoothY, 30
+UseGPU, No
+Set GPU option for dose calculation to No
+MR restart level set to MR3
+Set GPU option for optimization to No
+Assigned calculation options for plan: VMAT-TMLI
+Added plan VMAT-TMLI to stack!
+Finished creating and initializing plans!
+Elapsed time: 00:00
+Checking for potential couch collision
+Couch surface structure retrieved
+User origin to Table Top distance: 7.9 cm
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, 180)
+Adding calculated isocenter position to stack!
+Calculated isocenter position 1
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, -200)
+Adding calculated isocenter position to stack!
+Calculated isocenter position 2
+Rounding Y- and Z-positions to nearest integer values
+Calculated isocenter position (user coordinates): (0, 0, -580)
+Adding calculated isocenter position to stack!
+Calculated isocenter position 3
+Assigning isocenters and beams: 
+Preparing to set isocenters for plan: VMAT-TMLI
+Created default DRR parameters
+Preparation complete!
+Assigning isocenter: 1
+Added arc beam to iso: 1
+Assigned beam id: 1 CCW Head
+Assigned DRR to beam: 1 CCW Head
+Added arc beam to iso: 1
+Assigned beam id: 2 CW Head
+Assigned DRR to beam: 2 CW Head
+Added arc beam to iso: 1
+Assigned beam id: 3 CCW Head90
+Assigned DRR to beam: 3 CCW Head90
+Added arc beam to iso: 1
+Assigned beam id: 4 CW Head90
+Assigned DRR to beam: 4 CW Head90
+Assigning isocenter: 2
+Added arc beam to iso: 2
+Assigned beam id: 5 CCW Chest
+Assigned DRR to beam: 5 CCW Chest
+Added arc beam to iso: 2
+Assigned beam id: 6 CW Chest
+Assigned DRR to beam: 6 CW Chest
+Added arc beam to iso: 2
+Assigned beam id: 7 CCW Chest90
+Assigned DRR to beam: 7 CCW Chest90
+Assigning isocenter: 3
+Added arc beam to iso: 3
+Assigned beam id: 8 CW Legs
+Assigned DRR to beam: 8 CW Legs
+Added arc beam to iso: 3
+Assigned beam id: 9 CCW Legs
+Assigned DRR to beam: 9 CCW Legs
+Added arc beam to iso: 3
+Assigned beam id: 10 CW Legs90
+Assigned DRR to beam: 10 CW Legs90
+Elapsed time: 00:14
+Finished!
+
+Modifications NOT saved to database!
+
+
