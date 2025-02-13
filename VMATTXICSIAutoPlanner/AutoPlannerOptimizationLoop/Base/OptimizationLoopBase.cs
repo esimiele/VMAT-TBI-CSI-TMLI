@@ -196,6 +196,17 @@ namespace AutoPlannerOptimizationLoop.Base
                     ProvideUIUpdate(100 * ++percentComplete / calcItems);
                 }
 
+                //turn on jaw tracking if available
+                try
+                {
+                    itr.OptimizationSetup.UseJawTracking = true;
+                    ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Enabled jaw tracking for plan: {itr.Id}");
+                }
+                catch (Exception e)
+                {
+                    ProvideUIUpdate(100 * ++percentComplete / calcItems, $"{e.Message}\nCannot set jaw tracking for this machine! Jaw tracking will not be enabled!");
+                }
+
                 //set auto NTO priority to zero (i.e., shut it off)
                 itr.OptimizationSetup.AddAutomaticNormalTissueObjective(0.0);
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Set automatic NTO priority to 0 for plan: {itr.Id}");
@@ -316,10 +327,12 @@ namespace AutoPlannerOptimizationLoop.Base
             int percentComplete = 0;
             int calcItems = 1 + 7 * _data.NumberOfIterations;
 
-            //update the current optimization parameters for this iteration
-            List<OptimizationConstraintModel> initializedConstraints = InitializeOptimizationConstriants(plan);
-            UpdateConstraints(initializedConstraints, plan);
+            ////update the current optimization parameters for this iteration
+            //List<OptimizationConstraintModel> initializedConstraints = InitializeOptimizationConstriants(plan);
+            //UpdateConstraints(initializedConstraints, plan);
 
+            //print the initial optimization constraints. DO NOT apply 2/3 scaling to priorities!
+            ProvideUIUpdate(100 * ++percentComplete / calcItems, OptimizationLoopUIHelper.PrintPlanOptimizationConstraints(plan, OptimizationSetupHelper.ReadConstraintsFromPlan(plan)));
 
             if (_data.IsDemo) Thread.Sleep(3000);
             else _data.Application.SaveModifications();

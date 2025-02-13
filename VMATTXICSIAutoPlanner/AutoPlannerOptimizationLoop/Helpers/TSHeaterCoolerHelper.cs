@@ -88,30 +88,14 @@ namespace AutoPlannerOptimizationLoop.Helpers
 
         public static double ExtractCreationCriteriaMetric(ExternalPlanSetup plan, Structure target, OptTSCreationCriteriaModel criteria)
         {
-            if (criteria.DVHMetric == DVHMetric.Dmax)
+            if (criteria.DVHMetric == DVHMetric.VolumeAtDose)
             {
-                //dmax constraint
-                double result = plan.Dose.DoseMax3D.Dose;
-                if (criteria.QueryResultUnits == Units.Percent) result *= (plan.TotalDose.Dose / 100);
-                else if (criteria.QueryResultUnits == Units.Gy) result /= 100;
-                return result;
-            }
-            else if (criteria.DVHMetric == DVHMetric.Dmean)
-            {
-                return plan.GetDVHCumulativeData(target,
-                                                 criteria.QueryResultUnits == Units.Percent ? DoseValuePresentation.Relative : DoseValuePresentation.Absolute,
-                                                 VolumePresentation.Relative, 0.1).MeanDose.Dose;
-            }
-            else if (criteria.DVHMetric == DVHMetric.Dmin)
-            {
-                return plan.GetDVHCumulativeData(target,
-                                                 criteria.QueryResultUnits == Units.Percent ? DoseValuePresentation.Relative : DoseValuePresentation.Absolute,
-                                                 VolumePresentation.Relative, 0.1).MinDose.Dose;
-            }
-            else if (criteria.DVHMetric == DVHMetric.VolumeAtDose)
-            {
+                double dose = criteria.QueryValue;
+                //convert query dose from a percent to absolute dose
+                if (criteria.QueryUnits == Units.Percent) dose *= (plan.TotalDose.Dose / 100);
+                DoseValue queryDose = new DoseValue(dose, DoseValue.DoseUnit.cGy);
                 return plan.GetVolumeAtDose(target,
-                                            new DoseValue(criteria.QueryValue, UnitsTypeHelper.GetDoseUnit(criteria.QueryUnits)),
+                                            queryDose,
                                             criteria.QueryResultUnits == Units.Percent ? VolumePresentation.Relative : VolumePresentation.AbsoluteCm3);
             }
             else if (criteria.DVHMetric == DVHMetric.DoseAtVolume)
@@ -121,7 +105,17 @@ namespace AutoPlannerOptimizationLoop.Helpers
                                             criteria.QueryUnits == Units.Percent ? VolumePresentation.Relative : VolumePresentation.AbsoluteCm3,
                                             criteria.QueryResultUnits == Units.Percent ? DoseValuePresentation.Relative : DoseValuePresentation.Absolute).Dose;
             }
-            else return double.NaN;
+            else
+            {
+                DVHData dvhData = plan.GetDVHCumulativeData(target,
+                                                             criteria.QueryResultUnits == Units.Percent ? DoseValuePresentation.Relative : DoseValuePresentation.Absolute,
+                                                             VolumePresentation.Relative, 0.1);
+
+                if (criteria.DVHMetric == DVHMetric.Dmax) return dvhData.MaxDose.Dose;
+                else if (criteria.DVHMetric == DVHMetric.Dmean) return dvhData.MeanDose.Dose;
+                else if (criteria.DVHMetric == DVHMetric.Dmin) return dvhData.MinDose.Dose;
+                else return double.NaN;
+            }
         }
     }
 }
