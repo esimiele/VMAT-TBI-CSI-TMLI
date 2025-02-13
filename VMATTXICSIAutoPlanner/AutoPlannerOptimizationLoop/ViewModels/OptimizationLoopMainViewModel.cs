@@ -303,6 +303,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             //grab an instance of the VMAT TBI plan. Return null if it isn't found
             if (OptimizationLoopSettings.PlanUIDs.Any())
             {
+                EclipseContext.GetInstance().VMATPlans.Clear();
                 //should automatically be in order in terms of cumulative Rx (lowest to highest)
                 foreach (string uid in OptimizationLoopSettings.PlanUIDs)
                 {
