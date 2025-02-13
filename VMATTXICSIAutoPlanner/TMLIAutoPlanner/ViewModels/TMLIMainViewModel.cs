@@ -108,8 +108,6 @@ namespace TMLIAutoPlanner.ViewModels
 
         public void Initialize()
         {
-            //try { VMS.TPS.Common.Model.API.Application app = VMS.TPS.Common.Model.API.Application.CreateApplication(); }
-            //catch (Exception e) { MessageBox.Show(e.Message); }
             _generalConfigurationFile = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\configuration\\VMAT_TMLI_config.ini";
             LoadScriptConfigurationSettings(_generalConfigurationFile);
             LoadPlanTemplates();
@@ -397,8 +395,8 @@ namespace TMLIAutoPlanner.ViewModels
             if (ReferenceEquals(_selectedTemplate, null)) return;
             InitialDosePerFraction = (_selectedTemplate as TMLIAutoPlanTemplate).InitialRxDosePerFx;
             InitialNumberOfFractions = (_selectedTemplate as TMLIAutoPlanTemplate).InitialRxNumberOfFractions;
-            _prepForTargetsVM.UpdateRequestedTargetStructures((_selectedTemplate as TMLIAutoPlanTemplate).RequestedPreliminaryTargets);
             _setTargetsVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
+            _prepForTargetsVM.UpdateRequestedTargetStructures((_selectedTemplate as TMLIAutoPlanTemplate).RequestedPreliminaryTargets);
             Logger.GetInstance().Template = _selectedTemplate.TemplateName;
         }
 

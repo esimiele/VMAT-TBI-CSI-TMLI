@@ -132,11 +132,21 @@ namespace TBIAutoPlanner.ViewModels
             HelpGuideCommand = new RelayCommand(LaunchHelpGuide);
             PTVMarginInfoCommand = new RelayCommand(ShowPTVMarginInfo);
 
+            if (TBIAutoPlannerSettings.AllBeamsVMAT) _beamPlacementVM.HideRequestedNumberOfIsos();
             _beamPlacementVM.UpdateBeamsPerIso(TBIAutoPlannerSettings.BeamsPerIsocenter);
+
+            QuickStartGuideCommand = new RelayCommand(LaunchQuickStartGuide);
+            HelpGuideCommand = new RelayCommand(LaunchHelpGuide);
+            PTVMarginInfoCommand = new RelayCommand(ShowPTVMarginInfo);
 
             //needs to be initialized after the plan templates are loaded
             ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
             SpecifyTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
+            if (EclipseContext.GetInstance().IsInitialized && !ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
+            {
+                PatientMRN = EclipseContext.GetInstance().Patient.Id;
+                StructureSetId = EclipseContext.GetInstance().StructureSet.Id;
+            }
         }
 
         #region information and help guides
@@ -166,6 +176,12 @@ namespace TBIAutoPlanner.ViewModels
             {
                 Logger.GetInstance().LogError($"Error! Multiple plan Ids entered! This script is only configured to auto-plan one TBI plan!");
                 return true;
+            }
+
+            if (!ReferenceEquals(_selectedTemplate, null))
+            {
+                _tsGenerationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
+                _tsManipulationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
             }
             return false;
         }
@@ -199,11 +215,12 @@ namespace TBIAutoPlanner.ViewModels
             _planIsocenters = generateTS.PlanIsocentersList;
 
             _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters, TBIAutoPlannerSettings.AvailableLinacs, TBIAutoPlannerSettings.AvailableEnergies, TBIAutoPlannerSettings.ContourFieldOverlap, TBIAutoPlannerSettings.ContourFieldOverlapMarginInCM);
+            _optimizationSetupVM.UpdateStructureIdList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id));
             _planOptimizationSetup = UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
 
             StructureTuningTabBackground = System.Windows.Media.Brushes.ForestGreen;
             TSManipulationTabBackground = System.Windows.Media.Brushes.ForestGreen;
-            BeamPlacementTabBackground = System.Windows.Media.Brushes.ForestGreen;
+            BeamPlacementTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
 
             Logger.GetInstance().AddedStructures = generateTS.AddedStructureIds;
             Logger.GetInstance().StructureManipulations = tsManipulations;
@@ -230,8 +247,16 @@ namespace TBIAutoPlanner.ViewModels
             bool failed = placeBeams.Execute();
             Logger.GetInstance().AppendLogOutput("Generate plans and place beams output:", placeBeams.GetLogOutput());
             if (failed) return;
-            if (placeBeams.VMATPlans.Any()) EclipseContext.GetInstance().VMATPlans = placeBeams.VMATPlans;
-            _planOptimizationSetup = UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions, _planOptimizationSetup);
+            if (placeBeams.VMATPlans.Any())
+            {
+                EclipseContext.GetInstance().VMATPlans = placeBeams.VMATPlans;
+                Logger.GetInstance().PlanUIDs = placeBeams.VMATPlans.Select(x => x.UID).ToList();
+            }
+            if (placeBeams.FieldJunctions.Any())
+            {
+                _planOptimizationSetup = UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions, _planOptimizationSetup);
+                _optimizationSetupVM.UpdateStructureIdList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id));
+            }
             _optimizationSetupVM.UpdateUIWithPlanOptimizationSetupList(_planOptimizationSetup);
 
             BeamPlacementTabBackground = System.Windows.Media.Brushes.ForestGreen;
@@ -332,8 +357,7 @@ namespace TBIAutoPlanner.ViewModels
             InitialDosePerFraction = (_selectedTemplate as TBIAutoPlanTemplate).InitialRxDosePerFx;
             InitialNumberOfFractions = (_selectedTemplate as TBIAutoPlanTemplate).InitialRxNumberOfFractions;
             _setTargetsVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
-            _tsGenerationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
-            _tsManipulationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
+            Logger.GetInstance().Template = _selectedTemplate.TemplateName;
         }
 
         private void UpdateUseFlash()

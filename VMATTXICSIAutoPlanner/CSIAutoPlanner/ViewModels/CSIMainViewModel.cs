@@ -151,6 +151,8 @@ namespace CSIAutoPlanner.ViewModels
             SpecifyTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
             if (EclipseContext.GetInstance().IsInitialized && ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
             {
+                PatientMRN = EclipseContext.GetInstance().Patient.Id;
+                StructureSetId = EclipseContext.GetInstance().StructureSet.Id;
                 if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => x.ApprovalHistory.First().ApprovalStatus == StructureApprovalStatus.Approved && x.Id.ToLower().Contains("ptv")))
                 {
                     SetTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
@@ -223,6 +225,7 @@ namespace CSIAutoPlanner.ViewModels
                                                                  _boostPlanTotalDose);
             if (!_prescriptions.Any()) return;
             _planOptimizationSetup = BuildPlanOptimizationSetupList();
+            Logger.GetInstance().Prescriptions = _prescriptions;
 
             SpecifyTargetsTabBackground = System.Windows.Media.Brushes.ForestGreen;
             StructureTuningTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
@@ -257,6 +260,14 @@ namespace CSIAutoPlanner.ViewModels
                     }
                 }
             }
+
+            if (!ReferenceEquals(_selectedTemplate, null))
+            {
+                _tsGenerationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
+                _structureCropOverlapVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
+                _ringGenerationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
+                _tsManipulationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
+            }
             return false;
         }
         #endregion
@@ -290,6 +301,7 @@ namespace CSIAutoPlanner.ViewModels
             _planIsocenters = generateTS.PlanIsocentersList;
 
             _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters, CSIAutoPlannerSettings.AvailableLinacs, CSIAutoPlannerSettings.AvailableEnergies, CSIAutoPlannerSettings.ContourFieldOverlap, CSIAutoPlannerSettings.ContourFieldOverlapMarginInCM);
+            _optimizationSetupVM.UpdateStructureIdList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id));
             _planOptimizationSetup = UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
             _planOptimizationSetup = UpdateOptimizationConstraintsWithRings(generateTS.AddedRings, _planOptimizationSetup);
             _planOptimizationSetup = UpdateOptimizationConstraintsWithCropOverlapStructures(generateTS.TargetCropOverlapManipulations, _planOptimizationSetup);
@@ -322,10 +334,16 @@ namespace CSIAutoPlanner.ViewModels
             bool failed = placeBeams.Execute();
             Logger.GetInstance().AppendLogOutput("Generate plans and place beams output:", placeBeams.GetLogOutput());
             if (failed) return;
-            if (!placeBeams.VMATPlans.Any()) return;
-            EclipseContext.GetInstance().VMATPlans = placeBeams.VMATPlans;
-            Logger.GetInstance().PlanUIDs = placeBeams.VMATPlans.OrderBy(x => x.CreationDateTime).Select(x => x.UID).ToList();
-            _planOptimizationSetup = UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions, _planOptimizationSetup);
+            if (placeBeams.VMATPlans.Any())
+            {
+                EclipseContext.GetInstance().VMATPlans = placeBeams.VMATPlans;
+                Logger.GetInstance().PlanUIDs = placeBeams.VMATPlans.Select(x => x.UID).ToList();
+            }
+            if (placeBeams.FieldJunctions.Any())
+            {
+                _planOptimizationSetup = UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions, _planOptimizationSetup);
+                _optimizationSetupVM.UpdateStructureIdList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id));
+            }
             _optimizationSetupVM.UpdateUIWithPlanOptimizationSetupList(_planOptimizationSetup);
 
             BeamPlacementTabBackground = System.Windows.Media.Brushes.ForestGreen;
@@ -365,10 +383,7 @@ namespace CSIAutoPlanner.ViewModels
             BoostDosePerFraction = (_selectedTemplate as CSIAutoPlanTemplate).BoostRxDosePerFx;
             BoostNumberOfFractions = (_selectedTemplate as CSIAutoPlanTemplate).BoostRxNumberOfFractions;
             _setTargetsVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
-            _tsGenerationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
-            _ringGenerationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate, true);
-            _structureCropOverlapVM.AutoPlanTemplateSelectionChanged(_selectedTemplate, true);
-            _tsManipulationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
+            _prepForTargetsVM.UpdateRequestedTargetStructures(CSIAutoPlannerSettings.RequestedPreliminaryTargets);
         }
 
         #region script configuration

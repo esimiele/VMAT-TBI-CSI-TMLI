@@ -58,7 +58,14 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel>
-                                    <TextBlock Text="{Binding PlanId}" HorizontalAlignment="Center" Margin="10" FontWeight="Bold"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Label Content="Plan Id:" HorizontalAlignment="Right" FontSize="14"/>
+                                        <TextBlock Text="{Binding PlanId}" Grid.Column="1" HorizontalAlignment="Center" Margin="10" FontWeight="Bold" FontSize="14" Width="100"/>
+                                    </Grid>
                                     <ItemsControl ItemsSource="{Binding Isocenters}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>

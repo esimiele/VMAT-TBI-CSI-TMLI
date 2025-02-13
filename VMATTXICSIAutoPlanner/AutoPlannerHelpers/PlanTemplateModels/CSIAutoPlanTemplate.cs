@@ -14,6 +14,8 @@ namespace AutoPlannerHelpers.PlanTemplateModels
         public List<string> CropAndOverlapStructures { get; set; } = new List<string> { };
         public List<OptimizationConstraintModel> InitialOptimizationConstraints { get; set; } = new List<OptimizationConstraintModel> { };
         public List<OptimizationConstraintModel> BoostOptimizationConstraints { get; set; } = new List<OptimizationConstraintModel> { };
+        public List<RequestedTSStructureModel> RequestedPreliminaryTargets { get; set; } = new List<RequestedTSStructureModel> { };
+
         #endregion
 
         /// <summary>
