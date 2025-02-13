@@ -22,23 +22,19 @@ namespace VMS.TPS
             {
                 if (context.Patient != null)
                 {
-                    bool addOptLaunchOption = false;
-                    if (!ReferenceEquals(context.ExternalPlanSetup, null))
-                    {
-                        addOptLaunchOption = true;
-                    }
                     string exeName = "Launcher";
                     string path = AppExePath(exeName);
                     if (!string.IsNullOrEmpty(path))
                     {
                         ProcessStartInfo p = new ProcessStartInfo(path);
-                        string SSID = "/";
-                        if (context.StructureSet != null) SSID = context.StructureSet.Id;
-                        if (!addOptLaunchOption) p.Arguments = String.Format("-m {0} -s {1}", context.Patient.Id, SSID);
-                        else p.Arguments = String.Format("-m {0} -s {1} {2}", context.Patient.Id, SSID, true);
+                        p.Arguments = string.Format("-m {0}", context.Patient.Id);
+                        if (!ReferenceEquals(context.StructureSet, null)) p.Arguments += string.Format(" -s {0}", context.StructureSet.UID);
+                        if (!ReferenceEquals(context.Image, null)) p.Arguments += string.Format(" -i {0}", context.Image.FOR);
+                        if (!ReferenceEquals(context.PlanSetup, null)) p.Arguments += string.Format(" -p {0}", context.PlanSetup.UID);
+                        if (!ReferenceEquals(context.Course, null)) p.Arguments += string.Format(" -c {0}", context.Course.Id);
                         Process.Start(p);
                     }
-                    else MessageBox.Show(String.Format("Error! {0} executable NOT found!", exeName));
+                    else MessageBox.Show(string.Format("Error! {0} executable NOT found!", exeName));
                 }
                 else MessageBox.Show("Please open a patient before launching the autoplanning tool!");
             }

@@ -28,6 +28,7 @@ namespace AutoPlannerLauncher.ViewModels
         public ICommand LaunchVMATTBICommand { get; set; }
         public ICommand LaunchVMATCSICommand { get; set; }
         public ICommand LaunchVMATTMLICommand { get; set; }
+        public ICommand LaunchOptimizationLoopCommand { get; set; }
         #endregion
 
         #region fields
@@ -37,15 +38,14 @@ namespace AutoPlannerLauncher.ViewModels
         internal LauncherMainViewModel(string[] args)
         {
             _arguments = args;
-            LaunchOptimizationLoopVisible = Visibility.Visible;
-            //if (bool.TryParse(args[1], out bool showLauncher))
-            //{
-            //    if(showLauncher) LaunchOptimizationLoopVisible = Visibility.Visible;
-            //}
+            if (args.ToList().Any(x => string.Equals(x, "-p")))
+            {
+                LaunchOptimizationLoopVisible = Visibility.Visible;
+            }
             LaunchVMATTBICommand = new RelayCommand(LaunchVMATTBI);
             LaunchVMATCSICommand = new RelayCommand(LaunchVMATCSI);
             LaunchVMATTMLICommand = new RelayCommand(LaunchVMATTMLI);
-
+            LaunchOptimizationLoopCommand = new RelayCommand(LaunchOptimizationLoop);
         }
 
         private void LaunchVMATTBI()
@@ -61,6 +61,11 @@ namespace AutoPlannerLauncher.ViewModels
         public void LaunchVMATTMLI()
         {
             LaunchExe("TMLIAutoPlanner");
+        }
+
+        public void LaunchOptimizationLoop()
+        {
+            LaunchExe("AutoPlannerOptimizationLoop");
         }
 
         /// <summary>
@@ -79,13 +84,13 @@ namespace AutoPlannerLauncher.ViewModels
                 Process.Start(p);
                 //this.Close();
             }
-            else MessageBox.Show(String.Format("Error! {0} executable NOT found!", exeName));
+            else MessageBox.Show(string.Format("Error! {0} executable NOT found!", exeName));
         }
 
         private string SerializeInputArguments()
         {
             StringBuilder sb = new StringBuilder();
-            for (int i = 2; i < _arguments.Length; i++)
+            for (int i = 0; i < _arguments.Length; i++)
             {
                 sb.Append($"{_arguments[i]} ");
             }

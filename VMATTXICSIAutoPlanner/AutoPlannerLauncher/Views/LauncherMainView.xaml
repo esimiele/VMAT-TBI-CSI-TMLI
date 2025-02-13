@@ -12,7 +12,7 @@
             <Button Content="VMAT TBI" Width="160" Margin="5" Command="{Binding LaunchVMATTBICommand}"/>
             <Button Content="VMAT CSI" Width="160" Margin="5" Command="{Binding LaunchVMATCSICommand}"/>
             <Button Content="VMAT TMLI" Width="160" Margin="5" Command="{Binding LaunchVMATTMLICommand}"/>
-            <Button Content="Launch Optimization Loop" Width="160" Margin="5" Visibility="{Binding LaunchOptimizationLoopVisible, FallbackValue=Collapsed}" Command="{Binding LaunchOptimizationLoop}"/>
+            <Button Content="Launch Optimization Loop" Width="160" Margin="5" Visibility="{Binding LaunchOptimizationLoopVisible, FallbackValue=Collapsed}" Command="{Binding LaunchOptimizationLoopCommand}"/>
         </StackPanel>
     </Grid>
 </Window>
