@@ -221,7 +221,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         public void Initialize()
         {
             AssignDefaultLogAndDocPaths();
-            LoadPatient();
+            LoadPatientStructureSetAndPlans();
             LoadConfigurationSettingsForPlanType(_planType);
             LoadTemplatePlanChoices(_planType);
             InitializeUI();
@@ -243,7 +243,9 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                 return;
             }
             else StructureIds = EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id).ToList();
-            if(PlanTemplates.Any(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed)))
+            MRN = EclipseContext.GetInstance().Patient.Id;
+
+            if (PlanTemplates.Any(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed)))
             {
                 SelectedTemplate = PlanTemplates.First(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed));
             }
@@ -267,35 +269,42 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         /// Utility method to load a patient into the script. Attempt to read the log file from the preparation script
         /// </summary>
         /// <param name="patmrn"></param>
-        private void LoadPatient()
+        private void LoadPatientStructureSetAndPlans()
         {
             if (!EclipseContext.GetInstance().IsInitialized) return;
-            string fullLogName = string.Empty;
-            if(ReferenceEquals(EclipseContext.GetInstance().Patient, null))
-            {
-                SelectPatient sp = new SelectPatient(_logFilePath);
-                sp.ShowDialog();
-                if (!sp.SelectionMade) return;
-                EclipseContext.GetInstance().Patient = EclipseContext.GetInstance().Application.OpenPatientById(sp.PatientMRN);
-                if(ReferenceEquals(EclipseContext.GetInstance().Patient, null))
-                {
-                    MessageBox.Show($"Patient: {sp.PatientMRN} not found! Exiting initialization!");
-                    return;
-                }
-                fullLogName = sp.FullLogFileName;
-            }
-            else fullLogName = LogHelper.GetFullLogFileFromExistingMRN(EclipseContext.GetInstance().Patient.Id, _logFilePath);
-            if (!LoadLogFile(fullLogName)) OptimizationLoopSettings.PlanPreparationLogFileLoaded = true;
+            string prepLogFile = RetrievePreparationLogFile();
+            if (string.IsNullOrEmpty(prepLogFile)) return;
+            if (!LoadLogFile(prepLogFile)) OptimizationLoopSettings.PlanPreparationLogFileLoaded = true;
             else
             {
                 MessageBox.Show($"Error! Failed to ready plan preparation log file for patient: {EclipseContext.GetInstance().Patient.Id}! Exiting initialization!");
                 return;
             }
             LoadPlansAndStructureSet();
-            if (_planType == PlanType.VMAT_TBI && OptimizationLoopSettings.Reminders.Any(x => x.ToLower().Contains("base dose")))
+            if (OptimizationLoopSettings.Reminders.Any(x => x.ToLower().Contains("base dose")))
             {
                 if (!EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Any(x => x.Id.ToLower().Contains("legs"))) OptimizationLoopSettings.Reminders.Remove(OptimizationLoopSettings.Reminders.First(x => x.ToLower().Contains("base dose")));
             }
+        }
+
+        private string RetrievePreparationLogFile()
+        {
+            string fullLogName = string.Empty;
+            if (ReferenceEquals(EclipseContext.GetInstance().Patient, null))
+            {
+                SelectPatient sp = new SelectPatient(_logFilePath);
+                sp.ShowDialog();
+                if (!sp.SelectionMade) return string.Empty;
+                EclipseContext.GetInstance().Patient = EclipseContext.GetInstance().Application.OpenPatientById(sp.PatientMRN);
+                if (ReferenceEquals(EclipseContext.GetInstance().Patient, null))
+                {
+                    MessageBox.Show($"Patient: {sp.PatientMRN} not found! Exiting initialization!");
+                    return string.Empty;
+                }
+                fullLogName = sp.FullLogFileName;
+            }
+            else fullLogName = LogHelper.GetFullLogFileFromExistingMRN(EclipseContext.GetInstance().Patient.Id, _logFilePath);
+            return fullLogName;
         }
 
         public void LoadPlansAndStructureSet()
@@ -303,8 +312,12 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             //grab an instance of the VMAT TBI plan. Return null if it isn't found
             if (OptimizationLoopSettings.PlanUIDs.Any())
             {
+                //if plan uids were loaded from the prep script log file, then discard the current list of vmat plan uids, structure set, and course from eclipse initialization
+                //--> uids from log file are already sorted in order in terms of cumulative Rx (lowest to highest) 
                 EclipseContext.GetInstance().VMATPlans.Clear();
-                //should automatically be in order in terms of cumulative Rx (lowest to highest)
+                EclipseContext.GetInstance().StructureSet = null;
+                EclipseContext.GetInstance().Course = null;
+                //re-add the plan uids to vmat plan list
                 foreach (string uid in OptimizationLoopSettings.PlanUIDs)
                 {
                     ExternalPlanSetup tmp = EclipseContext.GetInstance().Patient.Courses.SelectMany(x => x.ExternalPlanSetups).FirstOrDefault(x => string.Equals(x.UID, uid));
@@ -312,6 +325,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                 }
                 if(EclipseContext.GetInstance().VMATPlans.Any())
                 {
+                    //if plans were loaded successfully, re-initialize the structure set and course
                     EclipseContext.GetInstance().StructureSet = EclipseContext.GetInstance().VMATPlans.First().StructureSet;
                     EclipseContext.GetInstance().Course = EclipseContext.GetInstance().VMATPlans.First().Course;
                 }
@@ -345,7 +359,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                     MessageBox.Show($"Error! No plans found in course: {theCourse.Id}! Unable to determine which plan(s) should be used for optimization! Exiting!");
                     return;
                 }
-                else if (thePlans.Count == 2 && (thePlans.First().StructureSet != thePlans.Last().StructureSet))
+                else if (thePlans.Count == 2 && !string.Equals(thePlans.First().StructureSet.UID, thePlans.Last().StructureSet.UID))
                 {
                     MessageBox.Show($"Error! Structure set in first plan ({thePlans.First().Id}) is not the same as the structure set in second plan ({thePlans.Last().Id})! Exiting!");
                     return;
@@ -399,7 +413,6 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             foreach (PlanObjectiveModel itr in _selectedTemplate.PlanObjectives)
             {
                 if(_structureIds.Contains(itr.StructureId)) PlanObjectives.Add(new PlanObjectiveModel(itr));
-                
             }
 
             if(!OptimizationLoopSettings.PlanPreparationOptimizationSetup.Any())
@@ -555,7 +568,6 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                 }
             }
             OptDataContainer _data = GenerateOptimizationDataContainer();
-            //VMATTBIOptimization opt = new VMATTBIOptimization(_data);
             OptimizationLoopBase opt;
             if (_planType == PlanType.VMAT_TBI) opt = new VMATTBIOptimization(_data);
             else if (_planType == PlanType.VMAT_CSI) opt = new VMATCSIOptimization(_data);

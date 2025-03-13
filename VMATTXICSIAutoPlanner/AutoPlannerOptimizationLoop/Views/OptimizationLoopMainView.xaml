@@ -193,8 +193,8 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <Label Content="Plan Id:" Grid.Column="0" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" ></Label>
-                                <Label Content="{Binding PlanId, FallbackValue=VMAT TBI}" Grid.Column="1" FontSize="14" FontWeight="Bold" HorizontalAlignment="Left" VerticalAlignment="Center" ></Label>
+                                <Label Content="Plan Type:" Grid.Column="0" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" ></Label>
+                                <Label Content="{Binding PlanType}" Grid.Column="1" FontSize="14" FontWeight="Bold" HorizontalAlignment="Left" VerticalAlignment="Center" ></Label>
                             </Grid>
                             <Label Content="Plan Templates" Grid.Column="0" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0"></Label>
                             <ListBox Grid.Column="0" Grid.Row="3" ItemsSource="{Binding PlanTemplates}" DisplayMemberPath="TemplateName"  SelectedItem="{Binding SelectedTemplate}" VerticalAlignment="Bottom" HorizontalContentAlignment="Center" Height="150" Width="300" Margin="0,0,0,5"/>
