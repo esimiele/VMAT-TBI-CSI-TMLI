@@ -26,14 +26,13 @@ using AutoPlannerOptimizationLoop.Base;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
+using AutoPlannerOptimizationLoop.Views;
 
 namespace AutoPlannerOptimizationLoop.ViewModels
 {
     public class OptimizationLoopMainViewModel : ObservableObject
     {
         public ObservableCollection<AutoPlanTemplateBase> PlanTemplates { get; set; }
-        public ObservableCollectionPropertyNotify<PlanObjectiveModel> PlanObjectives { get; set; }
-        public ObservableCollectionPropertyNotify<PlanOptimizationSetupModel> PlanOptimizationConstraints { get; set; }
 
         #region properties
         private string _logFilePath;
@@ -58,7 +57,6 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         private int _maxNumberOfIterations;
         private bool _runOneAdditionalOptimization;
         private double _planNormalizationValue;
-        private List<string> _structureIds;
 
         public string MRN
         {
@@ -135,31 +133,25 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         public double BoostPlanDosePerFraction
         {
             get { return _boostplanDosePerFraction; }
-            set { SetProperty(ref _boostplanDosePerFraction, value); }
+            set { SetProperty(ref _boostplanDosePerFraction, value); ResetRxDose(); }
         }
 
         public int BoostPlanNumberOfFractions
         {
             get { return _boostPlanNumberOfFractions; }
-            set { SetProperty(ref _boostPlanNumberOfFractions, value); }
+            set { SetProperty(ref _boostPlanNumberOfFractions, value); ResetRxDose(); }
         }
 
         public double BoostPlanTotalDose
         {
             get { return _boostPlanTotalDose; }
-            set { SetProperty(ref _basePlanTotalDose, value); }
+            set { SetProperty(ref _boostPlanTotalDose, value); }
         }
 
         public string BoostPlanNormalizationVolume
         {
             get { return _boostPlanNormalizationVolume; }
             set { SetProperty(ref _boostPlanNormalizationVolume, value); }
-        }
-
-        public List<string> StructureIds
-        {
-            get { return _structureIds; }
-            set { SetProperty(ref _structureIds, value); }
         }
         #endregion
 
@@ -170,40 +162,42 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             get { return _scriptConfiguration; }
             set { SetProperty(ref _scriptConfiguration, value); }
         }
+
+        private PlanObjectivesViewModel _planObjectivesVM;
+        private object _planObjectives;
+        public object PlanObjectives
+        {
+            get { return _planObjectives; }
+            set { SetProperty(ref _planObjectives, value); }
+        }
+
+        private OptimizationConstraintsViewModel _optimizationConstraintsVM;
+        private object _optimizationSetup;
+
+        public object OptimizationSetup
+        {
+            get { return _optimizationSetup; }
+            set { SetProperty(ref _optimizationSetup, value); }
+        }
+
         #endregion
 
         #region commands
         public ICommand QuickStartCommand { get; set; }
         public ICommand DocumentationCommand { get; set; }
         public ICommand OpenPatientCommand { get; set; }
-        public ICommand AddPlanObjectiveCommand { get; set; }
-        public ICommand ClearPlanObjectiveListCommand { get; set; }
-        public ICommand AddOptimizationConstraintCommand { get; set; }
-        public ICommand GetOptConstraintsFromPlanCommand { get; set; }
-        public ICommand GetOptConstraintsFromLogsCommand { get; set; }
-        public ICommand ClearOptimizationConstraintListCommand { get; set; }
-        public RelayCommand<object> ClearRowCommand { get; set; }
-        public ICommand StartOptimizationCommand { get; set; }
+        
+        public ICommand NotifyStartOptimizationCommand { get; set; }
         #endregion
 
         public OptimizationLoopMainViewModel(string[] args)
         {
             QuickStartCommand = new RelayCommand(QuickStartHelp);
             DocumentationCommand = new RelayCommand(ShowDocumentation);
-            AddPlanObjectiveCommand = new RelayCommand(AddPlanObjective);
-            ClearPlanObjectiveListCommand = new RelayCommand(ClearPlanObjectives);
-            AddOptimizationConstraintCommand = new RelayCommand(AddOptimizationObjective);
-            GetOptConstraintsFromPlanCommand = new RelayCommand(GetOptimizationConstraintsFromPlan);
-            GetOptConstraintsFromLogsCommand = new RelayCommand(GetOptimizationConstraintsFromLogs);
-            ClearOptimizationConstraintListCommand = new RelayCommand(ClearOptimizationConstraints);
+
             PlanTemplates = new ObservableCollection<AutoPlanTemplateBase> { };
-            PlanObjectives = new ObservableCollectionPropertyNotify<PlanObjectiveModel> { };
-            PlanOptimizationConstraints = new ObservableCollectionPropertyNotify<PlanOptimizationSetupModel> { };
-            ClearRowCommand = new RelayCommand<object>(ClearRow);
-            StartOptimizationCommand = new RelayCommand(StartOptimization);
             EclipseContextHelper.GenerateEclipseContext(args.ToList());
             Initialize();
-            ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
         }
 
         #region help and documentation
@@ -235,15 +229,18 @@ namespace AutoPlannerOptimizationLoop.ViewModels
 
         public void InitializeUI()
         {
+            List<string> structureIds;
             if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null) || !EclipseContext.GetInstance().VMATPlans.Any())
             {
                 Logger.GetInstance().LogError("Error! Structure set, Application, or Plan is null! Unable to assign normalization volume!", true);
                 List<string> structures = PlanTemplates.SelectMany(x => x.PlanObjectives).Select(x => x.StructureId).ToList();
-                StructureIds = structures.Distinct().ToList();
-                return;
+                structureIds = structures.Distinct().ToList();
             }
-            else StructureIds = EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id).ToList();
-            MRN = EclipseContext.GetInstance().Patient.Id;
+            else
+            {
+                structureIds = EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id).ToList();
+                MRN = EclipseContext.GetInstance().Patient.Id;
+            }
 
             if (PlanTemplates.Any(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed)))
             {
@@ -257,10 +254,15 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                     BoostPlanNormalizationVolume = OptimizationLoopSettings.PlanPreparationNormalizationVolumes.Last().Value;
                 }
             }
-            foreach(PlanOptimizationSetupModel itr in OptimizationLoopSettings.PlanPreparationOptimizationSetup)
-            {
-                PlanOptimizationConstraints.Add(itr);
-            }
+
+            _planObjectivesVM = new PlanObjectivesViewModel(structureIds);
+            PlanObjectives = new PlanObjectivesView { DataContext = _planObjectivesVM };
+
+            NotifyStartOptimizationCommand = new RelayCommand(StartOptimization);
+            _optimizationConstraintsVM = new OptimizationConstraintsViewModel(structureIds, _planType, NotifyStartOptimizationCommand);
+            OptimizationSetup = new OptimizationConstraintsView { DataContext = _optimizationConstraintsVM };
+
+            ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
         }
         #endregion
 
@@ -386,9 +388,20 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             }
         }
 
+        private void ClearAllRxDoses()
+        {
+            BasePlanDosePerFraction = 0;
+            BasePlanNumberOfFractions = 0;
+            BasePlanTotalDose = 0;
+            BoostPlanDosePerFraction = 0;
+            BoostPlanNumberOfFractions = 0;
+            BoostPlanTotalDose = 0;
+        }
+
         private void UpdateUIWithSelectedPlanTemplate()
         {
             if (ReferenceEquals(_selectedTemplate, null)) return;
+            ClearAllRxDoses();
             if (_planType == PlanType.VMAT_TBI)
             {
                 BasePlanDosePerFraction = (_selectedTemplate as TBIAutoPlanTemplate).InitialRxDosePerFx;
@@ -409,114 +422,8 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                 BasePlanDosePerFraction = (_selectedTemplate as TMLIAutoPlanTemplate).InitialRxDosePerFx;
                 BasePlanNumberOfFractions = (_selectedTemplate as TMLIAutoPlanTemplate).InitialRxNumberOfFractions;
             }
-            PlanObjectives.Clear();
-            foreach (PlanObjectiveModel itr in _selectedTemplate.PlanObjectives)
-            {
-                if(_structureIds.Contains(itr.StructureId)) PlanObjectives.Add(new PlanObjectiveModel(itr));
-            }
-
-            if(!OptimizationLoopSettings.PlanPreparationOptimizationSetup.Any())
-            {
-                PlanOptimizationConstraints.Clear();
-                if (_planType == PlanType.VMAT_TBI) PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel("1", (_selectedTemplate as TBIAutoPlanTemplate).InitialOptimizationConstraints.Where(x => _structureIds.Contains(x.StructureId))));
-                else if (_planType == PlanType.VMAT_CSI)
-                {
-                    PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel("1", (_selectedTemplate as CSIAutoPlanTemplate).InitialOptimizationConstraints.Where(x => _structureIds.Contains(x.StructureId))));
-                    if ((_selectedTemplate as CSIAutoPlanTemplate).BoostRxDosePerFx != 0.1)
-                    {
-                        PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel("2", (_selectedTemplate as CSIAutoPlanTemplate).BoostOptimizationConstraints.Where(x => _structureIds.Contains(x.StructureId))));
-                    }
-                }
-                else PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel("1", (_selectedTemplate as TMLIAutoPlanTemplate).InitialOptimizationConstraints.Where(x => _structureIds.Contains(x.StructureId))));
-            }
-        }
-
-        public void AddPlanObjective()
-        {
-            if (!ReferenceEquals(PlanObjectives, null))
-            {
-                PlanObjectives.Add(new PlanObjectiveModel(_structureIds.First(), OptimizationObjectiveType.None, 0, Units.None, 0, Units.None));
-            }
-        }
-
-        public void ClearPlanObjectives()
-        {
-            PlanObjectives.Clear();
-        }
-
-        public void AddOptimizationObjective()
-        {
-            if (PlanOptimizationConstraints.Count() > 1)
-            {
-                //logic for multiple plans
-                SelectItemPrompt SIP = new SelectItemPrompt("Please selct a plan to add a constraint!", new List<string>(PlanOptimizationConstraints.Select(x => x.PlanId)));
-                SIP.ShowDialog();
-                if (!SIP.GetSelection()) return;
-                PlanOptimizationSetupModel planOptSetupModel = PlanOptimizationConstraints.First(x => string.Equals(x.PlanId, SIP.GetSelectedItem()));
-                List<OptimizationConstraintModel> constraints = planOptSetupModel.OptimizationConstraints;
-                constraints.Add(GenerateNewEmptyOptimizationConstraint());
-                PlanOptimizationConstraints.Refresh();
-            }
-            else if (!PlanOptimizationConstraints.Any())
-            {
-                PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel("1", GenerateNewEmptyOptimizationConstraint()));
-            }
-            else
-            {
-                PlanOptimizationConstraints.First().OptimizationConstraints.Add(GenerateNewEmptyOptimizationConstraint());
-                PlanOptimizationConstraints.Refresh();
-            }
-        }
-
-        private OptimizationConstraintModel GenerateNewEmptyOptimizationConstraint()
-        {
-            return new OptimizationConstraintModel(_structureIds.First(), OptimizationObjectiveType.None, 0.0, Units.None, 0.0, 0);
-        }
-
-        public void GetOptimizationConstraintsFromPlan()
-        {
-            if (!EclipseContext.GetInstance().IsInitialized || !EclipseContext.GetInstance().VMATPlans.Any()) return;
-            PlanOptimizationConstraints.Clear();
-            foreach(ExternalPlanSetup itr in EclipseContext.GetInstance().VMATPlans)
-            {
-                PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel(itr.Id, OptimizationSetupHelper.ReadConstraintsFromPlan(itr)));
-            }
-        }
-
-        public void GetOptimizationConstraintsFromLogs()
-        {
-            foreach (PlanOptimizationSetupModel itr in OptimizationLoopSettings.PlanPreparationOptimizationSetup)
-            {
-                PlanOptimizationConstraints.Add(itr);
-            }
-        }
-
-        public void ClearOptimizationConstraints()
-        {
-            PlanOptimizationConstraints.Clear();
-        }
-
-        public void ClearRow(object o)
-        {
-            if (o.GetType() == typeof(PlanObjectiveModel))
-            {
-                PlanObjectiveModel p = o as PlanObjectiveModel;
-                if (PlanObjectives.Contains(p))
-                {
-                    PlanObjectives.Remove(p);
-                }
-            }
-            else
-            {
-                OptimizationConstraintModel opt = o as OptimizationConstraintModel;
-                if (PlanOptimizationConstraints.SelectMany(x => x.OptimizationConstraints).Contains(opt))
-                {
-                    PlanOptimizationSetupModel planOptSetupModel = PlanOptimizationConstraints.First(x => x.OptimizationConstraints.Contains(opt));
-                    List<OptimizationConstraintModel> constraints = planOptSetupModel.OptimizationConstraints;
-                    constraints.Remove(opt);
-                    PlanOptimizationConstraints.Refresh();
-                }
-            }
+            _planObjectivesVM.UpdateViewWithSelectedPlanTemplate(_selectedTemplate.PlanObjectives);
+            _optimizationConstraintsVM.UpdateViewWithSelectedPlanTemplate(_selectedTemplate);
         }
 
         public void StartOptimization()
@@ -558,16 +465,17 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             //MessageBox.Show(sb.ToString());
 
             EclipseContext.GetInstance().Patient.BeginModifications();
-            if(PlanOptimizationConstraints.Any())
+            if(_optimizationConstraintsVM.PlanOptimizationConstraints.Any())
             {
-                foreach(PlanOptimizationSetupModel itr in PlanOptimizationConstraints)
+                foreach(PlanOptimizationSetupModel itr in _optimizationConstraintsVM.PlanOptimizationConstraints)
                 {
                     ExternalPlanSetup plan = EclipseContext.GetInstance().VMATPlans.First(x => string.Equals(x.Id, itr.PlanId));
                     OptimizationSetupHelper.RemoveOptimizationConstraintsFromPLan(plan);
                     OptimizationSetupHelper.AssignOptConstraints(itr.OptimizationConstraints.Where(x => x.IsValidConstraint).ToList(), plan, false, 0.0);
                 }
             }
-            OptDataContainer _data = GenerateOptimizationDataContainer();
+            
+            OptDataContainer _data = GenerateOptimizationDataContainer(_planObjectivesVM.PlanObjectives.ToList());
             OptimizationLoopBase opt;
             if (_planType == PlanType.VMAT_TBI) opt = new VMATTBIOptimization(_data);
             else if (_planType == PlanType.VMAT_CSI) opt = new VMATCSIOptimization(_data);
@@ -576,7 +484,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             if (opt.Execute()) return;
         }
 
-        public OptDataContainer GenerateOptimizationDataContainer()
+        public OptDataContainer GenerateOptimizationDataContainer(List<PlanObjectiveModel> obj)
         {
             List<RequestedOptimizationTSStructureModel> requestedOptStructures = new List<RequestedOptimizationTSStructureModel> { };
             List<RequestedPlanMetricModel> requestedPlanMetrics = new List<RequestedPlanMetricModel> { };
@@ -589,7 +497,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             return new OptDataContainer(EclipseContext.GetInstance().VMATPlans,
                                         OptimizationLoopSettings.PlanPreparationPrescriptions,
                                         OptimizationLoopSettings.PlanPreparationNormalizationVolumes,
-                                        PlanObjectives.Where(x => x.IsValidObjective).ToList(),
+                                        obj?.Where(x => x.IsValidObjective).ToList(),
                                         requestedOptStructures,
                                         requestedPlanMetrics,
                                         _planType,

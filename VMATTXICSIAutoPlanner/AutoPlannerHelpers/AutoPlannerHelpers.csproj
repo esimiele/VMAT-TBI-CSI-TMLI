@@ -125,6 +125,7 @@
     <Compile Include="Helpers\OptimizationSetupHelper.cs" />
     <Compile Include="Helpers\PlanPrepHelper.cs" />
     <Compile Include="Helpers\ScriptClosingHelper.cs" />
+    <Compile Include="Helpers\StringComparisonExtension.cs" />
     <Compile Include="Helpers\StructureTuningHelper.cs" />
     <Compile Include="Helpers\TargetsHelper.cs" />
     <Compile Include="Interfaces\IPlanConstraint.cs" />

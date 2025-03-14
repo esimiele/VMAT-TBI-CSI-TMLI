@@ -287,7 +287,7 @@ namespace AutoPlannerHelpers.BaseViewModel
             return planConstraints;
         }
 
-        public List<PlanOptimizationSetupModel> UpdateOptimizationConstraintsWithRings(List<TSRingStructureModel> rings, List<PlanOptimizationSetupModel> planConstraints)
+        public List<PlanOptimizationSetupModel> UpdateOptimizationConstraintsWithRings(List<TSRingStructureModel> rings, List<PlanOptimizationSetupModel> planConstraints, int ringPrioity = 80)
         {
             foreach (TSRingStructureModel itr in rings)
             {
@@ -298,7 +298,7 @@ namespace AutoPlannerHelpers.BaseViewModel
                     //grab the optimization constraints that belong to this plan
                     List<OptimizationConstraintModel> constraints = planConstraints.First(x => string.Equals(planId, x.PlanId)).OptimizationConstraints;
                     //insert the ts ring constraint
-                    constraints.Insert(0, new OptimizationConstraintModel(itr.RingId, OptimizationObjectiveType.Upper, itr.DoseLevel, Units.cGy, 0.0, 80));
+                    constraints.Insert(0, new OptimizationConstraintModel(itr.RingId, OptimizationObjectiveType.Upper, itr.DoseLevel, Units.cGy, 0.0, ringPrioity));
                 }
             }
             return planConstraints;

@@ -108,14 +108,22 @@
     <Compile Include="Settings\OptimizationLoopSettings.cs" />
     <Compile Include="UIHelpers\OptimizationLoopUIHelper.cs" />
     <Compile Include="Utilities\WinUtilitiesModified.cs" />
+    <Compile Include="ViewModels\OptimizationConstraintsViewModel.cs" />
     <Compile Include="ViewModels\OptimizationLoopMainViewModel.cs" />
     <Compile Include="ViewModels\OptimizationLoopProgressViewModel.cs" />
+    <Compile Include="ViewModels\PlanObjectivesViewModel.cs" />
     <Compile Include="Views\EnumBindingSourceExtension.cs" />
+    <Compile Include="Views\OptimizationConstraintsView.xaml.cs">
+      <DependentUpon>OptimizationConstraintsView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\OptimizationLoopMainView.xaml.cs">
       <DependentUpon>OptimizationLoopMainView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\OptimizationLoopProgressView.xaml.cs">
       <DependentUpon>OptimizationLoopProgressView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\PlanObjectivesView.xaml.cs">
+      <DependentUpon>PlanObjectivesView.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -171,11 +179,19 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\OptimizationConstraintsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\OptimizationLoopMainView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\OptimizationLoopProgressView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\PlanObjectivesView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
