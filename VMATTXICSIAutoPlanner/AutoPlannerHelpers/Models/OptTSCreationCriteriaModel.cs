@@ -20,6 +20,7 @@ namespace AutoPlannerHelpers.Models
             DVHMetric = dVHMetric;
             QueryValue = queryVal;
             QueryUnits = queryUnits;
+            Operator = op;
             QueryResultUnits = resultUnits;
             Limit = lim;
             QueryResultUnits = resultUnits;
