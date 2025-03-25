@@ -380,16 +380,19 @@ namespace AutoPlannerHelpers.Helpers
                                                                  bool useJawTracking,
                                                                  double NTOpriority)
         {
+            ClearPlanOptimizationConstraints(VMATplan);
             foreach (OptimizationConstraintModel opt in parameters)
             {
+                double dose = opt.QueryDose;
+                if (opt.QueryDoseUnits == Units.Percent) dose *= VMATplan.TotalDose.Dose / 100.0;
                 Structure s = StructureTuningHelper.GetStructureFromId(opt.StructureId, VMATplan.StructureSet);
                 if (opt.ConstraintType != OptimizationObjectiveType.Mean) VMATplan.OptimizationSetup.AddPointObjective(s,
                                                                                                                        OptimizationTypeHelper.GetObjectiveOperator(opt.ConstraintType),
-                                                                                                                       new DoseValue(opt.QueryDose, opt.QueryDoseUnits == Units.Percent ? DoseValue.DoseUnit.Percent : DoseValue.DoseUnit.cGy),
+                                                                                                                       new DoseValue(dose, DoseValue.DoseUnit.cGy),
                                                                                                                        opt.QueryVolume,
                                                                                                                        (double)opt.Priority);
                 else VMATplan.OptimizationSetup.AddMeanDoseObjective(s,
-                                                                     new DoseValue(opt.QueryDose, opt.QueryDoseUnits == Units.Percent ? DoseValue.DoseUnit.Percent : DoseValue.DoseUnit.cGy),
+                                                                     new DoseValue(dose, DoseValue.DoseUnit.cGy),
                                                                      (double)opt.Priority);
             }
             //turn on/turn off jaw tracking
@@ -401,6 +404,14 @@ namespace AutoPlannerHelpers.Helpers
             //set auto NTO priority to zero (i.e., shut it off). It has to be done this way because every plan created in ESAPI has an instance of an automatic NTO, which CAN'T be deleted.
             VMATplan.OptimizationSetup.AddAutomaticNormalTissueObjective(NTOpriority);
             return false;
+        }
+
+        public static void ClearPlanOptimizationConstraints(ExternalPlanSetup plan)
+        {
+            foreach (OptimizationObjective o in plan.OptimizationSetup.Objectives)
+            {
+                plan.OptimizationSetup.RemoveObjective(o);
+            }
         }
     }
 }
