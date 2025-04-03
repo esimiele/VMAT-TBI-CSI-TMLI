@@ -259,7 +259,6 @@
                     <TabControl Background="DarkGray" HorizontalAlignment="Left" TabStripPlacement="Left" Margin="0">
                         <TabItem Header="Plan Objectives" Content="{Binding PlanObjectives}" BorderThickness="0,1,1,0"/>
                         <TabItem Header="Optimization Setup" Content="{Binding OptimizationSetup}" BorderThickness="0,1,1,1">
-                            
                         </TabItem>
                         <TabItem Header="Script Configuration" Content="{Binding ScriptConfiguration}" VerticalAlignment="Bottom" BorderThickness="0,1,1,1" Margin="0">
                         </TabItem>

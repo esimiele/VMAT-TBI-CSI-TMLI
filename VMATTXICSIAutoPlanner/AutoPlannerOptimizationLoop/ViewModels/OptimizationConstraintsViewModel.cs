@@ -40,6 +40,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         public ICommand GetOptConstraintsFromPlanCommand { get; set; }
         public ICommand GetOptConstraintsFromLogsCommand { get; set; }
         public ICommand ClearOptimizationConstraintListCommand { get; set; }
+        public ICommand StartOptimizationCommand { get; set; }
         private ICommand _notifyStartOptimization;
         #endregion
 
@@ -58,6 +59,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             GetOptConstraintsFromPlanCommand = new RelayCommand(GetOptimizationConstraintsFromPlan);
             GetOptConstraintsFromLogsCommand = new RelayCommand(GetOptimizationConstraintsFromLogs);
             ClearOptimizationConstraintListCommand = new RelayCommand(ClearOptimizationConstraints);
+            StartOptimizationCommand = new RelayCommand(StartOptimization);
             PlanOptimizationConstraints = new ObservableCollectionPropertyNotify<PlanOptimizationSetupModel> { };
             foreach (PlanOptimizationSetupModel itr in OptimizationLoopSettings.PlanPreparationOptimizationSetup)
             {

@@ -38,21 +38,14 @@ namespace AutoPlannerOptimizationLoop.Core
         {
             try
             {
-                //SetAbortStatus("Runnning");
-                //PrintRunSetupInfo();
-                ////preliminary checks
-                //if (PreliminaryChecksSSAndImage(_data.StructureSet, _data.Prescriptions.Select(x => x.TargetId))) return true;
-                //if (PreliminaryChecksPlans(_data.Plans)) return true;
+                PrintRunSetupInfo();
+                //preliminary checks
+                if (PreliminaryChecksSSAndImage(_data.StructureSet, _data.Prescriptions.Select(x => x.TargetId))) return true;
+                if (PreliminaryChecksPlans(_data.Plans)) return true;
 
-                //ProvideUIUpdate(String.Format(" Commencing optimization loop!"));
-                //if (RunOptimizationLoop(_data.Plans)) return true;
-                UpdateUILabel("Counting");
-                for (int i = 0; i < 100; i++)
-                {
-                    _constraints.First().StructureId = $"test{i}";
-                    ProvideUIUpdate(i, $"Constraint Id: {_constraints.First().StructureId}");
-                    Thread.Sleep(100);
-                }
+                ProvideUIUpdate("Commencing optimization loop!");
+                if (RunOptimizationLoop(_data.Plans)) return true;
+
                 OptimizationRunCompleted();
             }
             catch (Exception e)

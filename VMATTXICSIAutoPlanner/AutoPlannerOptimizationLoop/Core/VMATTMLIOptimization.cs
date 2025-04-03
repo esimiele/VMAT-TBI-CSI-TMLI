@@ -46,7 +46,7 @@ namespace AutoPlannerOptimizationLoop.Core
                 if (PreliminaryChecksSSAndImage(_data.StructureSet, _data.Prescriptions.Select(x => x.TargetId))) return true;
                 if (PreliminaryChecksPlans(_data.Plans)) return true;
 
-                ProvideUIUpdate(String.Format(" Commencing optimization loop!"));
+                ProvideUIUpdate("Commencing optimization loop!");
                 if (RunOptimizationLoop(_data.Plans)) return true;
                 OptimizationRunCompleted();
             }
