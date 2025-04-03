@@ -30,6 +30,7 @@ namespace TMLIAutoPlanner.Core
         };
 
         private List<RequestedTSManipulationModel> _manipulations;
+        private bool _includeTestesInPTV;
 
         /// <summary>
         /// Constructor
@@ -41,6 +42,7 @@ namespace TMLIAutoPlanner.Core
             base(tgts, TMLIAutoPlannerSettings.CloseProgressWindowOnFinish)
         {
             _manipulations = manipulations;
+            _includeTestesInPTV = includeTestesInPTV;
         }
 
         #region preliminary checks and pre-processing
@@ -155,7 +157,7 @@ namespace TMLIAutoPlanner.Core
                 StructureTuningHelper.GetStructureFromId("spleen", ss),
             };
             //need to know target dosing
-            if (StructureTuningHelper.DoesStructureExistInSS("testes", EclipseContext.GetInstance().StructureSet, true)) structures.Add(StructureTuningHelper.GetStructureFromId("testes", ss));
+            if (_includeTestesInPTV && StructureTuningHelper.DoesStructureExistInSS("testes", EclipseContext.GetInstance().StructureSet, true)) structures.Add(StructureTuningHelper.GetStructureFromId("testes", ss));
 
             ContourHelper.ContourUnion(structures, ptv);
             foreach (string itr in structures.Select(x => x.Id)) ProvideUIUpdate($"Unioned {itr} with PTV_TMLI");

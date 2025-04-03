@@ -183,7 +183,7 @@
                     <Label Content="{Binding PatientMRN}" Grid.Column="1" Grid.Row="0" FontWeight="Bold" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center"/>
 
                     <Label Content="Structure Set ID:" Grid.Column="0" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                    <Label Content="{Binding SructureSetId}" Grid.Column="1" Grid.Row="1" HorizontalContentAlignment="Center" HorizontalAlignment="Center" Width="140"/>
+                    <Label Content="{Binding StructureSetId}" Grid.Column="1" Grid.Row="1" HorizontalContentAlignment="Center" HorizontalAlignment="Center" Width="140"/>
                 </Grid>
 
                 <Grid Grid.Column="0" Grid.Row="2" Grid.RowSpan="4">

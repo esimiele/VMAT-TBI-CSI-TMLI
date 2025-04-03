@@ -588,7 +588,8 @@ namespace TBIAutoPlanner.Core
         {
             UpdateUILabel("Create flash:");
             int percentComplete = 0;
-            int calcItems = 13;
+            int calcItems = 10 + TSManipulationList.Count(x => x.ManipulationType == TSManipulationType.ContourOverlapWithTarget || x.ManipulationType == TSManipulationType.CropTargetFromStructure);
+            if (StructureTuningHelper.DoesStructureExistInSS("matchline", EclipseContext.GetInstance().StructureSet, true)) calcItems += 4;
             //create flash for the plan per the users request
             //NOTE: IT IS IMPORTANT THAT ALL OF THE STRUCTURES CREATED IN THIS METHOD (I.E., ALL STRUCTURES USED TO GENERATE FLASH HAVE THE KEYWORD 'FLASH' SOMEWHERE IN THE STRUCTURE ID)!
             //first need to create a bolus structure (remove it if it already exists)

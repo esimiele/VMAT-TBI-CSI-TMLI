@@ -240,11 +240,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                 structureIds = EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id).ToList();
                 MRN = EclipseContext.GetInstance().Patient.Id;
             }
-
-            if (PlanTemplates.Any(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed)))
-            {
-                SelectedTemplate = PlanTemplates.First(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed));
-            }
+            
             if(OptimizationLoopSettings.PlanPreparationNormalizationVolumes.Any())
             {
                 BasePlanNormalizationVolume = OptimizationLoopSettings.PlanPreparationNormalizationVolumes.First().Value;
@@ -262,6 +258,11 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             OptimizationSetup = new OptimizationConstraintsView { DataContext = _optimizationConstraintsVM };
 
             ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
+
+            if (PlanTemplates.Any(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed)))
+            {
+                SelectedTemplate = PlanTemplates.First(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed));
+            }
         }
         #endregion
 

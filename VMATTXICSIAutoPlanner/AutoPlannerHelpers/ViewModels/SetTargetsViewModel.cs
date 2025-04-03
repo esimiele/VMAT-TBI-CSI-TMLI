@@ -42,13 +42,9 @@ namespace AutoPlannerHelpers.ViewModels
         public SetTargetsViewModel(ICommand NotifyMainVMExecuted)
         {
             _notifyMainVMExecuted = NotifyMainVMExecuted;
-            TargetIds = new ObservableCollectionPropertyNotify<string> { "--Add New--", "red", "green", "blue" };
-            PlanIds = new List<string> { "--Add New--","1", "2", "3" };
-            Targets = new ObservableCollectionPropertyNotify<UnstructuredTargetModel>
-            {
-                new UnstructuredTargetModel("1", "green", 10),
-                new UnstructuredTargetModel("2", "red", 5)
-            };
+            TargetIds = new ObservableCollectionPropertyNotify<string> { " ", "--Add New--" };
+            PlanIds = new List<string> { " ", "--Add New--" };
+            Targets = new ObservableCollectionPropertyNotify<UnstructuredTargetModel> { };
             AddTargetCommand = new RelayCommand(AddEmptyTarget);
             AddDefaultTargetsCommand = new RelayCommand(AddDefaultTargets);
             RemoveAllTargetsCommand = new RelayCommand(RemoveAllTargets);

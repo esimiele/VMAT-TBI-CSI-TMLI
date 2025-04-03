@@ -166,6 +166,7 @@ namespace AutoPlannerHelpers.ViewModels
                 //do something
                 string planId = PlanIsocenterList.First().PlanId;
                 int totalNumIsos = _requestedNumberOfVMATIsos + PlanIsocenterList.SelectMany(x => x.Isocenters).Count(x => x.BeamType == BeamType.APPA);
+                int numAPPAIsos = PlanIsocenterList.SelectMany(x => x.Isocenters).Count(x => x.BeamType == BeamType.APPA);
                 PlanIsocenterList.Clear();
                 List<IsocenterModel> newIsos = IsoNameHelper.GetTBIVMATIsoNames(_requestedNumberOfVMATIsos, totalNumIsos);
                 for (int i = 0; i < newIsos.Count(); i++)
@@ -174,12 +175,15 @@ namespace AutoPlannerHelpers.ViewModels
                 }
 
                 PlanIsocenterList.Add(new PlanIsocenterModel(planId, newIsos));
-                if(totalNumIsos > _requestedNumberOfVMATIsos)
+                if(numAPPAIsos > 0)
                 {
-                    PlanIsocenterList.Add(new PlanIsocenterModel("AP / PA upper legs", new IsocenterModel("AP / PA upper legs")));
-                    if(totalNumIsos == _requestedNumberOfVMATIsos + 2)
+                    if(numAPPAIsos == 1) PlanIsocenterList.Add(new PlanIsocenterModel($"AP / PA legs", new IsocenterModel($"AP / PA legs", 2, BeamType.APPA)));
+                    else
                     {
-                        PlanIsocenterList.Add(new PlanIsocenterModel("AP / PA lower legs", new IsocenterModel("AP / PA lower legs")));
+                        for (int i = 0; i < numAPPAIsos; i++)
+                        {
+                            PlanIsocenterList.Add(new PlanIsocenterModel($"AP / PA {(i == 0 ? "upper" : "lower")} legs", new IsocenterModel($"AP / PA {(i == 0 ? "upper" : "lower")} legs", 2, BeamType.APPA)));
+                        }
                     }
                 }
             }

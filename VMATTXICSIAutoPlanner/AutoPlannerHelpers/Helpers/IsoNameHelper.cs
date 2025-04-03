@@ -37,7 +37,7 @@ namespace AutoPlannerHelpers.Helpers
             {
                 new IsocenterModel("Head")
             };
-            if (numVMATIsos > 1 || numIsos > 1)
+            if (numVMATIsos > 1)
             {
                 if (numIsos > numVMATIsos)
                 {

@@ -47,7 +47,11 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             PlanObjectives.Clear();
             foreach (PlanObjectiveModel itr in obj)
             {
-                if (_structureIds.Any(x => x.Contains(itr.StructureId, StringComparison.OrdinalIgnoreCase))) PlanObjectives.Add(new PlanObjectiveModel(itr));
+                if (_structureIds.Any(x => x.Equals(itr.StructureId, StringComparison.OrdinalIgnoreCase)))
+                {
+                    itr.StructureId = _structureIds.First(x => x.Equals(itr.StructureId, StringComparison.OrdinalIgnoreCase));
+                    PlanObjectives.Add(itr);
+                }
             }
         }
 
