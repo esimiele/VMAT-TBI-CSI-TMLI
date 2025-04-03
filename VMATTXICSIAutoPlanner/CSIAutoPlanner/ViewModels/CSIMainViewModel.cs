@@ -141,6 +141,7 @@ namespace CSIAutoPlanner.ViewModels
             StructureCropOverlap = new StructureCropOverlapView { DataContext = _structureCropOverlapVM };
 
             _beamPlacementVM.UpdateBeamsPerIso(CSIAutoPlannerSettings.BeamsPerIsocenter);
+            _beamPlacementVM.UpdateDefaultViewSettings(CSIAutoPlannerSettings.AvailableLinacs, CSIAutoPlannerSettings.AvailableEnergies, CSIAutoPlannerSettings.ContourFieldOverlap, CSIAutoPlannerSettings.ContourFieldOverlapMarginInCM);
 
             QuickStartGuideCommand = new RelayCommand(LaunchQuickStartGuide);
             HelpGuideCommand = new RelayCommand(LaunchHelpGuide);
@@ -300,7 +301,7 @@ namespace CSIAutoPlanner.ViewModels
             }
             _planIsocenters = generateTS.PlanIsocentersList;
 
-            _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters, CSIAutoPlannerSettings.AvailableLinacs, CSIAutoPlannerSettings.AvailableEnergies, CSIAutoPlannerSettings.ContourFieldOverlap, CSIAutoPlannerSettings.ContourFieldOverlapMarginInCM);
+            _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters);
             _optimizationSetupVM.UpdateStructureIdList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id));
             _planOptimizationSetup = UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
             _planOptimizationSetup = UpdateOptimizationConstraintsWithRings(generateTS.AddedRings, _planOptimizationSetup);
@@ -378,8 +379,8 @@ namespace CSIAutoPlanner.ViewModels
         protected override void UpdateUIWithSelectedPlanTemplate()
         {
             if (ReferenceEquals(_selectedTemplate, null)) return;
-            InitialDosePerFraction = (_selectedTemplate as CSIAutoPlanTemplate).InitialRxDosePerFx;
-            InitialNumberOfFractions = (_selectedTemplate as CSIAutoPlanTemplate).InitialRxNumberOfFractions;
+            InitialDosePerFraction = _selectedTemplate.InitialRxDosePerFx;
+            InitialNumberOfFractions = _selectedTemplate.InitialRxNumberOfFractions;
             BoostDosePerFraction = (_selectedTemplate as CSIAutoPlanTemplate).BoostRxDosePerFx;
             BoostNumberOfFractions = (_selectedTemplate as CSIAutoPlanTemplate).BoostRxNumberOfFractions;
             _setTargetsVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);

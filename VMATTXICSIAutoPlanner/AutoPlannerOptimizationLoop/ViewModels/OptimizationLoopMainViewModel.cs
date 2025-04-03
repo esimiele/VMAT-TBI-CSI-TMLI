@@ -186,7 +186,6 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         public ICommand QuickStartCommand { get; set; }
         public ICommand DocumentationCommand { get; set; }
         public ICommand OpenPatientCommand { get; set; }
-        
         public ICommand NotifyStartOptimizationCommand { get; set; }
         #endregion
 
@@ -402,26 +401,14 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         {
             if (ReferenceEquals(_selectedTemplate, null)) return;
             ClearAllRxDoses();
-            if (_planType == PlanType.VMAT_TBI)
+            BasePlanDosePerFraction = _selectedTemplate.InitialRxDosePerFx;
+            BasePlanNumberOfFractions = _selectedTemplate.InitialRxNumberOfFractions;
+            if (_planType == PlanType.VMAT_CSI && !CalculationHelper.AreEqual((_selectedTemplate as CSIAutoPlanTemplate).BoostRxDosePerFx, 0.1))
             {
-                BasePlanDosePerFraction = (_selectedTemplate as TBIAutoPlanTemplate).InitialRxDosePerFx;
-                BasePlanNumberOfFractions = (_selectedTemplate as TBIAutoPlanTemplate).InitialRxNumberOfFractions;
+                BoostPlanDosePerFraction = (_selectedTemplate as CSIAutoPlanTemplate).BoostRxDosePerFx;
+                BoostPlanNumberOfFractions = (_selectedTemplate as CSIAutoPlanTemplate).BoostRxNumberOfFractions;
             }
-            else if (_planType == PlanType.VMAT_CSI)
-            {
-                BasePlanDosePerFraction = (_selectedTemplate as CSIAutoPlanTemplate).InitialRxDosePerFx;
-                BasePlanNumberOfFractions = (_selectedTemplate as CSIAutoPlanTemplate).InitialRxNumberOfFractions;
-                if ((_selectedTemplate as CSIAutoPlanTemplate).BoostRxDosePerFx != 0.1)
-                {
-                    BoostPlanDosePerFraction = (_selectedTemplate as CSIAutoPlanTemplate).BoostRxDosePerFx;
-                    BoostPlanNumberOfFractions = (_selectedTemplate as CSIAutoPlanTemplate).BoostRxNumberOfFractions;
-                }
-            }
-            else
-            {
-                BasePlanDosePerFraction = (_selectedTemplate as TMLIAutoPlanTemplate).InitialRxDosePerFx;
-                BasePlanNumberOfFractions = (_selectedTemplate as TMLIAutoPlanTemplate).InitialRxNumberOfFractions;
-            }
+            
             _planObjectivesVM.UpdateViewWithSelectedPlanTemplate(_selectedTemplate.PlanObjectives);
             _optimizationConstraintsVM.UpdateViewWithSelectedPlanTemplate(_selectedTemplate);
         }

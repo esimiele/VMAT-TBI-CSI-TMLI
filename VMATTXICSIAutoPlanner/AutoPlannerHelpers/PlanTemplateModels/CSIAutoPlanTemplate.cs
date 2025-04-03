@@ -6,8 +6,6 @@ namespace AutoPlannerHelpers.PlanTemplateModels
     public class CSIAutoPlanTemplate : AutoPlanTemplateBase
     {
         #region Properties
-        public double InitialRxDosePerFx { get; set; } = 0.1;
-        public int InitialRxNumberOfFractions { get; set; } = 1;
         public double BoostRxDosePerFx { get; set; } = 0.1;
         public int BoostRxNumberOfFractions { get; set; } = 1;
         public List<TSRingStructureModel> Rings { get; set; } = new List<TSRingStructureModel>();

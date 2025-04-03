@@ -112,6 +112,19 @@ namespace AutoPlannerHelpers.ViewModels
             RequestedNumberOfIsosVisible = Visibility.Collapsed;
         }
 
+        public void UpdateDefaultViewSettings(List<string> linacs, List<string> energies, bool contourOverlap, double overlapMargin)
+        {
+            AvailableEnergies.AddRange(energies);
+            SelectedEnergy = energies.First();
+            AvailableLinacs.AddRange(linacs);
+            SelectedLinac = linacs.First();
+            if (contourOverlap)
+            {
+                ContourFieldOverlapChecked = true;
+                FieldOverlapMargin = overlapMargin;
+            }
+        }
+
         private void UpdateContourFieldOverlapChecked()
         {
             if (_contourFieldOverlapChecked) ContourOverlapMarginVisible = Visibility.Visible;
@@ -124,7 +137,7 @@ namespace AutoPlannerHelpers.ViewModels
             _fieldsPerIso.AddRange(fieldsIso);
         }
 
-        public void PopulateBeamPlacementUI(List<PlanIsocenterModel> isos, List<string> linacs, List<string> energies, bool contourOverlap, double overlapMargin)
+        public void PopulateBeamPlacementUI(List<PlanIsocenterModel> isos)
         {
             RequestedNumberOfVMATIsos = isos.First().Isocenters.Count(x => x.BeamType == BeamType.VMAT);
             PlanIsocenterList.Clear();
@@ -138,17 +151,6 @@ namespace AutoPlannerHelpers.ViewModels
                     }
                 }
                 PlanIsocenterList.Add(itr);
-            }
-            AvailableEnergies.Clear();
-            AvailableEnergies.AddRange(energies);
-            SelectedEnergy = energies.First();
-            AvailableLinacs.Clear();
-            AvailableLinacs.AddRange(linacs);
-            SelectedLinac = linacs.First();
-            if(contourOverlap)
-            {
-                ContourFieldOverlapChecked = true;
-                FieldOverlapMargin = overlapMargin;
             }
         }
 

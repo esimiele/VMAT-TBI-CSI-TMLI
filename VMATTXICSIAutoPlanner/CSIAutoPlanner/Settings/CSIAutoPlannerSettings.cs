@@ -1,4 +1,5 @@
 ﻿using AutoPlannerHelpers.Models;
+using AutoPlannerHelpers.Settings;
 using System.Collections.Generic;
 using VMS.TPS.Common.Model.Types;
 

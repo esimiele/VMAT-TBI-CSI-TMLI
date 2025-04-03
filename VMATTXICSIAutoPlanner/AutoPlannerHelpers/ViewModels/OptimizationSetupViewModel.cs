@@ -114,7 +114,7 @@ namespace AutoPlannerHelpers.ViewModels
                 {
                     if (_structureIds.Any(x => string.Equals(x, optModel.StructureId, StringComparison.OrdinalIgnoreCase)))
                     {
-                        optModel.StructureId = _structureIds.First(x => string.Equals(x, optModel.StructureId, System.StringComparison.OrdinalIgnoreCase));
+                        optModel.StructureId = _structureIds.First(x => string.Equals(x, optModel.StructureId, StringComparison.OrdinalIgnoreCase));
                         constraints.Add(new OptimizationConstraintModel(optModel));
                     }
                 }

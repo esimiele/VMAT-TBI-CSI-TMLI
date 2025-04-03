@@ -130,6 +130,7 @@ namespace TMLIAutoPlanner.ViewModels
 
             if (TMLIAutoPlannerSettings.AllBeamsVMAT) _beamPlacementVM.HideRequestedNumberOfIsos();
             _beamPlacementVM.UpdateBeamsPerIso(TMLIAutoPlannerSettings.BeamsPerIsocenter);
+            _beamPlacementVM.UpdateDefaultViewSettings(TMLIAutoPlannerSettings.AvailableLinacs, TMLIAutoPlannerSettings.AvailableEnergies, TMLIAutoPlannerSettings.ContourFieldOverlap, TMLIAutoPlannerSettings.ContourFieldOverlapMarginInCM);
 
             QuickStartGuideCommand = new RelayCommand(LaunchQuickStartGuide);
             HelpGuideCommand = new RelayCommand(LaunchHelpGuide);
@@ -158,6 +159,8 @@ namespace TMLIAutoPlanner.ViewModels
                 PrepForTargetsBackground = Brushes.LightGray;
                 SetTargetsTabBackground = Brushes.LightGray;
             }
+
+
         }
 
         #region information and help guides
@@ -267,9 +270,9 @@ namespace TMLIAutoPlanner.ViewModels
             }
             _planIsocenters = generateTS.PlanIsocentersList;
 
-            _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters, TMLIAutoPlannerSettings.AvailableLinacs, TMLIAutoPlannerSettings.AvailableEnergies, TMLIAutoPlannerSettings.ContourFieldOverlap, TMLIAutoPlannerSettings.ContourFieldOverlapMarginInCM);
+            _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters);
             _optimizationSetupVM.UpdateStructureIdList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id));
-            _planOptimizationSetup = UpdateOptimizationConstraintsWithRings(generateTS.AddedRings, _planOptimizationSetup, 60);
+            _planOptimizationSetup = UpdateOptimizationConstraintsWithRings(generateTS.AddedRings, _planOptimizationSetup, TMLIAutoPlannerSettings.DefaultRingPriority);
             _planOptimizationSetup = UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
 
             StructureTuningTabBackground = Brushes.ForestGreen;
@@ -393,8 +396,8 @@ namespace TMLIAutoPlanner.ViewModels
         protected override void UpdateUIWithSelectedPlanTemplate()
         {
             if (ReferenceEquals(_selectedTemplate, null)) return;
-            InitialDosePerFraction = (_selectedTemplate as TMLIAutoPlanTemplate).InitialRxDosePerFx;
-            InitialNumberOfFractions = (_selectedTemplate as TMLIAutoPlanTemplate).InitialRxNumberOfFractions;
+            InitialDosePerFraction = _selectedTemplate.InitialRxDosePerFx;
+            InitialNumberOfFractions = _selectedTemplate.InitialRxNumberOfFractions;
             _setTargetsVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
             _prepForTargetsVM.UpdateRequestedTargetStructures((_selectedTemplate as TMLIAutoPlanTemplate).RequestedPreliminaryTargets);
             Logger.GetInstance().Template = _selectedTemplate.TemplateName;

@@ -221,12 +221,12 @@
                                 <Label Content="Boost plan:" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0"></Label>
 
                                 <Label Content="Dose per fraction (cGy/fraction):" Grid.Column="0" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0"></Label>
-                                <TextBox Text="{Binding BasePlanDosePerFraction}" Grid.Column="1" Grid.Row="1" TextAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" Width="75" Height="20" Margin="0"></TextBox>
-                                <TextBox Text="{Binding BoostPlanDosePerFraction}" Grid.Column="2" Grid.Row="1" TextAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" Width="75" Height="20" Margin="0"></TextBox>
+                                <TextBox Text="{Binding BasePlanDosePerFraction}" Grid.Column="1" Grid.Row="1" TextAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" Width="75" Height="20" Margin="0" IsReadOnly="True"></TextBox>
+                                <TextBox Text="{Binding BoostPlanDosePerFraction}" Grid.Column="2" Grid.Row="1" TextAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" Width="75" Height="20" Margin="0" IsReadOnly="True"></TextBox>
 
                                 <Label Content="Number of fractions:" Grid.Column="0" Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0"/>
-                                <TextBox Text="{Binding BasePlanNumberOfFractions}" Grid.Column="1" Grid.Row="2" TextAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center"  Width="75" Height="20" Margin="0"></TextBox>
-                                <TextBox Text="{Binding BoostPlanNumberOfFractions}" Grid.Column="2" Grid.Row="2" TextAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center"  Width="75" Height="20" Margin="0"></TextBox>
+                                <TextBox Text="{Binding BasePlanNumberOfFractions}" Grid.Column="1" Grid.Row="2" TextAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center"  Width="75" Height="20" Margin="0" IsReadOnly="True"></TextBox>
+                                <TextBox Text="{Binding BoostPlanNumberOfFractions}" Grid.Column="2" Grid.Row="2" TextAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center"  Width="75" Height="20" Margin="0" IsReadOnly="True"></TextBox>
 
                                 <Label Content="Rx dose (cGy):" Grid.Column="0" Grid.Row="3" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0"></Label>
                                 <TextBox Text="{Binding BasePlanTotalDose}" Grid.Column="1" Grid.Row="3" TextAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" Width="75" Height="20" Margin="0" IsReadOnly="True"></TextBox>

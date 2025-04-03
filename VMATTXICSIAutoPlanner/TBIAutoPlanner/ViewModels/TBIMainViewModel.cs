@@ -134,6 +134,7 @@ namespace TBIAutoPlanner.ViewModels
 
             if (TBIAutoPlannerSettings.AllBeamsVMAT) _beamPlacementVM.HideRequestedNumberOfIsos();
             _beamPlacementVM.UpdateBeamsPerIso(TBIAutoPlannerSettings.BeamsPerIsocenter);
+            _beamPlacementVM.UpdateDefaultViewSettings(TBIAutoPlannerSettings.AvailableLinacs, TBIAutoPlannerSettings.AvailableEnergies, TBIAutoPlannerSettings.ContourFieldOverlap, TBIAutoPlannerSettings.ContourFieldOverlapMarginInCM);
 
             QuickStartGuideCommand = new RelayCommand(LaunchQuickStartGuide);
             HelpGuideCommand = new RelayCommand(LaunchHelpGuide);
@@ -214,7 +215,7 @@ namespace TBIAutoPlanner.ViewModels
             }
             _planIsocenters = generateTS.PlanIsocentersList;
 
-            _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters, TBIAutoPlannerSettings.AvailableLinacs, TBIAutoPlannerSettings.AvailableEnergies, TBIAutoPlannerSettings.ContourFieldOverlap, TBIAutoPlannerSettings.ContourFieldOverlapMarginInCM);
+            _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters);
             _optimizationSetupVM.UpdateStructureIdList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id));
             _planOptimizationSetup = UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
 
@@ -354,8 +355,8 @@ namespace TBIAutoPlanner.ViewModels
         {
             if (ReferenceEquals(_selectedTemplate, null)) return;
 
-            InitialDosePerFraction = (_selectedTemplate as TBIAutoPlanTemplate).InitialRxDosePerFx;
-            InitialNumberOfFractions = (_selectedTemplate as TBIAutoPlanTemplate).InitialRxNumberOfFractions;
+            InitialDosePerFraction = _selectedTemplate.InitialRxDosePerFx;
+            InitialNumberOfFractions = _selectedTemplate.InitialRxNumberOfFractions;
             _setTargetsVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
             Logger.GetInstance().Template = _selectedTemplate.TemplateName;
         }

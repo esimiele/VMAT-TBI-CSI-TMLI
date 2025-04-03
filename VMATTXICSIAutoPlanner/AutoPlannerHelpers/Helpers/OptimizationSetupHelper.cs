@@ -295,6 +295,31 @@ namespace AutoPlannerHelpers.Helpers
             if (!ReferenceEquals(selectedTemplate, null))
             {
                 list = CreateOptimizationConstraintList(selectedTemplate, TargetsHelper.GetHighestRxPlanTargetList(prescriptions), type);
+                if(type != PlanType.VMAT_CSI)
+                {
+                    string planId = list.First().PlanId;
+                    double planTotalDose = TargetsHelper.GetHighestRxForPlan(prescriptions, planId);
+                    double templateTotalDose = selectedTemplate.InitialRxNumberOfFractions * selectedTemplate.InitialRxDosePerFx;
+                    if (!CalculationHelper.AreEqual(planTotalDose, templateTotalDose))
+                    {
+                        list.First().OptimizationConstraints = RescalePlanObjectivesToNewRx(list.First().OptimizationConstraints, templateTotalDose, planTotalDose);
+                    }
+                }
+                else
+                {
+                    for(int i = 0; i < list.Count; i++)
+                    {
+                        string planId = list[i].PlanId;
+                        double planTotalDose = TargetsHelper.GetHighestRxForPlan(prescriptions, planId);
+                        double templateTotalDose;
+                        if (i == 0) templateTotalDose = selectedTemplate.InitialRxNumberOfFractions * selectedTemplate.InitialRxDosePerFx;
+                        else templateTotalDose = (selectedTemplate as CSIAutoPlanTemplate).BoostRxDosePerFx * (selectedTemplate as CSIAutoPlanTemplate).BoostRxNumberOfFractions;
+                        if (!CalculationHelper.AreEqual(templateTotalDose, planTotalDose))
+                        {
+                            list.ElementAt(i).OptimizationConstraints = RescalePlanObjectivesToNewRx(list.ElementAt(i).OptimizationConstraints, templateTotalDose, planTotalDose);
+                        }
+                    }
+                }
             }
             else Logger.GetInstance().LogError("Error! No autoplanning template selected!");
             return list;
@@ -329,7 +354,7 @@ namespace AutoPlannerHelpers.Helpers
         {
             List<PlanOptimizationSetupModel> list = new List<PlanOptimizationSetupModel> { };
             //no treatment template selected => scale optimization objectives by ratio of entered Rx dose to closest template treatment Rx dose
-            if (selectedTemplate != null)
+            if (!ReferenceEquals(selectedTemplate, null))
             {
                 if (planTargets.Any())
                 {
