@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AutoPlannerLauncher.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,6 +23,21 @@ namespace AutoPlannerLauncher.Views
         public LauncherMainView()
         {
             InitializeComponent();
+
+            Loaded += ViewLoaded;
+        }
+
+        private void ViewLoaded(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is LauncherMainViewModel vm)
+            {
+                vm.RequestClose += OnRequestClose;
+            }
+        }
+
+        private void OnRequestClose(object? sender, EventArgs e)
+        {
+            this.Close();
         }
     }
 }

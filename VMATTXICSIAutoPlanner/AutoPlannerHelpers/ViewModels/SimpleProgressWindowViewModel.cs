@@ -55,9 +55,13 @@ namespace AutoPlannerHelpers.ViewModels
         #region fields
         private Stopwatch sw = new Stopwatch();
         private System.Timers.Timer _timer = new System.Timers.Timer();
-        private EventHandler OnRequestClose;
+        private EventHandler CloseWindow;
         private bool _closeOnSuccessfulFinish = false;
         private int _closeTimeOut = 3000;
+        #endregion
+
+        #region events
+        public event EventHandler RequestClose;
         #endregion
 
         #region commands
@@ -81,7 +85,7 @@ namespace AutoPlannerHelpers.ViewModels
                 //stop the stopwatch
                 sw.Stop();
                 _timer.Stop();
-                if (_closeOnSuccessfulFinish && !slave.isError) OnRequestClose(this, new EventArgs());
+                if (_closeOnSuccessfulFinish && !slave.isError) CloseWindow(this,EventArgs.Empty);
             });
         }
 
@@ -102,7 +106,7 @@ namespace AutoPlannerHelpers.ViewModels
             slave.RunOnNewThread(() =>
             {
                 SimpleProgressWindowView pv = new SimpleProgressWindowView { DataContext = this };
-                this.OnRequestClose += (s, e) => pv.Dispatcher.BeginInvoke((Action)(() => { Thread.Sleep(_closeTimeOut); pv.Close(); }));
+                CloseWindow += (s, e) => HandleCloseOnFinish(pv.Dispatcher);
 
                 _timer.Interval = 1000;
                 _timer.Elapsed += new System.Timers.ElapsedEventHandler(Dt_tick);
@@ -195,9 +199,9 @@ namespace AutoPlannerHelpers.ViewModels
 
         private void HandleCloseOnFinish(Dispatcher dispatch)
         {
-            //dispatch.Invoke((Action)(() => { Thread.Sleep(_closeTimeOut); }));
-            //dispatch.Invoke((Action)(() => { this.Close(); }));
+            //need the dispatcher of the view to be able to close the window since the view and view model are running in separate threads
+            dispatch.Invoke((Action)(() => Thread.Sleep(_closeTimeOut)));
+            dispatch.Invoke((Action)(() => { RequestClose?.Invoke(this, EventArgs.Empty); }));
         }
-
     }
 }

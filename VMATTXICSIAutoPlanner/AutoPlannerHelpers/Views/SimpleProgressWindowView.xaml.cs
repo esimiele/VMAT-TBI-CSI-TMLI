@@ -1,4 +1,5 @@
 ﻿using AutoPlannerHelpers.Interfaces;
+using AutoPlannerHelpers.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,11 +25,25 @@ namespace AutoPlannerHelpers.Views
         public SimpleProgressWindowView()
         {
             InitializeComponent();
+            Loaded += ViewLoaded;
         }
+
+        private void ViewLoaded(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is SimpleProgressWindowViewModel vm)
+            {
+                vm.RequestClose += OnRequestClose;
+            }
+        }
+
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             SizeToContent = SizeToContent.WidthAndHeight;
         }
-        
+
+        private void OnRequestClose(object sender, EventArgs e)
+        {
+            this.Close();
+        }
     }
 }

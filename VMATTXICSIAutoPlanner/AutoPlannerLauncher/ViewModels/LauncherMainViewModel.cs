@@ -35,6 +35,10 @@ namespace AutoPlannerLauncher.ViewModels
         private string[] _arguments;
         #endregion
 
+        #region events
+        public event EventHandler RequestClose;
+        #endregion
+
         internal LauncherMainViewModel(string[] args)
         {
             _arguments = args;
@@ -48,24 +52,33 @@ namespace AutoPlannerLauncher.ViewModels
             LaunchOptimizationLoopCommand = new RelayCommand(LaunchOptimizationLoop);
         }
 
+        private void CloseWindow()
+        {
+            RequestClose?.Invoke(this, EventArgs.Empty);
+        }
+
         private void LaunchVMATTBI()
         {
             LaunchExe("TBIAutoPlanner");
+            CloseWindow();
         }
 
         public void LaunchVMATCSI()
         {
             LaunchExe("CSIAutoPlanner");
+            CloseWindow();
         }
 
         public void LaunchVMATTMLI()
         {
             LaunchExe("TMLIAutoPlanner");
+            CloseWindow();
         }
 
         public void LaunchOptimizationLoop()
         {
             LaunchExe("AutoPlannerOptimizationLoop");
+            CloseWindow();
         }
 
         /// <summary>

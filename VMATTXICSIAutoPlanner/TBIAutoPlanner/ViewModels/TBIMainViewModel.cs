@@ -200,10 +200,11 @@ namespace TBIAutoPlanner.ViewModels
                                                                                        FlashMargin,
                                                                                        PTVMarginFromBody);
 
-            EclipseContext.GetInstance().Patient.BeginModifications();
+            //EclipseContext.GetInstance().Patient.BeginModifications();
             bool failed = generateTS.Execute();
             Logger.GetInstance().AppendLogOutput("TS Generation and manipulation output:", generateTS.LogOutput);
             if (failed) return;
+            return;
 
             //does the structure sparing list need to be updated? This occurs when structures the user elected to spare with option of 'Mean Dose < Rx Dose' are high resolution. Since Eclipse can't perform
             //boolean operations on structures of two different resolutions, code was added to the generateTS class to automatically convert these structures to low resolution with the name of
