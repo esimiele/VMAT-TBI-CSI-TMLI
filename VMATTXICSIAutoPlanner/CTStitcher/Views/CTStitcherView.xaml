@@ -60,18 +60,18 @@
 
             <Grid x:Name="axialGrid" Grid.Column="0" Grid.Row="1" Width="500" Height="330" Background="Black" MouseWheel="MouseWheelMove" Margin="5">
                 <local:ZoomBorder x:Name="axialBorder" ClipToBounds="True" RenderTransformOrigin="0.5,0.5">
-                    <Image x:Name="axialImage" Source="{Binding DisplayedAxialImage}"/>
+                    <Image Source="{Binding DisplayedAxialImage}"/>
                 </local:ZoomBorder>
             </Grid>
             <Grid x:Name="coronalGrid"  Grid.Column="0" Grid.Row="2" Width="500" Height="330" Background="Black" MouseWheel="MouseWheelMove" Margin="5">
                 <local:ZoomBorder x:Name="coronalBorder" ClipToBounds="True" RenderTransformOrigin="0.5,0.5">
-                    <Image x:Name="coronalImage" Source="{Binding DisplayedCoronalImage}"/>
+                    <Image Source="{Binding DisplayedCoronalImage}"/>
                 </local:ZoomBorder>
             </Grid>
 
             <Grid x:Name="sagittalGrid"  Grid.Column="1" Grid.Row="2" Width="500" Height="330" Background="Black" MouseWheel="MouseWheelMove" Margin="5">
                 <local:ZoomBorder x:Name="sagittalBorder" ClipToBounds="True" RenderTransformOrigin="0.5,0.5">
-                    <Image x:Name="sagittalImage" Source="{Binding DisplayedSagittalImage}"/>
+                    <Image Source="{Binding DisplayedSagittalImage}"/>
                 </local:ZoomBorder>
             </Grid>
 

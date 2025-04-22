@@ -84,6 +84,7 @@
     <Compile Include="ImportListener.cs" />
     <Compile Include="ImportListenerHelper.cs" />
     <Compile Include="ImportSettingsModel.cs" />
+    <Compile Include="Logging\ImportListenerLogging.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -15,12 +15,12 @@ namespace AutoPlannerHelpers.Helpers
 
         }
 
-        public static bool LaunchImportListener(string listener, ImportExportDataModel IEData, string mrn)
+        public static bool LaunchImportListener(string listener, ImportExportDataModel IEData, string mrn, string planType)
         {
             if (!string.IsNullOrEmpty(listener))
             {
                 ProcessStartInfo p = new ProcessStartInfo(listener);
-                p.Arguments = $"{IEData.ImportLocation} {mrn} {IEData.AriaDBDaemon.AETitle} {IEData.AriaDBDaemon.IP} {IEData.AriaDBDaemon.Port} {IEData.LocalDaemon.AETitle} {IEData.LocalDaemon.Port} {3600.0}";
+                p.Arguments = $"{IEData.ImportLocation} {mrn} {IEData.AriaDBDaemon.AETitle} {IEData.AriaDBDaemon.IP} {IEData.AriaDBDaemon.Port} {IEData.LocalDaemon.AETitle} {IEData.LocalDaemon.Port} {3600.0} {planType}";
                 Process.Start(p);
                 return false;
             }

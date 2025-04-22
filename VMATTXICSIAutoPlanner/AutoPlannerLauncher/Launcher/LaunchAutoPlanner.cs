@@ -30,7 +30,7 @@ namespace VMS.TPS
                         p.Arguments = string.Format("-m {0}", context.Patient.Id);
                         if (!ReferenceEquals(context.StructureSet, null)) p.Arguments += string.Format(" -s {0}", context.StructureSet.UID);
                         if (!ReferenceEquals(context.Image, null)) p.Arguments += string.Format(" -i {0}", context.Image.FOR);
-                        if (!ReferenceEquals(context.PlanSetup, null)) p.Arguments += string.Format(" -p {0}", context.PlanSetup.UID);
+                        if (!ReferenceEquals(context.ExternalPlanSetup, null)) p.Arguments += string.Format(" -p {0}", context.ExternalPlanSetup.UID);
                         if (!ReferenceEquals(context.Course, null)) p.Arguments += string.Format(" -c {0}", context.Course.Id);
                         Process.Start(p);
                     }

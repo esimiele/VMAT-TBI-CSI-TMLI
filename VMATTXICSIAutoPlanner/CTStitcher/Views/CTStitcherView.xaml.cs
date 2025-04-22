@@ -28,9 +28,9 @@ namespace CTStitcher.Views
         private void MouseWheelMove(object sender, MouseWheelEventArgs e)
         {
             Grid theGrid = sender as Grid;
-            if (theGrid.Name.Contains("axial")) _vm.UpdateAxialImage(e.Delta, axialImage);
-            if (theGrid.Name.Contains("coronal")) _vm.UpdateCoronalImage(e.Delta, coronalImage);
-            if (theGrid.Name.Contains("sagittal")) _vm.UpdateSagittalImage(e.Delta, sagittalImage);
+            if (theGrid.Name.Contains("axial")) _vm.UpdateAxialImage(e.Delta);
+            if (theGrid.Name.Contains("coronal")) _vm.UpdateCoronalImage(e.Delta);
+            if (theGrid.Name.Contains("sagittal")) _vm.UpdateSagittalImage(e.Delta);
         }
     }
 }

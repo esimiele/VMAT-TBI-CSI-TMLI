@@ -178,6 +178,7 @@ namespace CSIAutoPlanner.ViewModels
             CTImageExport imageExport = new CTImageExport(EclipseContext.GetInstance().CTImages.First(x => string.Equals(x.Id, _ctExportViewModel.SelectedCTImage.CTId)),
                                                           EclipseContext.GetInstance().Patient.Id,
                                                           CSIAutoPlannerSettings.ImportExportData,
+                                                          "CSI",
                                                           CSIAutoPlannerSettings.CloseProgressWindowOnFinish);
             bool result = imageExport.Execute();
             Logger.GetInstance().AppendLogOutput("Export CT data:", imageExport.GetLogOutput());

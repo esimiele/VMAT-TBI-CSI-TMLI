@@ -112,7 +112,7 @@ namespace AutoPlannerHelpers.BaseViewModel
         private object _beamPlacement;
         protected TSGenerationViewModel _tsGenerationVM;
         private object _tsGeneration;
-        private PlanPreparationViewModel _planPrepVM;
+        protected PlanPreparationViewModel _planPrepVM;
         private object _planPreparation;
         private object _scriptConfiguration;
 

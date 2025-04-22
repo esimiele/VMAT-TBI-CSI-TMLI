@@ -15,6 +15,7 @@ namespace ImportListener
         public string LocalAET { get; set; } = string.Empty;
         public int LocalPort { get; set; } = -1;
         public double TimeoutSec { get; set; } = 30 & 60;
+        public string PatientPlanType { get; set; } = "TBI";
 
         public ImportSettingsModel() { }
     }

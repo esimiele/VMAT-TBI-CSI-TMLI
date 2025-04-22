@@ -23,6 +23,8 @@ using AutoPlannerHelpers.BaseViewModel;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using System.Windows.Media;
+using AutoPlannerHelpers.Enums;
+using AutoPlannerHelpers.Prompts;
 
 namespace TBIAutoPlanner.ViewModels
 {
@@ -204,7 +206,6 @@ namespace TBIAutoPlanner.ViewModels
             bool failed = generateTS.Execute();
             Logger.GetInstance().AppendLogOutput("TS Generation and manipulation output:", generateTS.LogOutput);
             if (failed) return;
-            return;
 
             //does the structure sparing list need to be updated? This occurs when structures the user elected to spare with option of 'Mean Dose < Rx Dose' are high resolution. Since Eclipse can't perform
             //boolean operations on structures of two different resolutions, code was added to the generateTS class to automatically convert these structures to low resolution with the name of
@@ -269,84 +270,72 @@ namespace TBIAutoPlanner.ViewModels
         #region prepare for treatment
         protected override void PreparePlanForTreatment()
         {
-            //ExternalPlanSetup thePlan = PlanPrepHelper.RetrieveVMATPlan(EclipseContext.GetInstance().Patient, Logger.GetInstance().LogPath, TBIAutoPlannerSettings.CourseId);
-            //if (ReferenceEquals(thePlan, null)) return;
-            //EclipseContext.GetInstance().VMATPlans = new List<ExternalPlanSetup> { thePlan };
+            if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().VMATPlans.FirstOrDefault(), null)) return;
 
-            //if (GenerateShiftNote()) return;
-            //if(SeparatePlans()) return;
-            //Logger.GetInstance().OpType = ScriptOperationType.PlanPrep;
-            //_planPrepVM.UpdateUIAllPrepItemsCompleted();
+            if (GenerateShiftNote()) return;
+            if (SeparatePlans()) return;
+            Logger.GetInstance().OpType = ScriptOperationType.PlanPrep;
+            _planPrepVM.UpdateUIAllPrepItemsCompleted();
         }
 
         public bool GenerateShiftNote()
         {
-            //List<ExternalPlanSetup> appaPlans = new List<ExternalPlanSetup> { };
-            //if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Any(x => x.Id.ToLower().Contains("legs")))
-            //{
-            //    appaPlans = EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("legs")).ToList();
-            //    if (appaPlans.Any(x => x.TreatmentOrientation != PatientOrientation.FeetFirstSupine))
-            //    {
-            //        StringBuilder sb = new StringBuilder();
-            //        sb.AppendLine($"The AP/PA plan {appaPlans.First(x => x.TreatmentOrientation != PatientOrientation.FeetFirstSupine).Id} is NOT in the FFS orientation!");
-            //        sb.AppendLine("THE COUCH SHIFTS FOR THESE PLANS WILL NOT BE ACCURATE! Please fix and try again!");
-            //        Logger.GetInstance().LogError(sb.ToString());
-            //        return true;
-            //    }
-            //}
+            if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Any(x => x.Id.ToLower().Contains("legs")))
+            {
+                if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("legs")).Any(x => x.TreatmentOrientation != PatientOrientation.FeetFirstSupine))
+                {
+                    StringBuilder sb = new StringBuilder();
+                    sb.AppendLine($"The AP/PA plan {EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("legs")).ToList().First(x => x.TreatmentOrientation != PatientOrientation.FeetFirstSupine).Id} is NOT in the FFS orientation!");
+                    sb.AppendLine("THE COUCH SHIFTS FOR THESE PLANS WILL NOT BE ACCURATE! Please fix and try again!");
+                    Logger.GetInstance().LogError(sb.ToString());
+                    return true;
+                }
+            }
 
-            //Clipboard.SetText(PlanPrepHelper.GetTBIShiftNote(EclipseContext.GetInstance().VMATPlans.First(), appaPlans).ToString());
+            Clipboard.SetText(PlanPrepHelper.GetTBIShiftNote(EclipseContext.GetInstance().VMATPlans.First(), EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("legs")).ToList()).ToString());
             return false;
         }
         public bool SeparatePlans()
         {
-            ////The shift note has to be retrieved first! Otherwise, we don't have instances of the plan objects
-            //if (!EclipseContext.GetInstance().VMATPlans.Any() || EclipseContext.GetInstance().VMATPlans.Count > 1)
-            //{
-            //    Logger.GetInstance().LogError("Please generate the shift note before separating the plans!");
-            //    return true;
-            //}
-            //ExternalPlanSetup thePlan = EclipseContext.GetInstance().VMATPlans.First();
+            if (!EclipseContext.GetInstance().VMATPlans.FirstOrDefault().Beams.Any(x => x.IsSetupField))
+            {
+                ConfirmPrompt CUI = new ConfirmPrompt($"I didn't find any setup fields in the {EclipseContext.GetInstance().VMATPlans.FirstOrDefault().Id}." + Environment.NewLine + Environment.NewLine + "Are you sure you want to continue?!");
+                CUI.ShowDialog();
+                if (!CUI.GetSelection()) return true;
+            }
 
-            //if (!thePlan.Beams.Any(x => x.IsSetupField))
-            //{
-            //    ConfirmPrompt CUI = new ConfirmPrompt($"I didn't find any setup fields in the {thePlan.Id}." + Environment.NewLine + Environment.NewLine + "Are you sure you want to continue?!");
-            //    CUI.ShowDialog();
-            //    if (!CUI.GetSelection()) return true;
-            //}
+            bool removeFlash = false;
+            StringBuilder sb = new StringBuilder();
+            //check if flash was used in the plan. If so, ask the user if they want to remove these structures as part of cleanup
+            if (PlanPrepHelper.CheckForFlash(EclipseContext.GetInstance().StructureSet))
+            {
+                sb.AppendLine("I found some structures in the structure set for generating flash.");
+                sb.AppendLine("Should I remove them?");
+                sb.AppendLine("(NOTE: this will require dose recalculation for all plans using this structure set!)");
+                ConfirmPrompt CP = new ConfirmPrompt(sb.ToString(), "YES", "NO");
+                CP.ShowDialog();
+                if (CP.GetSelection()) removeFlash = true;
+            }
 
-            //bool removeFlash = false;
-            //StringBuilder sb = new StringBuilder();
-            ////check if flash was used in the plan. If so, ask the user if they want to remove these structures as part of cleanup
-            //if (PlanPrepHelper.CheckForFlash(thePlan.StructureSet))
-            //{
-            //    sb.AppendLine("I found some structures in the structure set for generating flash.");
-            //    sb.AppendLine("Should I remove them?");
-            //    sb.AppendLine("(NOTE: this will require dose recalculation for all plans using this structure set!)");
-            //    ConfirmPrompt CP = new ConfirmPrompt(sb.ToString(), "YES", "NO");
-            //    CP.ShowDialog();
-            //    if (CP.GetSelection()) removeFlash = true;
-            //}
+            //separate the plans
+            EclipseContext.GetInstance().Patient.BeginModifications();
+            PreparePlansForTreatment_TBI planPrep = new PreparePlansForTreatment_TBI(removeFlash);
+            bool result = planPrep.Execute();
+            Logger.GetInstance().AppendLogOutput("Plan preparation:", planPrep.GetLogOutput());
+            if (result) return true;
 
-            ////separate the plans
-            //EclipseContext.GetInstance().Patient.BeginModifications();
-            //PreparePlansForTreatment_TBI planPrep = new PreparePlansForTreatment_TBI(removeFlash);
-            //bool result = planPrep.Execute();
-            //Logger.GetInstance().AppendLogOutput("Plan preparation:", planPrep.GetLogOutput());
-            //if (result) return true;
-
-            ////inform the user it's done
-            //sb.Clear();
-            //sb.AppendLine("Original plan(s) have been separated!");
-            //sb.AppendLine("Be sure to set the target volume and primary reference point!");
-            //if (thePlan.Beams.Any(x => x.IsSetupField))
-            //{
-            //    sb.AppendLine("Also reset the isocenter position of the setup fields!");
-            //}
-            //sb.AppendLine("");
-            //sb.AppendLine("Isocenter shifts have been copied to the clipboard!");
-            //sb.AppendLine("Paste them into the journal note!");
-            //MessageBox.Show(sb.ToString());
+            //inform the user it's done
+            sb.Clear();
+            sb.AppendLine("Original plan(s) have been separated!");
+            sb.AppendLine("Be sure to set the target volume and primary reference point!");
+            if (EclipseContext.GetInstance().VMATPlans.FirstOrDefault().Beams.Any(x => x.IsSetupField))
+            {
+                sb.AppendLine("Also reset the isocenter position of the setup fields!");
+            }
+            sb.AppendLine("");
+            sb.AppendLine("Isocenter shifts have been copied to the clipboard!");
+            sb.AppendLine("Paste them into the journal note!");
+            MessageBox.Show(sb.ToString());
 
             return false;
         }

@@ -35,7 +35,7 @@
     };
 
     /// <summary>
-    /// Plan type, either csi or tbi
+    /// Plan type, tbi, csi, or tmli
     /// </summary>
     public enum PlanType
     {

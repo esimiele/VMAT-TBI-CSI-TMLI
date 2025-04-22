@@ -21,7 +21,8 @@ namespace ImportListener
             model.AriaDBPort = int.Parse(args.ElementAt(4));
             model.LocalAET = args.ElementAt(5);
             model.LocalPort = int.Parse(args.ElementAt(6));
-            if (args.Count() == 8) model.TimeoutSec = double.Parse(args.ElementAt(7));
+            model.TimeoutSec = double.Parse(args.ElementAt(7));
+            model.PatientPlanType = args.ElementAt(8);
             return model;
         }
     }

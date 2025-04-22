@@ -23,6 +23,7 @@ namespace CSIAutoPlanner.Core
         private VMS.TPS.Common.Model.API.Image _image;
         private string _patID;
         private ImportExportDataModel _data;
+        private string _type;
 
         /// <summary>
         /// Constructor
@@ -34,11 +35,13 @@ namespace CSIAutoPlanner.Core
         public CTImageExport(VMS.TPS.Common.Model.API.Image img,
                              string patientID,
                              ImportExportDataModel theData,
+                             string planType,
                              bool closePW)
         {
             _image = img;
             _patID = patientID;
             _data = theData;
+            _type = planType;
             SetCloseOnFinish(closePW, 3000);
         }
 
@@ -533,7 +536,7 @@ namespace CSIAutoPlanner.Core
             string listener = ImportListenerHelper.GetImportListenerExePath();
             ProvideUIUpdate($"Listener path: {listener}");
 
-            if (ImportListenerHelper.LaunchImportListener(listener, _data, _patID))
+            if (ImportListenerHelper.LaunchImportListener(listener, _data, _patID, _type))
             {
                 ProvideUIUpdate("Error! Could not find listener executable or could not launch executable! Exiting!");
                 return true;

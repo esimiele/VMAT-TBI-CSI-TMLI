@@ -25,6 +25,7 @@ namespace ImportListener
         const string _twirl = "-\\|/";
         static private int index = 0;
         static bool playAnimation = true;
+        static Logging.ImportListenerLogging log;
 
         /// <summary>
         /// Main function. Input arguments are passed from calling script and include import path, mrn, aria database daemon info, local daemon info, and timeout period
@@ -33,12 +34,15 @@ namespace ImportListener
         [STAThread]
         static void Main(string[] args)
         {
-            //args = new string[] { "\\\\shariatscap105\\Dicom\\RSDCM\\Import\\", "CSI55", "VMSDBD" ,"10.151.176.60" ,"51402" ,"DCMTK" ,"50400" ,"3600" };
+            log = new Logging.ImportListenerLogging();
+            //args = new string[] { "\\\\shariatscap105\\Dicom\\RSDCM\\Import\\", "CSI55", "VMSDBD" ,"10.151.176.60" ,"51402" ,"DCMTK" ,"50400" ,"3600", "TMLI" };
             ImportSettingsModel importSettings = ImportListenerHelper.ParseInputArguments(args.ToList());
             if (importSettings.IsValid) Run(importSettings);
-            else Console.WriteLine("Error! Unable to parse command line arguments! Cannot listen for RT structure set! Exiting");
+            else log.WriteLine("Error! Unable to parse command line arguments! Cannot listen for RT structure set! Exiting");
 
-            Console.WriteLine("Press any key to exit");
+            string logLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\logs\\preparation\\" + importSettings.PatientPlanType + "\\" + importSettings.MRN + "\\ImportSS\\";
+            log.WriteLine("Press any key to exit");
+            log.SaveLog(logLocation, false);
             Console.ReadLine();
         }
 
@@ -52,13 +56,13 @@ namespace ImportListener
             {
                 SetTimer();
                 PrintConfiguration(settings);
-                Console.WriteLine("Listening for RT structure set...");
+                log.WriteLine("Listening for RT structure set...");
                 ListenForRTStruct(settings.ImportPath, settings.MRN, settings.TimeoutSec);
                 if (filePresent)
                 {
                     //wait one minute to ensure autocontouring model is done writing rt struct
                     ResetTimer(false);
-                    Console.WriteLine("Waiting for RT Struct file to be free for import...");
+                    log.WriteLine("Waiting for RT Struct file to be free for import...");
                     WaitForFile(settings.TimeoutSec);
                     if (fileReadyForImport)
                     {
@@ -75,9 +79,9 @@ namespace ImportListener
                             }
                         }
                     }
-                    else Console.WriteLine($"Auto contours for patient ({settings.MRN}) were being used by another process and could not be imported. Exiting");
+                    else log.WriteLine($"Auto contours for patient ({settings.MRN}) were being used by another process and could not be imported. Exiting");
                 }
-                else Console.WriteLine($"Auto contours for patient ({settings.MRN}) not found in time allotted. Exiting");
+                else log.WriteLine($"Auto contours for patient ({settings.MRN}) not found in time allotted. Exiting");
             }
             catch (Exception e)
             {
@@ -106,10 +110,10 @@ namespace ImportListener
                     Arguments = $"-d {mrn} {SSID}"
                 };
                 Process.Start(p);
-                Console.WriteLine($"Launched VMAT CSI autoplanning code to automatically down sample high-res structures!");
+                log.WriteLine($"Launched VMAT CSI autoplanning code to automatically down sample high-res structures!");
                 successfulLaunch = true;
             }
-            else Console.WriteLine($"Error! {exeName} executable NOT found!");
+            else log.WriteLine($"Error! {exeName} executable NOT found!");
             return successfulLaunch;
         }
 
@@ -140,17 +144,17 @@ namespace ImportListener
         /// <param name="listening"></param>
         private static void PrintConfiguration(ImportSettingsModel settings)
         {
-            Console.WriteLine(DateTime.Now);
-            Console.WriteLine("Configuration:");
-            Console.WriteLine($"Import path: {settings.ImportPath}");
-            Console.WriteLine($"Patient Id: {settings.MRN}");
-            Console.WriteLine($"Aria DB Daemon AE Title: {settings.AriaDBAET}");
-            Console.WriteLine($"Aria DB Daemon IP: {settings.AriaDBIP}");
-            Console.WriteLine($"Aria DB Daemon Port: {settings.AriaDBPort}");
-            Console.WriteLine($"Local Daemon AE Title: {settings.LocalAET}");
-            Console.WriteLine($"Local Daemon Port: {settings.LocalPort}");
-            Console.WriteLine($"Requested timeout: {settings.TimeoutSec} seconds");
-            Console.WriteLine("");
+            log.WriteLine(DateTime.Now.ToString());
+            log.WriteLine("Configuration:");
+            log.WriteLine($"Import path: {settings.ImportPath}");
+            log.WriteLine($"Patient Id: {settings.MRN}");
+            log.WriteLine($"Aria DB Daemon AE Title: {settings.AriaDBAET}");
+            log.WriteLine($"Aria DB Daemon IP: {settings.AriaDBIP}");
+            log.WriteLine($"Aria DB Daemon Port: {settings.AriaDBPort}");
+            log.WriteLine($"Local Daemon AE Title: {settings.LocalAET}");
+            log.WriteLine($"Local Daemon Port: {settings.LocalPort}");
+            log.WriteLine($"Requested timeout: {settings.TimeoutSec} seconds");
+            log.WriteLine("");
         }
 
         /// <summary>
@@ -189,12 +193,12 @@ namespace ImportListener
                 {
                     fileReadyForImport = true;
                     Console.Write("\b");
-                    Console.WriteLine($"RT Struct file ({theFile}) is ready for import");
-                    Console.WriteLine("");
+                    log.WriteLine($"RT Struct file ({theFile}) is ready for import");
+                    log.WriteLine("");
                 }
                 Wait(10000);
             }
-            Console.WriteLine($"Elapsed time: {elapsedSec:0.0} sec");
+            log.WriteLine($"Elapsed time: {elapsedSec:0.0} sec");
         }
 
         /// <summary>
@@ -267,12 +271,12 @@ namespace ImportListener
                     filePresent = true;
                     aTimer.Stop();
                     Console.Write("\b");
-                    Console.WriteLine($"Auto contours for patient {mrn} found");
-                    Console.WriteLine("");
+                    log.WriteLine($"Auto contours for patient {mrn} found");
+                    log.WriteLine("");
                 }
                 Wait(10000);
             }
-            Console.WriteLine($"Elapsed time: {elapsedSec:0.0} sec");
+            log.WriteLine($"Elapsed time: {elapsedSec:0.0} sec");
         }
 
         /// <summary>
@@ -310,7 +314,7 @@ namespace ImportListener
         /// <returns></returns>
         private static bool ImportRTStructureSet(ImportSettingsModel settings)
         {
-            Console.WriteLine("Importing structure set now...");
+            log.WriteLine("Importing structure set now...");
             bool importFailed = false;
             (Entity ariaDBDaemon, Entity localDaemon) = ConstructDaemons(settings);
             if (PingDaemon(ariaDBDaemon, localDaemon)) return true;
@@ -321,7 +325,7 @@ namespace ImportListener
             DICOMObject dcm = DICOMObject.Read(theFile);
             SSID = dcm.FindFirst(TagHelper.StructureSetLabel).DData as string;
 
-            Console.WriteLine("Executing C-store operation now...");
+            log.WriteLine("Executing C-store operation now...");
             EvilDICOM.Network.DIMSE.CStoreResponse response = storer.SendCStore(dcm, ref msgId);
             //EvilDICOM.Network.DIMSE.CStoreResponse response = null;
             if (response == null)
@@ -331,12 +335,12 @@ namespace ImportListener
             }
             if ((Status)response.Status != Status.SUCCESS)
             {
-                Console.WriteLine($"CStore failed");
+                log.WriteLine($"CStore failed");
                 importFailed = true;
             }
             else
             {
-                Console.WriteLine($"DICOM C-Store from {localDaemon.AeTitle} => {ariaDBDaemon.AeTitle} @{ariaDBDaemon.IpAddress}:{ariaDBDaemon.Port}: {(Status)response.Status}");
+                log.WriteLine($"DICOM C-Store from {localDaemon.AeTitle} => {ariaDBDaemon.AeTitle} @{ariaDBDaemon.IpAddress}:{ariaDBDaemon.Port}: {(Status)response.Status}");
                 RemoveRTStructDcmFile(theFile);
             }
             return importFailed;
@@ -353,8 +357,8 @@ namespace ImportListener
         {
             Status importedSuccess = Status.FAILURE;
             //connection timed-out or something. Usually successfully imports --> directly check Aria DB through ESAPI
-            Console.WriteLine("Warning! CStore response was null! This typically happens when the network connection times out");
-            Console.WriteLine("Attempting to directly check the Aria DB if the structure set was imported successfully");
+            log.WriteLine("Warning! CStore response was null! This typically happens when the network connection times out");
+            log.WriteLine("Attempting to directly check the Aria DB if the structure set was imported successfully");
             try
             {
                 Application app = Application.CreateApplication();
@@ -367,22 +371,22 @@ namespace ImportListener
                         {
                             importedSuccess = Status.SUCCESS;
                         }
-                        else Console.WriteLine("Structure set not found in Aria!");
+                        else log.WriteLine("Structure set not found in Aria!");
                     }
-                    else Console.WriteLine($"Error! Structure set id is null or empty!");
+                    else log.WriteLine($"Error! Structure set id is null or empty!");
                 }
                 else
                 {
-                    Console.WriteLine($"Error! Could not open patient {mrn}!");
+                    log.WriteLine($"Error! Could not open patient {mrn}!");
                 }
                 app.ClosePatient();
                 app.Dispose();
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Error! Unable to connect to aria DB to check if structure set was successfully imported! Check manually!");
-                Console.WriteLine(e.Message);
-                Console.WriteLine(e.StackTrace);
+                log.WriteLine($"Error! Unable to connect to aria DB to check if structure set was successfully imported! Check manually!");
+                log.WriteLine(e.Message);
+                log.WriteLine(e.StackTrace);
             }
             return (ushort)importedSuccess;
         }
@@ -408,31 +412,31 @@ namespace ImportListener
                             StructureSet ss = pi.StructureSets.First(x => string.Equals(SSID, x.Id));
                             if (ss.Structures.Any(x => x.Id.ToLower().Contains("spinalcord") && !x.IsEmpty && x.IsHighResolution))
                             {
-                                Console.WriteLine($"Spinal cord was imported as high resolution!");
+                                log.WriteLine($"Spinal cord was imported as high resolution!");
                                 isHighRes = true;
                             }
                             else if (ss.Structures.Any(x => x.Id.ToLower().Contains("brain") && !x.IsEmpty && x.IsHighResolution))
                             {
-                                Console.WriteLine($"Brain was imported as high resolution!");
+                                log.WriteLine($"Brain was imported as high resolution!");
                                 isHighRes = true;
                             }
                         }
-                        else Console.WriteLine("Structure set not found in Aria or more than one structure set found with the same Id! Check manually!");
+                        else log.WriteLine("Structure set not found in Aria or more than one structure set found with the same Id! Check manually!");
                     }
-                    else Console.WriteLine($"Error! Structure set id is null or empty!");
+                    else log.WriteLine($"Error! Structure set id is null or empty!");
                     app.ClosePatient();
                     app.Dispose();
                 }
                 else
                 {
-                    Console.WriteLine($"Error! Could not open patient {mrn}!");
+                    log.WriteLine($"Error! Could not open patient {mrn}!");
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Error! Unable to connect to aria DB to check if the imported structures were imported as high resolution! Check manually!");
-                Console.WriteLine(e.Message);
-                Console.WriteLine(e.StackTrace);
+                log.WriteLine($"Error! Unable to connect to aria DB to check if the imported structures were imported as high resolution! Check manually!");
+                log.WriteLine(e.Message);
+                log.WriteLine(e.StackTrace);
             }
             return isHighRes;
         }
@@ -445,11 +449,11 @@ namespace ImportListener
         /// <returns></returns>
         private static bool PingDaemon(Entity daemon, Entity local)
         {
-            Console.WriteLine($"C Echo from {local.AeTitle} => {daemon.AeTitle} @ {daemon.IpAddress} : {daemon.Port}");
+            log.WriteLine($"C Echo from {local.AeTitle} => {daemon.AeTitle} @ {daemon.IpAddress} : {daemon.Port}");
             DICOMSCU client = new DICOMSCU(local);
             //5 sec timeout
             bool success = client.Ping(daemon, 5000);
-            Console.WriteLine($"Success: {success}", !success);
+            log.WriteLine($"Success: {success}", !success);
             return !success;
         }
 
@@ -460,18 +464,18 @@ namespace ImportListener
         /// <returns></returns>
         private static bool RemoveRTStructDcmFile(string theFile)
         {
-            Console.WriteLine($"Removing {theFile} now");
+            log.WriteLine($"Removing {theFile} now");
             try
             {
                 File.Delete(theFile);
-                Console.WriteLine($"{theFile} has been removed");
+                log.WriteLine($"{theFile} has been removed");
                 return false;
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Could not remove {theFile}");
-                Console.WriteLine(e.Message);
-                Console.WriteLine(e.StackTrace);
+                log.WriteLine($"Could not remove {theFile}");
+                log.WriteLine(e.Message);
+                log.WriteLine(e.StackTrace);
                 return true;
             }
         }

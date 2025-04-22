@@ -291,7 +291,6 @@ namespace AutoPlannerOptimizationLoop.ViewModels
 
         private string RetrievePreparationLogFile()
         {
-            string fullLogName = string.Empty;
             if (ReferenceEquals(EclipseContext.GetInstance().Patient, null))
             {
                 SelectPatient sp = new SelectPatient(_logFilePath);
@@ -303,10 +302,9 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                     MessageBox.Show($"Patient: {sp.PatientMRN} not found! Exiting initialization!");
                     return string.Empty;
                 }
-                fullLogName = sp.FullLogFileName;
+                return sp.FullLogFileName;
             }
-            else fullLogName = LogHelper.GetFullLogFileFromExistingMRN(EclipseContext.GetInstance().Patient.Id, _logFilePath);
-            return fullLogName;
+            else return LogHelper.GetFullLogFileFromExistingMRN(EclipseContext.GetInstance().Patient.Id, _logFilePath);
         }
 
         public void LoadPlansAndStructureSet()
@@ -463,7 +461,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                 }
             }
             
-            OptDataContainer _data = GenerateOptimizationDataContainer(_planObjectivesVM.PlanObjectives.ToList());
+            OptDataContainer _data = GenerateOptimizationDataContainer();
             OptimizationLoopBase opt;
             if (_planType == PlanType.VMAT_TBI) opt = new VMATTBIOptimization(_data);
             else if (_planType == PlanType.VMAT_CSI) opt = new VMATCSIOptimization(_data);
@@ -472,7 +470,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             if (opt.Execute()) return;
         }
 
-        public OptDataContainer GenerateOptimizationDataContainer(List<PlanObjectiveModel> obj)
+        public OptDataContainer GenerateOptimizationDataContainer()
         {
             List<RequestedOptimizationTSStructureModel> requestedOptStructures = new List<RequestedOptimizationTSStructureModel> { };
             List<RequestedPlanMetricModel> requestedPlanMetrics = new List<RequestedPlanMetricModel> { };
@@ -485,7 +483,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             return new OptDataContainer(EclipseContext.GetInstance().VMATPlans,
                                         OptimizationLoopSettings.PlanPreparationPrescriptions,
                                         OptimizationLoopSettings.PlanPreparationNormalizationVolumes,
-                                        obj?.Where(x => x.IsValidObjective).ToList(),
+                                        _planObjectivesVM.PlanObjectives.Where(x => x.IsValidObjective).ToList(),
                                         requestedOptStructures,
                                         requestedPlanMetrics,
                                         _planType,
