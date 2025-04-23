@@ -24,6 +24,8 @@ using CommunityToolkit.Mvvm.Input;
 using System.Windows.Input;
 using AutoPlannerHelpers.Enums;
 using System.Windows.Media;
+using AutoPlannerHelpers.Messengers;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace TMLIAutoPlanner.ViewModels
 {
@@ -271,7 +273,7 @@ namespace TMLIAutoPlanner.ViewModels
             _planIsocenters = generateTS.PlanIsocentersList;
 
             _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters);
-            _optimizationSetupVM.UpdateStructureIdList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id));
+            WeakReferenceMessenger.Default.Send(new RequestUpdateStructureIds(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id)));
             _planOptimizationSetup = UpdateOptimizationConstraintsWithRings(generateTS.AddedRings, _planOptimizationSetup, TMLIAutoPlannerSettings.DefaultRingPriority);
             _planOptimizationSetup = UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
 
@@ -311,9 +313,9 @@ namespace TMLIAutoPlanner.ViewModels
             if(placeBeams.FieldJunctions.Any())
             {
                 _planOptimizationSetup = UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions, _planOptimizationSetup);
-                _optimizationSetupVM.UpdateStructureIdList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id));
+                WeakReferenceMessenger.Default.Send(new RequestUpdateStructureIds(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id)));
             }
-            _optimizationSetupVM.UpdateUIWithPlanOptimizationSetupList(_planOptimizationSetup);
+            WeakReferenceMessenger.Default.Send(new RequestUpdateOptimizationConstraintsMessage(_planOptimizationSetup));
 
             BeamPlacementTabBackground = Brushes.ForestGreen;
             OptimizationSetupTabBackground = Brushes.PaleVioletRed;
@@ -321,19 +323,7 @@ namespace TMLIAutoPlanner.ViewModels
         #endregion
 
         #region prepare for treatment
-        protected override void PreparePlanForTreatment()
-        {
-            //ExternalPlanSetup thePlan = PlanPrepHelper.RetrieveVMATPlan(EclipseContext.GetInstance().Patient, Logger.GetInstance().LogPath, TMLIAutoPlannerSettings.CourseId);
-            //if (ReferenceEquals(thePlan, null)) return;
-            //EclipseContext.GetInstance().VMATPlans = new List<ExternalPlanSetup> { thePlan };
-
-            //if (GenerateShiftNote()) return;
-            //if (SeparatePlans()) return;
-            //Logger.GetInstance().OpType = ScriptOperationType.PlanPrep;
-            //_planPrepVM.UpdateUIAllPrepItemsCompleted();
-        }
-
-        public bool GenerateShiftNote()
+        protected override bool GenerateShiftNote()
         {
             //List<ExternalPlanSetup> appaPlans = new List<ExternalPlanSetup> { };
             //if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Any(x => x.Id.ToLower().Contains("legs")))
@@ -352,7 +342,7 @@ namespace TMLIAutoPlanner.ViewModels
             //Clipboard.SetText(PlanPrepHelper.GetTBIShiftNote(EclipseContext.GetInstance().VMATPlans.First(), appaPlans).ToString());
             return false;
         }
-        public bool SeparatePlans()
+        protected override bool SeparatePlans()
         {
             ////The shift note has to be retrieved first! Otherwise, we don't have instances of the plan objects
             //if (!EclipseContext.GetInstance().VMATPlans.Any() || EclipseContext.GetInstance().VMATPlans.Count > 1)
@@ -398,7 +388,7 @@ namespace TMLIAutoPlanner.ViewModels
             if (ReferenceEquals(_selectedTemplate, null)) return;
             InitialDosePerFraction = _selectedTemplate.InitialRxDosePerFx;
             InitialNumberOfFractions = _selectedTemplate.InitialRxNumberOfFractions;
-            _setTargetsVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
+            WeakReferenceMessenger.Default.Send(new RequestAutoPlanTemplateChangedMessage(_selectedTemplate));
             _prepForTargetsVM.UpdateRequestedTargetStructures((_selectedTemplate as TMLIAutoPlanTemplate).RequestedPreliminaryTargets);
             Logger.GetInstance().Template = _selectedTemplate.TemplateName;
         }

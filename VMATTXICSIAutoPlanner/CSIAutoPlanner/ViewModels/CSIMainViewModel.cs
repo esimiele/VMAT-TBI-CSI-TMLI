@@ -22,6 +22,8 @@ using AutoPlannerHelpers.EnumTypeHelpers;
 using AutoPlannerHelpers.BaseViewModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Windows.Input;
+using AutoPlannerHelpers.Messengers;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace CSIAutoPlanner.ViewModels
 {
@@ -215,10 +217,10 @@ namespace CSIAutoPlanner.ViewModels
             MessageBox.Show("Structure set is prepared and ready for physician to review targets!");
         }
 
-        protected override void SetTargets()
+        protected override void SetTargets(List<PlanTargetsModel> targets)
         {
-            if (VerifyTargetsIntegrity(_setTargetsVM.PlanTargets)) return;
-            _prescriptions = TargetsHelper.BuildPrescriptionList(_setTargetsVM.PlanTargets, 
+            if (VerifyTargetsIntegrity(targets)) return;
+            _prescriptions = TargetsHelper.BuildPrescriptionList(targets, 
                                                                  _initialDosePerFraction, 
                                                                  _initialNumberOfFractions, 
                                                                  _initialPlanTotalDose,
@@ -237,8 +239,8 @@ namespace CSIAutoPlanner.ViewModels
         protected override bool VerifyTargetsIntegrity(List<PlanTargetsModel> parsedTargets)
         {
             //verify selected targets are APPROVED
-            //for CSI, we only want to make there is one plan (not configured for sequential boosts)
             if (!parsedTargets.Any()) return true;
+            if(!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null)) return false;
             if (parsedTargets.Select(x => x.PlanId).Distinct().Count() > 2)
             {
                 Logger.GetInstance().LogError($"Error! More than 2 plan Ids entered! This script is only configured to auto-plan two or less CSI plans!");
@@ -303,7 +305,7 @@ namespace CSIAutoPlanner.ViewModels
             _planIsocenters = generateTS.PlanIsocentersList;
 
             _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters);
-            _optimizationSetupVM.UpdateStructureIdList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id));
+            WeakReferenceMessenger.Default.Send(new RequestUpdateStructureIds(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id)));
             _planOptimizationSetup = UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
             _planOptimizationSetup = UpdateOptimizationConstraintsWithRings(generateTS.AddedRings, _planOptimizationSetup);
             _planOptimizationSetup = UpdateOptimizationConstraintsWithCropOverlapStructures(generateTS.TargetCropOverlapManipulations, _planOptimizationSetup);
@@ -344,9 +346,9 @@ namespace CSIAutoPlanner.ViewModels
             if (placeBeams.FieldJunctions.Any())
             {
                 _planOptimizationSetup = UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions, _planOptimizationSetup);
-                _optimizationSetupVM.UpdateStructureIdList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id));
+                WeakReferenceMessenger.Default.Send(new RequestUpdateStructureIds(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id)));
             }
-            _optimizationSetupVM.UpdateUIWithPlanOptimizationSetupList(_planOptimizationSetup);
+            WeakReferenceMessenger.Default.Send(new RequestUpdateOptimizationConstraintsMessage(_planOptimizationSetup));
 
             BeamPlacementTabBackground = System.Windows.Media.Brushes.ForestGreen;
             OptimizationSetupTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
@@ -354,18 +356,14 @@ namespace CSIAutoPlanner.ViewModels
         #endregion
 
         #region prepare for treatment
-        protected override void PreparePlanForTreatment()
+        protected override bool GenerateShiftNote()
         {
-
+            throw new NotImplementedException();
         }
 
-        public bool GenerateShiftNote()
+        protected override bool SeparatePlans()
         {
-            return false;
-        }
-        public bool SeparatePlans()
-        {
-            return false;
+            throw new NotImplementedException();
         }
         #endregion
 
@@ -384,7 +382,7 @@ namespace CSIAutoPlanner.ViewModels
             InitialNumberOfFractions = _selectedTemplate.InitialRxNumberOfFractions;
             BoostDosePerFraction = (_selectedTemplate as CSIAutoPlanTemplate).BoostRxDosePerFx;
             BoostNumberOfFractions = (_selectedTemplate as CSIAutoPlanTemplate).BoostRxNumberOfFractions;
-            _setTargetsVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
+            WeakReferenceMessenger.Default.Send(new RequestAutoPlanTemplateChangedMessage(_selectedTemplate));
             _prepForTargetsVM.UpdateRequestedTargetStructures(CSIAutoPlannerSettings.RequestedPreliminaryTargets);
         }
 
@@ -598,6 +596,7 @@ namespace CSIAutoPlanner.ViewModels
             if (PlanTemplates.Any()) sb.Append(ConfigurationUIHelper.PrintCSIPlanTemplateConfigurationParameters(PlanTemplates.ToList()));
             return sb;
         }
+
         #endregion
     }
 }

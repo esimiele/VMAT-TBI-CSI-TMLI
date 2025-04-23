@@ -2,11 +2,13 @@
 using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.Helpers;
 using AutoPlannerHelpers.Logging;
+using AutoPlannerHelpers.Messengers;
 using AutoPlannerHelpers.Models;
 using AutoPlannerHelpers.PlanTemplateModels;
 using AutoPlannerHelpers.Prompts;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,7 +40,6 @@ namespace AutoPlannerHelpers.ViewModels
         #endregion
 
         #region commands
-        private ICommand _notifyMainVMExecuted;
         public ICommand AddOptimizationConstraintCommand { get; set; }
         public ICommand AddDefaultOptimizationConstraintsCommand { get; set; }
         public ICommand ClearOptimizationConstraintListCommand { get; set; }
@@ -46,7 +47,7 @@ namespace AutoPlannerHelpers.ViewModels
         public ICommand AssignOptimizationConstraintsCommand { get; set; }
         #endregion
 
-        public OptimizationSetupViewModel(List<string> sIds, ICommand notifyMainVMExecuted, PlanType planType)
+        public OptimizationSetupViewModel(List<string> sIds, PlanType planType)
         {
             AddOptimizationConstraintCommand = new RelayCommand(AddOptimizationObjective);
             AddDefaultOptimizationConstraintsCommand = new RelayCommand(AddDefaultOptimizationConstraints);
@@ -56,8 +57,17 @@ namespace AutoPlannerHelpers.ViewModels
             if(sIds.Any()) StructureIds = new List<string>(sIds);
             else StructureIds = new List<string> { "1", "2", "3"};
             PlanOptimizationConstraints = new ObservableCollectionPropertyNotify<PlanOptimizationSetupModel> { };
-            _notifyMainVMExecuted = notifyMainVMExecuted;
             _planType = planType;
+
+            WeakReferenceMessenger.Default.Register<RequestUpdateStructureIds>(this, (r, m) =>
+            {
+                UpdateStructureIdList(m.StructureIds);
+            });
+
+            WeakReferenceMessenger.Default.Register<RequestUpdateOptimizationConstraintsMessage>(this, (r, m) =>
+            {
+                UpdateUIWithPlanOptimizationSetupList(m.PlanOptimizationSetup);
+            });
         }
 
         public void UpdateStructureIdList(IEnumerable<string> newIds)
@@ -141,31 +151,7 @@ namespace AutoPlannerHelpers.ViewModels
 
         public void AssignOptimizationConstraints()
         {
-            if (!EclipseContext.GetInstance().VMATPlans.Any()) return;
-            bool constraintsAssigned = false;
-            foreach (PlanOptimizationSetupModel itr in PlanOptimizationConstraints)
-            {
-                //additional check if the plan was not found in the list of VMATplans
-                if (EclipseContext.GetInstance().VMATPlans.Any(x => string.Equals(x.Id, itr.PlanId)))
-                {
-                    ExternalPlanSetup plan = EclipseContext.GetInstance().VMATPlans.First(x => string.Equals(x.Id, itr.PlanId));
-                    if (plan.OptimizationSetup.Objectives.Any())
-                    {
-                        foreach (OptimizationObjective o in plan.OptimizationSetup.Objectives) plan.OptimizationSetup.RemoveObjective(o);
-                    }
-                    OptimizationSetupHelper.AssignOptConstraints(itr.OptimizationConstraints, plan, false, 0.0);
-                    constraintsAssigned = true;
-                }
-                else Logger.GetInstance().LogError($"{itr.PlanId} not found!");
-            }
-            if (constraintsAssigned)
-            {
-                string message = "Optimization objectives have been successfully set!" + Environment.NewLine + Environment.NewLine + "Please review the generated structures, placed isocenters, placed beams, and optimization parameters!";
-                MessageBox.Show(message);
-                Logger.GetInstance().OptimizationConstraints = PlanOptimizationConstraints.ToList();
-                _notifyMainVMExecuted.Execute(null);
-            }
-            else Logger.GetInstance().LogError("Error! No optimization constraints assigned!");
+            WeakReferenceMessenger.Default.Send(new RequestSetOptimizationConstraintsMessage(PlanOptimizationConstraints));
         }
     }
 }

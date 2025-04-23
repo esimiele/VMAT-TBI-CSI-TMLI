@@ -2,9 +2,11 @@
 using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.Helpers;
 using AutoPlannerHelpers.Logging;
+using AutoPlannerHelpers.Messengers;
 using AutoPlannerHelpers.Prompts;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,126 +22,80 @@ namespace AutoPlannerHelpers.ViewModels
     public class PlanPreparationViewModel : ObservableObject
     {
         #region properties
-        private string _planId;
-        private string _planIdPrefix;
-        private bool _createBackupPlans;
-        private string _fieldNaming;
-        private string _separateIsos;
-        private string _refPoints;
-        private string _setupFields;
-        private string _planSumCreated;
-        private string _muQA;
-        private string _backupPlan;
-        private bool _allItemsCompleted;
+        private string _generateShiftText;
 
-        public string PlanId
+        public string GenerateShiftText
+        {
+            get { return _generateShiftText; }
+            set { SetProperty(ref _generateShiftText, value); }
+        }
+
+        private string _separatePlanText;
+
+        public string SeparatePlanText
+        {
+            get { return _separatePlanText; }
+            set { SetProperty(ref _separatePlanText, value); }
+        }
+
+        private string  _planId;
+
+        public string  PlanId
         {
             get { return _planId; }
             set { SetProperty(ref _planId, value); }
         }
+        #endregion
 
-        public string PlanIdPrefix
-        {
-            get { return _planIdPrefix; }
-            set { SetProperty(ref _planIdPrefix, value); }
-        }
-
-        public bool CreateBackupPlans
-        {
-            get { return _createBackupPlans; }
-            set { SetProperty(ref _createBackupPlans, value); }
-        }
-
-        public string FieldNaming
-        {
-            get { return _fieldNaming; }
-            set { SetProperty(ref _fieldNaming, value); }
-        }
-
-        public string SeparateIsos
-        {
-            get { return _separateIsos; }
-            set { SetProperty(ref _separateIsos, value); }
-        }
-
-        public string RefPoints
-        {
-            get { return _refPoints; }
-            set { SetProperty(ref _refPoints, value); }
-        }
-
-        public string SetupFields
-        {
-            get { return _setupFields; }
-            set { SetProperty(ref _setupFields, value); }
-        }
-
-        public string PlanSumCreated
-        {
-            get { return _planSumCreated; }
-            set { SetProperty(ref _planSumCreated, value); }
-        }
-
-        public string MUQA
-        {
-            get { return _muQA; }
-            set { SetProperty(ref _muQA, value); }
-        }
-
-        public string BackupPlan
-        {
-            get { return _backupPlan; }
-            set { SetProperty(ref _backupPlan, value); }
-        }
-
-        public bool AllItemsCompleted
-        {
-            get { return _allItemsCompleted; }
-            set { SetProperty(ref _allItemsCompleted, value); }
-        }
+        #region fields
+        private bool _canSeparatePlans = false;
         #endregion
 
         #region commands
-        private ICommand _notifyMainVMExecuted;
-        public ICommand RunCommand { get; set; }
+        public ICommand GenerateShiftNoteCommand { get; set; }
+        public ICommand SeparatePlansCommand { get; set; }
         #endregion
 
-        public PlanPreparationViewModel(ICommand notifyMainVM)
+        public PlanPreparationViewModel()
         {
-            _notifyMainVMExecuted = notifyMainVM;
-            FieldNaming = "NO";
-            SeparateIsos = "NO";
-            RefPoints = "NO";
-            SetupFields = "NO";
-            PlanSumCreated = "NO";
-            MUQA = "NO";
-            BackupPlan = "NO";
-            RunCommand = new RelayCommand(PreparePlanForTreatment);
-        }
-
-        private void PreparePlanForTreatment()
-        {
-            //logic needs to be handled by specific plan type classes
-            _notifyMainVMExecuted.Execute(null);
-        }
-
-        public void UpdateUIAllPrepItemsCompleted()
-        {
-            FieldNaming = "YES";
-            SeparateIsos = "YES";
-            RefPoints = "YES";
-            SetupFields = "YES";
-            PlanSumCreated = "YES";
-            MUQA = "YES";
-            AllItemsCompleted = true;
-
-            if (CreateBackupPlans)
+            GenerateShiftText = "NO";
+            SeparatePlanText = "NO";
+            if(EclipseContext.GetInstance().IsInitialized && EclipseContext.GetInstance().VMATPlans.Any())
             {
-                BackupPlan = "YES";
+                PlanId = EclipseContext.GetInstance().VMATPlans.First().Id;
             }
-            else
+            GenerateShiftNoteCommand = new RelayCommand(GenerateShiftNote);
+            SeparatePlansCommand = new RelayCommand(SeparatePlans);
+        }
+
+        private void GenerateShiftNote()
+        {
+            if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().VMATPlans.FirstOrDefault(), null))
             {
-                BackupPlan = "N/A";
+                Logger.GetInstance().LogError("Script not initialized or no vmat plans present! Exiting!");
+                return;
+            }
+            Logger.GetInstance().OpType = ScriptOperationType.PlanPrep;
+            //logic needs to be handled by specific plan type classes
+            var result = WeakReferenceMessenger.Default.Send(new RequestGenerateShiftNoteMessage());
+            if (!result)
+            {
+                GenerateShiftText = "YES";
+                _canSeparatePlans = true;
+            }
+        }
+
+        private void SeparatePlans()
+        {
+            if (!_canSeparatePlans)
+            {
+                Logger.GetInstance().LogError("Error! The shift note must be generated before separating the plans! Exiting!");
+                return;
+            }
+            var result = WeakReferenceMessenger.Default.Send(new RequestSeparatePlanMessage());
+            if (!result)
+            {
+                SeparatePlanText = "YES";
             }
         }
     }

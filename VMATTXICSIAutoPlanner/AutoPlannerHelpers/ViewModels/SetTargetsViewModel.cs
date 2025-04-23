@@ -6,6 +6,8 @@ using AutoPlannerHelpers.PlanTemplateModels;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using AutoPlannerHelpers.Messengers;
 
 namespace AutoPlannerHelpers.ViewModels
 {
@@ -36,12 +38,10 @@ namespace AutoPlannerHelpers.ViewModels
         public ICommand SetTargetsCommand { get; set; }
         public RelayCommand<UnstructuredTargetModel> SelectedTargetChangedCommand { get; set; }
         public RelayCommand<UnstructuredTargetModel> SelectedPlanChangedCommand { get; set; }
-        private ICommand _notifyMainVMExecuted;
         #endregion
 
-        public SetTargetsViewModel(ICommand NotifyMainVMExecuted)
+        public SetTargetsViewModel()
         {
-            _notifyMainVMExecuted = NotifyMainVMExecuted;
             TargetIds = new ObservableCollectionPropertyNotify<string> { " ", "--Add New--" };
             PlanIds = new List<string> { " ", "--Add New--" };
             Targets = new ObservableCollectionPropertyNotify<UnstructuredTargetModel> { };
@@ -52,6 +52,10 @@ namespace AutoPlannerHelpers.ViewModels
             SetTargetsCommand = new RelayCommand(SetTargets);
             SelectedTargetChangedCommand = new RelayCommand<UnstructuredTargetModel>(TargetIdSelectionChanged);
             SelectedPlanChangedCommand = new RelayCommand<UnstructuredTargetModel>(PlanIdSelectionChanged);
+            WeakReferenceMessenger.Default.Register<RequestAutoPlanTemplateChangedMessage>(this, (r, m) =>
+            {
+                AutoPlanTemplateSelectionChanged(m.AutoPlanTemplate);
+            });
         }
 
         public void TargetIdSelectionChanged(UnstructuredTargetModel value)
@@ -133,7 +137,7 @@ namespace AutoPlannerHelpers.ViewModels
         public void SetTargets()
         {
             _planTargets = GroupTargetsByPlanIdAndOrderByTargetRx(Targets.ToList());
-            _notifyMainVMExecuted.Execute(null);
+            WeakReferenceMessenger.Default.Send(new RequestSetTargetsMessage(_planTargets));
         }
 
         /// <summary>

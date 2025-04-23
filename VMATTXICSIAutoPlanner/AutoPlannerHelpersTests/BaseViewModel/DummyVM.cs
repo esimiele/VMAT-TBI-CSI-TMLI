@@ -45,17 +45,22 @@ namespace AutoPlannerHelpersTests.BaseViewModel
             throw new NotImplementedException();
         }
 
-        protected override void PreparePlanForTreatment()
-        {
-            throw new NotImplementedException();
-        }
-
         protected override void UpdateUIWithSelectedPlanTemplate()
         {
             throw new NotImplementedException();
         }
 
         protected override bool VerifyTargetsIntegrity(List<PlanTargetsModel> parsedTargets)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override bool GenerateShiftNote()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override bool SeparatePlans()
         {
             throw new NotImplementedException();
         }

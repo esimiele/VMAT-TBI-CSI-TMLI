@@ -13,6 +13,11 @@ using AutoPlannerHelpers.ViewModels;
 using AutoPlannerHelpers.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using AutoPlannerHelpers.Messengers;
+using System;
+using VMS.TPS.Common.Model.API;
+using System.Windows;
 
 namespace AutoPlannerHelpers.BaseViewModel
 {
@@ -102,9 +107,7 @@ namespace AutoPlannerHelpers.BaseViewModel
         #endregion
 
         #region view objects
-        protected SetTargetsViewModel _setTargetsVM;
         private object _specifyTargets;
-        protected OptimizationSetupViewModel _optimizationSetupVM;
         private object _optimizationSetup;
         protected TSManipulationViewModel _tsManipulationVM;
         private object _tsManipulation;
@@ -112,7 +115,6 @@ namespace AutoPlannerHelpers.BaseViewModel
         private object _beamPlacement;
         protected TSGenerationViewModel _tsGenerationVM;
         private object _tsGeneration;
-        protected PlanPreparationViewModel _planPrepVM;
         private object _planPreparation;
         private object _scriptConfiguration;
 
@@ -165,7 +167,6 @@ namespace AutoPlannerHelpers.BaseViewModel
         protected ICommand NotifyGenerateManipulateTuningStructuresCommand;
         protected ICommand NotifyBeamsPlacedCommand;
         protected ICommand NotifyAssignOptimizationConstraintsCommand;
-        protected ICommand NotifyPreparePlanForTreatmentCommand;
         #endregion
 
         #region fields
@@ -191,9 +192,12 @@ namespace AutoPlannerHelpers.BaseViewModel
                 _structureIdsPostUnion = new List<string> { "lung_l", "lung_r", "kidney_l", "kidney_r", "PTV^Body", "OpticChiasm", "Brainstem" };
             }
 
-            NotifySetTargetsCommand = new RelayCommand(SetTargets);
-            _setTargetsVM = new SetTargetsViewModel(NotifySetTargetsCommand);
-            SpecifyTargets = new SpecifyTargetsView { DataContext = _setTargetsVM };
+            WeakReferenceMessenger.Default.Register<RequestSetTargetsMessage>(this, (r, m) =>
+            {
+                SetTargets(m.PlanTargets);
+            });
+
+            SpecifyTargets = new SpecifyTargetsView { DataContext = new SetTargetsViewModel() };
 
             _tsGenerationVM = new TSGenerationViewModel();
             TSGeneration = new TSGenerationView { DataContext = _tsGenerationVM };
@@ -206,13 +210,23 @@ namespace AutoPlannerHelpers.BaseViewModel
             _beamPlacementVM = new BeamPlacementViewModel(NotifyBeamsPlacedCommand, type);
             BeamPlacement = new BeamPlacementView { DataContext = _beamPlacementVM };
 
-            NotifyAssignOptimizationConstraintsCommand = new RelayCommand(AssignOptimizationConstraints);
-            _optimizationSetupVM = new OptimizationSetupViewModel(_structureIdsPostUnion, NotifyAssignOptimizationConstraintsCommand, type);
-            OptimizationSetup = new OptimizationSetupView { DataContext = _optimizationSetupVM };
+            WeakReferenceMessenger.Default.Register<RequestSetOptimizationConstraintsMessage>(this, (r, m) =>
+            {
+                AssignOptimizationConstraints(m.PlanOptimizationSetup);
+            });
+            OptimizationSetup = new OptimizationSetupView { DataContext = new OptimizationSetupViewModel(_structureIdsPostUnion, type) };
 
-            NotifyPreparePlanForTreatmentCommand = new RelayCommand(PreparePlanForTreatment);
-            _planPrepVM = new PlanPreparationViewModel(NotifyPreparePlanForTreatmentCommand);
-            PlanPreparation = new PlanPreparationView { DataContext = _planPrepVM };
+            WeakReferenceMessenger.Default.Register<RequestGenerateShiftNoteMessage>(this, (r, m) =>
+            {
+                m.Reply(GenerateShiftNote());
+            });
+
+            WeakReferenceMessenger.Default.Register<RequestSeparatePlanMessage>(this, (r, m) =>
+            {
+                m.Reply(SeparatePlans());
+            });
+
+            PlanPreparation = new PlanPreparationView { DataContext = new PlanPreparationViewModel() };
 
             PlanTemplates = new ObservableCollection<AutoPlanTemplateBase>() { };
             WindowClosingCommand = new RelayCommand(WindowClosing);
@@ -223,10 +237,10 @@ namespace AutoPlannerHelpers.BaseViewModel
             OptimizationSetupTabBackground = System.Windows.Media.Brushes.LightGray;
         }
 
-        protected virtual void SetTargets()
+        protected virtual void SetTargets(List<PlanTargetsModel> targets)
         {
-            if (VerifyTargetsIntegrity(_setTargetsVM.PlanTargets)) return;
-            _prescriptions = TargetsHelper.BuildPrescriptionList(_setTargetsVM.PlanTargets, _initialDosePerFraction, _initialNumberOfFractions, _initialPlanTotalDose);
+            if (VerifyTargetsIntegrity(targets)) return;
+            _prescriptions = TargetsHelper.BuildPrescriptionList(targets, _initialDosePerFraction, _initialNumberOfFractions, _initialPlanTotalDose);
             if (!_prescriptions.Any()) return;
             Logger.GetInstance().Prescriptions = _prescriptions;
             _planOptimizationSetup = BuildPlanOptimizationSetupList();
@@ -334,14 +348,39 @@ namespace AutoPlannerHelpers.BaseViewModel
             return planConstraints;
         }
 
-        protected void AssignOptimizationConstraints()
+        protected void AssignOptimizationConstraints(List<PlanOptimizationSetupModel> PlanOptimizationConstraints)
         {
-            OptimizationSetupTabBackground = System.Windows.Media.Brushes.ForestGreen;
+            if (!EclipseContext.GetInstance().VMATPlans.Any()) return;
+            bool constraintsAssigned = false;
+            foreach (PlanOptimizationSetupModel itr in PlanOptimizationConstraints)
+            {
+                //additional check if the plan was not found in the list of VMATplans
+                if (EclipseContext.GetInstance().VMATPlans.Any(x => string.Equals(x.Id, itr.PlanId)))
+                {
+                    ExternalPlanSetup plan = EclipseContext.GetInstance().VMATPlans.First(x => string.Equals(x.Id, itr.PlanId));
+                    if (plan.OptimizationSetup.Objectives.Any())
+                    {
+                        foreach (OptimizationObjective o in plan.OptimizationSetup.Objectives) plan.OptimizationSetup.RemoveObjective(o);
+                    }
+                    OptimizationSetupHelper.AssignOptConstraints(itr.OptimizationConstraints, plan, false, 0.0);
+                    constraintsAssigned = true;
+                }
+                else Logger.GetInstance().LogError($"{itr.PlanId} not found!");
+            }
+            if (constraintsAssigned)
+            {
+                string message = "Optimization objectives have been successfully set!" + Environment.NewLine + Environment.NewLine + "Please review the generated structures, placed isocenters, placed beams, and optimization parameters!";
+                MessageBox.Show(message);
+                Logger.GetInstance().OptimizationConstraints = PlanOptimizationConstraints.ToList();
+                OptimizationSetupTabBackground = System.Windows.Media.Brushes.ForestGreen;
+            }
+            else Logger.GetInstance().LogError("Error! No optimization constraints assigned!");
         }
 
         protected abstract void LoadScriptConfigurationSettings(string file);
         protected abstract StringBuilder BuildScriptConfigurationInfo();
-        protected abstract void PreparePlanForTreatment();
+        protected abstract bool GenerateShiftNote();
+        protected abstract bool SeparatePlans();
         protected abstract void UpdateUIWithSelectedPlanTemplate();
 
         public void ResetInitialRxDose()

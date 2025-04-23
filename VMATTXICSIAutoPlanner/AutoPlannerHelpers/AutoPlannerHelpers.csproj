@@ -130,6 +130,7 @@
     <Compile Include="Helpers\TargetsHelper.cs" />
     <Compile Include="Interfaces\IPlanConstraint.cs" />
     <Compile Include="Logging\Logger.cs" />
+    <Compile Include="Messengers\AllMessengers.cs" />
     <Compile Include="Models\DaemonModel.cs" />
     <Compile Include="Models\ExportCTModel.cs" />
     <Compile Include="Models\FieldJunctionModel.cs" />

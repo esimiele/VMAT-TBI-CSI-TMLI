@@ -25,6 +25,8 @@ using CommunityToolkit.Mvvm.Input;
 using System.Windows.Media;
 using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.Prompts;
+using AutoPlannerHelpers.Messengers;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace TBIAutoPlanner.ViewModels
 {
@@ -218,7 +220,7 @@ namespace TBIAutoPlanner.ViewModels
             _planIsocenters = generateTS.PlanIsocentersList;
 
             _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters);
-            _optimizationSetupVM.UpdateStructureIdList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id));
+            WeakReferenceMessenger.Default.Send(new RequestUpdateStructureIds(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id)));
             _planOptimizationSetup = UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
 
             StructureTuningTabBackground = System.Windows.Media.Brushes.ForestGreen;
@@ -258,9 +260,9 @@ namespace TBIAutoPlanner.ViewModels
             if (placeBeams.FieldJunctions.Any())
             {
                 _planOptimizationSetup = UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions, _planOptimizationSetup);
-                _optimizationSetupVM.UpdateStructureIdList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id));
+                WeakReferenceMessenger.Default.Send(new RequestUpdateStructureIds(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id)));
             }
-            _optimizationSetupVM.UpdateUIWithPlanOptimizationSetupList(_planOptimizationSetup);
+            WeakReferenceMessenger.Default.Send(new RequestUpdateOptimizationConstraintsMessage(_planOptimizationSetup));
 
             BeamPlacementTabBackground = System.Windows.Media.Brushes.ForestGreen;
             OptimizationSetupTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
@@ -268,18 +270,10 @@ namespace TBIAutoPlanner.ViewModels
         #endregion
 
         #region prepare for treatment
-        protected override void PreparePlanForTreatment()
+        protected override bool GenerateShiftNote()
         {
-            if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().VMATPlans.FirstOrDefault(), null)) return;
-
-            if (GenerateShiftNote()) return;
-            if (SeparatePlans()) return;
+            if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().VMATPlans.FirstOrDefault(), null)) return true;
             Logger.GetInstance().OpType = ScriptOperationType.PlanPrep;
-            _planPrepVM.UpdateUIAllPrepItemsCompleted();
-        }
-
-        public bool GenerateShiftNote()
-        {
             if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Any(x => x.Id.ToLower().Contains("legs")))
             {
                 if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("legs")).Any(x => x.TreatmentOrientation != PatientOrientation.FeetFirstSupine))
@@ -293,9 +287,9 @@ namespace TBIAutoPlanner.ViewModels
             }
 
             Clipboard.SetText(PlanPrepHelper.GetTBIShiftNote(EclipseContext.GetInstance().VMATPlans.First(), EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("legs")).ToList()).ToString());
-            return false;
+            return true;
         }
-        public bool SeparatePlans()
+        protected override bool SeparatePlans()
         {
             if (!EclipseContext.GetInstance().VMATPlans.FirstOrDefault().Beams.Any(x => x.IsSetupField))
             {
@@ -336,7 +330,6 @@ namespace TBIAutoPlanner.ViewModels
             sb.AppendLine("Isocenter shifts have been copied to the clipboard!");
             sb.AppendLine("Paste them into the journal note!");
             MessageBox.Show(sb.ToString());
-
             return false;
         }
         #endregion
@@ -347,7 +340,7 @@ namespace TBIAutoPlanner.ViewModels
 
             InitialDosePerFraction = _selectedTemplate.InitialRxDosePerFx;
             InitialNumberOfFractions = _selectedTemplate.InitialRxNumberOfFractions;
-            _setTargetsVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
+            WeakReferenceMessenger.Default.Send(new RequestAutoPlanTemplateChangedMessage(_selectedTemplate));
             Logger.GetInstance().Template = _selectedTemplate.TemplateName;
         }
 
