@@ -1,8 +1,11 @@
-﻿using AutoPlannerHelpers.Models;
+﻿using AutoPlannerHelpers.Messengers;
+using AutoPlannerHelpers.Models;
 using AutoPlannerHelpers.PlanTemplateModels;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Input;
@@ -23,12 +26,10 @@ namespace AutoPlannerHelpers.ViewModels
         public ICommand RemoveAllTSStructuresCommand { get; set; }
         public RelayCommand<RequestedTSStructureModel> ClearRowCommand { get; set; }
         public ICommand RunPrepForTargetsCommand { get; set; }
-        private ICommand _notifyMainVMExecuted;
         #endregion
 
-        public PrepForTargetsViewModel(ICommand notifyMainVM)
+        public PrepForTargetsViewModel()
         {
-            _notifyMainVMExecuted = notifyMainVM;
             _originalRequestedTargets = new List<RequestedTSStructureModel> { };
             RequestedPreliminaryTargets = new ObservableCollectionPropertyNotify<RequestedTSStructureModel> { };
             DisplayInfoCommand = new RelayCommand(DisplayPrepForTargetsInfo);
@@ -36,6 +37,10 @@ namespace AutoPlannerHelpers.ViewModels
             RemoveAllTSStructuresCommand = new RelayCommand(RemoveAllTSStructures);
             ClearRowCommand = new RelayCommand<RequestedTSStructureModel>(ClearRow);
             RunPrepForTargetsCommand = new RelayCommand(RunPrepForTargets);
+            WeakReferenceMessenger.Default.Register<RequestUpdateTargetStructures>(this, (r, m) =>
+            {
+                UpdateRequestedTargetStructures(m.Structures);
+            });
         }
 
         public void UpdateRequestedTargetStructures(List<RequestedTSStructureModel> targets)
@@ -70,7 +75,7 @@ namespace AutoPlannerHelpers.ViewModels
 
         private void RunPrepForTargets()
         {
-            _notifyMainVMExecuted.Execute(null);
+            WeakReferenceMessenger.Default.Send(new RequestGeneratePreliminaryTargets(RequestedPreliminaryTargets.ToList()));
         }
     }
 }

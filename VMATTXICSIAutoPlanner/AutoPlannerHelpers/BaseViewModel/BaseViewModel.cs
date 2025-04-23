@@ -109,9 +109,7 @@ namespace AutoPlannerHelpers.BaseViewModel
         #region view objects
         private object _specifyTargets;
         private object _optimizationSetup;
-        protected TSManipulationViewModel _tsManipulationVM;
         private object _tsManipulation;
-        protected BeamPlacementViewModel _beamPlacementVM;
         private object _beamPlacement;
         protected TSGenerationViewModel _tsGenerationVM;
         private object _tsGeneration;
@@ -163,10 +161,6 @@ namespace AutoPlannerHelpers.BaseViewModel
 
         #region commands
         public ICommand WindowClosingCommand { get; set; }
-        protected ICommand NotifySetTargetsCommand;
-        protected ICommand NotifyGenerateManipulateTuningStructuresCommand;
-        protected ICommand NotifyBeamsPlacedCommand;
-        protected ICommand NotifyAssignOptimizationConstraintsCommand;
         #endregion
 
         #region fields
@@ -202,13 +196,17 @@ namespace AutoPlannerHelpers.BaseViewModel
             _tsGenerationVM = new TSGenerationViewModel();
             TSGeneration = new TSGenerationView { DataContext = _tsGenerationVM };
 
-            NotifyGenerateManipulateTuningStructuresCommand = new RelayCommand(PerformTSStructureGenerationManipulation);
-            _tsManipulationVM = new TSManipulationViewModel(NotifyGenerateManipulateTuningStructuresCommand, _structureIdsPostUnion);
-            TSManipulation = new TSManipulationView { DataContext = _tsManipulationVM };
+            WeakReferenceMessenger.Default.Register<RequestGenerateManipulateTuningStructuresMessage>(this, (r, m) =>
+            {
+                PerformTSStructureGenerationManipulation(m.RequestedTSManipulations);
+            });
+            TSManipulation = new TSManipulationView { DataContext = new TSManipulationViewModel(_structureIdsPostUnion) };
 
-            NotifyBeamsPlacedCommand = new RelayCommand(GeneratePlansAndPlaceBeams);
-            _beamPlacementVM = new BeamPlacementViewModel(NotifyBeamsPlacedCommand, type);
-            BeamPlacement = new BeamPlacementView { DataContext = _beamPlacementVM };
+            WeakReferenceMessenger.Default.Register<RequestGenerateAndPlaceBeams>(this, (r, m) =>
+            {
+                GeneratePlansAndPlaceBeams(m.SelectedLinac, m.SelectedEnergy, m.ContourOverlap, m.ContourOverlapMargin, m.PlanIsocenters);
+            });
+            BeamPlacement = new BeamPlacementView { DataContext = new BeamPlacementViewModel(type) };
 
             WeakReferenceMessenger.Default.Register<RequestSetOptimizationConstraintsMessage>(this, (r, m) =>
             {
@@ -274,9 +272,9 @@ namespace AutoPlannerHelpers.BaseViewModel
 
         protected abstract bool VerifyTargetsIntegrity(List<PlanTargetsModel> parsedTargets);
 
-        protected abstract void PerformTSStructureGenerationManipulation();
+        protected abstract void PerformTSStructureGenerationManipulation(List<RequestedTSManipulationModel> manipulations);
 
-        protected abstract void GeneratePlansAndPlaceBeams();
+        protected abstract void GeneratePlansAndPlaceBeams(string linac, string energy, bool contourOverlap, double overlapMargin, List<PlanIsocenterModel> PlanIsocenters);
 
         public List<PlanOptimizationSetupModel> UpdateOptimizationConstraintsWithTSTargets(List<PlanTargetsModel> planTargets, List<PlanOptimizationSetupModel> planConstraints)
         {

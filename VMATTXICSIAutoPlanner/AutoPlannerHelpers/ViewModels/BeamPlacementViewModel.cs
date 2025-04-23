@@ -6,9 +6,11 @@ using System.Windows.Input;
 using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.Helpers;
 using AutoPlannerHelpers.Logging;
+using AutoPlannerHelpers.Messengers;
 using AutoPlannerHelpers.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace AutoPlannerHelpers.ViewModels 
 {
@@ -83,7 +85,6 @@ namespace AutoPlannerHelpers.ViewModels
         #endregion
 
         #region commands
-        private ICommand _notifyMainVMExecuted;
         public ICommand UpdateNumberOfIsocentersCommand { get; set; }
         public ICommand CreatePlansAndPlaceBeamsCommand { get; set; }
         #endregion
@@ -92,9 +93,8 @@ namespace AutoPlannerHelpers.ViewModels
         private List<int> _fieldsPerIso = new List<int> { 0,0,0,0,0,0,0};
         #endregion
 
-        public BeamPlacementViewModel(ICommand NotifyMainVMExecuted, PlanType type)
+        public BeamPlacementViewModel(PlanType type)
         {
-            _notifyMainVMExecuted = NotifyMainVMExecuted;
             ContourOverlapMarginVisible = Visibility.Hidden;
             if (type == PlanType.VMAT_CSI) RequestedNumberOfIsosVisible = Visibility.Collapsed;
             else RequestedNumberOfIsosVisible = Visibility.Visible;
@@ -105,6 +105,18 @@ namespace AutoPlannerHelpers.ViewModels
             AvailableLinacs = new List<string> { };
             FieldOverlapMargin = 0.0;
             _requestedNumberOfVMATIsos = 0;
+            WeakReferenceMessenger.Default.Register<RequestUpdateBeamPlacementDefaultSettings>(this, (r, m) =>
+            {
+                UpdateDefaultViewSettings(m.Linacs, m.Energies, m.ContourOverlap, m.ContourOverlapMargin, m.FieldsPerIsocenter);
+            });
+            WeakReferenceMessenger.Default.Register<RequestHideNumberOfVMATIsocenters>(this, (r, m) =>
+            {
+                HideRequestedNumberOfIsos();
+            });
+            WeakReferenceMessenger.Default.Register<RequestUpdatePlanIsocenterList>(this, (r, m) =>
+            {
+                PopulateBeamPlacementUI(m.PlanIsocenterList);
+            });
         }
 
         public void HideRequestedNumberOfIsos()
@@ -112,7 +124,7 @@ namespace AutoPlannerHelpers.ViewModels
             RequestedNumberOfIsosVisible = Visibility.Collapsed;
         }
 
-        public void UpdateDefaultViewSettings(List<string> linacs, List<string> energies, bool contourOverlap, double overlapMargin)
+        public void UpdateDefaultViewSettings(List<string> linacs, List<string> energies, bool contourOverlap, double overlapMargin, IEnumerable<int> fieldsIso)
         {
             AvailableEnergies.AddRange(energies);
             SelectedEnergy = energies.First();
@@ -123,18 +135,14 @@ namespace AutoPlannerHelpers.ViewModels
                 ContourFieldOverlapChecked = true;
                 FieldOverlapMargin = overlapMargin;
             }
+            _fieldsPerIso.Clear();
+            _fieldsPerIso.AddRange(fieldsIso);
         }
 
         private void UpdateContourFieldOverlapChecked()
         {
             if (_contourFieldOverlapChecked) ContourOverlapMarginVisible = Visibility.Visible;
             else ContourOverlapMarginVisible = Visibility.Hidden;
-        }
-
-        public void UpdateBeamsPerIso(IEnumerable<int> fieldsIso)
-        {
-            _fieldsPerIso.Clear();
-            _fieldsPerIso.AddRange(fieldsIso);
         }
 
         public void PopulateBeamPlacementUI(List<PlanIsocenterModel> isos)
@@ -201,7 +209,7 @@ namespace AutoPlannerHelpers.ViewModels
             //    }
             //}
             //MessageBox.Show( sb.ToString() );
-            _notifyMainVMExecuted.Execute(null);
+            WeakReferenceMessenger.Default.Send<RequestGenerateAndPlaceBeams>(new RequestGenerateAndPlaceBeams(_selectedLinac, _selectedEnergy, _contourFieldOverlapChecked, _fieldOverlapMargin, PlanIsocenterList));
         }
     }
 }

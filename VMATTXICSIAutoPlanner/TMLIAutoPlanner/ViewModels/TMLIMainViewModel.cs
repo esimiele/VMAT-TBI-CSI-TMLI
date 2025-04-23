@@ -71,7 +71,6 @@ namespace TMLIAutoPlanner.ViewModels
         #region view objects
         private CTStitcherViewModel _stitcherViewModel;
         private object _stitchCT;
-        private PrepForTargetsViewModel _prepForTargetsVM;
         private object _prepForTargets;
         private RingGenerationViewModel _ringGenerationVM;
         private object _ringGeneration;
@@ -123,16 +122,22 @@ namespace TMLIAutoPlanner.ViewModels
                 InitialTabSelected = 1;
             }
 
-            NotifyPrepForTargetsCommand = new RelayCommand(PreparePreliminaryTargets);
-            _prepForTargetsVM = new PrepForTargetsViewModel(NotifyPrepForTargetsCommand);
-            PrepForTargets = new PrepForTargetsView { DataContext = _prepForTargetsVM };
+            WeakReferenceMessenger.Default.Register<RequestGeneratePreliminaryTargets>(this, (r, m) =>
+            {
+                PreparePreliminaryTargets(m.Targets);
+            });
+            PrepForTargets = new PrepForTargetsView { DataContext = new PrepForTargetsViewModel() };
+            WeakReferenceMessenger.Default.Send(new RequestUpdateTargetStructures(TMLIAutoPlannerSettings.RequestedPreliminaryTargets));
 
             _ringGenerationVM = new RingGenerationViewModel(_structureIdsPostUnion);
             RingGeneration = new RingGenerationView { DataContext = _ringGenerationVM };
 
-            if (TMLIAutoPlannerSettings.AllBeamsVMAT) _beamPlacementVM.HideRequestedNumberOfIsos();
-            _beamPlacementVM.UpdateBeamsPerIso(TMLIAutoPlannerSettings.BeamsPerIsocenter);
-            _beamPlacementVM.UpdateDefaultViewSettings(TMLIAutoPlannerSettings.AvailableLinacs, TMLIAutoPlannerSettings.AvailableEnergies, TMLIAutoPlannerSettings.ContourFieldOverlap, TMLIAutoPlannerSettings.ContourFieldOverlapMarginInCM);
+            if (TMLIAutoPlannerSettings.AllBeamsVMAT) WeakReferenceMessenger.Default.Send(new RequestHideNumberOfVMATIsocenters());
+            WeakReferenceMessenger.Default.Send(new RequestUpdateBeamPlacementDefaultSettings(TMLIAutoPlannerSettings.AvailableLinacs,
+                                                                                              TMLIAutoPlannerSettings.AvailableEnergies,
+                                                                                              TMLIAutoPlannerSettings.ContourFieldOverlap,
+                                                                                              TMLIAutoPlannerSettings.ContourFieldOverlapMarginInCM,
+                                                                                              TMLIAutoPlannerSettings.BeamsPerIsocenter));
 
             QuickStartGuideCommand = new RelayCommand(LaunchQuickStartGuide);
             HelpGuideCommand = new RelayCommand(LaunchHelpGuide);
@@ -183,9 +188,9 @@ namespace TMLIAutoPlanner.ViewModels
         #endregion
 
         #region specify targets
-        private void PreparePreliminaryTargets()
+        private void PreparePreliminaryTargets(List<RequestedTSStructureModel> preliminaryTargets)
         {
-            if (!EclipseContext.GetInstance().IsInitialized || !_prepForTargetsVM.RequestedPreliminaryTargets.Any()) return;
+            if (!EclipseContext.GetInstance().IsInitialized || !preliminaryTargets.Any()) return;
             List<RequestedTSManipulationModel> targetCropOperations = new List<RequestedTSManipulationModel> { };
             bool includeTestesInPTV = true;
             if (!ReferenceEquals(_selectedTemplate, null))
@@ -193,7 +198,7 @@ namespace TMLIAutoPlanner.ViewModels
                 targetCropOperations.AddRange(_selectedTemplate.TSManipulations.Where(x => x.ManipulationType == TSManipulationType.CropTargetFromStructure));
                 if(_selectedTemplate.PlanTargets.Any() && _selectedTemplate.PlanTargets.SelectMany(x => x.Targets).OrderByDescending(x => x.TargetRxDose).First().TargetRxDose <= 200) includeTestesInPTV = false;
             }
-            GeneratePreliminaryTargets_TMLI generateTargets = new GeneratePreliminaryTargets_TMLI(_prepForTargetsVM.RequestedPreliminaryTargets, 
+            GeneratePreliminaryTargets_TMLI generateTargets = new GeneratePreliminaryTargets_TMLI(preliminaryTargets, 
                                                                                                   targetCropOperations,
                                                                                                   includeTestesInPTV);
             EclipseContext.GetInstance().Patient.BeginModifications();
@@ -237,9 +242,7 @@ namespace TMLIAutoPlanner.ViewModels
 
             if(!ReferenceEquals(_selectedTemplate, null))
             {
-                _tsGenerationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
-                _ringGenerationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
-                _tsManipulationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
+                WeakReferenceMessenger.Default.Send(new RequestAutoPlanTemplateChangedMessage(_selectedTemplate));
             }
             
             return false;
@@ -247,10 +250,10 @@ namespace TMLIAutoPlanner.ViewModels
         #endregion
 
         #region TS generation and manipulation
-        protected override void PerformTSStructureGenerationManipulation()
+        protected override void PerformTSStructureGenerationManipulation(List<RequestedTSManipulationModel> manipulations)
         {
             List<RequestedTSStructureModel> tsGeneration = _tsGenerationVM.RequestedTuningStructures.ToList();
-            List<RequestedTSManipulationModel> tsManipulations = _tsManipulationVM.RequestedTSManipulations.ToList();
+            List<RequestedTSManipulationModel> tsManipulations = manipulations;
             List<TSRingStructureModel> rings = _ringGenerationVM.RequestedRingStructures.ToList();
             TSGenerationManipulation_TMLI generateTS = new TSGenerationManipulation_TMLI(tsGeneration,
                                                                                        tsManipulations,
@@ -268,11 +271,11 @@ namespace TMLIAutoPlanner.ViewModels
             //structure sparing list needs to be updated with the new low resolution structures.
             if (generateTS.DoesTSManipulationListRequireUpdating)
             {
-                _tsManipulationVM.UpdateTSManipulationList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id), generateTS.TSManipulationList);
+                WeakReferenceMessenger.Default.Send(new RequestUpdateTSManipulationList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id), generateTS.TSManipulationList));
             }
             _planIsocenters = generateTS.PlanIsocentersList;
 
-            _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters);
+            WeakReferenceMessenger.Default.Send(new RequestUpdatePlanIsocenterList(_planIsocenters));
             WeakReferenceMessenger.Default.Send(new RequestUpdateStructureIds(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id)));
             _planOptimizationSetup = UpdateOptimizationConstraintsWithRings(generateTS.AddedRings, _planOptimizationSetup, TMLIAutoPlannerSettings.DefaultRingPriority);
             _planOptimizationSetup = UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
@@ -293,15 +296,15 @@ namespace TMLIAutoPlanner.ViewModels
         #endregion
 
         #region beam placement
-        protected override void GeneratePlansAndPlaceBeams()
+        protected override void GeneratePlansAndPlaceBeams(string linac, string energy, bool contourOverlap, double overlapMargin, List<PlanIsocenterModel> PlanIsocenters)
         {
-            _planIsocenters = _beamPlacementVM.PlanIsocenterList.ToList();
+            _planIsocenters = PlanIsocenters;
             GeneratePlansAndPlaceBeams_TMLI placeBeams = new GeneratePlansAndPlaceBeams_TMLI(_planIsocenters,
                                                                                            _prescriptions,
-                                                                                           _beamPlacementVM.SelectedLinac,
-                                                                                           _beamPlacementVM.SelectedEnergy,
-                                                                                           _beamPlacementVM.ContourFieldOverlapChecked,
-                                                                                           _beamPlacementVM.FieldOverlapMargin);
+                                                                                           linac,
+                                                                                           energy,
+                                                                                           contourOverlap,
+                                                                                           overlapMargin);
             bool failed = placeBeams.Execute();
             Logger.GetInstance().AppendLogOutput("Generate plans and place beams output:", placeBeams.GetLogOutput());
             if (failed) return;
@@ -389,7 +392,6 @@ namespace TMLIAutoPlanner.ViewModels
             InitialDosePerFraction = _selectedTemplate.InitialRxDosePerFx;
             InitialNumberOfFractions = _selectedTemplate.InitialRxNumberOfFractions;
             WeakReferenceMessenger.Default.Send(new RequestAutoPlanTemplateChangedMessage(_selectedTemplate));
-            _prepForTargetsVM.UpdateRequestedTargetStructures((_selectedTemplate as TMLIAutoPlanTemplate).RequestedPreliminaryTargets);
             Logger.GetInstance().Template = _selectedTemplate.TemplateName;
         }
 
@@ -473,8 +475,7 @@ namespace TMLIAutoPlanner.ViewModels
                                 else if (parameter == "minimum field overlap") TMLIAutoPlannerSettings.MinFieldOverlap = double.Parse(value);
                                 else if (parameter == "all beams VMAT") TMLIAutoPlannerSettings.AllBeamsVMAT = bool.Parse(value);
                             }
-                            else if (line.Contains("add default TS manipulation")) defaultTSManipulations_temp.Add(ConfigurationHelper.ParseTSManipulation(line));
-                            else if (line.Contains("create default TS")) defaultTSstructures_temp.Add(ConfigurationHelper.ParseCreateTS(line));
+                            else if (line.Contains("create preliminary target")) TMLIAutoPlannerSettings.RequestedPreliminaryTargets.Add(ConfigurationHelper.ParseCreateTS(line));
                             else if (line.Contains("add linac"))
                             {
                                 //parse the linacs that should be added. One entry per line

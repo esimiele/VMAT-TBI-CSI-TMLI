@@ -136,9 +136,12 @@ namespace TBIAutoPlanner.ViewModels
             HelpGuideCommand = new RelayCommand(LaunchHelpGuide);
             PTVMarginInfoCommand = new RelayCommand(ShowPTVMarginInfo);
 
-            if (TBIAutoPlannerSettings.AllBeamsVMAT) _beamPlacementVM.HideRequestedNumberOfIsos();
-            _beamPlacementVM.UpdateBeamsPerIso(TBIAutoPlannerSettings.BeamsPerIsocenter);
-            _beamPlacementVM.UpdateDefaultViewSettings(TBIAutoPlannerSettings.AvailableLinacs, TBIAutoPlannerSettings.AvailableEnergies, TBIAutoPlannerSettings.ContourFieldOverlap, TBIAutoPlannerSettings.ContourFieldOverlapMarginInCM);
+            if (TBIAutoPlannerSettings.AllBeamsVMAT) WeakReferenceMessenger.Default.Send(new RequestHideNumberOfVMATIsocenters());
+            WeakReferenceMessenger.Default.Send(new RequestUpdateBeamPlacementDefaultSettings(TBIAutoPlannerSettings.AvailableLinacs,
+                                                                                              TBIAutoPlannerSettings.AvailableEnergies,
+                                                                                              TBIAutoPlannerSettings.ContourFieldOverlap,
+                                                                                              TBIAutoPlannerSettings.ContourFieldOverlapMarginInCM,
+                                                                                              TBIAutoPlannerSettings.BeamsPerIsocenter));
 
             QuickStartGuideCommand = new RelayCommand(LaunchQuickStartGuide);
             HelpGuideCommand = new RelayCommand(LaunchHelpGuide);
@@ -185,18 +188,17 @@ namespace TBIAutoPlanner.ViewModels
 
             if (!ReferenceEquals(_selectedTemplate, null))
             {
-                _tsGenerationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
-                _tsManipulationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
+                WeakReferenceMessenger.Default.Send(new RequestAutoPlanTemplateChangedMessage(_selectedTemplate));
             }
             return false;
         }
         #endregion
 
         #region TS generation and manipulation
-        protected override void PerformTSStructureGenerationManipulation()
+        protected override void PerformTSStructureGenerationManipulation(List<RequestedTSManipulationModel> manipulations)
         {
             List<RequestedTSStructureModel> tsGeneration = _tsGenerationVM.RequestedTuningStructures.ToList();
-            List<RequestedTSManipulationModel> tsManipulations = _tsManipulationVM.RequestedTSManipulations.ToList();
+            List<RequestedTSManipulationModel> tsManipulations = manipulations;
             TSGenerationManipulation_TBI generateTS = new TSGenerationManipulation_TBI(tsGeneration,
                                                                                        tsManipulations,
                                                                                        _prescriptions,
@@ -215,11 +217,11 @@ namespace TBIAutoPlanner.ViewModels
             //structure sparing list needs to be updated with the new low resolution structures.
             if (generateTS.DoesTSManipulationListRequireUpdating)
             {
-                _tsManipulationVM.UpdateTSManipulationList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id), generateTS.TSManipulationList);
+                WeakReferenceMessenger.Default.Send(new RequestUpdateTSManipulationList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id), generateTS.TSManipulationList));
             }
             _planIsocenters = generateTS.PlanIsocentersList;
 
-            _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters);
+            WeakReferenceMessenger.Default.Send(new RequestUpdatePlanIsocenterList(_planIsocenters));
             WeakReferenceMessenger.Default.Send(new RequestUpdateStructureIds(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id)));
             _planOptimizationSetup = UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
 
@@ -239,16 +241,16 @@ namespace TBIAutoPlanner.ViewModels
         #endregion
 
         #region beam placement
-        protected override void GeneratePlansAndPlaceBeams()
+        protected override void GeneratePlansAndPlaceBeams(string linac, string energy, bool contourOverlap, double overlapMargin, List<PlanIsocenterModel> PlanIsocenters)
         {
-            _planIsocenters = _beamPlacementVM.PlanIsocenterList.ToList();
+            _planIsocenters = PlanIsocenters;
             GeneratePlansAndPlaceBeams_TBI placeBeams = new GeneratePlansAndPlaceBeams_TBI(_planIsocenters,
                                                                                            _prescriptions,
-                                                                                           _beamPlacementVM.SelectedLinac,
-                                                                                           _beamPlacementVM.SelectedEnergy,
+                                                                                           linac,
+                                                                                           energy,
                                                                                            PTVMarginFromBody,
-                                                                                           _beamPlacementVM.ContourFieldOverlapChecked,
-                                                                                           _beamPlacementVM.FieldOverlapMargin);
+                                                                                           contourOverlap,
+                                                                                           overlapMargin);
             bool failed = placeBeams.Execute();
             Logger.GetInstance().AppendLogOutput("Generate plans and place beams output:", placeBeams.GetLogOutput());
             if (failed) return;

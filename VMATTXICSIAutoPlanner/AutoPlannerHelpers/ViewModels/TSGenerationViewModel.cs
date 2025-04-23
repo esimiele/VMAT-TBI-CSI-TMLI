@@ -5,6 +5,8 @@ using AutoPlannerHelpers.PlanTemplateModels;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
+using AutoPlannerHelpers.Messengers;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace AutoPlannerHelpers.ViewModels
 {
@@ -30,6 +32,10 @@ namespace AutoPlannerHelpers.ViewModels
             AddDefaultTSStructuresCommand = new RelayCommand(AddDefaultTSStructures);
             RemoveAllTSStructuresCommand = new RelayCommand(RemoveAllTSStructures);
             ClearRowCommand = new RelayCommand<RequestedTSStructureModel>(ClearRow);
+            WeakReferenceMessenger.Default.Register<RequestAutoPlanTemplateChangedMessage>(this, (r, m) =>
+            {
+                AutoPlanTemplateSelectionChanged(m.AutoPlanTemplate);
+            });
         }
 
         private void DisplayTSGenerationInfo()

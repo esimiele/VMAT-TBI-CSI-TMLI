@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Input;
+using AutoPlannerHelpers.Messengers;
 using AutoPlannerHelpers.PlanTemplateModels;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace AutoPlannerHelpers.ViewModels
 {
@@ -38,6 +40,10 @@ namespace AutoPlannerHelpers.ViewModels
             AddDefaultCropOverlapStructuresCommand = new RelayCommand(AddDefaultCropOverlapStructures);
             ClearCropOverlapStructureListCommand = new RelayCommand(ClearCropOverlapStructureList);
             RemoveCropOverlapStructureCommand = new RelayCommand<string>(RemoveCropOverlapStructure);
+            WeakReferenceMessenger.Default.Register<RequestAutoPlanTemplateChangedMessage>(this, (r, m) =>
+            {
+                AutoPlanTemplateSelectionChanged(m.AutoPlanTemplate);
+            });
         }
 
         public void AddCropOverlapStructure()

@@ -13,15 +13,86 @@ namespace AutoPlannerHelpers.Messengers
 {
     public class RequestGenerateShiftNoteMessage : RequestMessage<bool> { }
     public class RequestSeparatePlanMessage : RequestMessage<bool> { }
-    public class RequestSetTargetsMessage 
-    { 
+    public class RequestSetTargetsMessage
+    {
         public List<PlanTargetsModel> PlanTargets { get; private set; }
         public RequestSetTargetsMessage(List<PlanTargetsModel> planTargets)
         {
             this.PlanTargets = planTargets;
         }
     }
-    public class RequestGenerateManipulateTuningStructuresMessage : RequestMessage<bool> { }
+    public class RequestGenerateManipulateTuningStructuresMessage
+    {
+        public List<RequestedTSManipulationModel> RequestedTSManipulations { get; private set; }
+        public RequestGenerateManipulateTuningStructuresMessage(IEnumerable<RequestedTSManipulationModel> manipulations) { this.RequestedTSManipulations = manipulations.ToList(); }
+    }
+    public class RequestUpdateTSManipulationList
+    {
+        public IEnumerable<string> StructureIds { get; private set; }
+        public List<RequestedTSManipulationModel> RequestedTSManipulations { get; private set; }
+        public RequestUpdateTSManipulationList(IEnumerable<string> structureIds, List<RequestedTSManipulationModel> requestedTSManipulations)
+        {
+            this.StructureIds = structureIds;
+            this.RequestedTSManipulations = requestedTSManipulations;
+        }
+    }
+    public class RequestUpdateBeamPlacementDefaultSettings
+    {
+        public List<string> Linacs { get; private set; }
+        public List<string> Energies { get; private set; }
+        public bool ContourOverlap { get; private set; }
+        public double ContourOverlapMargin { get; private set; }
+        public IEnumerable<int> FieldsPerIsocenter { get; private set; }
+        public RequestUpdateBeamPlacementDefaultSettings(List<string> linacs, List<string> energies, bool contourOverlap, double overlapMargin, IEnumerable<int> fieldsPerIso)
+        {
+            Linacs = linacs;
+            Energies = energies;
+            ContourOverlap = contourOverlap;
+            ContourOverlapMargin = overlapMargin;
+            FieldsPerIsocenter = fieldsPerIso;
+        }
+    }
+
+    public class RequestGenerateAndPlaceBeams
+    {
+        public string SelectedLinac { get; private set; }
+        public string SelectedEnergy { get; private set; }
+        public bool ContourOverlap { get; private set; }
+        public double ContourOverlapMargin { get; private set; }
+        public List<PlanIsocenterModel> PlanIsocenters { get; private set; }
+        public RequestGenerateAndPlaceBeams(string linac, string energy, bool overlap, double overlapMargin, IEnumerable<PlanIsocenterModel> isos)
+        {
+            SelectedLinac = linac;
+            SelectedEnergy = energy;
+            ContourOverlap = overlap;
+            ContourOverlapMargin = overlapMargin;
+            PlanIsocenters = isos.ToList();
+        }
+    }
+    public class RequestUpdatePlanIsocenterList
+    {
+        public List<PlanIsocenterModel> PlanIsocenterList { get; private set; }
+        public RequestUpdatePlanIsocenterList(IEnumerable<PlanIsocenterModel> isos) { this.PlanIsocenterList = isos.ToList(); }
+    }
+
+
+    public class RequestHideNumberOfVMATIsocenters
+    {
+        public RequestHideNumberOfVMATIsocenters() { }
+    }
+    public class RequestUpdateTargetStructures
+    {
+        public List<RequestedTSStructureModel> Structures { get; private set; }
+        public RequestUpdateTargetStructures(List<RequestedTSStructureModel> structures) { this.Structures = structures; }
+    }
+
+    public class RequestGeneratePreliminaryTargets
+    {
+        public List<RequestedTSStructureModel> Targets { get; private set; }
+        public RequestGeneratePreliminaryTargets(List<RequestedTSStructureModel> structures) { this.Targets = structures; }
+    }
+
+
     public class RequestPlaceBeamsMessage : RequestMessage<bool> { }
     public class RequestUpdateStructureIds
     {

@@ -30,7 +30,7 @@ namespace AutoPlannerHelpersTests.BaseViewModel
             throw new NotImplementedException();
         }
 
-        protected override void GeneratePlansAndPlaceBeams()
+        protected override void GeneratePlansAndPlaceBeams(string linac, string energy, bool contourOverlap, double overlapMargin, List<PlanIsocenterModel> PlanIsocenters)
         {
             throw new NotImplementedException();
         }
@@ -40,7 +40,7 @@ namespace AutoPlannerHelpersTests.BaseViewModel
             throw new NotImplementedException();
         }
 
-        protected override void PerformTSStructureGenerationManipulation()
+        protected override void PerformTSStructureGenerationManipulation(List<RequestedTSManipulationModel> manipulations)
         {
             throw new NotImplementedException();
         }

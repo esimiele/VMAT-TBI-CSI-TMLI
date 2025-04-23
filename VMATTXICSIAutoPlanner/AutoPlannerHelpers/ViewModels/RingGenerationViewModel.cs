@@ -1,7 +1,9 @@
-﻿using AutoPlannerHelpers.Models;
+﻿using AutoPlannerHelpers.Messengers;
+using AutoPlannerHelpers.Models;
 using AutoPlannerHelpers.PlanTemplateModels;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,6 +46,10 @@ namespace AutoPlannerHelpers.ViewModels
             AddDefaultRingsCommand = new RelayCommand(AddDefaultRings);
             ClearRingListCommand = new RelayCommand(ClearRingList);
             ClearRowCommand = new RelayCommand<TSRingStructureModel>(ClearRow);
+            WeakReferenceMessenger.Default.Register<RequestAutoPlanTemplateChangedMessage>(this, (r, m) =>
+            {
+                AutoPlanTemplateSelectionChanged(m.AutoPlanTemplate);
+            });
         }
 
         public void AutoPlanTemplateSelectionChanged(AutoPlanTemplateBase template, bool skipStructureCheck = false)

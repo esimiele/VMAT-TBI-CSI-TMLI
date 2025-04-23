@@ -70,7 +70,6 @@ namespace CSIAutoPlanner.ViewModels
         #region view objects
         private CTExportViewModel _ctExportViewModel;
         private object _exportCT;
-        private PrepForTargetsViewModel _prepForTargetsVM;
         private object _prepForTargets;
         private StructureCropOverlapViewModel _structureCropOverlapVM;
         private object _structureCropOverlap;
@@ -131,10 +130,12 @@ namespace CSIAutoPlanner.ViewModels
             _ctExportViewModel = new CTExportViewModel(models, NotifyExportCTCommand);
             ExportCT = new CTExportView { DataContext = _ctExportViewModel };
 
-            NotifyPrepForTargetsCommand = new RelayCommand(PreparePreliminaryTargets);
-            _prepForTargetsVM = new PrepForTargetsViewModel(NotifyPrepForTargetsCommand);
-            _prepForTargetsVM.UpdateRequestedTargetStructures(CSIAutoPlannerSettings.RequestedPreliminaryTargets);
-            PrepForTargets = new PrepForTargetsView { DataContext = _prepForTargetsVM };
+            WeakReferenceMessenger.Default.Register<RequestGeneratePreliminaryTargets>(this, (r, m) =>
+            {
+                PreparePreliminaryTargets(m.Targets);
+            });
+            PrepForTargets = new PrepForTargetsView { DataContext = new PrepForTargetsViewModel() };
+            WeakReferenceMessenger.Default.Send(new RequestUpdateTargetStructures(CSIAutoPlannerSettings.RequestedPreliminaryTargets));
 
             _ringGenerationVM = new RingGenerationViewModel(_structureIdsPostUnion);
             RingGeneration = new RingGenerationView { DataContext = _ringGenerationVM };
@@ -142,8 +143,11 @@ namespace CSIAutoPlanner.ViewModels
             _structureCropOverlapVM = new StructureCropOverlapViewModel(_structureIdsPostUnion);
             StructureCropOverlap = new StructureCropOverlapView { DataContext = _structureCropOverlapVM };
 
-            _beamPlacementVM.UpdateBeamsPerIso(CSIAutoPlannerSettings.BeamsPerIsocenter);
-            _beamPlacementVM.UpdateDefaultViewSettings(CSIAutoPlannerSettings.AvailableLinacs, CSIAutoPlannerSettings.AvailableEnergies, CSIAutoPlannerSettings.ContourFieldOverlap, CSIAutoPlannerSettings.ContourFieldOverlapMarginInCM);
+            WeakReferenceMessenger.Default.Send(new RequestUpdateBeamPlacementDefaultSettings(CSIAutoPlannerSettings.AvailableLinacs, 
+                                                                                              CSIAutoPlannerSettings.AvailableEnergies, 
+                                                                                              CSIAutoPlannerSettings.ContourFieldOverlap, 
+                                                                                              CSIAutoPlannerSettings.ContourFieldOverlapMarginInCM, 
+                                                                                              CSIAutoPlannerSettings.BeamsPerIsocenter));
 
             QuickStartGuideCommand = new RelayCommand(LaunchQuickStartGuide);
             HelpGuideCommand = new RelayCommand(LaunchHelpGuide);
@@ -202,10 +206,10 @@ namespace CSIAutoPlanner.ViewModels
         #endregion
 
         #region specify targets
-        private void PreparePreliminaryTargets()
+        private void PreparePreliminaryTargets(List<RequestedTSStructureModel> preliminaryTargets)
         {
-            if (!EclipseContext.GetInstance().IsInitialized || !_prepForTargetsVM.RequestedPreliminaryTargets.Any()) return;
-            GeneratePreliminaryTargets_CSI generateTargets = new GeneratePreliminaryTargets_CSI(_prepForTargetsVM.RequestedPreliminaryTargets);
+            if (!EclipseContext.GetInstance().IsInitialized || !preliminaryTargets.Any()) return;
+            GeneratePreliminaryTargets_CSI generateTargets = new GeneratePreliminaryTargets_CSI(preliminaryTargets);
             EclipseContext.GetInstance().Patient.BeginModifications();
             bool result = generateTargets.Execute();
             //grab the log output regardless if it passes or fails
@@ -267,22 +271,19 @@ namespace CSIAutoPlanner.ViewModels
 
             if (!ReferenceEquals(_selectedTemplate, null))
             {
-                _tsGenerationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
-                _structureCropOverlapVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
-                _ringGenerationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
-                _tsManipulationVM.AutoPlanTemplateSelectionChanged(_selectedTemplate);
+                WeakReferenceMessenger.Default.Send(new RequestAutoPlanTemplateChangedMessage(_selectedTemplate)); 
             }
             return false;
         }
         #endregion
 
         #region TS generation and manipulation
-        protected override void PerformTSStructureGenerationManipulation()
+        protected override void PerformTSStructureGenerationManipulation(List<RequestedTSManipulationModel> manipulations)
         {
             List<RequestedTSStructureModel> tsGeneration = _tsGenerationVM.RequestedTuningStructures.ToList();
             List<TSRingStructureModel> rings = _ringGenerationVM.RequestedRingStructures.ToList();
             List<string> cropOverlapStructures = _structureCropOverlapVM.CropOverlapStructures.ToList();
-            List<RequestedTSManipulationModel> tsManipulations = _tsManipulationVM.RequestedTSManipulations.ToList();
+            List<RequestedTSManipulationModel> tsManipulations = manipulations;
             TSGenerationManipulation_CSI generateTS = new TSGenerationManipulation_CSI(tsGeneration, 
                                                                                        tsManipulations, 
                                                                                        rings, 
@@ -300,11 +301,11 @@ namespace CSIAutoPlanner.ViewModels
             //structure sparing list needs to be updated with the new low resolution structures.
             if (generateTS.DoesTSManipulationListRequireUpdating)
             {
-                _tsManipulationVM.UpdateTSManipulationList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id), generateTS.TSManipulationList);
+                WeakReferenceMessenger.Default.Send(new RequestUpdateTSManipulationList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id), generateTS.TSManipulationList));
             }
             _planIsocenters = generateTS.PlanIsocentersList;
 
-            _beamPlacementVM.PopulateBeamPlacementUI(_planIsocenters);
+            WeakReferenceMessenger.Default.Send(new RequestUpdatePlanIsocenterList(_planIsocenters));
             WeakReferenceMessenger.Default.Send(new RequestUpdateStructureIds(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id)));
             _planOptimizationSetup = UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
             _planOptimizationSetup = UpdateOptimizationConstraintsWithRings(generateTS.AddedRings, _planOptimizationSetup);
@@ -326,15 +327,15 @@ namespace CSIAutoPlanner.ViewModels
         #endregion
 
         #region beam placement
-        protected override void GeneratePlansAndPlaceBeams()
+        protected override void GeneratePlansAndPlaceBeams(string linac, string energy, bool contourOverlap, double overlapMargin, List<PlanIsocenterModel> PlanIsocenters)
         {
-            _planIsocenters = _beamPlacementVM.PlanIsocenterList.ToList();
+            _planIsocenters = PlanIsocenters;
             GeneratePlansAndPlaceBeams_CSI placeBeams = new GeneratePlansAndPlaceBeams_CSI(_planIsocenters,
                                                                                            _prescriptions,
-                                                                                           _beamPlacementVM.SelectedLinac,
-                                                                                           _beamPlacementVM.SelectedEnergy,
-                                                                                           _beamPlacementVM.ContourFieldOverlapChecked,
-                                                                                           _beamPlacementVM.FieldOverlapMargin);
+                                                                                           linac,
+                                                                                           energy,
+                                                                                           contourOverlap,
+                                                                                           overlapMargin);
             bool failed = placeBeams.Execute();
             Logger.GetInstance().AppendLogOutput("Generate plans and place beams output:", placeBeams.GetLogOutput());
             if (failed) return;
@@ -383,7 +384,7 @@ namespace CSIAutoPlanner.ViewModels
             BoostDosePerFraction = (_selectedTemplate as CSIAutoPlanTemplate).BoostRxDosePerFx;
             BoostNumberOfFractions = (_selectedTemplate as CSIAutoPlanTemplate).BoostRxNumberOfFractions;
             WeakReferenceMessenger.Default.Send(new RequestAutoPlanTemplateChangedMessage(_selectedTemplate));
-            _prepForTargetsVM.UpdateRequestedTargetStructures(CSIAutoPlannerSettings.RequestedPreliminaryTargets);
+            WeakReferenceMessenger.Default.Send(new RequestUpdateTargetStructures(CSIAutoPlannerSettings.RequestedPreliminaryTargets));
         }
 
         #region script configuration

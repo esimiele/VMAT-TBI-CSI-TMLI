@@ -1,7 +1,9 @@
-﻿using AutoPlannerHelpers.Models;
+﻿using AutoPlannerHelpers.Messengers;
+using AutoPlannerHelpers.Models;
 using AutoPlannerHelpers.PlanTemplateModels;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Input;
@@ -26,7 +28,6 @@ namespace AutoPlannerHelpers.ViewModels
         #endregion
 
         #region commands
-        private ICommand _notifyMainVMExecuted;
         public ICommand AddTSManipulationCommand { get; set; }
         public ICommand AddDefaultTSManipulationsCommand { get; set; }
         public ICommand RemoveAllTSManipulationsCommand { get; set; }
@@ -34,9 +35,8 @@ namespace AutoPlannerHelpers.ViewModels
         public RelayCommand<RequestedTSManipulationModel> ClearRowCommand { get; set; } 
         #endregion
 
-        public TSManipulationViewModel(ICommand NotifyMainVMExecuted, List<string> structureIds)
+        public TSManipulationViewModel(List<string> structureIds)
         {
-            _notifyMainVMExecuted = NotifyMainVMExecuted;
             AddTSManipulationCommand = new RelayCommand(AddTSManipulation);
             AddDefaultTSManipulationsCommand = new RelayCommand(AddDefaultTSManipulations);
             PerformTSGenerationManipulationCommand = new RelayCommand(PerformTSGenerationManipulation);
@@ -44,6 +44,14 @@ namespace AutoPlannerHelpers.ViewModels
             ClearRowCommand = new RelayCommand<RequestedTSManipulationModel>(ClearRow);
             StructureIdsPostUnion = new List<string>(structureIds);
             RequestedTSManipulations = new ObservableCollectionPropertyNotify<RequestedTSManipulationModel> { };
+            WeakReferenceMessenger.Default.Register<RequestAutoPlanTemplateChangedMessage>(this, (r, m) =>
+            {
+                AutoPlanTemplateSelectionChanged(m.AutoPlanTemplate);
+            });
+            WeakReferenceMessenger.Default.Register<RequestUpdateTSManipulationList>(this, (r, m) =>
+            {
+                UpdateTSManipulationList(m.StructureIds, m.RequestedTSManipulations);
+            });
         }
 
         public void UpdateTSManipulationList(IEnumerable<string> newStructureIds, List<RequestedTSManipulationModel> tsManipulations)
@@ -99,7 +107,7 @@ namespace AutoPlannerHelpers.ViewModels
 
         public void PerformTSGenerationManipulation()
         {
-            _notifyMainVMExecuted.Execute(null);
+            WeakReferenceMessenger.Default.Send(new RequestGenerateManipulateTuningStructuresMessage(RequestedTSManipulations));
         }
     }
 }
