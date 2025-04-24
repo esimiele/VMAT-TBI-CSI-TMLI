@@ -44,6 +44,11 @@ namespace AutoPlannerHelpers.ViewModels
             ClearRowCommand = new RelayCommand<RequestedTSManipulationModel>(ClearRow);
             StructureIdsPostUnion = new List<string>(structureIds);
             RequestedTSManipulations = new ObservableCollectionPropertyNotify<RequestedTSManipulationModel> { };
+            InitializeMessengers();
+        }
+
+        private void InitializeMessengers()
+        {
             WeakReferenceMessenger.Default.Register<RequestAutoPlanTemplateChangedMessage>(this, (r, m) =>
             {
                 AutoPlanTemplateSelectionChanged(m.AutoPlanTemplate);
@@ -69,7 +74,7 @@ namespace AutoPlannerHelpers.ViewModels
             UpdateViewWithAutoPlanTemplateTSManipulations();
         }
 
-        private void UpdateViewWithAutoPlanTemplateTSManipulations(bool skipStructureIdCheck = false)
+        private void UpdateViewWithAutoPlanTemplateTSManipulations(bool skipStructureIdCheck = true)
         {
             RequestedTSManipulations.Clear();
             foreach (RequestedTSManipulationModel itr in _selectedTemplate.TSManipulations)

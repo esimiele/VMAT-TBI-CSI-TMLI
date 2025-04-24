@@ -2,7 +2,6 @@
 using AutoPlannerHelpers.Helpers;
 using AutoPlannerHelpers.Logging;
 using AutoPlannerHelpers.Models;
-using AutoPlannerHelpers.PlanTemplateModels;
 using AutoPlannerHelpers.ViewModels;
 using AutoPlannerHelpers.Views;
 using CTStitcher.ViewModels;
@@ -26,6 +25,7 @@ using AutoPlannerHelpers.Enums;
 using System.Windows.Media;
 using AutoPlannerHelpers.Messengers;
 using CommunityToolkit.Mvvm.Messaging;
+using AutoPlannerHelpers.Prompts;
 
 namespace TMLIAutoPlanner.ViewModels
 {
@@ -69,10 +69,8 @@ namespace TMLIAutoPlanner.ViewModels
         #endregion
 
         #region view objects
-        private CTStitcherViewModel _stitcherViewModel;
         private object _stitchCT;
         private object _prepForTargets;
-        private RingGenerationViewModel _ringGenerationVM;
         private object _ringGeneration;
 
         public object StitchCT
@@ -98,7 +96,6 @@ namespace TMLIAutoPlanner.ViewModels
         public ICommand QuickStartGuideCommand { get; set; }
         public ICommand HelpGuideCommand { get; set; }
         public ICommand PTVMarginInfoCommand { get; set; }
-        private ICommand NotifyPrepForTargetsCommand;
         #endregion
 
         public TMLIMainViewModel(string[] args) :
@@ -113,24 +110,18 @@ namespace TMLIAutoPlanner.ViewModels
             LoadScriptConfigurationSettings(_generalConfigurationFile);
             LoadPlanTemplates();
 
-            _stitcherViewModel = new CTStitcherViewModel();
-            StitchCT = new CTStitcherView { DataContext = _stitcherViewModel };
+            StitchCT = new CTStitcherView { DataContext = new CTStitcherViewModel() };
             StitchCTTabBackground = Brushes.LightGray;
             if (!TMLIAutoPlannerSettings.ShowStitchCTTab)
             {
                 StitchCTTabVisible = Visibility.Collapsed;
                 InitialTabSelected = 1;
             }
-
-            WeakReferenceMessenger.Default.Register<RequestGeneratePreliminaryTargets>(this, (r, m) =>
-            {
-                PreparePreliminaryTargets(m.Targets);
-            });
+            
             PrepForTargets = new PrepForTargetsView { DataContext = new PrepForTargetsViewModel() };
             WeakReferenceMessenger.Default.Send(new RequestUpdateTargetStructures(TMLIAutoPlannerSettings.RequestedPreliminaryTargets));
 
-            _ringGenerationVM = new RingGenerationViewModel(_structureIdsPostUnion);
-            RingGeneration = new RingGenerationView { DataContext = _ringGenerationVM };
+            RingGeneration = new RingGenerationView { DataContext = new RingGenerationViewModel(_structureIdsPostUnion) };
 
             if (TMLIAutoPlannerSettings.AllBeamsVMAT) WeakReferenceMessenger.Default.Send(new RequestHideNumberOfVMATIsocenters());
             WeakReferenceMessenger.Default.Send(new RequestUpdateBeamPlacementDefaultSettings(TMLIAutoPlannerSettings.AvailableLinacs,
@@ -166,8 +157,15 @@ namespace TMLIAutoPlanner.ViewModels
                 PrepForTargetsBackground = Brushes.LightGray;
                 SetTargetsTabBackground = Brushes.LightGray;
             }
+            InitializeTMLIMessengers();
+        }
 
-
+        private void InitializeTMLIMessengers()
+        {
+            WeakReferenceMessenger.Default.Register<RequestGeneratePreliminaryTargets>(this, (r, m) =>
+            {
+                PreparePreliminaryTargets(m.Targets);
+            });
         }
 
         #region information and help guides
@@ -250,12 +248,16 @@ namespace TMLIAutoPlanner.ViewModels
         #endregion
 
         #region TS generation and manipulation
-        protected override void PerformTSStructureGenerationManipulation(List<RequestedTSManipulationModel> manipulations)
+        protected override void PerformTSStructureGenerationManipulation(List<RequestedTSStructureModel> structuresToGenerate, List<RequestedTSManipulationModel> manipulations)
         {
-            List<RequestedTSStructureModel> tsGeneration = _tsGenerationVM.RequestedTuningStructures.ToList();
+            if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
+            {
+                Logger.GetInstance().LogError("Error! Script is not connected to aria or no structure set loaded! Cannot perform TS generation/manipulation!");
+                return;
+            }
             List<RequestedTSManipulationModel> tsManipulations = manipulations;
-            List<TSRingStructureModel> rings = _ringGenerationVM.RequestedRingStructures.ToList();
-            TSGenerationManipulation_TMLI generateTS = new TSGenerationManipulation_TMLI(tsGeneration,
+            List<TSRingStructureModel> rings = WeakReferenceMessenger.Default.Send(new RequestRingStructures());
+            TSGenerationManipulation_TMLI generateTS = new TSGenerationManipulation_TMLI(structuresToGenerate,
                                                                                        tsManipulations,
                                                                                        rings,
                                                                                        _prescriptions);
@@ -298,6 +300,11 @@ namespace TMLIAutoPlanner.ViewModels
         #region beam placement
         protected override void GeneratePlansAndPlaceBeams(string linac, string energy, bool contourOverlap, double overlapMargin, List<PlanIsocenterModel> PlanIsocenters)
         {
+            if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
+            {
+                Logger.GetInstance().LogError("Error! Script is not connected to aria or no structure set loaded! Cannot perform beam placement!");
+                return;
+            }
             _planIsocenters = PlanIsocenters;
             GeneratePlansAndPlaceBeams_TMLI placeBeams = new GeneratePlansAndPlaceBeams_TMLI(_planIsocenters,
                                                                                            _prescriptions,
@@ -328,60 +335,29 @@ namespace TMLIAutoPlanner.ViewModels
         #region prepare for treatment
         protected override bool GenerateShiftNote()
         {
-            //List<ExternalPlanSetup> appaPlans = new List<ExternalPlanSetup> { };
-            //if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Any(x => x.Id.ToLower().Contains("legs")))
-            //{
-            //    appaPlans = EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("legs")).ToList();
-            //    if (appaPlans.Any(x => x.TreatmentOrientation != PatientOrientation.FeetFirstSupine))
-            //    {
-            //        StringBuilder sb = new StringBuilder();
-            //        sb.AppendLine($"The AP/PA plan {appaPlans.First(x => x.TreatmentOrientation != PatientOrientation.FeetFirstSupine).Id} is NOT in the FFS orientation!");
-            //        sb.AppendLine("THE COUCH SHIFTS FOR THESE PLANS WILL NOT BE ACCURATE! Please fix and try again!");
-            //        Logger.GetInstance().LogError(sb.ToString());
-            //        return true;
-            //    }
-            //}
+            if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Any(x => x.Id.ToLower().Contains("legs")))
+            {
+                if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("legs")).Any(x => x.TreatmentOrientation != PatientOrientation.FeetFirstSupine))
+                {
+                    StringBuilder sb = new StringBuilder();
+                    sb.AppendLine($"The AP/PA plan {EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("legs")).ToList().First(x => x.TreatmentOrientation != PatientOrientation.FeetFirstSupine).Id} is NOT in the FFS orientation!");
+                    sb.AppendLine("THE COUCH SHIFTS FOR THESE PLANS WILL NOT BE ACCURATE! Please fix and try again!");
+                    Logger.GetInstance().LogError(sb.ToString());
+                    return true;
+                }
+            }
 
-            //Clipboard.SetText(PlanPrepHelper.GetTBIShiftNote(EclipseContext.GetInstance().VMATPlans.First(), appaPlans).ToString());
-            return false;
+            Clipboard.SetText(PlanPrepHelper.GetTBITMLIShiftNote(EclipseContext.GetInstance().VMATPlans.First(), EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("legs")).ToList()).ToString());
+            return true;
         }
         protected override bool SeparatePlans()
         {
-            ////The shift note has to be retrieved first! Otherwise, we don't have instances of the plan objects
-            //if (!EclipseContext.GetInstance().VMATPlans.Any() || EclipseContext.GetInstance().VMATPlans.Count > 1)
-            //{
-            //    Logger.GetInstance().LogError("Please generate the shift note before separating the plans!");
-            //    return true;
-            //}
-            //ExternalPlanSetup thePlan = EclipseContext.GetInstance().VMATPlans.First();
-
-            //if (!thePlan.Beams.Any(x => x.IsSetupField))
-            //{
-            //    ConfirmPrompt CUI = new ConfirmPrompt($"I didn't find any setup fields in the {thePlan.Id}." + Environment.NewLine + Environment.NewLine + "Are you sure you want to continue?!");
-            //    CUI.ShowDialog();
-            //    if (!CUI.GetSelection()) return true;
-            //}
-
-            ////separate the plans
-            //EclipseContext.GetInstance().Patient.BeginModifications();
-            //PreparePlansForTreatment_TMLI planPrep = new PreparePlansForTreatment_TMLI();
-            //bool result = planPrep.Execute();
-            //Logger.GetInstance().AppendLogOutput("Plan preparation:", planPrep.GetLogOutput());
-            //if (result) return true;
-
-            ////inform the user it's done
-            //StringBuilder sb = new StringBuilder();
-            //sb.AppendLine("Original plan(s) have been separated!");
-            //sb.AppendLine("Be sure to set the target volume and primary reference point!");
-            //if (thePlan.Beams.Any(x => x.IsSetupField))
-            //{
-            //    sb.AppendLine("Also reset the isocenter position of the setup fields!");
-            //}
-            //sb.AppendLine("");
-            //sb.AppendLine("Isocenter shifts have been copied to the clipboard!");
-            //sb.AppendLine("Paste them into the journal note!");
-            //MessageBox.Show(sb.ToString());
-
+            //separate the plans
+            EclipseContext.GetInstance().Patient.BeginModifications();
+            PreparePlansForTreatment_TMLI planPrep = new PreparePlansForTreatment_TMLI();
+            bool result = planPrep.Execute();
+            Logger.GetInstance().AppendLogOutput("Plan preparation:", planPrep.GetLogOutput());
+            if (result) return true;
             return false;
         }
         #endregion

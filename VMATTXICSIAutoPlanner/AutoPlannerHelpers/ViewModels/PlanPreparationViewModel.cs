@@ -1,6 +1,5 @@
 ﻿using AutoPlannerHelpers.Context;
 using AutoPlannerHelpers.Enums;
-using AutoPlannerHelpers.Helpers;
 using AutoPlannerHelpers.Logging;
 using AutoPlannerHelpers.Messengers;
 using AutoPlannerHelpers.Prompts;
@@ -8,14 +7,10 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using VMS.TPS.Common.Model.API;
-using VMS.TPS.Common.Model.Types;
 
 namespace AutoPlannerHelpers.ViewModels
 {
@@ -72,14 +67,17 @@ namespace AutoPlannerHelpers.ViewModels
         {
             if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().VMATPlans.FirstOrDefault(), null))
             {
-                Logger.GetInstance().LogError("Script not initialized or no vmat plans present! Exiting!");
+                Logger.GetInstance().LogError("Error! Script is not connected to aria or no vmat plans loaded into context! Cannot perform preparation for treatment!");
                 return;
             }
             Logger.GetInstance().OpType = ScriptOperationType.PlanPrep;
+
             //logic needs to be handled by specific plan type classes
             var result = WeakReferenceMessenger.Default.Send(new RequestGenerateShiftNoteMessage());
             if (!result)
             {
+                MessageBox.Show("Shifts have been copied to the clipboard! \r\nPaste them into the journal note!");
+
                 GenerateShiftText = "YES";
                 _canSeparatePlans = true;
             }
@@ -92,9 +90,29 @@ namespace AutoPlannerHelpers.ViewModels
                 Logger.GetInstance().LogError("Error! The shift note must be generated before separating the plans! Exiting!");
                 return;
             }
+            if (!EclipseContext.GetInstance().VMATPlans.FirstOrDefault().Beams.Any(x => x.IsSetupField))
+            {
+                ConfirmPrompt CUI = new ConfirmPrompt($"I didn't find any setup fields in the {EclipseContext.GetInstance().VMATPlans.FirstOrDefault().Id}." + Environment.NewLine + Environment.NewLine + "Are you sure you want to continue?!");
+                CUI.ShowDialog();
+                if (!CUI.GetSelection()) return;
+            }
+
             var result = WeakReferenceMessenger.Default.Send(new RequestSeparatePlanMessage());
             if (!result)
             {
+                //inform the user it's done
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("Original plan(s) have been separated!");
+                sb.AppendLine("Be sure to set the target volume and primary reference point!");
+                if (EclipseContext.GetInstance().VMATPlans.FirstOrDefault().Beams.Any(x => x.IsSetupField))
+                {
+                    sb.AppendLine("Also reset the isocenter position of the setup fields!");
+                }
+                sb.AppendLine("");
+                sb.AppendLine("Isocenter shifts have been copied to the clipboard!");
+                sb.AppendLine("Paste them into the journal note!");
+                MessageBox.Show(sb.ToString());
+
                 SeparatePlanText = "YES";
             }
         }

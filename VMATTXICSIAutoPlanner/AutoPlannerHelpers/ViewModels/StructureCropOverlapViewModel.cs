@@ -40,9 +40,18 @@ namespace AutoPlannerHelpers.ViewModels
             AddDefaultCropOverlapStructuresCommand = new RelayCommand(AddDefaultCropOverlapStructures);
             ClearCropOverlapStructureListCommand = new RelayCommand(ClearCropOverlapStructureList);
             RemoveCropOverlapStructureCommand = new RelayCommand<string>(RemoveCropOverlapStructure);
+            InitializeMessengers();
+        }
+
+        private void InitializeMessengers()
+        {
             WeakReferenceMessenger.Default.Register<RequestAutoPlanTemplateChangedMessage>(this, (r, m) =>
             {
                 AutoPlanTemplateSelectionChanged(m.AutoPlanTemplate);
+            });
+            WeakReferenceMessenger.Default.Register<RequestCropOverlapStructures>(this, (r, m) =>
+            {
+                m.Reply(this.CropOverlapStructures.ToList());
             });
         }
 

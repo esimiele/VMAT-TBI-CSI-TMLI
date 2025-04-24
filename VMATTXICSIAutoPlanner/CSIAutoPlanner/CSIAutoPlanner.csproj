@@ -98,6 +98,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Core\PreparePlansForTreatment_CSI.cs" />
     <Compile Include="Settings\CSIAutoPlannerSettings.cs" />
     <Compile Include="ViewModels\CSIMainViewModel.cs" />
     <Compile Include="Views\CSIMainView.xaml.cs">

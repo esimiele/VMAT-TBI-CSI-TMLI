@@ -37,6 +37,11 @@ namespace AutoPlannerHelpers.ViewModels
             RemoveAllTSStructuresCommand = new RelayCommand(RemoveAllTSStructures);
             ClearRowCommand = new RelayCommand<RequestedTSStructureModel>(ClearRow);
             RunPrepForTargetsCommand = new RelayCommand(RunPrepForTargets);
+            InitializeMessengers();
+        }
+
+        private void InitializeMessengers()
+        {
             WeakReferenceMessenger.Default.Register<RequestUpdateTargetStructures>(this, (r, m) =>
             {
                 UpdateRequestedTargetStructures(m.Structures);

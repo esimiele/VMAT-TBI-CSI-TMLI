@@ -105,6 +105,11 @@ namespace AutoPlannerHelpers.ViewModels
             AvailableLinacs = new List<string> { };
             FieldOverlapMargin = 0.0;
             _requestedNumberOfVMATIsos = 0;
+            InitializeMessengers();
+        }
+
+        private void InitializeMessengers()
+        {
             WeakReferenceMessenger.Default.Register<RequestUpdateBeamPlacementDefaultSettings>(this, (r, m) =>
             {
                 UpdateDefaultViewSettings(m.Linacs, m.Energies, m.ContourOverlap, m.ContourOverlapMargin, m.FieldsPerIsocenter);

@@ -5,6 +5,8 @@ using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using AutoPlannerHelpers.Messengers;
 
 namespace AutoPlannerHelpers.ViewModels
 {
@@ -23,14 +25,9 @@ namespace AutoPlannerHelpers.ViewModels
         public RelayCommand<ExportCTModel> CTImageSelectionChangedCommand { get; set; }
         #endregion
 
-        #region fields
-        private ICommand _notifyMainVMExportCT;
-        #endregion
-
-        public CTExportViewModel(List<ExportCTModel> ctImages, ICommand notifyMainVM)
+        public CTExportViewModel(List<ExportCTModel> ctImages)
         {
             CTImageList = new ObservableCollectionPropertyNotify<ExportCTModel> { };
-            _notifyMainVMExportCT = notifyMainVM;
             foreach(ExportCTModel itr in ctImages) CTImageList.Add(itr);
             ShowExportCTInfoCommand = new RelayCommand(ShowExportCTInfo);
             CTImageSelectionChangedCommand = new RelayCommand<ExportCTModel>(CTImageSelectionChanged);
@@ -58,7 +55,7 @@ namespace AutoPlannerHelpers.ViewModels
         {
             if (!CTImageList.Any(x => x.SelectedForExport)) return;
             SelectedCTImage = CTImageList.FirstOrDefault(x => x.SelectedForExport);
-            _notifyMainVMExportCT.Execute(null);
+            WeakReferenceMessenger.Default.Send(new RequestExportCT(SelectedCTImage));
         }
     }
 }

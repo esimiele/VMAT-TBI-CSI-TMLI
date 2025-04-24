@@ -40,7 +40,7 @@ namespace AutoPlannerHelpersTests.BaseViewModel
             throw new NotImplementedException();
         }
 
-        protected override void PerformTSStructureGenerationManipulation(List<RequestedTSManipulationModel> manipulations)
+        protected override void PerformTSStructureGenerationManipulation(List<RequestedTSStructureModel> structuresToGenerate, List<RequestedTSManipulationModel> manipulations)
         {
             throw new NotImplementedException();
         }

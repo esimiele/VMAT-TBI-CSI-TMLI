@@ -46,9 +46,18 @@ namespace AutoPlannerHelpers.ViewModels
             AddDefaultRingsCommand = new RelayCommand(AddDefaultRings);
             ClearRingListCommand = new RelayCommand(ClearRingList);
             ClearRowCommand = new RelayCommand<TSRingStructureModel>(ClearRow);
+            InitializeMessengers();
+        }
+
+        private void InitializeMessengers()
+        {
             WeakReferenceMessenger.Default.Register<RequestAutoPlanTemplateChangedMessage>(this, (r, m) =>
             {
                 AutoPlanTemplateSelectionChanged(m.AutoPlanTemplate);
+            });
+            WeakReferenceMessenger.Default.Register<RequestRingStructures>(this, (r, m) =>
+            {
+                m.Reply(this.RequestedRingStructures.ToList());
             });
         }
 

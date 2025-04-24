@@ -111,7 +111,6 @@ namespace AutoPlannerHelpers.BaseViewModel
         private object _optimizationSetup;
         private object _tsManipulation;
         private object _beamPlacement;
-        protected TSGenerationViewModel _tsGenerationVM;
         private object _tsGeneration;
         private object _planPreparation;
         private object _scriptConfiguration;
@@ -186,33 +185,45 @@ namespace AutoPlannerHelpers.BaseViewModel
                 _structureIdsPostUnion = new List<string> { "lung_l", "lung_r", "kidney_l", "kidney_r", "PTV^Body", "OpticChiasm", "Brainstem" };
             }
 
+            SpecifyTargets = new SpecifyTargetsView { DataContext = new SetTargetsViewModel() };
+            TSGeneration = new TSGenerationView { DataContext = new TSGenerationViewModel() };
+            TSManipulation = new TSManipulationView { DataContext = new TSManipulationViewModel(_structureIdsPostUnion) };
+            BeamPlacement = new BeamPlacementView { DataContext = new BeamPlacementViewModel(type) };
+            OptimizationSetup = new OptimizationSetupView { DataContext = new OptimizationSetupViewModel(_structureIdsPostUnion, type) };
+            PlanPreparation = new PlanPreparationView { DataContext = new PlanPreparationViewModel() };
+
+            PlanTemplates = new ObservableCollection<AutoPlanTemplateBase>() { };
+            WindowClosingCommand = new RelayCommand(WindowClosing);
+
+            StructureTuningTabBackground = System.Windows.Media.Brushes.LightGray;
+            TSManipulationTabBackground = System.Windows.Media.Brushes.LightGray;
+            BeamPlacementTabBackground = System.Windows.Media.Brushes.LightGray;
+            OptimizationSetupTabBackground = System.Windows.Media.Brushes.LightGray;
+            InitializeMessengers();
+        }
+
+        private void InitializeMessengers()
+        {
             WeakReferenceMessenger.Default.Register<RequestSetTargetsMessage>(this, (r, m) =>
             {
                 SetTargets(m.PlanTargets);
             });
 
-            SpecifyTargets = new SpecifyTargetsView { DataContext = new SetTargetsViewModel() };
-
-            _tsGenerationVM = new TSGenerationViewModel();
-            TSGeneration = new TSGenerationView { DataContext = _tsGenerationVM };
-
             WeakReferenceMessenger.Default.Register<RequestGenerateManipulateTuningStructuresMessage>(this, (r, m) =>
             {
-                PerformTSStructureGenerationManipulation(m.RequestedTSManipulations);
+                List<RequestedTSStructureModel> tsGenerationStructures = WeakReferenceMessenger.Default.Send(new RequestTSGenerationStructures());
+                PerformTSStructureGenerationManipulation(tsGenerationStructures, m.RequestedTSManipulations);
             });
-            TSManipulation = new TSManipulationView { DataContext = new TSManipulationViewModel(_structureIdsPostUnion) };
 
             WeakReferenceMessenger.Default.Register<RequestGenerateAndPlaceBeams>(this, (r, m) =>
             {
                 GeneratePlansAndPlaceBeams(m.SelectedLinac, m.SelectedEnergy, m.ContourOverlap, m.ContourOverlapMargin, m.PlanIsocenters);
             });
-            BeamPlacement = new BeamPlacementView { DataContext = new BeamPlacementViewModel(type) };
 
             WeakReferenceMessenger.Default.Register<RequestSetOptimizationConstraintsMessage>(this, (r, m) =>
             {
                 AssignOptimizationConstraints(m.PlanOptimizationSetup);
             });
-            OptimizationSetup = new OptimizationSetupView { DataContext = new OptimizationSetupViewModel(_structureIdsPostUnion, type) };
 
             WeakReferenceMessenger.Default.Register<RequestGenerateShiftNoteMessage>(this, (r, m) =>
             {
@@ -223,16 +234,6 @@ namespace AutoPlannerHelpers.BaseViewModel
             {
                 m.Reply(SeparatePlans());
             });
-
-            PlanPreparation = new PlanPreparationView { DataContext = new PlanPreparationViewModel() };
-
-            PlanTemplates = new ObservableCollection<AutoPlanTemplateBase>() { };
-            WindowClosingCommand = new RelayCommand(WindowClosing);
-
-            StructureTuningTabBackground = System.Windows.Media.Brushes.LightGray;
-            TSManipulationTabBackground = System.Windows.Media.Brushes.LightGray;
-            BeamPlacementTabBackground = System.Windows.Media.Brushes.LightGray;
-            OptimizationSetupTabBackground = System.Windows.Media.Brushes.LightGray;
         }
 
         protected virtual void SetTargets(List<PlanTargetsModel> targets)
@@ -272,7 +273,7 @@ namespace AutoPlannerHelpers.BaseViewModel
 
         protected abstract bool VerifyTargetsIntegrity(List<PlanTargetsModel> parsedTargets);
 
-        protected abstract void PerformTSStructureGenerationManipulation(List<RequestedTSManipulationModel> manipulations);
+        protected abstract void PerformTSStructureGenerationManipulation(List<RequestedTSStructureModel> structuresToGenerate, List<RequestedTSManipulationModel> manipulations);
 
         protected abstract void GeneratePlansAndPlaceBeams(string linac, string energy, bool contourOverlap, double overlapMargin, List<PlanIsocenterModel> PlanIsocenters);
 
@@ -348,7 +349,11 @@ namespace AutoPlannerHelpers.BaseViewModel
 
         protected void AssignOptimizationConstraints(List<PlanOptimizationSetupModel> PlanOptimizationConstraints)
         {
-            if (!EclipseContext.GetInstance().VMATPlans.Any()) return;
+            if (!EclipseContext.GetInstance().VMATPlans.Any())
+            {
+                Logger.GetInstance().LogError("Error! No vmat plans generated from beam placement! No plans to assign optimization constraints to!");
+                return;
+            }
             bool constraintsAssigned = false;
             foreach (PlanOptimizationSetupModel itr in PlanOptimizationConstraints)
             {
@@ -386,7 +391,7 @@ namespace AutoPlannerHelpers.BaseViewModel
             if (InitialNumberOfFractions > 0 && InitialDosePerFraction > 0)
             {
                 //double priorTotalDose = PlanTotalDose;
-                InitialPlanTotalDose = InitialDosePerFraction * InitialNumberOfFractions;
+                InitialPlanTotalDose = Math.Round(InitialDosePerFraction * InitialNumberOfFractions, 1);
                 //if (PlanTotalDose != priorTotalDose)
                 //{
                 //    foreach (PlanObjectiveModel itr in PlanObjectives)

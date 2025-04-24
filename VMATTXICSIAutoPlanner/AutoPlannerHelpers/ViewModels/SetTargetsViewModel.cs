@@ -52,6 +52,11 @@ namespace AutoPlannerHelpers.ViewModels
             SetTargetsCommand = new RelayCommand(SetTargets);
             SelectedTargetChangedCommand = new RelayCommand<UnstructuredTargetModel>(TargetIdSelectionChanged);
             SelectedPlanChangedCommand = new RelayCommand<UnstructuredTargetModel>(PlanIdSelectionChanged);
+            InitializeMessengers();
+        }
+
+        private void InitializeMessengers()
+        {
             WeakReferenceMessenger.Default.Register<RequestAutoPlanTemplateChangedMessage>(this, (r, m) =>
             {
                 AutoPlanTemplateSelectionChanged(m.AutoPlanTemplate);

@@ -2,7 +2,6 @@
 using System.Windows;
 using AutoPlannerHelpers.ViewModels;
 using AutoPlannerHelpers.Views;
-using AutoPlannerHelpers.PlanTemplateModels;
 using AutoPlannerHelpers.Models;
 using System.IO;
 using System.Reflection;
@@ -86,7 +85,6 @@ namespace TBIAutoPlanner.ViewModels
         #endregion
 
         #region view objects
-        private CTStitcherViewModel _stitcherViewModel;
         private object _stitchCT;
 
         public object StitchCT
@@ -102,9 +100,6 @@ namespace TBIAutoPlanner.ViewModels
         public ICommand PTVMarginInfoCommand { get; set; }
         #endregion
 
-        #region fields
-        #endregion
-
         public TBIMainViewModel(string[] args) :
             base(PlanType.VMAT_TBI, args)
         {
@@ -117,8 +112,7 @@ namespace TBIAutoPlanner.ViewModels
             LoadScriptConfigurationSettings(_generalConfigurationFile);
             LoadPlanTemplates();
 
-            _stitcherViewModel = new CTStitcherViewModel();
-            StitchCT = new CTStitcherView { DataContext = _stitcherViewModel };
+            StitchCT = new CTStitcherView { DataContext = new CTStitcherViewModel() };
             StitchCTTabBackground = Brushes.LightGray;
 
             if (!TBIAutoPlannerSettings.ShowStitchCTTab)
@@ -149,7 +143,7 @@ namespace TBIAutoPlanner.ViewModels
 
             //needs to be initialized after the plan templates are loaded
             ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
-            SpecifyTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
+            SpecifyTargetsTabBackground = Brushes.PaleVioletRed;
             if (EclipseContext.GetInstance().IsInitialized && !ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
             {
                 PatientMRN = EclipseContext.GetInstance().Patient.Id;
@@ -195,11 +189,15 @@ namespace TBIAutoPlanner.ViewModels
         #endregion
 
         #region TS generation and manipulation
-        protected override void PerformTSStructureGenerationManipulation(List<RequestedTSManipulationModel> manipulations)
+        protected override void PerformTSStructureGenerationManipulation(List<RequestedTSStructureModel> structuresToGenerate, List<RequestedTSManipulationModel> manipulations)
         {
-            List<RequestedTSStructureModel> tsGeneration = _tsGenerationVM.RequestedTuningStructures.ToList();
+            if(!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
+            {
+                Logger.GetInstance().LogError("Error! Script is not connected to aria or no structure set loaded! Cannot perform TS generation/manipulation!");
+                return;
+            }
             List<RequestedTSManipulationModel> tsManipulations = manipulations;
-            TSGenerationManipulation_TBI generateTS = new TSGenerationManipulation_TBI(tsGeneration,
+            TSGenerationManipulation_TBI generateTS = new TSGenerationManipulation_TBI(structuresToGenerate,
                                                                                        tsManipulations,
                                                                                        _prescriptions,
                                                                                        UseFlash,
@@ -225,9 +223,9 @@ namespace TBIAutoPlanner.ViewModels
             WeakReferenceMessenger.Default.Send(new RequestUpdateStructureIds(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id)));
             _planOptimizationSetup = UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
 
-            StructureTuningTabBackground = System.Windows.Media.Brushes.ForestGreen;
-            TSManipulationTabBackground = System.Windows.Media.Brushes.ForestGreen;
-            BeamPlacementTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
+            StructureTuningTabBackground = Brushes.ForestGreen;
+            TSManipulationTabBackground = Brushes.ForestGreen;
+            BeamPlacementTabBackground = Brushes.PaleVioletRed;
 
             Logger.GetInstance().AddedStructures = generateTS.AddedStructureIds;
             Logger.GetInstance().StructureManipulations = tsManipulations;
@@ -243,6 +241,11 @@ namespace TBIAutoPlanner.ViewModels
         #region beam placement
         protected override void GeneratePlansAndPlaceBeams(string linac, string energy, bool contourOverlap, double overlapMargin, List<PlanIsocenterModel> PlanIsocenters)
         {
+            if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
+            {
+                Logger.GetInstance().LogError("Error! Script is not connected to aria or no structure set loaded! Cannot perform beam placement!");
+                return;
+            }
             _planIsocenters = PlanIsocenters;
             GeneratePlansAndPlaceBeams_TBI placeBeams = new GeneratePlansAndPlaceBeams_TBI(_planIsocenters,
                                                                                            _prescriptions,
@@ -266,16 +269,14 @@ namespace TBIAutoPlanner.ViewModels
             }
             WeakReferenceMessenger.Default.Send(new RequestUpdateOptimizationConstraintsMessage(_planOptimizationSetup));
 
-            BeamPlacementTabBackground = System.Windows.Media.Brushes.ForestGreen;
-            OptimizationSetupTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
+            BeamPlacementTabBackground = Brushes.ForestGreen;
+            OptimizationSetupTabBackground = Brushes.PaleVioletRed;
         }
         #endregion
 
         #region prepare for treatment
         protected override bool GenerateShiftNote()
         {
-            if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().VMATPlans.FirstOrDefault(), null)) return true;
-            Logger.GetInstance().OpType = ScriptOperationType.PlanPrep;
             if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Any(x => x.Id.ToLower().Contains("legs")))
             {
                 if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("legs")).Any(x => x.TreatmentOrientation != PatientOrientation.FeetFirstSupine))
@@ -288,27 +289,20 @@ namespace TBIAutoPlanner.ViewModels
                 }
             }
 
-            Clipboard.SetText(PlanPrepHelper.GetTBIShiftNote(EclipseContext.GetInstance().VMATPlans.First(), EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("legs")).ToList()).ToString());
+            Clipboard.SetText(PlanPrepHelper.GetTBITMLIShiftNote(EclipseContext.GetInstance().VMATPlans.First(), EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("legs")).ToList()).ToString());
             return true;
         }
         protected override bool SeparatePlans()
         {
-            if (!EclipseContext.GetInstance().VMATPlans.FirstOrDefault().Beams.Any(x => x.IsSetupField))
-            {
-                ConfirmPrompt CUI = new ConfirmPrompt($"I didn't find any setup fields in the {EclipseContext.GetInstance().VMATPlans.FirstOrDefault().Id}." + Environment.NewLine + Environment.NewLine + "Are you sure you want to continue?!");
-                CUI.ShowDialog();
-                if (!CUI.GetSelection()) return true;
-            }
-
             bool removeFlash = false;
-            StringBuilder sb = new StringBuilder();
             //check if flash was used in the plan. If so, ask the user if they want to remove these structures as part of cleanup
             if (PlanPrepHelper.CheckForFlash(EclipseContext.GetInstance().StructureSet))
             {
-                sb.AppendLine("I found some structures in the structure set for generating flash.");
-                sb.AppendLine("Should I remove them?");
-                sb.AppendLine("(NOTE: this will require dose recalculation for all plans using this structure set!)");
-                ConfirmPrompt CP = new ConfirmPrompt(sb.ToString(), "YES", "NO");
+                StringBuilder flashSB = new StringBuilder();
+                flashSB.AppendLine("I found some structures in the structure set for generating flash.");
+                flashSB.AppendLine("Should I remove them?");
+                flashSB.AppendLine("(NOTE: this will require dose recalculation for all plans using this structure set!)");
+                ConfirmPrompt CP = new ConfirmPrompt(flashSB.ToString(), "YES", "NO");
                 CP.ShowDialog();
                 if (CP.GetSelection()) removeFlash = true;
             }
@@ -319,19 +313,6 @@ namespace TBIAutoPlanner.ViewModels
             bool result = planPrep.Execute();
             Logger.GetInstance().AppendLogOutput("Plan preparation:", planPrep.GetLogOutput());
             if (result) return true;
-
-            //inform the user it's done
-            sb.Clear();
-            sb.AppendLine("Original plan(s) have been separated!");
-            sb.AppendLine("Be sure to set the target volume and primary reference point!");
-            if (EclipseContext.GetInstance().VMATPlans.FirstOrDefault().Beams.Any(x => x.IsSetupField))
-            {
-                sb.AppendLine("Also reset the isocenter position of the setup fields!");
-            }
-            sb.AppendLine("");
-            sb.AppendLine("Isocenter shifts have been copied to the clipboard!");
-            sb.AppendLine("Paste them into the journal note!");
-            MessageBox.Show(sb.ToString());
             return false;
         }
         #endregion

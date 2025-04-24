@@ -94,7 +94,7 @@ namespace AutoPlannerHelpers.Helpers
         /// <param name="vmatPlan"></param>
         /// <param name="appaPlans"></param>
         /// <returns></returns>
-        public static StringBuilder GetTBIShiftNote(ExternalPlanSetup vmatPlan, List<ExternalPlanSetup> appaPlans)
+        public static StringBuilder GetTBITMLIShiftNote(ExternalPlanSetup vmatPlan, List<ExternalPlanSetup> appaPlans)
         {
             StringBuilder sb = new StringBuilder();
             List<VVector> isoPositions = ExtractIsoPositions(vmatPlan);
@@ -124,7 +124,7 @@ namespace AutoPlannerHelpers.Helpers
                 TT = (vmatPlan.Beams.First(x => !x.IsSetupField).IsocenterPosition.y - couchSurface.MeshGeometry.Positions.Min(p => p.Y)) / 10;
             }
 
-            sb.Append(BuildTBIShiftNote(TT, isoNames, shifts, numVMATIsos, numIsos));
+            sb.Append(BuildTBITMLIShiftNote(TT, isoNames, shifts, numVMATIsos, numIsos));
             return sb;
         }
 
@@ -137,7 +137,7 @@ namespace AutoPlannerHelpers.Helpers
         /// <param name="numVMATIsos"></param>
         /// <param name="numIsos"></param>
         /// <returns></returns>
-        private static StringBuilder BuildTBIShiftNote(double TT, List<IsocenterModel> isoNames, List<VVector> shifts, int numVMATIsos, int numIsos)
+        private static StringBuilder BuildTBITMLIShiftNote(double TT, List<IsocenterModel> isoNames, List<VVector> shifts, int numVMATIsos, int numIsos)
         {
             StringBuilder sb = new StringBuilder();
             if (TT != -1)

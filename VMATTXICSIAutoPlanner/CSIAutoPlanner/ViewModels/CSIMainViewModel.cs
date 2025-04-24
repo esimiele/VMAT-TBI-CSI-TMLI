@@ -68,12 +68,9 @@ namespace CSIAutoPlanner.ViewModels
         #endregion
 
         #region view objects
-        private CTExportViewModel _ctExportViewModel;
         private object _exportCT;
         private object _prepForTargets;
-        private StructureCropOverlapViewModel _structureCropOverlapVM;
         private object _structureCropOverlap;
-        private RingGenerationViewModel _ringGenerationVM;
         private object _ringGeneration;
 
         public object ExportCT
@@ -104,8 +101,6 @@ namespace CSIAutoPlanner.ViewModels
         #region commands
         public ICommand QuickStartGuideCommand { get; set; }
         public ICommand HelpGuideCommand { get; set; }
-        private ICommand NotifyExportCTCommand;
-        private ICommand NotifyPrepForTargetsCommand;
         #endregion
 
         public CSIMainViewModel(string[] args) :
@@ -126,22 +121,14 @@ namespace CSIAutoPlanner.ViewModels
                 new ExportCTModel("2", "CT 2", 200, "2019-01-01"),
                 new ExportCTModel("3", "CT 3", 300, "2020-10-10"),
             };
-            NotifyExportCTCommand = new RelayCommand(ExportCTImage);
-            _ctExportViewModel = new CTExportViewModel(models, NotifyExportCTCommand);
-            ExportCT = new CTExportView { DataContext = _ctExportViewModel };
-
-            WeakReferenceMessenger.Default.Register<RequestGeneratePreliminaryTargets>(this, (r, m) =>
-            {
-                PreparePreliminaryTargets(m.Targets);
-            });
+            
+            ExportCT = new CTExportView { DataContext = new CTExportViewModel(models) };
             PrepForTargets = new PrepForTargetsView { DataContext = new PrepForTargetsViewModel() };
             WeakReferenceMessenger.Default.Send(new RequestUpdateTargetStructures(CSIAutoPlannerSettings.RequestedPreliminaryTargets));
 
-            _ringGenerationVM = new RingGenerationViewModel(_structureIdsPostUnion);
-            RingGeneration = new RingGenerationView { DataContext = _ringGenerationVM };
+            RingGeneration = new RingGenerationView { DataContext = new RingGenerationViewModel(_structureIdsPostUnion) };
 
-            _structureCropOverlapVM = new StructureCropOverlapViewModel(_structureIdsPostUnion);
-            StructureCropOverlap = new StructureCropOverlapView { DataContext = _structureCropOverlapVM };
+            StructureCropOverlap = new StructureCropOverlapView { DataContext = new StructureCropOverlapViewModel(_structureIdsPostUnion) };
 
             WeakReferenceMessenger.Default.Send(new RequestUpdateBeamPlacementDefaultSettings(CSIAutoPlannerSettings.AvailableLinacs, 
                                                                                               CSIAutoPlannerSettings.AvailableEnergies, 
@@ -176,12 +163,25 @@ namespace CSIAutoPlanner.ViewModels
                 PrepForTargetsBackground = System.Windows.Media.Brushes.LightGray;
                 SetTargetsTabBackground = System.Windows.Media.Brushes.LightGray;
             }
+            InitializeCSIMessengers();
         }
 
-        public void ExportCTImage()
+        private void InitializeCSIMessengers()
         {
-            if (!ReferenceEquals(_ctExportViewModel.SelectedCTImage, null)) return;
-            CTImageExport imageExport = new CTImageExport(EclipseContext.GetInstance().CTImages.First(x => string.Equals(x.Id, _ctExportViewModel.SelectedCTImage.CTId)),
+            WeakReferenceMessenger.Default.Register<RequestExportCT>(this, (r, m) =>
+            {
+                ExportCTImage(m.SelectedCTImage);
+            }); 
+            WeakReferenceMessenger.Default.Register<RequestGeneratePreliminaryTargets>(this, (r, m) =>
+            {
+                PreparePreliminaryTargets(m.Targets);
+            });
+        }
+
+        public void ExportCTImage(ExportCTModel selectedImage)
+        {
+            if (!ReferenceEquals(selectedImage, null)) return;
+            CTImageExport imageExport = new CTImageExport(EclipseContext.GetInstance().CTImages.First(x => string.Equals(x.Id, selectedImage.CTId)),
                                                           EclipseContext.GetInstance().Patient.Id,
                                                           CSIAutoPlannerSettings.ImportExportData,
                                                           "CSI",
@@ -278,13 +278,17 @@ namespace CSIAutoPlanner.ViewModels
         #endregion
 
         #region TS generation and manipulation
-        protected override void PerformTSStructureGenerationManipulation(List<RequestedTSManipulationModel> manipulations)
+        protected override void PerformTSStructureGenerationManipulation(List<RequestedTSStructureModel> structuresToGenerate, List<RequestedTSManipulationModel> manipulations)
         {
-            List<RequestedTSStructureModel> tsGeneration = _tsGenerationVM.RequestedTuningStructures.ToList();
-            List<TSRingStructureModel> rings = _ringGenerationVM.RequestedRingStructures.ToList();
-            List<string> cropOverlapStructures = _structureCropOverlapVM.CropOverlapStructures.ToList();
+            if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
+            {
+                Logger.GetInstance().LogError("Error! Script is not connected to aria or no structure set loaded! Cannot perform TS generation/manipulation!");
+                return;
+            }
+            List<TSRingStructureModel> rings = WeakReferenceMessenger.Default.Send(new RequestRingStructures());
+            List<string> cropOverlapStructures = WeakReferenceMessenger.Default.Send(new RequestCropOverlapStructures());
             List<RequestedTSManipulationModel> tsManipulations = manipulations;
-            TSGenerationManipulation_CSI generateTS = new TSGenerationManipulation_CSI(tsGeneration, 
+            TSGenerationManipulation_CSI generateTS = new TSGenerationManipulation_CSI(structuresToGenerate, 
                                                                                        tsManipulations, 
                                                                                        rings, 
                                                                                        _prescriptions, 
@@ -329,6 +333,11 @@ namespace CSIAutoPlanner.ViewModels
         #region beam placement
         protected override void GeneratePlansAndPlaceBeams(string linac, string energy, bool contourOverlap, double overlapMargin, List<PlanIsocenterModel> PlanIsocenters)
         {
+            if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
+            {
+                Logger.GetInstance().LogError("Error! Script is not connected to aria or no structure set loaded! Cannot perform beam placement!");
+                return;
+            }
             _planIsocenters = PlanIsocenters;
             GeneratePlansAndPlaceBeams_CSI placeBeams = new GeneratePlansAndPlaceBeams_CSI(_planIsocenters,
                                                                                            _prescriptions,
@@ -359,12 +368,19 @@ namespace CSIAutoPlanner.ViewModels
         #region prepare for treatment
         protected override bool GenerateShiftNote()
         {
-            throw new NotImplementedException();
+            Clipboard.SetText(PlanPrepHelper.GetCSIShiftNote(EclipseContext.GetInstance().VMATPlans.First()).ToString());
+            return false;
         }
 
         protected override bool SeparatePlans()
         {
-            throw new NotImplementedException();
+            //separate the plans
+            EclipseContext.GetInstance().Patient.BeginModifications();
+            PreparePlansForTreatment_CSI planPrep = new PreparePlansForTreatment_CSI();
+            bool result = planPrep.Execute();
+            Logger.GetInstance().AppendLogOutput("Plan preparation:", planPrep.GetLogOutput());
+            if (result) return true;
+            return false;
         }
         #endregion
 
@@ -372,7 +388,7 @@ namespace CSIAutoPlanner.ViewModels
         {
             if(BoostNumberOfFractions > 0 && BoostDosePerFraction > 0)
             {
-                BoostPlanTotalDose = BoostDosePerFraction * BoostNumberOfFractions;
+                BoostPlanTotalDose = Math.Round(BoostDosePerFraction * BoostNumberOfFractions, 1);
             }
         }
 

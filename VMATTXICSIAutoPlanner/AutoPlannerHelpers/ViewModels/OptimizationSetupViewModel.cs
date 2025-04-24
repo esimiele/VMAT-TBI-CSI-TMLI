@@ -58,7 +58,11 @@ namespace AutoPlannerHelpers.ViewModels
             else StructureIds = new List<string> { "1", "2", "3"};
             PlanOptimizationConstraints = new ObservableCollectionPropertyNotify<PlanOptimizationSetupModel> { };
             _planType = planType;
+            InitializeMessengers();
+        }
 
+        private void InitializeMessengers()
+        {
             WeakReferenceMessenger.Default.Register<RequestUpdateStructureIds>(this, (r, m) =>
             {
                 UpdateStructureIdList(m.StructureIds);

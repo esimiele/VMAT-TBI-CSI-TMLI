@@ -12,7 +12,10 @@ using System.Threading.Tasks;
 namespace AutoPlannerHelpers.Messengers
 {
     public class RequestGenerateShiftNoteMessage : RequestMessage<bool> { }
+
     public class RequestSeparatePlanMessage : RequestMessage<bool> { }
+
+    #region set targets
     public class RequestSetTargetsMessage
     {
         public List<PlanTargetsModel> PlanTargets { get; private set; }
@@ -21,11 +24,15 @@ namespace AutoPlannerHelpers.Messengers
             this.PlanTargets = planTargets;
         }
     }
+    #endregion
+
+    #region structure generation and manipulation
     public class RequestGenerateManipulateTuningStructuresMessage
     {
         public List<RequestedTSManipulationModel> RequestedTSManipulations { get; private set; }
         public RequestGenerateManipulateTuningStructuresMessage(IEnumerable<RequestedTSManipulationModel> manipulations) { this.RequestedTSManipulations = manipulations.ToList(); }
     }
+
     public class RequestUpdateTSManipulationList
     {
         public IEnumerable<string> StructureIds { get; private set; }
@@ -36,6 +43,25 @@ namespace AutoPlannerHelpers.Messengers
             this.RequestedTSManipulations = requestedTSManipulations;
         }
     }
+
+    public class RequestTSGenerationStructures : RequestMessage<List<RequestedTSStructureModel>> { }
+
+    public class RequestCropOverlapStructures : RequestMessage<List<string>> { }
+    public class RequestRingStructures : RequestMessage<List<TSRingStructureModel>> { }
+    #endregion
+
+    #region beam placement
+    public class RequestUpdatePlanIsocenterList
+    {
+        public List<PlanIsocenterModel> PlanIsocenterList { get; private set; }
+        public RequestUpdatePlanIsocenterList(IEnumerable<PlanIsocenterModel> isos) { this.PlanIsocenterList = isos.ToList(); }
+    }
+
+    public class RequestHideNumberOfVMATIsocenters
+    {
+        public RequestHideNumberOfVMATIsocenters() { }
+    }
+
     public class RequestUpdateBeamPlacementDefaultSettings
     {
         public List<string> Linacs { get; private set; }
@@ -69,17 +95,9 @@ namespace AutoPlannerHelpers.Messengers
             PlanIsocenters = isos.ToList();
         }
     }
-    public class RequestUpdatePlanIsocenterList
-    {
-        public List<PlanIsocenterModel> PlanIsocenterList { get; private set; }
-        public RequestUpdatePlanIsocenterList(IEnumerable<PlanIsocenterModel> isos) { this.PlanIsocenterList = isos.ToList(); }
-    }
+    #endregion
 
-
-    public class RequestHideNumberOfVMATIsocenters
-    {
-        public RequestHideNumberOfVMATIsocenters() { }
-    }
+    #region preliminary target generation
     public class RequestUpdateTargetStructures
     {
         public List<RequestedTSStructureModel> Structures { get; private set; }
@@ -91,14 +109,17 @@ namespace AutoPlannerHelpers.Messengers
         public List<RequestedTSStructureModel> Targets { get; private set; }
         public RequestGeneratePreliminaryTargets(List<RequestedTSStructureModel> structures) { this.Targets = structures; }
     }
+    #endregion
 
-
-    public class RequestPlaceBeamsMessage : RequestMessage<bool> { }
-    public class RequestUpdateStructureIds
+    #region export ct
+    public class RequestExportCT
     {
-        public List<string> StructureIds { get; private set; }
-        public RequestUpdateStructureIds(IEnumerable<string> structureIds) { this.StructureIds = structureIds.ToList(); }
+        public ExportCTModel SelectedCTImage { get; private set; }
+        public RequestExportCT(ExportCTModel selectedCTImage) { this.SelectedCTImage = selectedCTImage;}
     }
+    #endregion
+
+    #region optimization setup
     public class RequestSetOptimizationConstraintsMessage
     {
         public List<PlanOptimizationSetupModel> PlanOptimizationSetup { get; private set; }
@@ -110,10 +131,19 @@ namespace AutoPlannerHelpers.Messengers
         public List<PlanOptimizationSetupModel> PlanOptimizationSetup { get; private set; }
         public RequestUpdateOptimizationConstraintsMessage(IEnumerable<PlanOptimizationSetupModel> constraints) { this.PlanOptimizationSetup = constraints.ToList(); }
     }
+    #endregion
 
+    #region multiple
     public class RequestAutoPlanTemplateChangedMessage
     {
         public AutoPlanTemplateBase AutoPlanTemplate { get; private set; }
         public RequestAutoPlanTemplateChangedMessage(AutoPlanTemplateBase autoPlanTemplate) { this.AutoPlanTemplate = autoPlanTemplate; }
     }
+
+    public class RequestUpdateStructureIds
+    {
+        public List<string> StructureIds { get; private set; }
+        public RequestUpdateStructureIds(IEnumerable<string> structureIds) { this.StructureIds = structureIds.ToList(); }
+    }
+    #endregion
 }
