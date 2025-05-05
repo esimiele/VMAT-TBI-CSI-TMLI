@@ -209,6 +209,7 @@ namespace TMLIAutoPlanner.ViewModels
             PrepForTargetsBackground = Brushes.ForestGreen;
             MessageBox.Show("Structure set is prepared and ready for physician to review targets!");
         }
+
         protected override bool VerifyTargetsIntegrity(List<PlanTargetsModel> parsedTargets)
         {
             //verify selected targets are APPROVED
@@ -238,11 +239,6 @@ namespace TMLIAutoPlanner.ViewModels
                 }
             }
 
-            if(!ReferenceEquals(_selectedTemplate, null))
-            {
-                WeakReferenceMessenger.Default.Send(new RequestAutoPlanTemplateChangedMessage(_selectedTemplate));
-            }
-            
             return false;
         }
         #endregion

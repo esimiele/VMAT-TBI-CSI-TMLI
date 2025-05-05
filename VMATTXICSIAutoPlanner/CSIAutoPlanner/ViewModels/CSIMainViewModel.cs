@@ -268,11 +268,6 @@ namespace CSIAutoPlanner.ViewModels
                     }
                 }
             }
-
-            if (!ReferenceEquals(_selectedTemplate, null))
-            {
-                WeakReferenceMessenger.Default.Send(new RequestAutoPlanTemplateChangedMessage(_selectedTemplate)); 
-            }
             return false;
         }
         #endregion

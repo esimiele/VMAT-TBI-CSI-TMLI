@@ -159,7 +159,7 @@ namespace TMLIAutoPlanner.Core
             //need to know target dosing
             if (_includeTestesInPTV && StructureTuningHelper.DoesStructureExistInSS("testes", EclipseContext.GetInstance().StructureSet, true)) structures.Add(StructureTuningHelper.GetStructureFromId("testes", ss));
 
-            ContourHelper.ContourUnion(structures, ptv);
+            ContourHelper.ContourUnion(structures, ptv, 0.5);
             foreach (string itr in structures.Select(x => x.Id)) ProvideUIUpdate($"Unioned {itr} with PTV_TMLI");
             ptv.SegmentVolume = ptv.Margin(5.0);
             ProvideUIUpdate("Expanded PTV_TMLI with uniform 5mm margin");
@@ -250,8 +250,13 @@ namespace TMLIAutoPlanner.Core
         private bool GeneratePTV1200(Structure ptv)
         {
             StructureSet ss = EclipseContext.GetInstance().StructureSet;
-            ContourHelper.CopyStructureOntoStructure(StructureTuningHelper.GetStructureFromId("brain", ss), ptv);
-            ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("liver", ss), ptv, 5.0);
+            ContourHelper.CopyStructureOntoStructure(StructureTuningHelper.GetStructureFromId("brain", ss), ptv, 0.5);
+            ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("liver", ss), ptv, 0.5);
+            ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("Rib", ss), ptv, 0.7);
+            ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("Lungs", ss), 0.5);
+            ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("Heart", ss), 0.5);
+            ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("Kidneys", ss), 0.5);
+            ContourHelper.CropStructureFromBody(ptv, ss, -0.3);
             return false;
         }
         #endregion

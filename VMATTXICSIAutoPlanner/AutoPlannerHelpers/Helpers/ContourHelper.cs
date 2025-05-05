@@ -200,7 +200,7 @@ namespace AutoPlannerHelpers.Helpers
         /// <param name="structuresToCombine"></param>
         /// <param name="structureToUnion"></param>
         /// <returns></returns>
-        public static (bool, StringBuilder) ContourUnion(List<Structure> structuresToCombine, Structure structureToUnion)
+        public static (bool, StringBuilder) ContourUnion(List<Structure> structuresToCombine, Structure structureToUnion, double marginInCm = 0.0)
         {
             StringBuilder sb = new StringBuilder();
             bool fail = false;
@@ -208,7 +208,7 @@ namespace AutoPlannerHelpers.Helpers
             {
                 if (!ReferenceEquals(itr, null) && !ReferenceEquals(structureToUnion, null))
                 {
-                    structureToUnion.SegmentVolume = itr.SegmentVolume.Or(structureToUnion.SegmentVolume.Margin(0.0));
+                    structureToUnion.SegmentVolume = itr.SegmentVolume.Or(structureToUnion.SegmentVolume.Margin(marginInCm * 10));
                 }
                 else
                 {
@@ -283,13 +283,13 @@ namespace AutoPlannerHelpers.Helpers
         /// <param name="baseStructure"></param>
         /// <param name="structureToContour"></param>
         /// <returns></returns>
-        public static (bool, StringBuilder) CopyStructureOntoStructure(Structure baseStructure, Structure structureToContour)
+        public static (bool, StringBuilder) CopyStructureOntoStructure(Structure baseStructure, Structure structureToContour, double marginInCM = 0.0)
         {
             StringBuilder sb = new StringBuilder();
             bool fail = false;
             try
             {
-                structureToContour.SegmentVolume = baseStructure.SegmentVolume.Margin(0.0);
+                structureToContour.SegmentVolume = baseStructure.SegmentVolume.Margin(marginInCM * 10);
             }
             catch (Exception e)
             {

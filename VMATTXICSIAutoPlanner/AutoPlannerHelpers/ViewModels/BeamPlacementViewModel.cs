@@ -214,7 +214,7 @@ namespace AutoPlannerHelpers.ViewModels
             //    }
             //}
             //MessageBox.Show( sb.ToString() );
-            WeakReferenceMessenger.Default.Send<RequestGenerateAndPlaceBeams>(new RequestGenerateAndPlaceBeams(_selectedLinac, _selectedEnergy, _contourFieldOverlapChecked, _fieldOverlapMargin, PlanIsocenterList));
+            WeakReferenceMessenger.Default.Send(new RequestGenerateAndPlaceBeams(_selectedLinac, _selectedEnergy, _contourFieldOverlapChecked, _fieldOverlapMargin, PlanIsocenterList));
         }
     }
 }

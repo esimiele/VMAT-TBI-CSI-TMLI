@@ -22,7 +22,6 @@ using AutoPlannerHelpers.BaseViewModel;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using System.Windows.Media;
-using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.Prompts;
 using AutoPlannerHelpers.Messengers;
 using CommunityToolkit.Mvvm.Messaging;
@@ -171,18 +170,12 @@ namespace TBIAutoPlanner.ViewModels
         #region specify targets
         protected override bool VerifyTargetsIntegrity(List<PlanTargetsModel> parsedTargets)
         {
-            //verify selected targets are APPROVED
             //for tbi, we only want to make there is one plan (not configured for sequential boosts)
             if (!parsedTargets.Any()) return true;
             if (parsedTargets.Select(x => x.PlanId).Distinct().Count() > 1)
             {
                 Logger.GetInstance().LogError($"Error! Multiple plan Ids entered! This script is only configured to auto-plan one TBI plan!");
                 return true;
-            }
-
-            if (!ReferenceEquals(_selectedTemplate, null))
-            {
-                WeakReferenceMessenger.Default.Send(new RequestAutoPlanTemplateChangedMessage(_selectedTemplate));
             }
             return false;
         }
@@ -329,7 +322,7 @@ namespace TBIAutoPlanner.ViewModels
 
         private void UpdateUseFlash()
         {
-            if (UseFlash) FlashMarginVisible = Visibility.Visible;
+            if (_useFlash) FlashMarginVisible = Visibility.Visible;
             else FlashMarginVisible = Visibility.Hidden;
         }
 
