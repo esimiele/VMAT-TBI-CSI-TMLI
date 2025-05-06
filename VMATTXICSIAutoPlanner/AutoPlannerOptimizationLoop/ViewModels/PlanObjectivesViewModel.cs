@@ -10,6 +10,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using AutoPlannerHelpers.Helpers;
+using AutoPlannerHelpers.Messengers;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace AutoPlannerOptimizationLoop.ViewModels
 {
@@ -40,6 +42,19 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             ClearPlanObjectiveListCommand = new RelayCommand(ClearPlanObjectives);
             ClearRowCommand = new RelayCommand<PlanObjectiveModel>(ClearRow);
             PlanObjectives = new ObservableCollectionPropertyNotify<PlanObjectiveModel> { };
+            InitializeMessengers();
+        }
+
+        private void InitializeMessengers()
+        {
+            WeakReferenceMessenger.Default.Register<RequestAutoPlanTemplateChangedMessage>(this, (r, m) =>
+            {
+                UpdateViewWithSelectedPlanTemplate(m.AutoPlanTemplate.PlanObjectives);
+            });
+            WeakReferenceMessenger.Default.Register<RequestPlanObjectives>(this, (r, m) =>
+            {
+                m.Reply(PlanObjectives.ToList());
+            });
         }
 
         public void UpdateViewWithSelectedPlanTemplate(List<PlanObjectiveModel> obj)

@@ -146,4 +146,8 @@ namespace AutoPlannerHelpers.Messengers
         public RequestUpdateStructureIds(IEnumerable<string> structureIds) { this.StructureIds = structureIds.ToList(); }
     }
     #endregion
+
+    #region optimization
+    public class RequestPlanObjectives : RequestMessage<List<PlanObjectiveModel>> { }
+    #endregion
 }

@@ -27,6 +27,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using AutoPlannerOptimizationLoop.Views;
+using AutoPlannerHelpers.Messengers;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace AutoPlannerOptimizationLoop.ViewModels
 {
@@ -163,7 +165,6 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             set { SetProperty(ref _scriptConfiguration, value); }
         }
 
-        private PlanObjectivesViewModel _planObjectivesVM;
         private object _planObjectives;
         public object PlanObjectives
         {
@@ -171,7 +172,6 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             set { SetProperty(ref _planObjectives, value); }
         }
 
-        private OptimizationConstraintsViewModel _optimizationConstraintsVM;
         private object _optimizationSetup;
 
         public object OptimizationSetup
@@ -185,8 +185,6 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         #region commands
         public ICommand QuickStartCommand { get; set; }
         public ICommand DocumentationCommand { get; set; }
-        public ICommand OpenPatientCommand { get; set; }
-        public ICommand NotifyStartOptimizationCommand { get; set; }
         #endregion
 
         public OptimizationLoopMainViewModel(string[] args)
@@ -217,7 +215,17 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             LoadPatientStructureSetAndPlans();
             LoadConfigurationSettingsForPlanType(_planType);
             LoadTemplatePlanChoices(_planType);
+            InitializeMessengers();
             InitializeUI();
+        }
+
+        private void InitializeMessengers()
+        {
+            WeakReferenceMessenger.Default.Register<RequestSetOptimizationConstraintsMessage>(this, (r, m) =>
+            {
+                List<PlanObjectiveModel> planObjectives = WeakReferenceMessenger.Default.Send(new RequestPlanObjectives());
+                StartOptimization(planObjectives, m.PlanOptimizationSetup);
+            });
         }
 
         private void AssignDefaultLogAndDocPaths()
@@ -250,12 +258,9 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                 }
             }
 
-            _planObjectivesVM = new PlanObjectivesViewModel(structureIds);
-            PlanObjectives = new PlanObjectivesView { DataContext = _planObjectivesVM };
+            PlanObjectives = new PlanObjectivesView { DataContext = new PlanObjectivesViewModel(structureIds) };
 
-            NotifyStartOptimizationCommand = new RelayCommand(StartOptimization);
-            _optimizationConstraintsVM = new OptimizationConstraintsViewModel(structureIds, _planType, NotifyStartOptimizationCommand);
-            OptimizationSetup = new OptimizationConstraintsView { DataContext = _optimizationConstraintsVM };
+            OptimizationSetup = new OptimizationConstraintsView { DataContext = new OptimizationConstraintsViewModel(structureIds, _planType) };
 
             ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
 
@@ -407,12 +412,11 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                 BoostPlanDosePerFraction = (_selectedTemplate as CSIAutoPlanTemplate).BoostRxDosePerFx;
                 BoostPlanNumberOfFractions = (_selectedTemplate as CSIAutoPlanTemplate).BoostRxNumberOfFractions;
             }
-            
-            _planObjectivesVM.UpdateViewWithSelectedPlanTemplate(_selectedTemplate.PlanObjectives);
-            _optimizationConstraintsVM.UpdateViewWithSelectedPlanTemplate(_selectedTemplate);
+
+            WeakReferenceMessenger.Default.Send(new RequestAutoPlanTemplateChangedMessage(_selectedTemplate));
         }
 
-        public void StartOptimization()
+        public void StartOptimization(List<PlanObjectiveModel> planObj, List<PlanOptimizationSetupModel> planOptSetup)
         {
             if (!EclipseContext.GetInstance().IsInitialized)
             {
@@ -451,9 +455,9 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             //MessageBox.Show(sb.ToString());
 
             EclipseContext.GetInstance().Patient.BeginModifications();
-            if(_optimizationConstraintsVM.PlanOptimizationConstraints.Any())
+            if(planOptSetup.Any())
             {
-                foreach(PlanOptimizationSetupModel itr in _optimizationConstraintsVM.PlanOptimizationConstraints)
+                foreach(PlanOptimizationSetupModel itr in planOptSetup)
                 {
                     ExternalPlanSetup plan = EclipseContext.GetInstance().VMATPlans.First(x => string.Equals(x.Id, itr.PlanId));
                     OptimizationSetupHelper.RemoveOptimizationConstraintsFromPLan(plan);
@@ -461,7 +465,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                 }
             }
             
-            OptDataContainer _data = GenerateOptimizationDataContainer();
+            OptDataContainer _data = GenerateOptimizationDataContainer(planObj);
             OptimizationLoopBase opt;
             if (_planType == PlanType.VMAT_TBI) opt = new VMATTBIOptimization(_data);
             else if (_planType == PlanType.VMAT_CSI) opt = new VMATCSIOptimization(_data);
@@ -470,7 +474,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             if (opt.Execute()) return;
         }
 
-        public OptDataContainer GenerateOptimizationDataContainer()
+        public OptDataContainer GenerateOptimizationDataContainer(List<PlanObjectiveModel> planObj)
         {
             List<RequestedOptimizationTSStructureModel> requestedOptStructures = new List<RequestedOptimizationTSStructureModel> { };
             List<RequestedPlanMetricModel> requestedPlanMetrics = new List<RequestedPlanMetricModel> { };
@@ -483,7 +487,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             return new OptDataContainer(EclipseContext.GetInstance().VMATPlans,
                                         OptimizationLoopSettings.PlanPreparationPrescriptions,
                                         OptimizationLoopSettings.PlanPreparationNormalizationVolumes,
-                                        _planObjectivesVM.PlanObjectives.Where(x => x.IsValidObjective).ToList(),
+                                        planObj.Where(x => x.IsValidObjective).ToList(),
                                         requestedOptStructures,
                                         requestedPlanMetrics,
                                         _planType,

@@ -2,6 +2,7 @@
 using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.Helpers;
 using AutoPlannerHelpers.Logging;
+using AutoPlannerHelpers.Messengers;
 using AutoPlannerHelpers.Models;
 using AutoPlannerHelpers.PlanTemplateModels;
 using AutoPlannerHelpers.Prompts;
@@ -12,6 +13,7 @@ using AutoPlannerOptimizationLoop.DataContainers;
 using AutoPlannerOptimizationLoop.Settings;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,7 +43,6 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         public ICommand GetOptConstraintsFromLogsCommand { get; set; }
         public ICommand ClearOptimizationConstraintListCommand { get; set; }
         public ICommand StartOptimizationCommand { get; set; }
-        private ICommand _notifyStartOptimization;
         #endregion
 
         #region fields
@@ -50,7 +51,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         private List<string> _planIds;
         #endregion
 
-        public OptimizationConstraintsViewModel(List<string> sIds, PlanType type, ICommand NotifyStartOptimization)
+        public OptimizationConstraintsViewModel(List<string> sIds, PlanType type)
         {
             if (sIds.Any()) StructureIds = sIds;
             else StructureIds = new List<string> { "1", "2", "3" };
@@ -65,9 +66,17 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             {
                 PlanOptimizationConstraints.Add(itr);
             }
-            _notifyStartOptimization = NotifyStartOptimization;
             if (EclipseContext.GetInstance().IsInitialized && EclipseContext.GetInstance().VMATPlans.Any()) _planIds = new List<string>(EclipseContext.GetInstance().VMATPlans.Select(x => x.Id));
             else _planIds = new List<string> { "1", "2"};
+            InitializeMessengers();
+        }
+
+        private void InitializeMessengers()
+        {
+            WeakReferenceMessenger.Default.Register<RequestAutoPlanTemplateChangedMessage>(this, (r, m) =>
+            {
+                UpdateViewWithSelectedPlanTemplate(m.AutoPlanTemplate);
+            });
         }
 
         public void UpdateViewWithSelectedPlanTemplate(AutoPlanTemplateBase template)
@@ -155,7 +164,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
 
         public void StartOptimization()
         {
-            _notifyStartOptimization.Execute(null);
+            WeakReferenceMessenger.Default.Send(new RequestSetOptimizationConstraintsMessage(PlanOptimizationConstraints));
         }
     }
 }
