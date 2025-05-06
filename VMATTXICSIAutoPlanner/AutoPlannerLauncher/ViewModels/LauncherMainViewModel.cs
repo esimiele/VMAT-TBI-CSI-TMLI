@@ -46,6 +46,7 @@ namespace AutoPlannerLauncher.ViewModels
             {
                 LaunchOptimizationLoopVisible = Visibility.Visible;
             }
+            else LaunchOptimizationLoopVisible = Visibility.Collapsed;
             LaunchVMATTBICommand = new RelayCommand(LaunchVMATTBI);
             LaunchVMATCSICommand = new RelayCommand(LaunchVMATCSI);
             LaunchVMATTMLICommand = new RelayCommand(LaunchVMATTMLI);

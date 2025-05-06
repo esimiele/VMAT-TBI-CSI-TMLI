@@ -197,7 +197,7 @@ namespace TBIAutoPlanner.ViewModels
                                                                                        FlashMargin,
                                                                                        PTVMarginFromBody);
 
-            //EclipseContext.GetInstance().Patient.BeginModifications();
+            EclipseContext.GetInstance().Patient.BeginModifications();
             bool failed = generateTS.Execute();
             Logger.GetInstance().AppendLogOutput("TS Generation and manipulation output:", generateTS.LogOutput);
             if (failed) return;

@@ -74,7 +74,7 @@ namespace AutoPlannerHelpers.ViewModels
             UpdateViewWithAutoPlanTemplateTSManipulations();
         }
 
-        private void UpdateViewWithAutoPlanTemplateTSManipulations(bool skipStructureIdCheck = true)
+        private void UpdateViewWithAutoPlanTemplateTSManipulations(bool skipStructureIdCheck = false)
         {
             RequestedTSManipulations.Clear();
             foreach (RequestedTSManipulationModel itr in _selectedTemplate.TSManipulations)
