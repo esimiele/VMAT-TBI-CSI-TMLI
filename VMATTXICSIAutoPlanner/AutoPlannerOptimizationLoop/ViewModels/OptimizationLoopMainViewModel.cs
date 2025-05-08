@@ -81,6 +81,14 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             set { SetProperty(ref _structureIds, value); }
         }
 
+        private List<string> _planIds;
+
+        public List<string> PlanIds
+        {
+            get { return _planIds; }
+            set { SetProperty(ref _planIds, value); }
+        }
+
         public AutoPlanTemplateBase SelectedTemplate
         {
             get { return _selectedTemplate; }
@@ -244,6 +252,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
 
         public void InitializeUI()
         {
+            PlanIds = new List<string> { "1", "2" };
             ESAPIThreadContext.RunOnESAPIThreadSync(() =>
             {
                 if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null) || !EclipseContext.GetInstance().VMATPlans.Any())
@@ -258,6 +267,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                     {
                         StructureIds = EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id).ToList();
                         MRN = EclipseContext.GetInstance().Patient.Id;
+                        if(EclipseContext.GetInstance().VMATPlans.Any()) PlanIds = EclipseContext.GetInstance().VMATPlans.Select(x => x.Id).ToList();
                     });
                 }
             });
@@ -274,7 +284,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
 
             PlanObjectives = new PlanObjectivesView { DataContext = new PlanObjectivesViewModel(_structureIds) };
 
-            OptimizationSetup = new OptimizationConstraintsView { DataContext = new OptimizationConstraintsViewModel(_structureIds, _planType) };
+            OptimizationSetup = new OptimizationConstraintsView { DataContext = new OptimizationConstraintsViewModel(_structureIds, _planIds, _planType) };
 
             ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
 

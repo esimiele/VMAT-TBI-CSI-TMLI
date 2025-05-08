@@ -187,33 +187,36 @@ namespace AutoPlannerOptimizationLoop.Base
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Beams present in plan: {itr.Id}");
 
                 //check each beam to ensure the isoposition is rounded-off to the nearest 5mm
-                calcItems += itr.Beams.Where(x => !x.IsSetupField).Count();
-                foreach (Beam b in itr.Beams.Where(x => !x.IsSetupField))
+                if (!_data.IsDemo)
                 {
-                    BeamParameters bp = b.GetEditableParameters();
-                    bp.Isocenter = RoundIsocenterPosition(b.IsocenterPosition, itr);
-                    b.ApplyParameters(bp);
-                    ProvideUIUpdate(100 * ++percentComplete / calcItems);
-                }
+                    calcItems += itr.Beams.Where(x => !x.IsSetupField).Count();
+                    foreach (Beam b in itr.Beams.Where(x => !x.IsSetupField))
+                    {
+                        BeamParameters bp = b.GetEditableParameters();
+                        bp.Isocenter = RoundIsocenterPosition(b.IsocenterPosition, itr);
+                        b.ApplyParameters(bp);
+                        ProvideUIUpdate(100 * ++percentComplete / calcItems);
+                    }
 
-                //turn on jaw tracking if available
-                try
-                {
-                    itr.OptimizationSetup.UseJawTracking = true;
-                    ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Enabled jaw tracking for plan: {itr.Id}");
-                }
-                catch (Exception e)
-                {
-                    ProvideUIUpdate(100 * ++percentComplete / calcItems, $"{e.Message}\nCannot set jaw tracking for this machine! Jaw tracking will not be enabled!");
-                }
+                    //turn on jaw tracking if available
+                    try
+                    {
+                        itr.OptimizationSetup.UseJawTracking = true;
+                        ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Enabled jaw tracking for plan: {itr.Id}");
+                    }
+                    catch (Exception e)
+                    {
+                        ProvideUIUpdate(100 * ++percentComplete / calcItems, $"{e.Message}\nCannot set jaw tracking for this machine! Jaw tracking will not be enabled!");
+                    }
 
-                //set auto NTO priority to zero (i.e., shut it off)
-                itr.OptimizationSetup.AddAutomaticNormalTissueObjective(0.0);
-                ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Set automatic NTO priority to 0 for plan: {itr.Id}");
+                    //set auto NTO priority to zero (i.e., shut it off)
+                    itr.OptimizationSetup.AddAutomaticNormalTissueObjective(0.0);
+                    ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Set automatic NTO priority to 0 for plan: {itr.Id}");
 
-                //be sure to set the dose value presentation to absolute! This is important for plan evaluation in the evaluateAndUpdatePlan method below
-                itr.DoseValuePresentation = DoseValuePresentation.Absolute;
-                ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Set dose value presentation to absolute for plan: {itr.Id}");
+                    //be sure to set the dose value presentation to absolute! This is important for plan evaluation in the evaluateAndUpdatePlan method below
+                    itr.DoseValuePresentation = DoseValuePresentation.Absolute;
+                    ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Set dose value presentation to absolute for plan: {itr.Id}");
+                }
             }
             UpdateOverallProgress(100 * ++overallPercentCompletion / overallCalcItems);
             return false;
