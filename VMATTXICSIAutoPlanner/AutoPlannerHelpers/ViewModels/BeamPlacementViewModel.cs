@@ -190,12 +190,12 @@ namespace AutoPlannerHelpers.ViewModels
                 PlanIsocenterList.Add(new PlanIsocenterModel(planId, newIsos));
                 if(numAPPAIsos > 0)
                 {
-                    if(numAPPAIsos == 1) PlanIsocenterList.Add(new PlanIsocenterModel($"AP / PA legs", new IsocenterModel($"AP / PA legs", 2, BeamType.APPA)));
+                    if(numAPPAIsos == 1) PlanIsocenterList.Add(new PlanIsocenterModel($"_legs", new IsocenterModel($"legs", 2, BeamType.APPA)));
                     else
                     {
                         for (int i = 0; i < numAPPAIsos; i++)
                         {
-                            PlanIsocenterList.Add(new PlanIsocenterModel($"AP / PA {(i == 0 ? "upper" : "lower")} legs", new IsocenterModel($"AP / PA {(i == 0 ? "upper" : "lower")} legs", 2, BeamType.APPA)));
+                            PlanIsocenterList.Add(new PlanIsocenterModel($"{(i == 0 ? "_upper" : "_lower")} legs", new IsocenterModel($"{(i == 0 ? "upper" : "lower")} legs", 2, BeamType.APPA)));
                         }
                     }
                 }

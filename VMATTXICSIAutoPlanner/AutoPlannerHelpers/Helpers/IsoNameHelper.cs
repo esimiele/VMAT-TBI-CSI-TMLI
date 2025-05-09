@@ -82,9 +82,9 @@ namespace AutoPlannerHelpers.Helpers
         {
             List<IsocenterModel> isoNames = new List<IsocenterModel>
             {
-                new IsocenterModel("AP / PA upper legs")
+                new IsocenterModel("upper legs")
             };
-            if (numIsos == numVMATIsos + 2) isoNames.Add(new IsocenterModel("AP / PA lower legs"));
+            if (numIsos == numVMATIsos + 2) isoNames.Add(new IsocenterModel("lower legs"));
             foreach (IsocenterModel itr in isoNames) itr.BeamType = Enums.BeamType.APPA;
             return isoNames;
         }

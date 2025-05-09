@@ -798,12 +798,12 @@ namespace TBIAutoPlanner.Core
             {
                 if (NumberofIsocenters == NumberofVMATIsocenters + 2)
                 {
-                    PlanIsocentersList.Add(new PlanIsocenterModel("_upper legs", new IsocenterModel("AP / PA upper legs", 2, BeamType.APPA)));
-                    PlanIsocentersList.Add(new PlanIsocenterModel("_lower legs", new IsocenterModel("AP / PA lower legs", 2, BeamType.APPA)));
+                    PlanIsocentersList.Add(new PlanIsocenterModel("_upper legs", new IsocenterModel("upper legs", 2, BeamType.APPA)));
+                    PlanIsocentersList.Add(new PlanIsocenterModel("_lower legs", new IsocenterModel("lower legs", 2, BeamType.APPA)));
                 }
                 else
                 {
-                    PlanIsocentersList.Add(new PlanIsocenterModel("_legs", new IsocenterModel("AP / PA legs", 2, BeamType.APPA)));
+                    PlanIsocentersList.Add(new PlanIsocenterModel("_legs", new IsocenterModel("legs", 2, BeamType.APPA)));
                 }
             }
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved appropriate isocenter names:");
