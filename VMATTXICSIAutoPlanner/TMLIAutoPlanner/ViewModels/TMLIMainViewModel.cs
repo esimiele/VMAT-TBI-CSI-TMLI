@@ -26,6 +26,8 @@ using System.Windows.Media;
 using AutoPlannerHelpers.Messengers;
 using CommunityToolkit.Mvvm.Messaging;
 using AutoPlannerHelpers.Prompts;
+using AutoPlannerHelpers.EnumTypeHelpers;
+using System.Windows.Media.Media3D;
 
 namespace TMLIAutoPlanner.ViewModels
 {
@@ -69,6 +71,8 @@ namespace TMLIAutoPlanner.ViewModels
         #endregion
 
         #region view objects
+        private object _exportCT;
+        private object _importSS;
         private object _stitchCT;
         private object _prepForTargets;
         private object _ringGeneration;
@@ -77,6 +81,18 @@ namespace TMLIAutoPlanner.ViewModels
         {
             get { return _stitchCT; }
             set { SetProperty(ref _stitchCT, value); }
+        }
+
+        public object ExportCT
+        {
+            get { return _exportCT; }
+            set { SetProperty(ref _exportCT, value); }
+        }
+
+        public object ImportSS
+        {
+            get { return _importSS; }
+            set { SetProperty(ref _importSS, value); }
         }
 
         public object PrepForTargets
@@ -117,7 +133,9 @@ namespace TMLIAutoPlanner.ViewModels
                 StitchCTTabVisible = Visibility.Collapsed;
                 InitialTabSelected = 1;
             }
-            
+
+            ExportCT = new CTExportView { DataContext = new CTExportViewModel() };
+            ImportSS = new ImportSSView { DataContext = new ImportSSViewModel(TMLIAutoPlannerSettings.ImportExportData, PlanType.VMAT_CSI, (!ReferenceEquals(EclipseContext.GetInstance().Patient, null) ? EclipseContext.GetInstance().Patient.Id : "")) };
             PrepForTargets = new PrepForTargetsView { DataContext = new PrepForTargetsViewModel() };
             WeakReferenceMessenger.Default.Send(new RequestUpdateTargetStructures(TMLIAutoPlannerSettings.RequestedPreliminaryTargets));
 
@@ -137,35 +155,68 @@ namespace TMLIAutoPlanner.ViewModels
             //needs to be initialized after the plan templates are loaded
             ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
             SpecifyTargetsTabBackground = Brushes.PaleVioletRed;
-            if (EclipseContext.GetInstance().IsInitialized && !ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
+            if (EclipseContext.GetInstance().IsInitialized)
             {
-                PatientMRN = EclipseContext.GetInstance().Patient.Id;
-                StructureSetId = EclipseContext.GetInstance().StructureSet.Id;
-                if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => x.ApprovalHistory.First().ApprovalStatus == StructureApprovalStatus.Approved && x.Id.ToLower().Contains("ptv")))
+                if(!ReferenceEquals(EclipseContext.GetInstance().Patient, null)) PatientMRN = EclipseContext.GetInstance().Patient.Id;
+                if (EclipseContext.GetInstance().CTImages.Any())
                 {
-                    SetTargetsTabBackground = Brushes.PaleVioletRed;
-                    PrepForTargetsBackground = Brushes.LightGray;
+                    WeakReferenceMessenger.Default.Send(new RequestUpdateCTList(EclipseContext.GetInstance().CTImages.ToList().ConvertAll(x => new ExportCTModel(x.Series.Id, x.Id, x.ZSize, x.HistoryDateTime.ToString()))));
                 }
-                else
+                if(!ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
                 {
-                    PrepForTargetsBackground = Brushes.PaleVioletRed;
-                    SetTargetsTabBackground = Brushes.LightGray;
+                    StructureSetId = EclipseContext.GetInstance().StructureSet.Id;
+                    if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => x.ApprovalHistory.First().ApprovalStatus == StructureApprovalStatus.Approved && x.Id.ToLower().Contains("ptv")))
+                    {
+                        SetTargetsTabBackground = Brushes.PaleVioletRed;
+                        PrepForTargetsBackground = Brushes.LightGray;
+                    }
+                    else
+                    {
+                        PrepForTargetsBackground = Brushes.PaleVioletRed;
+                        SetTargetsTabBackground = Brushes.LightGray;
+                    }
                 }
             }
             else
             {
                 PrepForTargetsBackground = Brushes.LightGray;
                 SetTargetsTabBackground = Brushes.LightGray;
+                List<ExportCTModel> models = new List<ExportCTModel>
+                {
+                    new ExportCTModel("1", "CT 1", 100, DateTime.Now.ToString("yyyy-mm-dd")),
+                    new ExportCTModel("2", "CT 2", 200, "2019-01-01"),
+                    new ExportCTModel("3", "CT 3", 300, "2020-10-10"),
+                };
+                WeakReferenceMessenger.Default.Send(new RequestUpdateCTList(models));
             }
             InitializeTMLIMessengers();
         }
 
         private void InitializeTMLIMessengers()
         {
+            WeakReferenceMessenger.Default.Register<RequestExportCT>(this, (r, m) =>
+            {
+                ExportCTImage(m.SelectedCTImage);
+            });
             WeakReferenceMessenger.Default.Register<RequestGeneratePreliminaryTargets>(this, (r, m) =>
             {
                 PreparePreliminaryTargets(m.Targets);
             });
+        }
+
+        public void ExportCTImage(ExportCTModel selectedImage)
+        {
+            if (ReferenceEquals(selectedImage, null) || !EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().Patient,null) || !EclipseContext.GetInstance().CTImages.Any()) return;
+            CTImageExport imageExport = new CTImageExport(EclipseContext.GetInstance().CTImages.First(x => string.Equals(x.Id, selectedImage.CTId)),
+                                                          EclipseContext.GetInstance().Patient.Id,
+                                                          TMLIAutoPlannerSettings.ImportExportData,
+                                                          PlanType.VMAT_TMLI,
+                                                          TMLIAutoPlannerSettings.CloseProgressWindowOnFinish);
+            bool result = imageExport.Execute();
+            Logger.GetInstance().AppendLogOutput("Export CT data:", imageExport.GetLogOutput());
+            Logger.GetInstance().OpType = ScriptOperationType.ExportCT;
+            if (result) return;
+            Application.Current.MainWindow.Close();
         }
 
         #region information and help guides
@@ -398,6 +449,39 @@ namespace TMLIAutoPlanner.ViewModels
                                 if (parameter == "close progress windows on finish")
                                 {
                                     if (!string.IsNullOrEmpty(value)) TMLIAutoPlannerSettings.CloseProgressWindowOnFinish = bool.Parse(value);
+                                }
+                                else if (parameter == "img export location")
+                                {
+                                    string result = ConfigurationHelper.VerifyPathIntegrity(value);
+                                    if (!string.IsNullOrEmpty(result)) TMLIAutoPlannerSettings.ImportExportData.WriteLocation = result;
+                                    else Logger.GetInstance().LogError($"Warning! {value} does NOT exist!");
+                                }
+                                else if (parameter == "RTStruct import location")
+                                {
+                                    string result = ConfigurationHelper.VerifyPathIntegrity(value);
+                                    if (!string.IsNullOrEmpty(result)) TMLIAutoPlannerSettings.ImportExportData.ImportLocation = result;
+                                    else Logger.GetInstance().LogError($"Warning! {value} does NOT exist!");
+                                }
+                                else if (parameter == "img export format")
+                                {
+                                    if (string.Equals(value, "dcm") || string.Equals(value, "png")) TMLIAutoPlannerSettings.ImportExportData.ExportFormat = ExportFormatTypeHelper.GetExportFormatType(value);
+                                    else Logger.GetInstance().LogError("Only png and dcm image formats are supported for export!");
+                                }
+                                else if (parameter.Contains("daemon"))
+                                {
+                                    //CONTINUE HERE 070523!
+                                    DaemonModel result = ConfigurationHelper.ParseDaemonSettings(line);
+                                    if (result.Port != -1)
+                                    {
+                                        if (parameter.ToLower().Contains("aria")) TMLIAutoPlannerSettings.ImportExportData.AriaDBDaemon = result;
+                                        else if (parameter.ToLower().Contains("vms file")) TMLIAutoPlannerSettings.ImportExportData.VMSFileDaemon = result;
+                                        else if (parameter.ToLower().Contains("local")) TMLIAutoPlannerSettings.ImportExportData.LocalDaemon = result;
+                                        else
+                                        {
+                                            Logger.GetInstance().LogError($"Error! Daemon type {parameter} not recognized! Skipping!");
+                                        }
+                                    }
+                                    else Logger.GetInstance().LogError($"Error! Daemon configuration settings for {line} not parsed successfully! Skipping!");
                                 }
                                 else if (parameter == "beams per iso")
                                 {

@@ -3,7 +3,6 @@ using AutoPlannerHelpers.Models;
 using SimpleProgressWindow;
 using System;
 using System.Collections.Generic;
-using System.Drawing.Imaging;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -14,8 +13,9 @@ using EvilDICOM.Network;
 using EvilDICOM.Core.Helpers;
 using AutoPlannerHelpers.Helpers;
 using EvilDICOM.Network.Enums;
+using System.Drawing.Imaging;
 
-namespace CSIAutoPlanner.Core
+namespace AutoPlannerHelpers.Helpers
 {
     public class CTImageExport : SimpleMTbase
     {
@@ -23,7 +23,7 @@ namespace CSIAutoPlanner.Core
         private VMS.TPS.Common.Model.API.Image _image;
         private string _patID;
         private ImportExportDataModel _data;
-        private string _type;
+        private PlanType _type;
 
         /// <summary>
         /// Constructor
@@ -35,7 +35,7 @@ namespace CSIAutoPlanner.Core
         public CTImageExport(VMS.TPS.Common.Model.API.Image img,
                              string patientID,
                              ImportExportDataModel theData,
-                             string planType,
+                             PlanType planType,
                              bool closePW)
         {
             _image = img;
@@ -439,7 +439,7 @@ namespace CSIAutoPlanner.Core
                 ProvideUIUpdate($"Creating directory: {folderLoc}");
                 Directory.CreateDirectory(folderLoc);
             }
-            string fileName = folderLoc + $"\\{numImgs}.txt";
+            string fileName = folderLoc + $"\\{_type}-{numImgs}.txt";
             try
             {
                 ProvideUIUpdate($"Writing num images file: {fileName}");

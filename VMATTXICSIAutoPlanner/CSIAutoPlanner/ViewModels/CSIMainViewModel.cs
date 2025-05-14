@@ -24,6 +24,7 @@ using CommunityToolkit.Mvvm.Input;
 using System.Windows.Input;
 using AutoPlannerHelpers.Messengers;
 using CommunityToolkit.Mvvm.Messaging;
+using System.Windows.Media;
 
 namespace CSIAutoPlanner.ViewModels
 {
@@ -69,6 +70,7 @@ namespace CSIAutoPlanner.ViewModels
 
         #region view objects
         private object _exportCT;
+        private object _importSS;
         private object _prepForTargets;
         private object _structureCropOverlap;
         private object _ringGeneration;
@@ -77,6 +79,12 @@ namespace CSIAutoPlanner.ViewModels
         {
             get { return _exportCT; }
             set { SetProperty(ref _exportCT, value); }
+        }
+
+        public object ImportSS
+        {
+            get { return _importSS; }
+            set { SetProperty(ref _importSS, value); }
         }
 
         public object PrepForTargets
@@ -114,15 +122,9 @@ namespace CSIAutoPlanner.ViewModels
             _generalConfigurationFile = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\configuration\\VMAT_CSI_config.ini";
             LoadScriptConfigurationSettings(_generalConfigurationFile);
             LoadPlanTemplates();
-
-            List<ExportCTModel> models = new List<ExportCTModel>
-            {
-                new ExportCTModel("1", "CT 1", 100, DateTime.Now.ToString("yyyy-mm-dd")),
-                new ExportCTModel("2", "CT 2", 200, "2019-01-01"),
-                new ExportCTModel("3", "CT 3", 300, "2020-10-10"),
-            };
             
-            ExportCT = new CTExportView { DataContext = new CTExportViewModel(models) };
+            ExportCT = new CTExportView { DataContext = new CTExportViewModel() };
+            ImportSS = new ImportSSView { DataContext = new ImportSSViewModel(CSIAutoPlannerSettings.ImportExportData, PlanType.VMAT_CSI, (!ReferenceEquals(EclipseContext.GetInstance().Patient, null) ? EclipseContext.GetInstance().Patient.Id : "")) };
             PrepForTargets = new PrepForTargetsView { DataContext = new PrepForTargetsViewModel() };
             WeakReferenceMessenger.Default.Send(new RequestUpdateTargetStructures(CSIAutoPlannerSettings.RequestedPreliminaryTargets));
 
@@ -145,23 +147,37 @@ namespace CSIAutoPlanner.ViewModels
             SpecifyTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
             if (EclipseContext.GetInstance().IsInitialized && ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
             {
-                PatientMRN = EclipseContext.GetInstance().Patient.Id;
-                StructureSetId = EclipseContext.GetInstance().StructureSet.Id;
-                if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => x.ApprovalHistory.First().ApprovalStatus == StructureApprovalStatus.Approved && x.Id.ToLower().Contains("ptv")))
+                if (!ReferenceEquals(EclipseContext.GetInstance().Patient, null)) PatientMRN = EclipseContext.GetInstance().Patient.Id;
+                if (EclipseContext.GetInstance().CTImages.Any())
                 {
-                    SetTargetsTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
-                    PrepForTargetsBackground = System.Windows.Media.Brushes.LightGray;
+                    WeakReferenceMessenger.Default.Send(new RequestUpdateCTList(EclipseContext.GetInstance().CTImages.ToList().ConvertAll(x => new ExportCTModel(x.Series.Id, x.Id, x.ZSize, x.HistoryDateTime.ToString()))));
                 }
-                else
+                if (!ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
                 {
-                    PrepForTargetsBackground = System.Windows.Media.Brushes.PaleVioletRed;
-                    SetTargetsTabBackground = System.Windows.Media.Brushes.LightGray;
+                    StructureSetId = EclipseContext.GetInstance().StructureSet.Id;
+                    if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => x.ApprovalHistory.First().ApprovalStatus == StructureApprovalStatus.Approved && x.Id.ToLower().Contains("ptv")))
+                    {
+                        SetTargetsTabBackground = Brushes.PaleVioletRed;
+                        PrepForTargetsBackground = Brushes.LightGray;
+                    }
+                    else
+                    {
+                        PrepForTargetsBackground = Brushes.PaleVioletRed;
+                        SetTargetsTabBackground = Brushes.LightGray;
+                    }
                 }
             }
             else
             {
-                PrepForTargetsBackground = System.Windows.Media.Brushes.LightGray;
-                SetTargetsTabBackground = System.Windows.Media.Brushes.LightGray;
+                PrepForTargetsBackground = Brushes.LightGray;
+                SetTargetsTabBackground = Brushes.LightGray;
+                List<ExportCTModel> models = new List<ExportCTModel>
+                {
+                    new ExportCTModel("1", "CT 1", 100, DateTime.Now.ToString("yyyy-mm-dd")),
+                    new ExportCTModel("2", "CT 2", 200, "2019-01-01"),
+                    new ExportCTModel("3", "CT 3", 300, "2020-10-10"),
+                };
+                WeakReferenceMessenger.Default.Send(new RequestUpdateCTList(models));
             }
             InitializeCSIMessengers();
         }
@@ -180,11 +196,11 @@ namespace CSIAutoPlanner.ViewModels
 
         public void ExportCTImage(ExportCTModel selectedImage)
         {
-            if (!ReferenceEquals(selectedImage, null)) return;
+            if (ReferenceEquals(selectedImage, null) || !EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().Patient, null) || !EclipseContext.GetInstance().CTImages.Any()) return;
             CTImageExport imageExport = new CTImageExport(EclipseContext.GetInstance().CTImages.First(x => string.Equals(x.Id, selectedImage.CTId)),
                                                           EclipseContext.GetInstance().Patient.Id,
                                                           CSIAutoPlannerSettings.ImportExportData,
-                                                          "CSI",
+                                                          PlanType.VMAT_CSI,
                                                           CSIAutoPlannerSettings.CloseProgressWindowOnFinish);
             bool result = imageExport.Execute();
             Logger.GetInstance().AppendLogOutput("Export CT data:", imageExport.GetLogOutput());

@@ -112,6 +112,11 @@ namespace AutoPlannerHelpers.Messengers
     #endregion
 
     #region export ct
+    public class RequestUpdateCTList
+    {
+        public IEnumerable<ExportCTModel> Images { get; private set; }
+        public RequestUpdateCTList(IEnumerable<ExportCTModel> images) { this.Images = images; }
+    }
     public class RequestExportCT
     {
         public ExportCTModel SelectedCTImage { get; private set; }

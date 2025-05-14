@@ -65,6 +65,7 @@
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml">
@@ -117,6 +118,7 @@
     <Compile Include="Helpers\CalculationHelper.cs" />
     <Compile Include="Helpers\ConfigurationHelper.cs" />
     <Compile Include="Helpers\ContourHelper.cs" />
+    <Compile Include="Helpers\CTImageExport.cs" />
     <Compile Include="Helpers\ESAPIWorker.cs" />
     <Compile Include="Helpers\ImportListenerHelper.cs" />
     <Compile Include="Helpers\IsoNameHelper.cs" />
@@ -176,6 +178,7 @@
     <Compile Include="UIHelpers\ConfigurationUIHelper.cs" />
     <Compile Include="ViewModels\BeamPlacementViewModel.cs" />
     <Compile Include="ViewModels\CTExportViewModel.cs" />
+    <Compile Include="ViewModels\ImportSSViewModel.cs" />
     <Compile Include="ViewModels\ObservableCollectionPropertyNotify.cs" />
     <Compile Include="ViewModels\OptimizationSetupViewModel.cs" />
     <Compile Include="ViewModels\PlanPreparationViewModel.cs" />
@@ -195,6 +198,9 @@
       <DependentUpon>CTExportView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\EnumBindingSourceExtension.cs" />
+    <Compile Include="Views\ImportSSView.xaml.cs">
+      <DependentUpon>ImportSSView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\OptimizationSetupView.xaml.cs">
       <DependentUpon>OptimizationSetupView.xaml</DependentUpon>
     </Compile>
@@ -258,6 +264,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Views\ImportSSView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\OptimizationSetupView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -306,6 +316,9 @@
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm">
       <Version>8.4.0</Version>
+    </PackageReference>
+    <PackageReference Include="EvilDICOM">
+      <Version>3.0.8998.340</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf">
       <Version>1.1.135</Version>

@@ -25,13 +25,26 @@ namespace AutoPlannerHelpers.ViewModels
         public RelayCommand<ExportCTModel> CTImageSelectionChangedCommand { get; set; }
         #endregion
 
-        public CTExportViewModel(List<ExportCTModel> ctImages)
+        public CTExportViewModel()
         {
             CTImageList = new ObservableCollectionPropertyNotify<ExportCTModel> { };
-            foreach(ExportCTModel itr in ctImages) CTImageList.Add(itr);
             ShowExportCTInfoCommand = new RelayCommand(ShowExportCTInfo);
             CTImageSelectionChangedCommand = new RelayCommand<ExportCTModel>(CTImageSelectionChanged);
             ExportCTCommand = new RelayCommand(ExportCT);
+            InitializeMessengers();
+        }
+
+        private void InitializeMessengers()
+        {
+            WeakReferenceMessenger.Default.Register<RequestUpdateCTList>(this, (r,m) =>
+            {
+                UpdateCTListForExport(m.Images);
+            });
+        }
+
+        public void UpdateCTListForExport(IEnumerable<ExportCTModel> images)
+        {
+            foreach (ExportCTModel itr in images) CTImageList.Add(itr);
         }
 
         public void ShowExportCTInfo()

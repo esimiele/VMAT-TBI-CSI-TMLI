@@ -126,6 +126,13 @@
                 <TabControl SelectedIndex="{Binding InitialTabSelected}" Background="DarkGray" TabStripPlacement="Left" HorizontalAlignment="Left" Height="Auto" Margin="-2,0,0,0" VerticalAlignment="Bottom">
                     <TabItem Header="Stitch CT" Content="{Binding StitchCT}" Background="{Binding StitchCTTabBackground,FallbackValue=LightGray}" BorderThickness="0,1,1,0" Visibility="{Binding StitchCTTabVisible, FallbackValue=Visible}">
                     </TabItem>
+                    <TabItem Header="Export/Import" BorderThickness="0,1,1,0">
+                        <TabControl TabStripPlacement="Top" Background="DarkGray">
+                            <TabItem Header="Export CT" Content="{Binding ExportCT}" BorderThickness="1,1,1,1" Width="294">
+                            </TabItem>
+                            <TabItem Header="Import Structure Set" Content="{Binding ImportSS}" BorderThickness="1,1,1,1" Width="294"/>
+                        </TabControl>
+                    </TabItem>
                     <TabItem Header="Specify Targets" Background="{Binding SpecifyTargetsTabBackground, FallbackValue=LightGray}" BorderThickness="0,1,1,0">
                         <TabControl TabStripPlacement="Top" Background="DarkGray">
                             <TabItem Content="{Binding PrepForTargets}" Background="{Binding PrepForTargetsBackground, FallbackValue=LightGray}" Header="Prep for Targets" Width="294" BorderThickness="1,1,1,1">

@@ -1,4 +1,5 @@
-﻿using AutoPlannerHelpers.Models;
+﻿using AutoPlannerHelpers.Enums;
+using AutoPlannerHelpers.Models;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -15,7 +16,7 @@ namespace AutoPlannerHelpers.Helpers
 
         }
 
-        public static bool LaunchImportListener(string listener, ImportExportDataModel IEData, string mrn, string planType)
+        public static bool LaunchImportListener(string listener, ImportExportDataModel IEData, string mrn, PlanType planType)
         {
             if (!string.IsNullOrEmpty(listener))
             {
