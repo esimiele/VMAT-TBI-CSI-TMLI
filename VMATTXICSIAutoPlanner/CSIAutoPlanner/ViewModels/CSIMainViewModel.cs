@@ -588,6 +588,34 @@ namespace CSIAutoPlanner.ViewModels
             sb.AppendLine($"Documentation path: {Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\documentation\\"}");
             sb.AppendLine($"Log file path: {Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\logs\\"}");
             sb.AppendLine($"Close progress windows on finish: {CSIAutoPlannerSettings.CloseProgressWindowOnFinish}");
+
+            sb.AppendLine($"Import/export settings:");
+            sb.AppendLine($"Image export path: {CSIAutoPlannerSettings.ImportExportData.WriteLocation}");
+            sb.AppendLine($"RT structure set import path: {CSIAutoPlannerSettings.ImportExportData.ImportLocation}");
+            sb.AppendLine($"Image export format: {CSIAutoPlannerSettings.ImportExportData.ExportFormat}");
+
+            if (CSIAutoPlannerSettings.ImportExportData.AriaDBDaemon.IsInitialized)
+            {
+                sb.AppendLine("Aria database daemon:");
+                sb.AppendLine($"AE Title: {CSIAutoPlannerSettings.ImportExportData.AriaDBDaemon.AETitle}");
+                sb.AppendLine($"IP: {CSIAutoPlannerSettings.ImportExportData.AriaDBDaemon.IP}");
+                sb.AppendLine($"Port: {CSIAutoPlannerSettings.ImportExportData.AriaDBDaemon.Port}");
+            }
+            if (CSIAutoPlannerSettings.ImportExportData.VMSFileDaemon.IsInitialized)
+            {
+                sb.AppendLine("Aria VMS File daemon:");
+                sb.AppendLine($"AE Title: {CSIAutoPlannerSettings.ImportExportData.VMSFileDaemon.AETitle}");
+                sb.AppendLine($"IP: {CSIAutoPlannerSettings.ImportExportData.VMSFileDaemon.IP}");
+                sb.AppendLine($"Port: {CSIAutoPlannerSettings.ImportExportData.VMSFileDaemon.Port}");
+            }
+            if (CSIAutoPlannerSettings.ImportExportData.LocalDaemon.IsInitialized)
+            {
+                sb.AppendLine("Local daemon:");
+                sb.AppendLine($"AE Title: {CSIAutoPlannerSettings.ImportExportData.LocalDaemon.AETitle}");
+                sb.AppendLine($"Port: {CSIAutoPlannerSettings.ImportExportData.LocalDaemon.Port}");
+            }
+            sb.AppendLine();
+
             sb.AppendLine("Default parameters:");
             sb.AppendLine($"Course Id: {CSIAutoPlannerSettings.CourseId}");
             sb.AppendLine($"Check for potential couch collision: {CSIAutoPlannerSettings.CheckTTCollision}");

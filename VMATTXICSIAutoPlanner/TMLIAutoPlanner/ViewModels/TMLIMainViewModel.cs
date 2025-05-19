@@ -598,6 +598,34 @@ namespace TMLIAutoPlanner.ViewModels
             sb.AppendLine($"Documentation path: {Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\documentation\\"}");
             sb.AppendLine($"Log file path: {Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\logs\\"}");
             sb.AppendLine($"Close progress windows on finish: {TMLIAutoPlannerSettings.CloseProgressWindowOnFinish}");
+
+            sb.AppendLine($"Import/export settings:");
+            sb.AppendLine($"Image export path: {TMLIAutoPlannerSettings.ImportExportData.WriteLocation}");
+            sb.AppendLine($"RT structure set import path: {TMLIAutoPlannerSettings.ImportExportData.ImportLocation}");
+            sb.AppendLine($"Image export format: {TMLIAutoPlannerSettings.ImportExportData.ExportFormat}");
+
+            if (TMLIAutoPlannerSettings.ImportExportData.AriaDBDaemon.IsInitialized)
+            {
+                sb.AppendLine("Aria database daemon:");
+                sb.AppendLine($"AE Title: {TMLIAutoPlannerSettings.ImportExportData.AriaDBDaemon.AETitle}");
+                sb.AppendLine($"IP: {TMLIAutoPlannerSettings.ImportExportData.AriaDBDaemon.IP}");
+                sb.AppendLine($"Port: {TMLIAutoPlannerSettings.ImportExportData.AriaDBDaemon.Port}");
+            }
+            if (TMLIAutoPlannerSettings.ImportExportData.VMSFileDaemon.IsInitialized)
+            {
+                sb.AppendLine("Aria VMS File daemon:");
+                sb.AppendLine($"AE Title: {TMLIAutoPlannerSettings.ImportExportData.VMSFileDaemon.AETitle}");
+                sb.AppendLine($"IP: {TMLIAutoPlannerSettings.ImportExportData.VMSFileDaemon.IP}");
+                sb.AppendLine($"Port: {TMLIAutoPlannerSettings.ImportExportData.VMSFileDaemon.Port}");
+            }
+            if (TMLIAutoPlannerSettings.ImportExportData.LocalDaemon.IsInitialized)
+            {
+                sb.AppendLine("Local daemon:");
+                sb.AppendLine($"AE Title: {TMLIAutoPlannerSettings.ImportExportData.LocalDaemon.AETitle}");
+                sb.AppendLine($"Port: {TMLIAutoPlannerSettings.ImportExportData.LocalDaemon.Port}");
+            }
+            sb.AppendLine();
+
             sb.AppendLine("Default parameters:");
             sb.AppendLine($"Course Id: {TMLIAutoPlannerSettings.CourseId}");
             sb.AppendLine($"Check for potential couch collision: {TMLIAutoPlannerSettings.CheckTTCollision}");

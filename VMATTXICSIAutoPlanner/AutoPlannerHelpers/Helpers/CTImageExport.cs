@@ -300,27 +300,15 @@ namespace AutoPlannerHelpers.Helpers
             if (VerifyPathIntegrity(_data.ImportLocation)) return true;
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Import data path {_data.ImportLocation} verified");
 
-            if (VerifyDaemonIntegrity(_data.AriaDBDaemon)) return true;
+            if (_data.AriaDBDaemon.IsInitialized) return true;
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Aria DB Daemon integrity verified");
-            if (VerifyDaemonIntegrity(_data.VMSFileDaemon)) return true;
+            if (_data.VMSFileDaemon.IsInitialized) return true;
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"VMS File Daemon integrity verified");
-            if (VerifyDaemonIntegrity(_data.LocalDaemon)) return true;
+            if (_data.LocalDaemon.IsInitialized) return true;
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Local file Daemon integrity verified");
 
             if (CheckDaemonConnection()) return true;
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Daemon connection verified");
-            return false;
-        }
-
-        /// <summary>
-        /// Helper method to verify the integrity of the daemon parameters that were parsed from the configuration file
-        /// </summary>
-        /// <param name="daemon"></param>
-        /// <returns></returns>
-        private bool VerifyDaemonIntegrity(DaemonModel daemon)
-        {
-            //check if anything was assigned to this daemon (the port, item3, is set to -1 by default)
-            if (daemon.Port == -1) return true;
             return false;
         }
 

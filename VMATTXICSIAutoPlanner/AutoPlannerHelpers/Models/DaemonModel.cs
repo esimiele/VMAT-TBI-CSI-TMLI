@@ -2,6 +2,7 @@
 {
     public class DaemonModel
     {
+        public bool IsInitialized { get => !string.IsNullOrEmpty(AETitle) && Port != -1; }
         public string AETitle { get; set; } = string.Empty;
         public string IP { get; set; } = string.Empty;
         public int Port { get; set; } = -1;
