@@ -92,7 +92,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         public AutoPlanTemplateBase SelectedTemplate
         {
             get { return _selectedTemplate; }
-            set { SetProperty(ref _selectedTemplate, value); UpdateUIWithSelectedPlanTemplate(); }
+            set { SetProperty(ref _selectedTemplate, value); }
         }
 
         public double BasePlanDosePerFraction
@@ -291,6 +291,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             if (PlanTemplates.Any(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed)))
             {
                 SelectedTemplate = PlanTemplates.First(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed));
+                WeakReferenceMessenger.Default.Send(new RequestAutoPlanTemplateChangedMessage(_selectedTemplate));
             }
         }
         #endregion
@@ -413,6 +414,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                     EclipseContext.GetInstance().Course = theCourse;
                 }
             }
+            if(EclipseContext.GetInstance().VMATPlans.Any()) ESAPIThreadContext.ESAPIDispatcher.Invoke(() => UpdateUIWithPlanPrescriptionInfo());
         }
         #endregion
 
@@ -438,19 +440,16 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             BoostPlanTotalDose = 0;
         }
 
-        private void UpdateUIWithSelectedPlanTemplate()
+        private void UpdateUIWithPlanPrescriptionInfo()
         {
-            if (ReferenceEquals(_selectedTemplate, null)) return;
             ClearAllRxDoses();
-            BasePlanDosePerFraction = _selectedTemplate.InitialRxDosePerFx;
-            BasePlanNumberOfFractions = _selectedTemplate.InitialRxNumberOfFractions;
-            if (_planType == PlanType.VMAT_CSI && !CalculationHelper.AreEqual((_selectedTemplate as CSIAutoPlanTemplate).BoostRxDosePerFx, 0.1))
+            BasePlanDosePerFraction = EclipseContext.GetInstance().VMATPlans.First().DosePerFraction.Dose;
+            BasePlanNumberOfFractions = (int)EclipseContext.GetInstance().VMATPlans.First().NumberOfFractions;
+            if (_planType == PlanType.VMAT_CSI && EclipseContext.GetInstance().VMATPlans.Count() > 1)
             {
-                BoostPlanDosePerFraction = (_selectedTemplate as CSIAutoPlanTemplate).BoostRxDosePerFx;
-                BoostPlanNumberOfFractions = (_selectedTemplate as CSIAutoPlanTemplate).BoostRxNumberOfFractions;
+                BoostPlanDosePerFraction = EclipseContext.GetInstance().VMATPlans.Last().DosePerFraction.Dose;
+                BoostPlanNumberOfFractions = (int)EclipseContext.GetInstance().VMATPlans.Last().NumberOfFractions;
             }
-
-            WeakReferenceMessenger.Default.Send(new RequestAutoPlanTemplateChangedMessage(_selectedTemplate));
         }
 
         public void StartOptimization(List<PlanObjectiveModel> planObj, List<PlanOptimizationSetupModel> planOptSetup)

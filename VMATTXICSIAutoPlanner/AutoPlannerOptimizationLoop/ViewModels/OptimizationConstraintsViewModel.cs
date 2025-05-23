@@ -43,6 +43,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         public ICommand GetOptConstraintsFromPlanCommand { get; set; }
         public ICommand GetOptConstraintsFromLogsCommand { get; set; }
         public ICommand ClearOptimizationConstraintListCommand { get; set; }
+        public ICommand ClearRowCommand { get; set; }
         public ICommand StartOptimizationCommand { get; set; }
         #endregion
 
@@ -62,6 +63,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             GetOptConstraintsFromPlanCommand = new RelayCommand(GetOptimizationConstraintsFromPlan);
             GetOptConstraintsFromLogsCommand = new RelayCommand(GetOptimizationConstraintsFromLogs);
             ClearOptimizationConstraintListCommand = new RelayCommand(ClearOptimizationConstraints);
+            ClearRowCommand = new RelayCommand<OptimizationConstraintModel>(ClearRow);
             StartOptimizationCommand = new RelayCommand(StartOptimization);
             PlanOptimizationConstraints = new ObservableCollectionPropertyNotify<PlanOptimizationSetupModel> { };
             foreach (PlanOptimizationSetupModel itr in OptimizationLoopSettings.PlanPreparationOptimizationSetup)
@@ -69,6 +71,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                 PlanOptimizationConstraints.Add(itr);
             }
             _planIds = new List<string>(pids);
+            _tmpPlanOptSetup = new List<PlanOptimizationSetupModel>();
             InitializeMessengers();
         }
 
@@ -82,10 +85,11 @@ namespace AutoPlannerOptimizationLoop.ViewModels
 
         public void UpdateViewWithSelectedPlanTemplate(AutoPlanTemplateBase template)
         {
+            _selectedTemplate = template;
             if (!OptimizationLoopSettings.PlanPreparationOptimizationSetup.Any())
             {
+                //only add constraints if none were found in the plan prep log file
                 if (ReferenceEquals(template, null)) return;
-                _selectedTemplate = template;
                 PlanOptimizationConstraints.Clear();
                 if (_planType == PlanType.VMAT_TBI) PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel(_planIds.First(), (_selectedTemplate as TBIAutoPlanTemplate).InitialOptimizationConstraints.Where(x => _structureIds.Any(y => y.Contains(x.StructureId, StringComparison.OrdinalIgnoreCase)))));
                 else if (_planType == PlanType.VMAT_CSI)
@@ -134,7 +138,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             ESAPIThreadContext.RunOnESAPIThreadSync(() =>
             {
                 if (!EclipseContext.GetInstance().IsInitialized || !EclipseContext.GetInstance().VMATPlans.Any()) return;
-                _tmpPlanOptSetup = new List<PlanOptimizationSetupModel> { };
+                _tmpPlanOptSetup.Clear();
                 ESAPIThreadContext.ESAPIDispatcher.Invoke(() =>
                 {
                     foreach (ExternalPlanSetup itr in EclipseContext.GetInstance().VMATPlans)
@@ -172,6 +176,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                 PlanOptimizationSetupModel planOptSetupModel = PlanOptimizationConstraints.First(x => x.OptimizationConstraints.Contains(opt));
                 List<OptimizationConstraintModel> constraints = planOptSetupModel.OptimizationConstraints;
                 constraints.Remove(opt);
+                if (!constraints.Any()) PlanOptimizationConstraints.Remove(planOptSetupModel);
                 PlanOptimizationConstraints.Refresh();
             }
         }
