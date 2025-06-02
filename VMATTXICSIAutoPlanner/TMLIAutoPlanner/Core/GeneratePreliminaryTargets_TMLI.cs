@@ -26,7 +26,8 @@ namespace TMLIAutoPlanner.Core
             "bones_extrem",
             "brain",
             "OralCavity",
-            //"ribs",
+            "Rib",
+            "Eyes",
         };
 
         private List<RequestedTSManipulationModel> _manipulations;
@@ -53,7 +54,7 @@ namespace TMLIAutoPlanner.Core
         /// <returns></returns>
         protected override bool PreliminaryChecks()
         {
-            UpdateUILabel("Performing Preliminary Checks: ");
+            UpdateUILabel("Performing Preliminary Checks:");
             int calcItems = 3;
             int counter = 0;
 
@@ -100,14 +101,15 @@ namespace TMLIAutoPlanner.Core
             {
                 ProvideUIUpdate(100 * ++counter / calcItems, $"Contouring target: {itr}");
                 Structure theTarget = StructureTuningHelper.GetStructureFromId(itr, EclipseContext.GetInstance().StructureSet);
-                if (itr.ToLower().Contains("ptv_tmli"))
+                if(string.Equals(itr, "ptv_tmli_12", StringComparison.OrdinalIgnoreCase))
+                {
+                    GeneratePTV1200(theTarget);
+
+                }
+                else if (string.Equals(itr,  "ptv_tmli_20",StringComparison.OrdinalIgnoreCase) || string.Equals(itr, "ptv_tmli", StringComparison.OrdinalIgnoreCase))
                 {
                     GeneratePTVTMLI(theTarget);
                     ManipulatePTVTMLI(theTarget);
-                }
-                else if (itr.ToLower().Contains("ptv_1200"))
-                {
-                   GeneratePTV1200(theTarget);
                 }
             }
             
@@ -118,7 +120,7 @@ namespace TMLIAutoPlanner.Core
 
         private bool UnionLRStructures()
         {
-            UpdateUILabel("Unioning Structures: ");
+            UpdateUILabel("Unioning Structures:");
             ProvideUIUpdate(0, "Checking for L and R structures to union!");
             List<UnionStructureModel> structuresToUnion = StructureTuningHelper.CheckStructuresToUnion(EclipseContext.GetInstance().StructureSet);
             if (structuresToUnion.Any())
@@ -159,12 +161,11 @@ namespace TMLIAutoPlanner.Core
             //need to know target dosing
             if (_includeTestesInPTV && StructureTuningHelper.DoesStructureExistInSS("testes", EclipseContext.GetInstance().StructureSet, true)) structures.Add(StructureTuningHelper.GetStructureFromId("testes", ss));
 
-            ContourHelper.ContourUnion(structures, ptv, 0.5);
+            ContourHelper.ContourUnion(structures, ptv, 0.0);
             foreach (string itr in structures.Select(x => x.Id)) ProvideUIUpdate($"Unioned {itr} with PTV_TMLI");
             ptv.SegmentVolume = ptv.Margin(5.0);
             ProvideUIUpdate("Expanded PTV_TMLI with uniform 5mm margin");
 
-            //ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("rib", ss).Margin(5.0), ptv, 0.0);
             ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("bones_extrem", ss).Margin(10.0), ptv, 0.0);
             ProvideUIUpdate($"Unioned bones_extrem with PTV_TMLI with 10 mm outer margin");
             PostProcessPTVTMLI(ptv);
@@ -173,7 +174,8 @@ namespace TMLIAutoPlanner.Core
 
         private bool PostProcessPTVTMLI(Structure target)
         {
-            Structure expandedBrain = EclipseContext.GetInstance().StructureSet.AddStructure("CONTROL", "Brain+1.0cm");
+
+            Structure expandedBrain = StructureTuningHelper.GetStructureFromId("brain+1.0cm", EclipseContext.GetInstance().StructureSet, true);
             expandedBrain.SegmentVolume = StructureTuningHelper.GetStructureFromId("Brain", EclipseContext.GetInstance().StructureSet).Margin(10.0);
             int supOralCavitySlice = CalculationHelper.ComputeSlice(StructureTuningHelper.GetStructureFromId("oralcavity", EclipseContext.GetInstance().StructureSet).MeshGeometry.Positions.Max(p => p.Z),
                                                                     EclipseContext.GetInstance().StructureSet.Image.Origin.z,
@@ -184,9 +186,6 @@ namespace TMLIAutoPlanner.Core
 
             double zPos = StructureTuningHelper.GetStructureFromId("eyes", EclipseContext.GetInstance().StructureSet).MeshGeometry.Positions.OrderByDescending(x => x.Z).First().Z + 15.0 - EclipseContext.GetInstance().StructureSet.Image.UserOrigin.z;
             ProvideUIUpdate($"{zPos}");
-
-            //Structure tmpTarget = EclipseContext.GetInstance().StructureSet.AddStructure("CONTROL", "_tmpTarget");
-            //ContourHelper.CopyStructureOntoStructure(target, tmpTarget);
 
             Structure tmp = EclipseContext.GetInstance().StructureSet.AddStructure("CONTROL", "_tmp");
 
@@ -234,6 +233,17 @@ namespace TMLIAutoPlanner.Core
                         if (failCrop)
                         {
                             ProvideUIUpdate(errorCropMessage.ToString());
+                            return true;
+                        }
+                    }
+                    else if (manipulationItem.ManipulationType == TSManipulationType.UnionWithTarget)
+                    {
+                        ProvideUIUpdate($"Unioning target {target.Id} with structure {manipulationItem.StructureId} with margin {manipulationItem.MarginInCM} cm");
+                        //crop target from structure
+                        (bool failUnion, StringBuilder errorUnionMessage) = ContourHelper.ContourUnion(theStructure, target, manipulationItem.MarginInCM);
+                        if (failUnion)
+                        {
+                            ProvideUIUpdate(errorUnionMessage.ToString());
                             return true;
                         }
                     }

@@ -25,6 +25,7 @@ using System.Windows.Input;
 using AutoPlannerHelpers.Messengers;
 using CommunityToolkit.Mvvm.Messaging;
 using System.Windows.Media;
+using AutoPlannerHelpers.EqualityComparers;
 
 namespace CSIAutoPlanner.ViewModels
 {
@@ -411,7 +412,7 @@ namespace CSIAutoPlanner.ViewModels
             BoostDosePerFraction = (_selectedTemplate as CSIAutoPlanTemplate).BoostRxDosePerFx;
             BoostNumberOfFractions = (_selectedTemplate as CSIAutoPlanTemplate).BoostRxNumberOfFractions;
             WeakReferenceMessenger.Default.Send(new RequestAutoPlanTemplateChangedMessage(_selectedTemplate));
-            WeakReferenceMessenger.Default.Send(new RequestUpdateTargetStructures(CSIAutoPlannerSettings.RequestedPreliminaryTargets));
+            Logger.GetInstance().Template = _selectedTemplate.TemplateName;
         }
 
         #region script configuration

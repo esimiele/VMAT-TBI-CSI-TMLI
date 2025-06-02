@@ -135,6 +135,17 @@ namespace AutoPlannerHelpers.BaseCore
             {
                 if (ContourInnerOuterStructure(theStructure, manipulationItem.MarginInCM)) return true;
             }
+            else if (manipulationItem.ManipulationType == TSManipulationType.UnionWithTarget)
+            {
+                ProvideUIUpdate($"Unioning target {target.Id} with structure {manipulationItem.StructureId} with margin {manipulationItem.MarginInCM} cm");
+                //crop target from structure
+                (bool failUnion, StringBuilder errorUnionMessage) = ContourHelper.ContourUnion(theStructure, target, manipulationItem.MarginInCM);
+                if (failUnion)
+                {
+                    ProvideUIUpdate(errorUnionMessage.ToString());
+                    return true;
+                }
+            }
             return false;
         }
 

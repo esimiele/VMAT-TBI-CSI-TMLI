@@ -195,7 +195,7 @@
                                 <Label Content="{Binding PlanType}" Grid.Column="1" Grid.Row="1" FontSize="14" FontWeight="Bold" HorizontalAlignment="Left" VerticalAlignment="Center" ></Label>
 
                                 <Label Content="Plan Template:" Grid.Column="0" Grid.Row="2" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0"></Label>
-                                <Label Content="{Binding SelectedTemplate.TemplateName}" Grid.Column="1" Grid.Row="2" FontSize="14" FontWeight="Bold" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0"></Label>
+                                <Label Content="{Binding SelectedTemplate.TemplateName}" Grid.Column="1" Grid.Row="2" FontSize="14" FontWeight="Bold" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0" ToolTip="{Binding SelectedTemplate.TemplateName}"></Label>
                             </Grid>
 
                             <Grid Grid.Column="1" Grid.Row="0" Margin="5">
@@ -228,8 +228,8 @@
                                 <TextBox Text="{Binding BoostPlanTotalDose}" Grid.Column="2" Grid.Row="3" TextAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" Width="75" Height="20" Margin="0" IsReadOnly="True"></TextBox>
 
                                 <Label Content="Normalization volumes:" Grid.Column="0" Grid.Row="4" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0"></Label>
-                                <TextBox Text="{Binding BasePlanNormalizationVolume}" Grid.Column="1" Grid.Row="4" TextAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" Width="75" Height="20" Margin="0" IsReadOnly="True"></TextBox>
-                                <TextBox Text="{Binding BoostPlanNormalizationVolume}" Grid.Column="2" Grid.Row="4" TextAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" Width="75" Height="20" Margin="0" IsReadOnly="True"></TextBox>
+                                <TextBox Text="{Binding BasePlanNormalizationVolume}" Grid.Column="1" Grid.Row="4" TextAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" Width="75" Height="20" Margin="0" IsReadOnly="True" IsTabStop="False" ToolTip="{Binding BasePlanNormalizationVolume}"></TextBox>
+                                <TextBox Text="{Binding BoostPlanNormalizationVolume}" Grid.Column="2" Grid.Row="4" TextAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" Width="75" Height="20" Margin="0" IsReadOnly="True" IsTabStop="False" ></TextBox>
                             </Grid>
 
                             <Grid Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" Margin="0,0,0,5">

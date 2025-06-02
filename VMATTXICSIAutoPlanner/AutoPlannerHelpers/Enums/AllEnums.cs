@@ -10,7 +10,8 @@
         ContourOverlapWithTarget,
         CropFromBody,
         ContourSubStructure,
-        ContourOuterStructure
+        ContourOuterStructure,
+        UnionWithTarget
     };
 
     /// <summary>

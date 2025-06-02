@@ -115,6 +115,7 @@
     <Compile Include="EnumTypeHelpers\OptimizationTypeHelper.cs" />
     <Compile Include="EnumTypeHelpers\TSManipulationTypeHelper.cs" />
     <Compile Include="EnumTypeHelpers\UnitsTypeHelper.cs" />
+    <Compile Include="EqualityComparers\RequestedTSStructureModelComparer.cs" />
     <Compile Include="Helpers\CalculationHelper.cs" />
     <Compile Include="Helpers\ConfigurationHelper.cs" />
     <Compile Include="Helpers\ContourHelper.cs" />

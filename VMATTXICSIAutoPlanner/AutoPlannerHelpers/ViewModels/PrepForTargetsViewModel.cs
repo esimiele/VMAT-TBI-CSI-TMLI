@@ -50,6 +50,7 @@ namespace AutoPlannerHelpers.ViewModels
 
         public void UpdateRequestedTargetStructures(List<RequestedTSStructureModel> targets)
         {
+            if (!targets.Any()) return;
             RequestedPreliminaryTargets.Clear();
             _originalRequestedTargets = new List<RequestedTSStructureModel>(targets);
             foreach (RequestedTSStructureModel itr in _originalRequestedTargets) RequestedPreliminaryTargets.Add(itr);
