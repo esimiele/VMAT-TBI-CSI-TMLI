@@ -19,7 +19,7 @@ namespace AutoPlannerHelpers.EqualityComparers
 
         public int GetHashCode(RequestedTSStructureModel obj)
         {
-            throw new NotImplementedException();
+            return obj.GetHashCode();
         }
     }
 }

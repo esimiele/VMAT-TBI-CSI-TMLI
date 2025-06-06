@@ -29,6 +29,7 @@ using AutoPlannerHelpers.Prompts;
 using AutoPlannerHelpers.EnumTypeHelpers;
 using System.Windows.Media.Media3D;
 using AutoPlannerHelpers.EqualityComparers;
+using AutoPlannerHelpers.PlanTemplateModels;
 
 namespace TMLIAutoPlanner.ViewModels
 {
@@ -417,7 +418,7 @@ namespace TMLIAutoPlanner.ViewModels
             InitialNumberOfFractions = _selectedTemplate.InitialRxNumberOfFractions;
             WeakReferenceMessenger.Default.Send(new RequestAutoPlanTemplateChangedMessage(_selectedTemplate));
             List<RequestedTSStructureModel> prelimTargets = new List<RequestedTSStructureModel>(TMLIAutoPlannerSettings.RequestedPreliminaryTargets);
-            prelimTargets.AddRange(_selectedTemplate.CreateTSStructures);
+            prelimTargets.AddRange((_selectedTemplate as TMLIAutoPlanTemplate).RequestedPreliminaryTargets);
             WeakReferenceMessenger.Default.Send(new RequestUpdateTargetStructures(prelimTargets.Distinct(new RequestedTSStructureModelComparer()).ToList()));
             Logger.GetInstance().Template = _selectedTemplate.TemplateName;
         }
