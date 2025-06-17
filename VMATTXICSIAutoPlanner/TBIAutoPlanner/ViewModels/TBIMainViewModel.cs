@@ -25,6 +25,7 @@ using System.Windows.Media;
 using AutoPlannerHelpers.Prompts;
 using AutoPlannerHelpers.Messengers;
 using CommunityToolkit.Mvvm.Messaging;
+using ExternalPlanSetup = VMS.TPS.Common.Model.API.ExternalPlanSetup;
 
 namespace TBIAutoPlanner.ViewModels
 {
@@ -150,6 +151,14 @@ namespace TBIAutoPlanner.ViewModels
             }
         }
 
+        private void InitializeTBIMessengers()
+        {
+            WeakReferenceMessenger.Default.Register<RequestAreSeparatedPlansAutomaticallyRecalculated>(this, (r, m) =>
+            {
+                m.Reply(TBIAutoPlannerSettings.AutoDoseRecalculationDuringPlanPrep);
+            });
+        }
+
         #region information and help guides
         private void LaunchQuickStartGuide()
         {
@@ -270,6 +279,9 @@ namespace TBIAutoPlanner.ViewModels
         #region prepare for treatment
         protected override bool GenerateShiftNote()
         {
+            ExternalPlanSetup plan = PlanPrepHelper.RetrieveVMATPlan(Logger.GetInstance().LogPath, !string.IsNullOrEmpty(TBIAutoPlannerSettings.CourseId) ? TBIAutoPlannerSettings.CourseId : "VMAT-TBI");
+            if (!ReferenceEquals(plan, null)) EclipseContext.GetInstance().VMATPlans = new List<ExternalPlanSetup> { plan };
+            else return true;
             if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Any(x => x.Id.ToLower().Contains("legs")))
             {
                 if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("legs")).Any(x => x.TreatmentOrientation != PatientOrientation.FeetFirstSupine))
@@ -283,7 +295,7 @@ namespace TBIAutoPlanner.ViewModels
             }
 
             Clipboard.SetText(PlanPrepHelper.GetTBITMLIShiftNote(EclipseContext.GetInstance().VMATPlans.First(), EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("legs")).ToList()).ToString());
-            return true;
+            return false;
         }
         protected override bool SeparatePlans()
         {
@@ -302,9 +314,18 @@ namespace TBIAutoPlanner.ViewModels
 
             //separate the plans
             EclipseContext.GetInstance().Patient.BeginModifications();
-            PreparePlansForTreatment_TBI planPrep = new PreparePlansForTreatment_TBI(removeFlash);
-            bool result = planPrep.Execute();
-            Logger.GetInstance().AppendLogOutput("Plan preparation:", planPrep.GetLogOutput());
+            _planPrep = new PreparePlansForTreatment_TBI(removeFlash);
+            bool result = _planPrep.Execute();
+            Logger.GetInstance().AppendLogOutput("Plan preparation:", _planPrep.GetLogOutput());
+            if (result) return true;
+            return false;
+        }
+
+        protected override bool RecalculateDoseForSeparatePlans()
+        {
+            _planPrep.RecalculateDoseOnly = true;
+            bool result = _planPrep.Execute();
+            Logger.GetInstance().AppendLogOutput("Plan prep dose recalculation:", _planPrep.GetLogOutput());
             if (result) return true;
             return false;
         }

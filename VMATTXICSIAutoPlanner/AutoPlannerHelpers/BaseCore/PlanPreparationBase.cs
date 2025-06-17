@@ -15,7 +15,14 @@ namespace AutoPlannerHelpers.BaseCore
         protected int numVMATIsos = 0;
         protected int numIsos;
         protected List<ExternalPlanSetup> separatedPlans = new List<ExternalPlanSetup> { };
-        protected bool recalcNeeded = false;
+        public bool DoseRecalcNeeded { get; set; } = false;
+        protected bool _recalculateDoseOnly = false;
+
+        public bool RecalculateDoseOnly
+        {
+            get { return _recalculateDoseOnly = false; }
+            set { _recalculateDoseOnly = value; }
+        }
 
         /// <summary>
         /// Helper method to verify the name formatting of all the beam Ids is appropriate and will not cause problems with this script

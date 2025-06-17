@@ -25,7 +25,7 @@ using System.Windows.Input;
 using AutoPlannerHelpers.Messengers;
 using CommunityToolkit.Mvvm.Messaging;
 using System.Windows.Media;
-using AutoPlannerHelpers.EqualityComparers;
+using ExternalPlanSetup = VMS.TPS.Common.Model.API.ExternalPlanSetup;
 
 namespace CSIAutoPlanner.ViewModels
 {
@@ -192,6 +192,10 @@ namespace CSIAutoPlanner.ViewModels
             WeakReferenceMessenger.Default.Register<RequestGeneratePreliminaryTargets>(this, (r, m) =>
             {
                 PreparePreliminaryTargets(m.Targets);
+            });
+            WeakReferenceMessenger.Default.Register<RequestAreSeparatedPlansAutomaticallyRecalculated>(this, (r, m) =>
+            {
+                m.Reply(CSIAutoPlannerSettings.AutoDoseRecalculationDuringPlanPrep);
             });
         }
 
@@ -380,6 +384,10 @@ namespace CSIAutoPlanner.ViewModels
         #region prepare for treatment
         protected override bool GenerateShiftNote()
         {
+            ExternalPlanSetup plan = PlanPrepHelper.RetrieveVMATPlan(Logger.GetInstance().LogPath, !string.IsNullOrEmpty(CSIAutoPlannerSettings.CourseId) ? CSIAutoPlannerSettings.CourseId : "VMAT-CSI");
+            if (!ReferenceEquals(plan, null)) EclipseContext.GetInstance().VMATPlans = new List<ExternalPlanSetup> { plan };
+            else return true;
+
             Clipboard.SetText(PlanPrepHelper.GetCSIShiftNote(EclipseContext.GetInstance().VMATPlans.First()).ToString());
             return false;
         }
@@ -388,9 +396,18 @@ namespace CSIAutoPlanner.ViewModels
         {
             //separate the plans
             EclipseContext.GetInstance().Patient.BeginModifications();
-            PreparePlansForTreatment_CSI planPrep = new PreparePlansForTreatment_CSI();
-            bool result = planPrep.Execute();
-            Logger.GetInstance().AppendLogOutput("Plan preparation:", planPrep.GetLogOutput());
+            _planPrep = new PreparePlansForTreatment_CSI();
+            bool result = _planPrep.Execute();
+            Logger.GetInstance().AppendLogOutput("Plan preparation:", _planPrep.GetLogOutput());
+            if (result) return true;
+            return false;
+        }
+
+        protected override bool RecalculateDoseForSeparatePlans()
+        {
+            _planPrep.RecalculateDoseOnly = true;
+            bool result = _planPrep.Execute();
+            Logger.GetInstance().AppendLogOutput("Plan prep dose recalculation:", _planPrep.GetLogOutput());
             if (result) return true;
             return false;
         }
@@ -521,6 +538,7 @@ namespace CSIAutoPlanner.ViewModels
                                 else if (parameter == "optimization model") { if (value != "") CSIAutoPlannerSettings.OptimizationAlorithm = value; }
                                 else if (parameter == "contour field overlap") { if (value != "") CSIAutoPlannerSettings.ContourFieldOverlap = bool.Parse(value); }
                                 else if (parameter == "contour field overlap margin") { if (value != "") CSIAutoPlannerSettings.ContourFieldOverlapMarginInCM = double.Parse(value); }
+                                else if (parameter == "auto dose recalculation") CSIAutoPlannerSettings.AutoDoseRecalculationDuringPlanPrep = bool.Parse(value);
                             }
                             else if (line.Contains("create preliminary target")) CSIAutoPlannerSettings.RequestedPreliminaryTargets.Add(ConfigurationHelper.ParseCreateTS(line));
                             else if (line.Contains("add linac"))

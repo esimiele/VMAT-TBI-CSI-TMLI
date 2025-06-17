@@ -20,36 +20,46 @@ namespace AutoPlannerHelpers.Helpers
         /// <param name="logPath"></param>
         /// <param name="courseId"></param>
         /// <returns></returns>
-        public static ExternalPlanSetup RetrieveVMATPlan(Patient pi, string logPath, string courseId)
+        public static ExternalPlanSetup RetrieveVMATPlan(string logPath, string courseId)
         {
             if (ReferenceEquals(EclipseContext.GetInstance().Patient, null)) return null;
             ExternalPlanSetup thePlan = null;
-            string fullLogName = LogHelper.GetFullLogFileFromExistingMRN(pi.Id, logPath);
+            string fullLogName = LogHelper.GetFullLogFileFromExistingMRN(EclipseContext.GetInstance().Patient.Id, logPath);
             if (!string.IsNullOrEmpty(fullLogName))
             {
                 string initPlanUID = LogHelper.LoadVMATPlanUIDFromLogFile(fullLogName);
                 if (string.IsNullOrEmpty(initPlanUID)) return null;
-                ExternalPlanSetup tmp = pi.Courses.SelectMany(x => x.ExternalPlanSetups).FirstOrDefault(x => string.Equals(x.UID, initPlanUID));
+                ExternalPlanSetup tmp = EclipseContext.GetInstance().Patient.Courses.SelectMany(x => x.ExternalPlanSetups).FirstOrDefault(x => string.Equals(x.UID, initPlanUID));
                 if (!ReferenceEquals(tmp, null))
                 {
                     Course theCourse = tmp.Course;
                     if (theCourse.ExternalPlanSetups.Where(x => !x.Id.ToLower().Contains("legs")).Count() > 1)
                     {
                         thePlan = PromptUserToSelectPlan(theCourse);
+                        if (ReferenceEquals(thePlan, null))
+                        {
+                            Logger.GetInstance().LogError("No plan selected. Exiting");
+                            return thePlan;
+                        }
                     }
                     else thePlan = tmp;
                 }
             }
             if (ReferenceEquals(thePlan, null))
             {
-                if (pi.Courses.Any(x => string.Equals(x.Id, courseId, StringComparison.OrdinalIgnoreCase)))
+                if (EclipseContext.GetInstance().Patient.Courses.Any(x => string.Equals(x.Id, courseId, StringComparison.OrdinalIgnoreCase)))
                 {
-                    Course theCourse = pi.Courses.FirstOrDefault(x => string.Equals(x.Id.ToLower(), courseId.ToLower()));
+                    Course theCourse = EclipseContext.GetInstance().Patient.Courses.FirstOrDefault(x => string.Equals(x.Id.ToLower(), courseId.ToLower()));
                     if (theCourse.ExternalPlanSetups.Where(x => !x.Id.ToLower().Contains("legs")).Count() > 1)
                     {
                         thePlan = PromptUserToSelectPlan(theCourse);
+                        if (ReferenceEquals(thePlan, null))
+                        {
+                            Logger.GetInstance().LogError("No plan selected. Exiting");
+                            return thePlan;
+                        }
+                        else thePlan = theCourse.ExternalPlanSetups.First();
                     }
-                    else thePlan = theCourse.ExternalPlanSetups.First();
                 }
                 else
                 {
@@ -69,7 +79,7 @@ namespace AutoPlannerHelpers.Helpers
             StringBuilder sb = new StringBuilder();
             sb.AppendLine($"Multiple plans found in {theCourse.Id} course!");
             sb.AppendLine("Please select a plan to prep!");
-            SelectItemPrompt SIP = new SelectItemPrompt(sb.ToString(), theCourse.ExternalPlanSetups.Where(x => !x.Id.ToLower().Contains("legs")).Select(x => x.Id).ToList());
+            SelectItemPrompt SIP = new SelectItemPrompt(sb.ToString(), theCourse.ExternalPlanSetups.Where(x => x.Beams.Any(y => !y.IsSetupField) && !x.Id.ToLower().Contains("leg")).Select(x => x.Id).ToList());
             SIP.ShowDialog();
             if (!SIP.GetSelection()) return null;
             //get the plan the user chose from the combobox
@@ -222,7 +232,7 @@ namespace AutoPlannerHelpers.Helpers
             StringBuilder sb = new StringBuilder();
             if (TT != -1)
             {
-                sb.AppendLine("***Bars out***");
+                sb.AppendLine("***Bars in***");
             }
             else sb.AppendLine("No couch surface structure found in plan!");
 
@@ -261,8 +271,6 @@ namespace AutoPlannerHelpers.Helpers
             foreach (Beam b in plan.Beams.Where(x => !x.IsSetupField).OrderByDescending(o => o.IsocenterPosition.z))
             {
                 VVector v = b.IsocenterPosition;
-                v = plan.StructureSet.Image.DicomToUser(v, plan);
-
                 if (!isoPositions.Any(k => CalculationHelper.AreEqual(k.z, v.z)))
                 {
                     isoPositions.Add(v);

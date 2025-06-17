@@ -41,6 +41,10 @@
                     <Button Content="Separate plans" Width="100" Height="25" HorizontalAlignment="Center" Margin="0,0,200,0" Command="{Binding SeparatePlansCommand}"></Button>
                     <TextBox Text="{Binding SeparatePlanText}" IsReadOnly="True" FontWeight="Bold" TextAlignment="Center" Foreground="black" Style="{StaticResource TextBoxStyle}" Width="70" Height="20" Margin="200,0,0,0"></TextBox>
                 </Grid>
+                <Grid Height="40" Width ="400" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,0,0,0" Visibility="{Binding DoseCalculationVisibility}">
+                    <Button Content="Calculate Dose (optional)" Width="150" Height="25" HorizontalAlignment="Center" Margin="0,0,200,0" Command="{Binding CalculateDoseCommand}"></Button>
+                    <TextBox Text="{Binding CalculateDoseText}" IsReadOnly="True" FontWeight="Bold" TextAlignment="Center" Foreground="black" Style="{StaticResource TextBoxStyle}" Width="70" Height="20" Margin="200,0,0,0"></TextBox>
+                </Grid>
                 <Label Content="More features coming in v16!" FontWeight="Bold" FontSize="20" HorizontalAlignment="Center" Margin="0,75,0,0"></Label>
             </StackPanel>
         </Border>

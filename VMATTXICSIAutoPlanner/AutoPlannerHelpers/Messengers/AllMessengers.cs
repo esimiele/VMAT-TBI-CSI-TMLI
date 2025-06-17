@@ -11,9 +11,14 @@ using System.Threading.Tasks;
 
 namespace AutoPlannerHelpers.Messengers
 {
+    #region plan preparation
     public class RequestGenerateShiftNoteMessage : RequestMessage<bool> { }
 
     public class RequestSeparatePlanMessage : RequestMessage<bool> { }
+    public class RequestDoSeparatedPlansRequireDoseRecalculation : RequestMessage<bool> { }
+    public class RequestRecalculateDoseForSeparatedPlans : RequestMessage<bool> { }
+    public class RequestAreSeparatedPlansAutomaticallyRecalculated : RequestMessage<bool> { }
+    #endregion
 
     #region set targets
     public class RequestSetTargetsMessage

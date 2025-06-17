@@ -30,6 +30,7 @@ using AutoPlannerHelpers.EnumTypeHelpers;
 using System.Windows.Media.Media3D;
 using AutoPlannerHelpers.EqualityComparers;
 using AutoPlannerHelpers.PlanTemplateModels;
+using ExternalPlanSetup = VMS.TPS.Common.Model.API.ExternalPlanSetup;
 
 namespace TMLIAutoPlanner.ViewModels
 {
@@ -203,6 +204,10 @@ namespace TMLIAutoPlanner.ViewModels
             WeakReferenceMessenger.Default.Register<RequestGeneratePreliminaryTargets>(this, (r, m) =>
             {
                 PreparePreliminaryTargets(m.Targets);
+            });
+            WeakReferenceMessenger.Default.Register<RequestAreSeparatedPlansAutomaticallyRecalculated>(this, (r, m) =>
+            {
+                m.Reply(TMLIAutoPlannerSettings.AutoDoseRecalculationDuringPlanPrep);
             });
         }
 
@@ -384,6 +389,9 @@ namespace TMLIAutoPlanner.ViewModels
         #region prepare for treatment
         protected override bool GenerateShiftNote()
         {
+            ExternalPlanSetup plan = PlanPrepHelper.RetrieveVMATPlan(Logger.GetInstance().LogPath, !string.IsNullOrEmpty(TMLIAutoPlannerSettings.CourseId) ? TMLIAutoPlannerSettings.CourseId : "VMAT-TMLI");
+            if (!ReferenceEquals(plan, null)) EclipseContext.GetInstance().VMATPlans = new List<ExternalPlanSetup> { plan };
+            else return true;
             if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Any(x => x.Id.ToLower().Contains("legs")))
             {
                 if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("legs")).Any(x => x.TreatmentOrientation != PatientOrientation.FeetFirstSupine))
@@ -397,15 +405,24 @@ namespace TMLIAutoPlanner.ViewModels
             }
 
             Clipboard.SetText(PlanPrepHelper.GetTBITMLIShiftNote(EclipseContext.GetInstance().VMATPlans.First(), EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("legs")).ToList()).ToString());
-            return true;
+            return false;
         }
         protected override bool SeparatePlans()
         {
             //separate the plans
             EclipseContext.GetInstance().Patient.BeginModifications();
-            PreparePlansForTreatment_TMLI planPrep = new PreparePlansForTreatment_TMLI();
-            bool result = planPrep.Execute();
-            Logger.GetInstance().AppendLogOutput("Plan preparation:", planPrep.GetLogOutput());
+            _planPrep = new PreparePlansForTreatment_TMLI();
+            bool result = _planPrep.Execute();
+            Logger.GetInstance().AppendLogOutput("Plan preparation:", _planPrep.GetLogOutput());
+            if (result) return true;
+            return false;
+        }
+
+        protected override bool RecalculateDoseForSeparatePlans()
+        {
+            _planPrep.RecalculateDoseOnly = true;
+            bool result = _planPrep.Execute();
+            Logger.GetInstance().AppendLogOutput("Plan prep dose recalculation:", _planPrep.GetLogOutput());
             if (result) return true;
             return false;
         }
@@ -535,6 +552,7 @@ namespace TMLIAutoPlanner.ViewModels
                                 else if (parameter == "max Y-jaw field extent") TMLIAutoPlannerSettings.MaxFieldYExtent = double.Parse(value);
                                 else if (parameter == "minimum field overlap") TMLIAutoPlannerSettings.MinFieldOverlap = double.Parse(value);
                                 else if (parameter == "all beams VMAT") TMLIAutoPlannerSettings.AllBeamsVMAT = bool.Parse(value);
+                                else if (parameter == "auto dose recalculation") TMLIAutoPlannerSettings.AutoDoseRecalculationDuringPlanPrep = bool.Parse(value);
                             }
                             else if (line.Contains("create preliminary target")) TMLIAutoPlannerSettings.RequestedPreliminaryTargets.Add(ConfigurationHelper.ParseCreateTS(line));
                             else if (line.Contains("add linac"))

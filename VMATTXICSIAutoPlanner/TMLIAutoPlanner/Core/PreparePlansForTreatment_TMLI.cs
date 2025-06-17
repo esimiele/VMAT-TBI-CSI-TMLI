@@ -31,12 +31,22 @@ namespace TMLIAutoPlanner.Core
         public override bool Run()
         {
             UpdateUILabel("Running:");
-            if (PreliminaryChecks()) return true;
-            if (SeparatePlans()) return true;
-            if (recalcNeeded && ReCalculateDose()) return true;
-            UpdateUILabel("Finished!");
-            ProvideUIUpdate(100, "Finished separating plans!");
-            ProvideUIUpdate($"Run time: {GetElapsedTime()} (mm:ss)");
+            if (_recalculateDoseOnly)
+            {
+                if (DoseRecalcNeeded && ReCalculateDose()) return true;
+                UpdateUILabel("Finished!");
+                ProvideUIUpdate(100, "Finished calculating dose!");
+                ProvideUIUpdate($"Run time: {GetElapsedTime()} (mm:ss)");
+            }
+            else
+            {
+                if (PreliminaryChecks()) return true;
+                if (SeparatePlans()) return true;
+                if (TMLIAutoPlannerSettings.AutoDoseRecalculationDuringPlanPrep && DoseRecalcNeeded && ReCalculateDose()) return true;
+                UpdateUILabel("Finished!");
+                ProvideUIUpdate(100, "Finished separating plans!");
+                ProvideUIUpdate($"Run time: {GetElapsedTime()} (mm:ss)");
+            }
             return false;
         }
         #endregion
@@ -51,7 +61,7 @@ namespace TMLIAutoPlanner.Core
             UpdateUILabel("Preliminary Checks:");
             ProvideUIUpdate($"Checking {VMATPlan.Id} ({VMATPlan.UID}) is valid for preparation");
             if (CheckBeamNameFormatting(VMATPlan)) return true;
-            if (CheckIfDoseRecalcNeeded(VMATPlan)) recalcNeeded = true;
+            if (CheckIfDoseRecalcNeeded(VMATPlan)) DoseRecalcNeeded = true;
             if (appaPlans.Any())
             {
                 foreach (ExternalPlanSetup itr in appaPlans)

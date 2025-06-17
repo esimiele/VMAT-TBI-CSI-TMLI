@@ -18,6 +18,7 @@ using AutoPlannerHelpers.Messengers;
 using System;
 using VMS.TPS.Common.Model.API;
 using System.Windows;
+using AutoPlannerHelpers.BaseCore;
 
 namespace AutoPlannerHelpers.BaseViewModel
 {
@@ -168,6 +169,7 @@ namespace AutoPlannerHelpers.BaseViewModel
         protected List<PlanIsocenterModel> _planIsocenters = new List<PlanIsocenterModel> { };
         protected List<string> _structureIdsPostUnion;
         protected string _generalConfigurationFile = string.Empty;
+        protected PlanPreparationBase _planPrep = null;
         private PlanType _planType;
         #endregion
 
@@ -233,6 +235,14 @@ namespace AutoPlannerHelpers.BaseViewModel
             WeakReferenceMessenger.Default.Register<RequestSeparatePlanMessage>(this, (r, m) =>
             {
                 m.Reply(SeparatePlans());
+            });
+            WeakReferenceMessenger.Default.Register<RequestDoSeparatedPlansRequireDoseRecalculation>(this, (r, m) =>
+            {
+                m.Reply(_planPrep.DoseRecalcNeeded);
+            });
+            WeakReferenceMessenger.Default.Register<RequestRecalculateDoseForSeparatedPlans>(this, (r, m) =>
+            {
+                m.Reply(RecalculateDoseForSeparatePlans());
             });
         }
 
@@ -384,6 +394,7 @@ namespace AutoPlannerHelpers.BaseViewModel
         protected abstract StringBuilder BuildScriptConfigurationInfo();
         protected abstract bool GenerateShiftNote();
         protected abstract bool SeparatePlans();
+        protected abstract bool RecalculateDoseForSeparatePlans();
         protected abstract void UpdateUIWithSelectedPlanTemplate();
 
         public void ResetInitialRxDose()

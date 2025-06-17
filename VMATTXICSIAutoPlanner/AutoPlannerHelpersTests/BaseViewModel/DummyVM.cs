@@ -64,5 +64,10 @@ namespace AutoPlannerHelpersTests.BaseViewModel
         {
             throw new NotImplementedException();
         }
+
+        protected override bool RecalculateDoseForSeparatePlans()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

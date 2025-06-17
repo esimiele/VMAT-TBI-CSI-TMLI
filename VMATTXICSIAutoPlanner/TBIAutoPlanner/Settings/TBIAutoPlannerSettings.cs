@@ -33,5 +33,6 @@ namespace TBIAutoPlanner.Settings
         internal static double MaxFieldYExtent = 400.0; //in mm
         internal static double MinFieldOverlap = 20.0; //in mm
         internal static bool AllBeamsVMAT = false;
+        internal static bool AutoDoseRecalculationDuringPlanPrep { get; set; } = true;
     }
 }

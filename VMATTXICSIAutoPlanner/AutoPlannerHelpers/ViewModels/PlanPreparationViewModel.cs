@@ -40,6 +40,23 @@ namespace AutoPlannerHelpers.ViewModels
             get { return _planId; }
             set { SetProperty(ref _planId, value); }
         }
+
+        private Visibility _doseCalculationVisibility;
+
+        public Visibility DoseCalculationVisibility
+        {
+            get { return _doseCalculationVisibility; }
+            set { SetProperty(ref _doseCalculationVisibility, value); }
+        }
+
+        private string _calculateDoseText;
+
+        public string CalculateDoseText
+        {
+            get { return _calculateDoseText; }
+            set { SetProperty(ref _calculateDoseText, value); }
+        }
+
         #endregion
 
         #region fields
@@ -49,18 +66,21 @@ namespace AutoPlannerHelpers.ViewModels
         #region commands
         public ICommand GenerateShiftNoteCommand { get; set; }
         public ICommand SeparatePlansCommand { get; set; }
+        public ICommand CalculateDoseCommand { get; set; }
         #endregion
 
         public PlanPreparationViewModel()
         {
             GenerateShiftText = "NO";
             SeparatePlanText = "NO";
-            if(EclipseContext.GetInstance().IsInitialized && EclipseContext.GetInstance().VMATPlans.Any())
+            if (EclipseContext.GetInstance().IsInitialized && EclipseContext.GetInstance().VMATPlans.Any())
             {
                 PlanId = EclipseContext.GetInstance().VMATPlans.First().Id;
             }
             GenerateShiftNoteCommand = new RelayCommand(GenerateShiftNote);
             SeparatePlansCommand = new RelayCommand(SeparatePlans);
+            CalculateDoseCommand = new RelayCommand(CalculateDose);
+            DoseCalculationVisibility = Visibility.Collapsed;
         }
 
         private void GenerateShiftNote()
@@ -108,12 +128,29 @@ namespace AutoPlannerHelpers.ViewModels
                 {
                     sb.AppendLine("Also reset the isocenter position of the setup fields!");
                 }
-                sb.AppendLine("");
-                sb.AppendLine("Isocenter shifts have been copied to the clipboard!");
-                sb.AppendLine("Paste them into the journal note!");
                 MessageBox.Show(sb.ToString());
 
                 SeparatePlanText = "YES";
+                bool doseRecalcNeeded = WeakReferenceMessenger.Default.Send(new RequestDoSeparatedPlansRequireDoseRecalculation());
+                if(WeakReferenceMessenger.Default.Send(new RequestAreSeparatedPlansAutomaticallyRecalculated()) && WeakReferenceMessenger.Default.Send(new RequestDoSeparatedPlansRequireDoseRecalculation()))
+                {
+                    DoseCalculationVisibility = Visibility.Visible;
+                }
+            }
+        }
+
+        private void CalculateDose()
+        {
+            //ask the user if they are sure they want to do this. Each plan will calculate dose sequentially, which will take time
+            ConfirmPrompt CUI = new ConfirmPrompt("Warning!" + Environment.NewLine + "This will take some time as each plan needs to be calculated sequentionally!" + Environment.NewLine + "Continue?!");
+            CUI.ShowDialog();
+            if (!CUI.GetSelection()) return;
+
+            bool recalculationFailed = WeakReferenceMessenger.Default.Send(new RequestRecalculateDoseForSeparatedPlans());
+            if(!recalculationFailed)
+            {
+                //let the user know this step has been completed
+                CalculateDoseText = "YES";
             }
         }
     }
