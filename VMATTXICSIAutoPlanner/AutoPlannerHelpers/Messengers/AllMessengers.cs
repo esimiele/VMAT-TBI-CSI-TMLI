@@ -1,4 +1,5 @@
-﻿using AutoPlannerHelpers.Models;
+﻿using AutoPlannerHelpers.Enums;
+using AutoPlannerHelpers.Models;
 using AutoPlannerHelpers.PlanTemplateModels;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using System;
@@ -159,5 +160,17 @@ namespace AutoPlannerHelpers.Messengers
 
     #region optimization
     public class RequestPlanObjectives : RequestMessage<List<PlanObjectiveModel>> { }
+    public class RequestSelectPatient
+    {
+        public string PatientId { get; private set; }
+        public PlanType PlanType { get; private set; }
+        public string FullPreparationLogPath { get; private set; }
+        public RequestSelectPatient(string mrn, PlanType type, string logPath)
+        {
+            PatientId = mrn;
+            PlanType = type;
+            FullPreparationLogPath = logPath;
+        }
+    }
     #endregion
 }

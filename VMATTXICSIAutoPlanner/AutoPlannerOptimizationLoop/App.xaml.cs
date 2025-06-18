@@ -54,7 +54,7 @@ namespace AutoPlannerOptimizationLoop
 
         private void CloseApplication()
         {
-            ESAPIThreadContext.RunOnESAPIThread(() => { Application.Current.Shutdown(); });
+            ESAPIThreadContext.RunOnESAPIThread(() => { Current.Shutdown(); });
         }
     }
 }

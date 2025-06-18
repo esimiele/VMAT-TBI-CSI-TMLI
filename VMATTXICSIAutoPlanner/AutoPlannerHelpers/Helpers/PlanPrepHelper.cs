@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using VMS.TPS.Common.Model.API;
 using VMS.TPS.Common.Model.Types;
+using PlanType = AutoPlannerHelpers.Enums.PlanType;
 
 namespace AutoPlannerHelpers.Helpers
 {
@@ -17,14 +18,13 @@ namespace AutoPlannerHelpers.Helpers
         /// Helper method to retrieve the VMAT plan that should be prepared for treatment
         /// </summary>
         /// <param name="pi"></param>
-        /// <param name="logPath"></param>
         /// <param name="courseId"></param>
         /// <returns></returns>
-        public static ExternalPlanSetup RetrieveVMATPlan(string logPath, string courseId)
+        public static ExternalPlanSetup RetrieveVMATPlan(string courseId, PlanType type)
         {
             if (ReferenceEquals(EclipseContext.GetInstance().Patient, null)) return null;
             ExternalPlanSetup thePlan = null;
-            string fullLogName = LogHelper.GetFullLogFileFromExistingMRN(EclipseContext.GetInstance().Patient.Id, logPath);
+            string fullLogName = LogHelper.GetFullLogFileFromExistingMRN(EclipseContext.GetInstance().Patient.Id, type);
             if (!string.IsNullOrEmpty(fullLogName))
             {
                 string initPlanUID = LogHelper.LoadVMATPlanUIDFromLogFile(fullLogName);

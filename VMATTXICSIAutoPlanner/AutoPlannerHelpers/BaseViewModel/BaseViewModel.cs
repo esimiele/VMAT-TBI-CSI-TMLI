@@ -210,28 +210,23 @@ namespace AutoPlannerHelpers.BaseViewModel
             {
                 SetTargets(m.PlanTargets);
             });
-
             WeakReferenceMessenger.Default.Register<RequestGenerateManipulateTuningStructuresMessage>(this, (r, m) =>
             {
                 List<RequestedTSStructureModel> tsGenerationStructures = WeakReferenceMessenger.Default.Send(new RequestTSGenerationStructures());
                 PerformTSStructureGenerationManipulation(tsGenerationStructures, m.RequestedTSManipulations);
             });
-
             WeakReferenceMessenger.Default.Register<RequestGenerateAndPlaceBeams>(this, (r, m) =>
             {
                 GeneratePlansAndPlaceBeams(m.SelectedLinac, m.SelectedEnergy, m.ContourOverlap, m.ContourOverlapMargin, m.PlanIsocenters);
             });
-
             WeakReferenceMessenger.Default.Register<RequestSetOptimizationConstraintsMessage>(this, (r, m) =>
             {
                 AssignOptimizationConstraints(m.PlanOptimizationSetup);
             });
-
             WeakReferenceMessenger.Default.Register<RequestGenerateShiftNoteMessage>(this, (r, m) =>
             {
                 m.Reply(GenerateShiftNote());
             });
-
             WeakReferenceMessenger.Default.Register<RequestSeparatePlanMessage>(this, (r, m) =>
             {
                 m.Reply(SeparatePlans());

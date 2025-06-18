@@ -83,7 +83,7 @@ namespace AutoPlannerOptimizationLoop.Prompts
             if (!string.IsNullOrEmpty(MRNTB.Text) || !string.IsNullOrEmpty(_patientMRN))
             {
                 //give priority to the text box data
-                if (string.IsNullOrEmpty(MRNTB.Text)) _fullLogFileName = LogHelper.GetFullLogFileFromExistingMRN(_patientMRN, logPath);
+                if (string.IsNullOrEmpty(MRNTB.Text)) _fullLogFileName = LogHelper.GetFullLogFileFromExistingMRN(_patientMRN);
                 else _patientMRN = MRNTB.Text;
                 SelectionMade = true;
             }

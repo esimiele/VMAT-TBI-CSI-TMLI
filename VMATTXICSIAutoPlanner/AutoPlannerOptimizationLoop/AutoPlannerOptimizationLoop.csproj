@@ -14,6 +14,7 @@
     <WarningLevel>4</WarningLevel>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>false</Deterministic>
+	<LangVersion>preview</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -113,6 +114,7 @@
     <Compile Include="ViewModels\OptimizationLoopMainViewModel.cs" />
     <Compile Include="ViewModels\OptimizationLoopProgressViewModel.cs" />
     <Compile Include="ViewModels\PlanObjectivesViewModel.cs" />
+    <Compile Include="ViewModels\SelectPatientViewModel.cs" />
     <Compile Include="Views\EnumBindingSourceExtension.cs" />
     <Compile Include="Views\OptimizationConstraintsView.xaml.cs">
       <DependentUpon>OptimizationConstraintsView.xaml</DependentUpon>
@@ -125,6 +127,9 @@
     </Compile>
     <Compile Include="Views\PlanObjectivesView.xaml.cs">
       <DependentUpon>PlanObjectivesView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\SelectPatientView.xaml.cs">
+      <DependentUpon>SelectPatientView.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -193,6 +198,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\PlanObjectivesView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\SelectPatientView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -149,6 +149,7 @@ namespace TBIAutoPlanner.ViewModels
                 PatientMRN = EclipseContext.GetInstance().Patient.Id;
                 StructureSetId = EclipseContext.GetInstance().StructureSet.Id;
             }
+            InitializeTBIMessengers();
         }
 
         private void InitializeTBIMessengers()
@@ -279,9 +280,10 @@ namespace TBIAutoPlanner.ViewModels
         #region prepare for treatment
         protected override bool GenerateShiftNote()
         {
-            ExternalPlanSetup plan = PlanPrepHelper.RetrieveVMATPlan(Logger.GetInstance().LogPath, !string.IsNullOrEmpty(TBIAutoPlannerSettings.CourseId) ? TBIAutoPlannerSettings.CourseId : "VMAT-TBI");
+            ExternalPlanSetup plan = PlanPrepHelper.RetrieveVMATPlan(!string.IsNullOrEmpty(TBIAutoPlannerSettings.CourseId) ? TBIAutoPlannerSettings.CourseId : "VMAT-TBI", PlanType.VMAT_TBI);
             if (!ReferenceEquals(plan, null)) EclipseContext.GetInstance().VMATPlans = new List<ExternalPlanSetup> { plan };
             else return true;
+
             if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Any(x => x.Id.ToLower().Contains("legs")))
             {
                 if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("legs")).Any(x => x.TreatmentOrientation != PatientOrientation.FeetFirstSupine))

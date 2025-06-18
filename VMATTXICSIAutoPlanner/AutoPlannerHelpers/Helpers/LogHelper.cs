@@ -5,26 +5,40 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using VMS.TPS.Common.Model.Types;
+using PlanType = AutoPlannerHelpers.Enums.PlanType;
 
 namespace AutoPlannerHelpers.Helpers
 {
     public static class LogHelper
     {
+        public static int GetNumberofMatchingLogFilesForMRN(string mrn)
+        {
+            if (Directory.Exists(Logger.GetInstance().LogPath + "\\preparation\\"))
+            {
+                return Directory.GetFiles(Logger.GetInstance().LogPath + "\\preparation\\", ".", SearchOption.AllDirectories).Count(x => x.Contains(mrn + ".txt"));
+            }
+            else return 0;
+        }
+
         /// <summary>
         /// Helper method to get the full log file path for a given patient mrn and initial log path specified in the log configuration .ini file
         /// </summary>
         /// <param name="mrn"></param>
         /// <param name="logFilePath"></param>
         /// <returns></returns>
-        public static string GetFullLogFileFromExistingMRN(string mrn, string logFilePath)
+        public static string GetFullLogFileFromExistingMRN(string mrn, PlanType type = PlanType.None)
         {
-            if(string.IsNullOrEmpty(logFilePath) || string.IsNullOrEmpty(mrn)) return string.Empty;
+            if(string.IsNullOrEmpty(Logger.GetInstance().LogPath) || string.IsNullOrEmpty(mrn)) return string.Empty;
             string logName = string.Empty;
-            if (Directory.Exists(logFilePath + "\\preparation\\"))
+            string additionalContext = string.Empty;
+            if (type == PlanType.VMAT_CSI) additionalContext = @"CSI\\";
+            else if (type == PlanType.VMAT_TBI) additionalContext = @"TBI\\";
+            else if (type == PlanType.VMAT_TMLI) additionalContext = @"TMLI\\";
+            if (Directory.Exists(Logger.GetInstance().LogPath + "\\preparation\\" + additionalContext))
             {
-                if (Directory.GetFiles(logFilePath + "\\preparation\\", ".", SearchOption.AllDirectories).Any(x => x.Contains(mrn + ".txt")))
+                if (Directory.GetFiles(Logger.GetInstance().LogPath + "\\preparation\\" + additionalContext, ".", SearchOption.AllDirectories).Any(x => x.Contains(mrn + ".txt")))
                 {
-                    logName = Directory.GetFiles(logFilePath + "\\preparation\\", ".", SearchOption.AllDirectories).First(x => x.Contains(mrn + ".txt"));
+                    logName = Directory.GetFiles(Logger.GetInstance().LogPath + "\\preparation\\" + additionalContext, ".", SearchOption.AllDirectories).First(x => x.Contains(mrn + ".txt"));
                 }
             }
             return logName;

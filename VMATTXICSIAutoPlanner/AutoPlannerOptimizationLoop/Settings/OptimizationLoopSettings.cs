@@ -13,5 +13,15 @@ namespace AutoPlannerOptimizationLoop.Settings
         internal static Dictionary<string, string> PlanPreparationTsTargets { get; set; } = new Dictionary<string, string> { };
         internal static Dictionary<string, string> PlanPreparationNormalizationVolumes { get; set; } = new Dictionary<string, string> { };
         internal static List<PlanOptimizationSetupModel> PlanPreparationOptimizationSetup { get; set; } = new List<PlanOptimizationSetupModel> { };
+        internal static void ClearSettings()
+        {
+            PlanUIDs.Clear();
+            PlanPreparationLogFileLoaded = false;
+            PlanPreparationTemplateUsed = string.Empty;
+            PlanPreparationPrescriptions = new List<PrescriptionModel> { };
+            PlanPreparationTsTargets = new Dictionary<string, string> { };
+            PlanPreparationNormalizationVolumes = new Dictionary<string, string> { };
+            PlanPreparationOptimizationSetup = new List<PlanOptimizationSetupModel> { };
+        }
     }
 }

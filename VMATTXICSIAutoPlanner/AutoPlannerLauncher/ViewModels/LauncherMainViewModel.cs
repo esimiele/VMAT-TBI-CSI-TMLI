@@ -8,7 +8,6 @@ using System.Reflection;
 using System.Text;
 using System.Windows.Input;
 using System.Windows;
-using VMS.TPS.Common.Model.API;
 
 namespace AutoPlannerLauncher.ViewModels
 {

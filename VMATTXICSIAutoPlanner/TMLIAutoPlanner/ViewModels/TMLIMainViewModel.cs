@@ -389,7 +389,7 @@ namespace TMLIAutoPlanner.ViewModels
         #region prepare for treatment
         protected override bool GenerateShiftNote()
         {
-            ExternalPlanSetup plan = PlanPrepHelper.RetrieveVMATPlan(Logger.GetInstance().LogPath, !string.IsNullOrEmpty(TMLIAutoPlannerSettings.CourseId) ? TMLIAutoPlannerSettings.CourseId : "VMAT-TMLI");
+            ExternalPlanSetup plan = PlanPrepHelper.RetrieveVMATPlan(!string.IsNullOrEmpty(TMLIAutoPlannerSettings.CourseId) ? TMLIAutoPlannerSettings.CourseId : "VMAT-TMLI", PlanType.VMAT_TMLI);
             if (!ReferenceEquals(plan, null)) EclipseContext.GetInstance().VMATPlans = new List<ExternalPlanSetup> { plan };
             else return true;
             if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Any(x => x.Id.ToLower().Contains("legs")))

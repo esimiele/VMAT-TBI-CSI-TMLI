@@ -384,7 +384,7 @@ namespace CSIAutoPlanner.ViewModels
         #region prepare for treatment
         protected override bool GenerateShiftNote()
         {
-            ExternalPlanSetup plan = PlanPrepHelper.RetrieveVMATPlan(Logger.GetInstance().LogPath, !string.IsNullOrEmpty(CSIAutoPlannerSettings.CourseId) ? CSIAutoPlannerSettings.CourseId : "VMAT-CSI");
+            ExternalPlanSetup plan = PlanPrepHelper.RetrieveVMATPlan(!string.IsNullOrEmpty(CSIAutoPlannerSettings.CourseId) ? CSIAutoPlannerSettings.CourseId : "VMAT-CSI", PlanType.VMAT_CSI);
             if (!ReferenceEquals(plan, null)) EclipseContext.GetInstance().VMATPlans = new List<ExternalPlanSetup> { plan };
             else return true;
 

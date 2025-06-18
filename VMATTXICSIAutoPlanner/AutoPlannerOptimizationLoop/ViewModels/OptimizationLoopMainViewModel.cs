@@ -230,6 +230,13 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             AssignDefaultLogAndDocPaths();
             LoadPatientStructureSetAndPlans();
             LoadConfigurationSettingsForPlanType(_planType);
+            if (OptimizationLoopSettings.Reminders.Any(x => x.ToLower().Contains("base dose")))
+            {
+                if (EclipseContext.GetInstance().VMATPlans.Any() && !EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Any(x => x.Id.ToLower().Contains("legs")))
+                {
+                    ESAPIThreadContext.ESAPIDispatcher.Invoke(() => { OptimizationLoopSettings.Reminders.Remove(OptimizationLoopSettings.Reminders.First(x => x.ToLower().Contains("base dose"))); });
+                }
+            }
             LoadTemplatePlanChoices(_planType);
             InitializeMessengers();
             InitializeUI();
@@ -241,6 +248,10 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             {
                 List<PlanObjectiveModel> planObjectives = WeakReferenceMessenger.Default.Send(new RequestPlanObjectives());
                 StartOptimization(planObjectives, m.PlanOptimizationSetup);
+            });
+            WeakReferenceMessenger.Default.Register<RequestSelectPatient>(this, (r, m) =>
+            {
+                LoadPatient(m);
             });
         }
 
@@ -306,8 +317,12 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             ESAPIThreadContext.RunOnESAPIThreadSync(() =>
             {
                 if (!EclipseContext.GetInstance().IsInitialized) return;
-                string prepLogFile = RetrievePreparationLogFile();
-                if (string.IsNullOrEmpty(prepLogFile)) return;
+                if (ReferenceEquals(EclipseContext.GetInstance().Patient, null) || LogHelper.GetNumberofMatchingLogFilesForMRN(EclipseContext.GetInstance().Patient.Id) != 1)
+                {
+                    PromptUserForPatientSelection();
+                    return;
+                }
+                string prepLogFile = LogHelper.GetFullLogFileFromExistingMRN(EclipseContext.GetInstance().Patient.Id);
                 ESAPIThreadContext.ESAPIDispatcher.Invoke(() =>
                 {
                     if (!LoadLogFile(prepLogFile)) OptimizationLoopSettings.PlanPreparationLogFileLoaded = true;
@@ -318,32 +333,37 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                     }
                 });
                 LoadPlansAndStructureSet();
-                if (OptimizationLoopSettings.Reminders.Any(x => x.ToLower().Contains("base dose")))
-                {
-                    if (!EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Any(x => x.Id.ToLower().Contains("legs")))
-                    {
-                        ESAPIThreadContext.ESAPIDispatcher.Invoke(() => { OptimizationLoopSettings.Reminders.Remove(OptimizationLoopSettings.Reminders.First(x => x.ToLower().Contains("base dose"))); });
-                    }
-                }
             });
         }
 
-        private string RetrievePreparationLogFile()
+        private void PromptUserForPatientSelection()
         {
-            if (ReferenceEquals(EclipseContext.GetInstance().Patient, null))
+            SelectPatientView spv = new SelectPatientView { DataContext = new SelectPatientViewModel() };
+            spv.ShowDialog();
+        }
+
+        private void LoadPatient(RequestSelectPatient selection)
+        {
+            ESAPIThreadContext.RunOnESAPIThreadSync(() =>
             {
-                SelectPatient sp = new SelectPatient(_logFilePath);
-                sp.ShowDialog();
-                if (!sp.SelectionMade) return string.Empty;
-                EclipseContext.GetInstance().Patient = EclipseContext.GetInstance().Application.OpenPatientById(sp.PatientMRN);
-                if (ReferenceEquals(EclipseContext.GetInstance().Patient, null))
+                if (!string.IsNullOrEmpty(selection.PatientId))
                 {
-                    MessageBox.Show($"Patient: {sp.PatientMRN} not found! Exiting initialization!");
-                    return string.Empty;
+                    OptimizationLoopSettings.ClearSettings();
+                    EclipseContext.GetInstance().Application.ClosePatient();
+                    EclipseContext.GetInstance().Application.OpenPatientById(selection.PatientId);
+                    if(!ReferenceEquals(EclipseContext.GetInstance().Patient, null))
+                    {
+                        if(!string.IsNullOrEmpty(selection.FullPreparationLogPath) && !LoadLogFile(selection.FullPreparationLogPath)) OptimizationLoopSettings.PlanPreparationLogFileLoaded = true;
+                        LoadPlansAndStructureSet();
+                    }
+                    else
+                    {
+                        Logger.GetInstance().LogError($"Error! Patient {selection.PatientId} does not exist! Exiting!");
+                        return;
+                    }
                 }
-                return sp.FullLogFileName;
-            }
-            else return LogHelper.GetFullLogFileFromExistingMRN(EclipseContext.GetInstance().Patient.Id, _logFilePath);
+            });
+            
         }
 
         public void LoadPlansAndStructureSet()
@@ -391,20 +411,20 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                     else PlanType = PlanType.VMAT_TMLI;
                 });
 
-                List<ExternalPlanSetup> thePlans = theCourse.ExternalPlanSetups.OrderBy(x => x.CreationDateTime).ToList();
+                List<ExternalPlanSetup> thePlans = theCourse.ExternalPlanSetups.Where(x => x.Beams.Any(y => !y.IsSetupField) && !x.Id.ToLower().Contains("leg")).ToList();
                 if (thePlans.Count > 2)
                 {
-                    MessageBox.Show($"Error! More than two plans found in course: {theCourse.Id}! Unable to determine which plan(s) should be used for optimization! Exiting!");
+                    Logger.GetInstance().LogError($"Error! More than two plans found in course: {theCourse.Id}! Unable to determine which plan(s) should be used for optimization! Exiting!");
                     return;
                 }
                 else if (!thePlans.Any())
                 {
-                    MessageBox.Show($"Error! No plans found in course: {theCourse.Id}! Unable to determine which plan(s) should be used for optimization! Exiting!");
+                    Logger.GetInstance().LogError($"Error! No plans found in course: {theCourse.Id}! Unable to determine which plan(s) should be used for optimization! Exiting!");
                     return;
                 }
                 else if (thePlans.Count == 2 && !string.Equals(thePlans.First().StructureSet.UID, thePlans.Last().StructureSet.UID))
                 {
-                    MessageBox.Show($"Error! Structure set in first plan ({thePlans.First().Id}) is not the same as the structure set in second plan ({thePlans.Last().Id})! Exiting!");
+                    Logger.GetInstance().LogError($"Error! Structure set in first plan ({thePlans.First().Id}) is not the same as the structure set in second plan ({thePlans.Last().Id})! Exiting!");
                     return;
                 }
                 else
@@ -670,6 +690,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         /// <returns></returns>
         private bool LoadLogFile(string fullLogName)
         {
+            if (string.IsNullOrEmpty(fullLogName)) return true;
             try
             {
                 using (StreamReader reader = new StreamReader(fullLogName))
