@@ -75,6 +75,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         {
             LoadPatientMRNsFromLogs();
             OpenPatientCommand = new RelayCommand(OpenPatient);
+            SelectedPlanType = PlanType.None;
         }
 
         private void LoadPatientMRNsFromLogs()
