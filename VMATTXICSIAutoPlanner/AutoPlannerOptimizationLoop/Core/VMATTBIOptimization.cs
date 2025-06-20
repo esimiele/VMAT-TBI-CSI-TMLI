@@ -40,7 +40,7 @@ namespace AutoPlannerOptimizationLoop.Core
             {
                 PrintRunSetupInfo();
                 //preliminary checks
-                if (PreliminaryChecksSSAndImage(_data.StructureSet, _data.Prescriptions.Select(x => x.TargetId))) return true;
+                if (PreliminaryChecksSSAndImage(_data.StructureSet, TargetsHelper.GetAllTargetIds(_data.Prescriptions).Any() ? TargetsHelper.GetAllTargetIds(_data.Prescriptions) : _data.NormalizationVolumes.Select(x => x.Value))) return true;
                 if (PreliminaryChecksPlans(_data.Plans)) return true;
 
                 ProvideUIUpdate("Commencing optimization loop!");

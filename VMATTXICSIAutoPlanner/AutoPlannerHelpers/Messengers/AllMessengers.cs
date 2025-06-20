@@ -159,6 +159,23 @@ namespace AutoPlannerHelpers.Messengers
     #endregion
 
     #region optimization
+    public class RequestPlanSelectionChanged
+    {
+        public List<string> UpdatedPlanIds { get; private set; }
+        public RequestPlanSelectionChanged(IEnumerable<string> updatedPlanIds)
+        {
+            this.UpdatedPlanIds = updatedPlanIds.ToList();
+        }
+    }
+
+    public class RequestStructureSetChanged
+    {
+        public List<string> UpdatedStructureIds { get; set; }
+        public RequestStructureSetChanged(IEnumerable<string> structureIds)
+        {
+            this.UpdatedStructureIds = structureIds.ToList();
+        }
+    }
     public class RequestPlanObjectives : RequestMessage<List<PlanObjectiveModel>> { }
     public class RequestSelectPatient
     {
