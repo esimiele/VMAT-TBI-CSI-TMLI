@@ -46,9 +46,9 @@
                         <Label Content="VMAT TBI" Grid.Column="0" Grid.Row="0" FontWeight="Bold" HorizontalAlignment="Center" Margin="0"/>
                         <Label Content="VMAT CSI" Grid.Column="1" Grid.Row="0" FontWeight="Bold" HorizontalAlignment="Center" Margin="0" Visibility="Visible"/>
                         <Label Content="VMAT TMLI" Grid.Column="2" Grid.Row="0" FontWeight="Bold" HorizontalAlignment="Center" Margin="0" Visibility="Visible"/>
-                        <ListBox Grid.Column="0" Grid.Row="1" ItemsSource="{Binding PatientMRNsTBI}" SelectedItem="{Binding SelectedLogFile}" HorizontalContentAlignment="Center" Height="300" Width="160" Margin="10,0,10,10"/>
-                        <ListBox Grid.Column="1" Grid.Row="1" ItemsSource="{Binding PatientMRNsCSI}" SelectedItem="{Binding SelectedLogFile}" HorizontalContentAlignment="Center" Height="300" Width="160" Margin="10,0,10,10" Visibility="Visible"/>
-                        <ListBox Grid.Column="2" Grid.Row="1" ItemsSource="{Binding PatientMRNsTMLI}" SelectedItem="{Binding SelectedLogFile}" HorizontalContentAlignment="Center" Height="300" Width="160" Margin="10,0,10,10" Visibility="Visible"/>
+                        <ListBox Grid.Column="0" Grid.Row="1" ItemsSource="{Binding PatientMRNsTBI}" SelectedItem="{Binding SelectedLogFileTBI, Mode=TwoWay}" HorizontalContentAlignment="Center" Height="300" Width="160" Margin="10,0,10,10"/>
+                        <ListBox Grid.Column="1" Grid.Row="1" ItemsSource="{Binding PatientMRNsCSI}" SelectedItem="{Binding SelectedLogFileCSI, Mode=TwoWay}" HorizontalContentAlignment="Center" Height="300" Width="160" Margin="10,0,10,10" Visibility="Visible"/>
+                        <ListBox Grid.Column="2" Grid.Row="1" ItemsSource="{Binding PatientMRNsTMLI}" SelectedItem="{Binding SelectedLogFileTMLI, Mode=TwoWay}" HorizontalContentAlignment="Center" Height="300" Width="160" Margin="10,0,10,10" Visibility="Visible"/>
                     </Grid>
                     <Grid>
                     </Grid>

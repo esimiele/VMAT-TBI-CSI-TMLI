@@ -24,10 +24,10 @@ namespace AutoPlannerHelpers.Context
         public string UserName { get; set; } = "";
         public string UserId { get; set; } = "";
 
-        public void ClearContext()
+        public void ClearContext(bool closePatient = true)
         {
-            if (IsInitialized) Application.ClosePatient();
-            Course = null; ;
+            if (IsInitialized && closePatient) Application.ClosePatient();
+            Course = null;
             VMATPlans = new List<ExternalPlanSetup> { };
             StructureSet = null;
             Registrations = new List<Registration> { };

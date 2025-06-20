@@ -149,8 +149,8 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             });
 
             if (!_tmpPlanOptSetup.Any()) return;
-            PlanOptimizationConstraints.Clear();
-            foreach(PlanOptimizationSetupModel itr in _tmpPlanOptSetup)
+            ClearOptimizationConstraints();
+            foreach (PlanOptimizationSetupModel itr in _tmpPlanOptSetup)
             {
                 PlanOptimizationConstraints.Add(itr);
             }
@@ -158,6 +158,12 @@ namespace AutoPlannerOptimizationLoop.ViewModels
 
         public void GetOptimizationConstraintsFromLogs()
         {
+            if(!OptimizationLoopSettings.PlanPreparationOptimizationSetup.Any())
+            {
+                Logger.GetInstance().LogError("Warning! No optimization constraints found in log file! Skipping!");
+                return;
+            }
+            ClearOptimizationConstraints();
             foreach (PlanOptimizationSetupModel itr in OptimizationLoopSettings.PlanPreparationOptimizationSetup)
             {
                 PlanOptimizationConstraints.Add(itr);

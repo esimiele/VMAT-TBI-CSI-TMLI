@@ -5,6 +5,7 @@ using AutoPlannerHelpers.Messengers;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using EvilDICOM.RT.Data.DVH;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -20,13 +21,57 @@ namespace AutoPlannerOptimizationLoop.ViewModels
     public class SelectPatientViewModel : ObservableObject
     {
         #region properties
-        private string _selectedLogFile;
+        private string _selectedLogFileTBI;
 
-        public string SelectedLogFile
+        public string SelectedLogFileTBI
         {
-            get { return _selectedLogFile; }
-            set { SetProperty(ref _selectedLogFile, value); UpdateSelectedLogFile(); }
+            get { return _selectedLogFileTBI; }
+            set
+            {
+                if (SetProperty(ref _selectedLogFileTBI, value))
+                {
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        UpdateSelectedLogFileTBI(value);
+                    }
+                }
+            }
         }
+
+        private string _selectedLogFileCSI;
+
+        public string SelectedLogFileCSI
+        {
+            get { return _selectedLogFileCSI; }
+            set
+            {
+                if (SetProperty(ref _selectedLogFileCSI, value))
+                {
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        UpdateSelectedLogFileCSI(value);
+                    }
+                }
+            }
+        }
+
+        private string _selectedLogFileTMLI;
+
+        public string SelectedLogFileTMLI
+        {
+            get { return _selectedLogFileTMLI; }
+            set
+            {
+                if (SetProperty(ref _selectedLogFileTMLI, value))
+                {
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        UpdateSelectedLogFileTMLI(value);
+                    }
+                }
+            }
+        }
+
 
         private string _fullLogFileName;
 
@@ -124,37 +169,63 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             }
             else
             {
-                //implement file selection system to select folder
-                MessageBox.Show($"Log file directory: {(Logger.GetInstance().LogPath + "\\preparation\\")}\nDoes not exist! Please open an patient by manually entering an MRN.");
+                Logger.GetInstance().LogError($"Log file directory: {(Logger.GetInstance().LogPath + "\\preparation\\")}\nDoes not exist! Please open an patient by manually entering an MRN.");
             }
         }
 
-        private void UpdateSelectedLogFile()
+        private void UpdateSelectedLogFileTBI(string selection)
         {
-            if(string.Equals(_selectedLogFile, "--select--"))
+            if (string.Equals(selection, "--select--"))
             {
-                _selectedPlanType = PlanType.None;
-                _mrn = string.Empty;
-                SelectedLogFile = null;
+                ClearAllSelections();
+                return;
             }
-            if (_selectedLogFile.Contains(@"\\CSI"))
+            
+            SelectedPlanType = PlanType.VMAT_TBI;
+            MRN = selection;
+            _fullLogFileName = _logsTBI.FirstOrDefault(x => x.Contains(selection));
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => SelectedLogFileCSI = null), System.Windows.Threading.DispatcherPriority.Background);
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => SelectedLogFileTMLI = null), System.Windows.Threading.DispatcherPriority.Background);
+        }
+
+        private void UpdateSelectedLogFileCSI(string selection)
+        {
+            if (string.Equals(selection, "--select--"))
             {
-                _selectedPlanType = PlanType.VMAT_CSI;
-                _mrn = _selectedLogFile;
-                _fullLogFileName = _logsCSI.FirstOrDefault(x => x.Contains(_selectedLogFile));
+                ClearAllSelections();
+                return;
             }
-            else if (_selectedLogFile.Contains(@"\\TBI"))
+
+            SelectedPlanType = PlanType.VMAT_CSI;
+            MRN = selection;
+            _fullLogFileName = _logsCSI.FirstOrDefault(x => x.Contains(selection));
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => SelectedLogFileTBI = null), System.Windows.Threading.DispatcherPriority.Background);
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => SelectedLogFileTMLI = null), System.Windows.Threading.DispatcherPriority.Background);
+        }
+
+        private void UpdateSelectedLogFileTMLI(string selection)
+        {
+            if (string.Equals(selection, "--select--"))
             {
-                _selectedPlanType = PlanType.VMAT_TBI;
-                _mrn = _selectedLogFile;
-                _fullLogFileName = _logsTBI.FirstOrDefault(x => x.Contains(_selectedLogFile));
+                ClearAllSelections();
+                return;
             }
-            else
-            {
-                _selectedPlanType = PlanType.VMAT_TMLI;
-                _mrn = _selectedLogFile;
-                _fullLogFileName = _logsTMLI.FirstOrDefault(x => x.Contains(_selectedLogFile));
-            }
+
+            SelectedPlanType = PlanType.VMAT_TMLI;
+            MRN = selection;
+            _fullLogFileName = _logsTMLI.FirstOrDefault(x => x.Contains(selection));
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => SelectedLogFileTBI = null), System.Windows.Threading.DispatcherPriority.Background);
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => SelectedLogFileCSI = null), System.Windows.Threading.DispatcherPriority.Background);
+        }
+
+        private void ClearAllSelections()
+        {
+            SelectedPlanType = PlanType.None;
+            MRN = string.Empty;
+            _fullLogFileName = string.Empty;
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => SelectedLogFileTBI = null), System.Windows.Threading.DispatcherPriority.Background);
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => SelectedLogFileCSI = null), System.Windows.Threading.DispatcherPriority.Background);
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => SelectedLogFileTMLI = null), System.Windows.Threading.DispatcherPriority.Background);
         }
 
         private void OpenPatient()
