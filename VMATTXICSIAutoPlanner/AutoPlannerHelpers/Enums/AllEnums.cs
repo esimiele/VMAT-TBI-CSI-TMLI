@@ -14,6 +14,15 @@
         ContourOuterStructure,
     };
 
+    public enum StructureManipulationOperation
+    {
+        Intersection,
+        Union,
+        Crop,
+        XOR,
+        None
+    }
+
     /// <summary>
     /// Optimization objective type as an enum. Created own copy to include mean in list
     /// </summary>
