@@ -137,7 +137,8 @@ namespace AutoPlannerHelpers.Helpers
                                             if (int.TryParse(value, out int bstFx)) tempTemplate.BoostRxNumberOfFractions = bstFx;
                                         }
                                     }
-                                    else if (line.Contains("add TS manipulation")) TSManipulation_temp.Add(ParseTSManipulation(line));
+                                    else if (line.Contains("add target TS manipulation")) TSManipulation_temp.Add(ParseTargetTSManipulation(line));
+                                    else if (line.Contains("add OAR TS manipulation")) TSManipulation_temp.Add(ParseOARTSManipulation(line));
                                     else if (line.Contains("create ring")) createRings_temp.Add(ParseCreateRing(line));
                                     else if (line.Contains("crop and contour")) cropAndContourOverlapStructures_temp.Add(ParseCropAndContourOverlapStruct(line));
                                     else if (line.Contains("add init opt constraint")) initOptConst_temp.Add(ParseOptimizationConstraint(line));
@@ -216,7 +217,8 @@ namespace AutoPlannerHelpers.Helpers
                                             if (int.TryParse(value, out int initFx)) tempTemplate.InitialRxNumberOfFractions = initFx;
                                         }
                                     }
-                                    else if (line.Contains("add TS manipulation")) TSManipulation_temp.Add(ParseTSManipulation(line));
+                                    else if (line.Contains("add target TS manipulation")) TSManipulation_temp.Add(ParseTargetTSManipulation(line));
+                                    else if (line.Contains("add OAR TS manipulation")) TSManipulation_temp.Add(ParseOARTSManipulation(line));
                                     else if (line.Contains("add opt constraint")) initOptConst_temp.Add(ParseOptimizationConstraint(line));
                                     else if (line.Contains("create TS")) TSstructures_temp.Add(ParseCreateTS(line));
                                     else if (line.Contains("add target")) targets_temp.Add(ParseTargets(line));
@@ -289,7 +291,8 @@ namespace AutoPlannerHelpers.Helpers
                                             if (int.TryParse(value, out int initFx)) tempTemplate.InitialRxNumberOfFractions = initFx;
                                         }
                                     }
-                                    else if (line.Contains("add TS manipulation")) TSManipulation_temp.Add(ParseTSManipulation(line));
+                                    else if (line.Contains("add target TS manipulation")) TSManipulation_temp.Add(ParseTargetTSManipulation(line));
+                                    else if (line.Contains("add OAR TS manipulation")) TSManipulation_temp.Add(ParseOARTSManipulation(line));
                                     else if (line.Contains("add opt constraint")) initOptConst_temp.Add(ParseOptimizationConstraint(line));
                                     else if (line.Contains("create ring")) createRings_temp.Add(ParseCreateRing(line));
                                     else if (line.Contains("create TS")) TSstructures_temp.Add(ParseCreateTS(line));
@@ -438,7 +441,7 @@ namespace AutoPlannerHelpers.Helpers
         /// </summary>
         /// <param name="line"></param>
         /// <returns></returns>
-        public static RequestedTSManipulationModel ParseTSManipulation(string line)
+        public static RequestedTSManipulationModel ParseOARTSManipulation(string line)
         {
             //known array format --> can take shortcuts in parsing the data
             //structure id, sparing type, added margin in cm (ignored if sparing type is Dmax ~ Rx Dose)
@@ -452,6 +455,30 @@ namespace AutoPlannerHelpers.Helpers
             line = CropLine(line, ",");
             val = double.Parse(line.Substring(0, line.IndexOf("}")));
             return new RequestedTSManipulationModel(structure, TSManipulationTypeHelper.GetTSManipulationType(spareType), val);
+        }
+
+        /// <summary>
+        /// Helper method to parse a requested tuning structure manipulation from a template plan file
+        /// </summary>
+        /// <param name="line"></param>
+        /// <returns></returns>
+        public static RequestedTSManipulationModel ParseTargetTSManipulation(string line)
+        {
+            //known array format --> can take shortcuts in parsing the data
+            //structure id, sparing type, added margin in cm (ignored if sparing type is Dmax ~ Rx Dose)
+            string target;
+            string structure;
+            string spareType;
+            double val;
+            line = CropLine(line, "{");
+            target = line.Substring(0, line.IndexOf(","));
+            line = CropLine(line, ",");
+            structure = line.Substring(0, line.IndexOf(","));
+            line = CropLine(line, ",");
+            spareType = line.Substring(0, line.IndexOf(","));
+            line = CropLine(line, ",");
+            val = double.Parse(line.Substring(0, line.IndexOf("}")));
+            return new RequestedTSManipulationModel(target, structure, TSManipulationTypeHelper.GetTSManipulationType(spareType), val);
         }
 
         /// <summary>

@@ -97,26 +97,15 @@ namespace AutoPlannerHelpers.BaseCore
         }
 
         /// <summary>
-        /// Helper method to direct the manipulation of the tuning structures
+        /// Helper method to direct the manipulation of the target tuning structures
         /// </summary>
         /// <param name="manipulationItem"></param>
         /// <param name="target"></param>
         /// <returns></returns>
-        protected bool ManipulateTuningStructures(RequestedTSManipulationModel manipulationItem, Structure target)
+        protected bool ManipulateTargetTuningStructures(RequestedTSManipulationModel manipulationItem, Structure target)
         {
             Structure theStructure = StructureTuningHelper.GetStructureFromId(manipulationItem.StructureId, EclipseContext.GetInstance().StructureSet);
-            if (manipulationItem.ManipulationType == TSManipulationType.CropFromBody)
-            {
-                ProvideUIUpdate($"Cropping {manipulationItem.StructureId} from Body with margin {manipulationItem.MarginInCM} cm");
-                //crop from body
-                (bool failOp, StringBuilder errorOpMessage) = ContourHelper.CropStructureFromBody(theStructure, EclipseContext.GetInstance().StructureSet, manipulationItem.MarginInCM);
-                if (failOp)
-                {
-                    ProvideUIUpdate(errorOpMessage.ToString());
-                    return true;
-                }
-            }
-            else if (manipulationItem.ManipulationType == TSManipulationType.CropTargetFromStructure)
+            if (manipulationItem.ManipulationType == TSManipulationType.CropTargetFromStructure)
             {
                 ProvideUIUpdate($"Cropping target {target.Id} from {manipulationItem.StructureId} with margin {manipulationItem.MarginInCM} cm");
                 //crop target from structure
@@ -131,10 +120,6 @@ namespace AutoPlannerHelpers.BaseCore
             {
                 if (CreateOverlapStructure(target, theStructure, manipulationItem.MarginInCM)) return true;
             }
-            else if (manipulationItem.ManipulationType == TSManipulationType.ContourSubStructure || manipulationItem.ManipulationType == TSManipulationType.ContourOuterStructure)
-            {
-                if (ContourInnerOuterStructure(theStructure, manipulationItem.MarginInCM)) return true;
-            }
             else if (manipulationItem.ManipulationType == TSManipulationType.UnionWithTarget)
             {
                 ProvideUIUpdate($"Unioning target {target.Id} with structure {manipulationItem.StructureId} with margin {manipulationItem.MarginInCM} cm");
@@ -145,6 +130,43 @@ namespace AutoPlannerHelpers.BaseCore
                     ProvideUIUpdate(errorUnionMessage.ToString());
                     return true;
                 }
+            }
+            else
+            {
+                ProvideUIUpdate($"Error! Manipulation type {manipulationItem.ManipulationType} is not compatible with Manipulate Target Tuning Structures Method! Exiting", true);
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Helper method to direct the manipulation of the OAR tuning structures
+        /// </summary>
+        /// <param name="manipulationItem"></param>
+        /// <param name="target"></param>
+        /// <returns></returns>
+        protected bool ManipulateOARTuningStructures(RequestedTSManipulationModel manipulationItem)
+        {
+            Structure theStructure = StructureTuningHelper.GetStructureFromId(manipulationItem.StructureId, EclipseContext.GetInstance().StructureSet);
+            if (manipulationItem.ManipulationType == TSManipulationType.CropFromBody)
+            {
+                ProvideUIUpdate($"Cropping {manipulationItem.StructureId} from Body with margin {manipulationItem.MarginInCM} cm");
+                //crop from body
+                (bool failOp, StringBuilder errorOpMessage) = ContourHelper.CropStructureFromBody(theStructure, EclipseContext.GetInstance().StructureSet, manipulationItem.MarginInCM);
+                if (failOp)
+                {
+                    ProvideUIUpdate(errorOpMessage.ToString());
+                    return true;
+                }
+            }
+            else if (manipulationItem.ManipulationType == TSManipulationType.ContourSubStructure || manipulationItem.ManipulationType == TSManipulationType.ContourOuterStructure)
+            {
+                if (ContourInnerOuterStructure(theStructure, manipulationItem.MarginInCM)) return true;
+            }
+            else
+            {
+                ProvideUIUpdate($"Error! Manipulation type {manipulationItem.ManipulationType} is not compatible with Manipulate OAR Tuning Structures Method! Exiting", true);
+                return true;
             }
             return false;
         }

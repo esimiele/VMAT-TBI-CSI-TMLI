@@ -367,44 +367,107 @@ namespace TBIAutoPlanner.Core
             int calcItems = TSManipulationList.Count * prescriptions.Count;
 
             List<TargetModel> tmpTSTargetList = new List<TargetModel> { };
-            //prescriptions are inherently sorted by increasing cumulative Rx to targets
             foreach (PrescriptionModel itr in prescriptions)
             {
-                Structure target = null;
-                //special logic. We want to actually manipulate ptv_body itself rather than a TS_PTV_Body structure
-                if (string.Equals(itr.TargetId.ToLower(), "ptv_body"))
+                if(!string.Equals(itr.TargetId, "ptv_body", StringComparison.OrdinalIgnoreCase))
                 {
-                    target = StructureTuningHelper.GetStructureFromId(itr.TargetId, EclipseContext.GetInstance().StructureSet);
-                }
-                else
-                {
-                    //target Id is not ptv_body, generate a new TSTarget
-                    target = GetTSTarget(itr.TargetId);
-                    tmpTSTargetList.Add(new TargetModel(itr.TargetId, itr.CumulativeDoseToTarget, target.Id));
-                }
-                if (target == null || target.IsEmpty)
-                {
-                    ProvideUIUpdate($"Error! Target structure: {itr.TargetId} is null or empty! Cannot perform tuning structure manipulations! Exiting!", true);
-                    return true;
-                }
-                if (TSManipulationList.Any())
-                {
-                    //perform all relevant TS manipulations for the specified target
-                    foreach (RequestedTSManipulationModel itr1 in TSManipulationList)
+                    //Generate a new TSTarget
+                    Structure addedTSTarget = GetTSTarget(itr.TargetId);
+                    tmpTSTargetList.Add(new TargetModel(itr.TargetId, itr.CumulativeDoseToTarget, addedTSTarget.Id));
+                    if (ReferenceEquals(addedTSTarget, null) || addedTSTarget.IsEmpty)
                     {
-                        if (ManipulateTuningStructures(itr1, target)) return true;
-                        ProvideUIUpdate(100 * ++counter / calcItems);
+                        ProvideUIUpdate($"Error! Target structure: {itr.TargetId} is null or empty! Cannot perform tuning structure manipulations! Exiting!", true);
+                        return true;
                     }
                 }
-                else ProvideUIUpdate("No TS manipulations requested!");
-                if (string.Equals(itr.TargetId.ToLower(), "ptv_body"))
+            }
+
+            if (TSManipulationList.Any(x => !string.IsNullOrEmpty(x.TargetId)))
+            {
+                foreach (RequestedTSManipulationModel itr in TSManipulationList.Where(x => !string.IsNullOrEmpty(x.TargetId)))
                 {
-                    //ts_ptv_vmat needs to be handled AFTER ts manipulation because ptv_body itself needs to be cropped from all the relevant structures
-                    (bool fail, string tsPTVVMATId) = GenerateTSPTVBodyTarget(target, "TS_PTV_VMAT");
-                    if (fail) return true;
-                    tmpTSTargetList.Add(new TargetModel(itr.TargetId, itr.CumulativeDoseToTarget, tsPTVVMATId));
+                    Structure target = null;
+                    if(string.Equals(itr.TargetId, "ptv_body", StringComparison.OrdinalIgnoreCase))
+                    {
+                        target = StructureTuningHelper.GetStructureFromId(itr.TargetId, EclipseContext.GetInstance().StructureSet);
+                    }
+                    //target operations
+                    else if (tmpTSTargetList.Any(x => string.Equals(x.TargetId, itr.TargetId, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        string tsTargetId = tmpTSTargetList.First(x => string.Equals(x.TargetId, itr.TargetId, StringComparison.OrdinalIgnoreCase)).TsTargetId;
+                        target = StructureTuningHelper.GetStructureFromId(tsTargetId, EclipseContext.GetInstance().StructureSet);
+                    }
+                    if (!ReferenceEquals(target, null))
+                    {
+                        if (ManipulateTargetTuningStructures(itr, target)) return true;
+                        ProvideUIUpdate(100 * ++counter / calcItems);
+                    }
+                    else
+                    {
+                        ProvideUIUpdate($"Error! Could not retrieve target structure {itr.TargetId} or its TS counterpart to perform structure manipulation! Exiting!", true);
+                        return true;
+                    }
                 }
             }
+            else ProvideUIUpdate("No target TS manipulations requested!");
+
+            if (TSManipulationList.Any(x => string.IsNullOrEmpty(x.TargetId)))
+            {
+                foreach (RequestedTSManipulationModel itr in TSManipulationList.Where(x => string.IsNullOrEmpty(x.TargetId)))
+                {
+                    if (ManipulateOARTuningStructures(itr)) return true;
+                    ProvideUIUpdate(100 * ++counter / calcItems);
+                }
+            }
+            else ProvideUIUpdate("No OAR TS manipulations requested!");
+
+            if (!TBIAutoPlannerSettings.AllBeamsVMAT && prescriptions.Any(x => string.Equals(x.TargetId, "ptv_body", StringComparison.OrdinalIgnoreCase)) && StructureTuningHelper.DoesStructureExistInSS("ptv_body",EclipseContext.GetInstance().StructureSet, true))
+            {
+                //ts_ptv_vmat needs to be handled AFTER ts manipulation because ptv_body itself needs to be cropped from all the relevant structures
+                (bool fail, string tsPTVVMATId) = GenerateTSPTVBodyTarget(StructureTuningHelper.GetStructureFromId("ptv_body", EclipseContext.GetInstance().StructureSet), "TS_PTV_VMAT");
+                if (fail) return true;
+                PrescriptionModel presc = prescriptions.First(x => string.Equals(x.TargetId, "ptv_body", StringComparison.OrdinalIgnoreCase));
+                tmpTSTargetList.Add(new TargetModel(presc.TargetId, presc.CumulativeDoseToTarget, tsPTVVMATId));
+            }
+
+            ////prescriptions are inherently sorted by increasing cumulative Rx to targets
+            //foreach (PrescriptionModel itr in prescriptions)
+            //{
+            //    Structure target = null;
+            //    //special logic. We want to actually manipulate ptv_body itself rather than a TS_PTV_Body structure
+            //    if (string.Equals(itr.TargetId.ToLower(), "ptv_body"))
+            //    {
+            //        target = StructureTuningHelper.GetStructureFromId(itr.TargetId, EclipseContext.GetInstance().StructureSet);
+            //    }
+            //    else
+            //    {
+            //        //target Id is not ptv_body, generate a new TSTarget
+            //        target = GetTSTarget(itr.TargetId);
+            //        tmpTSTargetList.Add(new TargetModel(itr.TargetId, itr.CumulativeDoseToTarget, target.Id));
+            //    }
+            //    if (target == null || target.IsEmpty)
+            //    {
+            //        ProvideUIUpdate($"Error! Target structure: {itr.TargetId} is null or empty! Cannot perform tuning structure manipulations! Exiting!", true);
+            //        return true;
+            //    }
+            //    if (TSManipulationList.Any())
+            //    {
+            //        //perform all relevant TS manipulations for the specified target
+            //        foreach (RequestedTSManipulationModel itr1 in TSManipulationList)
+            //        {
+            //            if (ManipulateTuningStructures(itr1, target)) return true;
+            //            ProvideUIUpdate(100 * ++counter / calcItems);
+            //        }
+            //    }
+            //    else ProvideUIUpdate("No TS manipulations requested!");
+            //    if (string.Equals(itr.TargetId.ToLower(), "ptv_body"))
+            //    {
+            //        //ts_ptv_vmat needs to be handled AFTER ts manipulation because ptv_body itself needs to be cropped from all the relevant structures
+            //        (bool fail, string tsPTVVMATId) = GenerateTSPTVBodyTarget(target, "TS_PTV_VMAT");
+            //        if (fail) return true;
+            //        tmpTSTargetList.Add(new TargetModel(itr.TargetId, itr.CumulativeDoseToTarget, tsPTVVMATId));
+            //    }
+            //}
             //only one plan is allowed for the prescriptions --> last item is the highest Rx target for this plan and needs to be set as the normalization volume
             NormalizationVolumes.Add(prescriptions.Last().PlanId, tmpTSTargetList.OrderByDescending(x => x.TargetRxDose).First().TsTargetId);
             PlanTargets.Add(new PlanTargetsModel(prescriptions.Last().PlanId, new List<TargetModel>(tmpTSTargetList)));
@@ -653,9 +716,10 @@ namespace TBIAutoPlanner.Core
             if (GeneratePTVFromBody(ptvBodyFlash)) return true;
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Contoured {ptvBodyFlash.Id} structure from body structure");
 
-            foreach (RequestedTSManipulationModel itr in TSManipulationList.Where(x => x.ManipulationType == TSManipulationType.ContourOverlapWithTarget || x.ManipulationType == TSManipulationType.CropTargetFromStructure))
+            foreach (RequestedTSManipulationModel itr in TSManipulationList.Where(x => !string.IsNullOrEmpty(x.TargetId) && string.Equals(x.TargetId, "ptv_body", StringComparison.OrdinalIgnoreCase)))
             {
-                ManipulateTuningStructures(itr, ptvBodyFlash);
+                //only grab the ts target manipulations intended for ptv_body
+                ManipulateTargetTuningStructures(itr, ptvBodyFlash);
                 ProvideUIUpdate(100 * ++percentComplete / calcItems);
             }
 

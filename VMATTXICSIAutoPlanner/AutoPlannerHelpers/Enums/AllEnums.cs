@@ -8,10 +8,10 @@
         None,
         CropTargetFromStructure,
         ContourOverlapWithTarget,
+        UnionWithTarget,
         CropFromBody,
         ContourSubStructure,
         ContourOuterStructure,
-        UnionWithTarget
     };
 
     /// <summary>

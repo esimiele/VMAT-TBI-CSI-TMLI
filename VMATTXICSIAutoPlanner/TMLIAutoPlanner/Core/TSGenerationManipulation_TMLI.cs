@@ -170,8 +170,9 @@ namespace TMLIAutoPlanner.Core
             int counter = 0;
             int calcItems = TSManipulationList.Count * prescriptions.Count;
 
-            List<TargetModel> tmpTSTargetList = new List<TargetModel> { };
+            //construct all ts targets 
             //prescriptions are inherently sorted by increasing cumulative Rx to targets
+            List<TargetModel> tmpTSTargetList = new List<TargetModel> { };
             foreach (PrescriptionModel itr in prescriptions)
             {
                 //Generate a new TSTarget
@@ -182,28 +183,79 @@ namespace TMLIAutoPlanner.Core
                     ProvideUIUpdate($"Error! Target structure: {itr.TargetId} is null or empty! Cannot perform tuning structure manipulations! Exiting!", true);
                     return true;
                 }
-                if (TSManipulationList.Any())
+            }
+
+            if(TSManipulationList.Any(x => !string.IsNullOrEmpty(x.TargetId)))
+            {
+                foreach (RequestedTSManipulationModel itr in TSManipulationList.Where(x => !string.IsNullOrEmpty(x.TargetId)))
                 {
-                    //perform all relevant TS manipulations for the specified target
-                    foreach (RequestedTSManipulationModel itr1 in TSManipulationList)
+                    //target operations
+                    if (tmpTSTargetList.Any(x => string.Equals(x.TargetId, itr.TargetId, StringComparison.OrdinalIgnoreCase)))
                     {
-                        if (ManipulateTuningStructures(itr1, addedTSTarget)) return true;
+                        string tsTargetId = tmpTSTargetList.First(x => string.Equals(x.TargetId, itr.TargetId, StringComparison.OrdinalIgnoreCase)).TsTargetId;
+                        Structure tsTarget = StructureTuningHelper.GetStructureFromId(tsTargetId, EclipseContext.GetInstance().StructureSet);
+                        if (ManipulateTargetTuningStructures(itr, tsTarget)) return true;
                         ProvideUIUpdate(100 * ++counter / calcItems);
                     }
                 }
-                else ProvideUIUpdate("No TS manipulations requested!");
-                if (string.Equals(itr.TargetId.ToLower(), "ptv_tmli") && !TMLIAutoPlannerSettings.AllBeamsVMAT && StructureTuningHelper.DoesStructureExistInSS("matchline", EclipseContext.GetInstance().StructureSet, true))
+            }
+            else ProvideUIUpdate("No target TS manipulations requested!");
+
+            if (TSManipulationList.Any(x => string.IsNullOrEmpty(x.TargetId)))
+            {
+                foreach (RequestedTSManipulationModel itr in TSManipulationList.Where(x => string.IsNullOrEmpty(x.TargetId)))
                 {
-                    ProvideUIUpdate($"Cutting {addedTSTarget} at the matchline!");
-
-                    //find the image plane where the matchline is location. Record this value and break the loop. Also find the first slice where the ptv_body contour starts and record this value
-                    Structure matchline = StructureTuningHelper.GetStructureFromId("matchline", EclipseContext.GetInstance().StructureSet);
-                    ProvideUIUpdate($"Retrieved matchline structure: {matchline.Id}");
-
-                    if (ContourTSLegs("TS_PTV_Legs", matchline, addedTSTarget)) return true;
-                    if (CutTSPTVAtMatchline(addedTSTarget, matchline)) return true;
+                    if (ManipulateOARTuningStructures(itr)) return true;
+                    ProvideUIUpdate(100 * ++counter / calcItems);
                 }
             }
+            else ProvideUIUpdate("No OAR TS manipulations requested!");
+
+            if (!TMLIAutoPlannerSettings.AllBeamsVMAT && StructureTuningHelper.DoesStructureExistInSS("matchline", EclipseContext.GetInstance().StructureSet, true))
+            {
+                ProvideUIUpdate($"Cutting {tmpTSTargetList.Last().TsTargetId} at the matchline!");
+
+                //find the image plane where the matchline is location. Record this value and break the loop. Also find the first slice where the ptv_body contour starts and record this value
+                Structure matchline = StructureTuningHelper.GetStructureFromId("matchline", EclipseContext.GetInstance().StructureSet);
+                ProvideUIUpdate($"Retrieved matchline structure: {matchline.Id}");
+
+                if (ContourTSLegs("TS_PTV_Legs", matchline, StructureTuningHelper.GetStructureFromId(tmpTSTargetList.Last().TsTargetId, EclipseContext.GetInstance().StructureSet))) return true;
+                if (CutTSPTVAtMatchline(StructureTuningHelper.GetStructureFromId(tmpTSTargetList.Last().TsTargetId, EclipseContext.GetInstance().StructureSet), matchline)) return true;
+            }
+
+            ////prescriptions are inherently sorted by increasing cumulative Rx to targets
+            //foreach (PrescriptionModel itr in prescriptions)
+            //{
+            //    //Generate a new TSTarget
+            //    Structure addedTSTarget = GetTSTarget(itr.TargetId);
+            //    tmpTSTargetList.Add(new TargetModel(itr.TargetId, itr.CumulativeDoseToTarget, addedTSTarget.Id));
+            //    if (ReferenceEquals(addedTSTarget, null) || addedTSTarget.IsEmpty)
+            //    {
+            //        ProvideUIUpdate($"Error! Target structure: {itr.TargetId} is null or empty! Cannot perform tuning structure manipulations! Exiting!", true);
+            //        return true;
+            //    }
+            //    if (TSManipulationList.Any())
+            //    {
+            //        //perform all relevant TS manipulations for the specified target
+            //        foreach (RequestedTSManipulationModel itr1 in TSManipulationList)
+            //        {
+            //            if (ManipulateTuningStructures(itr1, addedTSTarget)) return true;
+            //            ProvideUIUpdate(100 * ++counter / calcItems);
+            //        }
+            //    }
+            //    else ProvideUIUpdate("No TS manipulations requested!");
+            //    if (string.Equals(itr.TargetId.ToLower(), "ptv_tmli") && !TMLIAutoPlannerSettings.AllBeamsVMAT && StructureTuningHelper.DoesStructureExistInSS("matchline", EclipseContext.GetInstance().StructureSet, true))
+            //    {
+            //        ProvideUIUpdate($"Cutting {addedTSTarget} at the matchline!");
+
+            //        //find the image plane where the matchline is location. Record this value and break the loop. Also find the first slice where the ptv_body contour starts and record this value
+            //        Structure matchline = StructureTuningHelper.GetStructureFromId("matchline", EclipseContext.GetInstance().StructureSet);
+            //        ProvideUIUpdate($"Retrieved matchline structure: {matchline.Id}");
+
+            //        if (ContourTSLegs("TS_PTV_Legs", matchline, addedTSTarget)) return true;
+            //        if (CutTSPTVAtMatchline(addedTSTarget, matchline)) return true;
+            //    }
+            //}
             //only one plan is allowed for the prescriptions --> last item is the highest Rx target for this plan and needs to be set as the normalization volume
             NormalizationVolumes.Add(prescriptions.Last().PlanId, tmpTSTargetList.OrderByDescending(x => x.TargetRxDose).First().TsTargetId);
             PlanTargets.Add(new PlanTargetsModel(prescriptions.Last().PlanId, new List<TargetModel>(tmpTSTargetList)));

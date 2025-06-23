@@ -509,23 +509,77 @@ namespace CSIAutoPlanner.Core
                     ProvideUIUpdate(errorMessage.ToString());
                     return true;
                 }
-
-                if (TSManipulationList.Any())
-                {
-                    //normal structure id, manipulation type, added margin (if applicable)
-                    foreach (RequestedTSManipulationModel itr1 in TSManipulationList)
-                    {
-                        if (ManipulateTuningStructures(itr1, addedTSTarget)) return true;
-                        ProvideUIUpdate(100 * ++counter / calcItems);
-                    }
-                }
-                else ProvideUIUpdate("No TS manipulations requested!");
             }
             //iterated through entire prescription list, need to add final values to normVolumes and tsTargets
             NormalizationVolumes.Add(tmpPlanId, prevTargetId);
             PlanTargets.Add(new PlanTargetsModel(tmpPlanId, new List<TargetModel>(tmpTSTargetList)));
+
+            if (TSManipulationList.Any(x => !string.IsNullOrEmpty(x.TargetId)))
+            {
+                foreach (RequestedTSManipulationModel itr in TSManipulationList.Where(x => !string.IsNullOrEmpty(x.TargetId)))
+                {
+                    //target operations
+                    if (PlanTargets.SelectMany(x => x.Targets).Any(x => string.Equals(x.TargetId, itr.TargetId, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        string tsTargetId = PlanTargets.SelectMany(x => x.Targets).First(x => string.Equals(x.TargetId, itr.TargetId, StringComparison.OrdinalIgnoreCase)).TsTargetId;
+                        Structure tsTarget = StructureTuningHelper.GetStructureFromId(tsTargetId, EclipseContext.GetInstance().StructureSet);
+                        if (ManipulateTargetTuningStructures(itr, tsTarget)) return true;
+                        ProvideUIUpdate(100 * ++counter / calcItems);
+                    }
+                }
+            }
+            else ProvideUIUpdate("No target TS manipulations requested!");
+
+            if (TSManipulationList.Any(x => string.IsNullOrEmpty(x.TargetId)))
+            {
+                foreach (RequestedTSManipulationModel itr in TSManipulationList.Where(x => string.IsNullOrEmpty(x.TargetId)))
+                {
+                    if (ManipulateOARTuningStructures(itr)) return true;
+                    ProvideUIUpdate(100 * ++counter / calcItems);
+                }
+            }
+            else ProvideUIUpdate("No OAR TS manipulations requested!");
+
             ProvideUIUpdate("Finished performing TS manipulations");
             ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
+            //prescriptions are inherently sorted by increasing cumulative Rx to targets
+            //foreach (PrescriptionModel itr in prescriptions)
+            //{
+            //    if (!string.Equals(itr.PlanId, tmpPlanId))
+            //    {
+            //        //new plan
+            //        PlanTargets.Add(new PlanTargetsModel(tmpPlanId, new List<TargetModel>(tmpTSTargetList)));
+            //        //last target id represents highest Rx target for previous plan
+            //        NormalizationVolumes.Add(tmpPlanId, prevTargetId);
+            //        tmpTSTargetList = new List<TargetModel> { };
+            //        tmpPlanId = itr.PlanId;
+            //    }
+            //    //create a new TS target for optimization and copy the original target structure onto the new TS structure
+            //    Structure addedTSTarget = GetTSTarget(itr.TargetId);
+            //    prevTargetId = addedTSTarget.Id;
+            //    tmpTSTargetList.Add(new TargetModel(itr.TargetId, itr.CumulativeDoseToTarget, addedTSTarget.Id));
+
+            //    //ensure the target is cropped 3mm from body
+            //    ProvideUIUpdate($"Cropping TS target from body with {3.0} mm inner margin");
+            //    (bool fail, StringBuilder errorMessage) = ContourHelper.CropStructureFromBody(addedTSTarget, EclipseContext.GetInstance().StructureSet, -0.3);
+            //    if (fail)
+            //    {
+            //        ProvideUIUpdate(errorMessage.ToString());
+            //        return true;
+            //    }
+
+            //    if (TSManipulationList.Any())
+            //    {
+            //        //normal structure id, manipulation type, added margin (if applicable)
+            //        foreach (RequestedTSManipulationModel itr1 in TSManipulationList)
+            //        {
+            //            if (ManipulateTuningStructures(itr1, addedTSTarget)) return true;
+            //            ProvideUIUpdate(100 * ++counter / calcItems);
+            //        }
+            //    }
+            //    else ProvideUIUpdate("No TS manipulations requested!");
+            //}
+
             return false;
         }
 
