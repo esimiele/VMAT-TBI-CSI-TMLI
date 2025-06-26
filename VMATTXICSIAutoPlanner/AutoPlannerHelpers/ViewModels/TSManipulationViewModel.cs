@@ -80,10 +80,10 @@ namespace AutoPlannerHelpers.ViewModels
             foreach (RequestedTSManipulationModel itr in _selectedTemplate.TSManipulations)
             {
                 if (skipStructureIdCheck) RequestedTSManipulations.Add(itr);
-                else if (StructureIdsPostUnion.Any(x => string.Equals(x, itr.StructureId, System.StringComparison.OrdinalIgnoreCase)))
+                else if (_structureIdsPostUnion.Any(x => string.Equals(x, itr.StructureId, System.StringComparison.OrdinalIgnoreCase)))
                 {
                     //only add it they base structure exists in the structure set
-                    string structureId = StructureIdsPostUnion.First(x => string.Equals(x, itr.StructureId, System.StringComparison.OrdinalIgnoreCase));
+                    string structureId = _structureIdsPostUnion.First(x => string.Equals(x, itr.StructureId, System.StringComparison.OrdinalIgnoreCase));
                     RequestedTSManipulations.Add(new RequestedTSManipulationModel(structureId, itr.ManipulationType, itr.MarginInCM));
                 }
             }

@@ -539,6 +539,11 @@ namespace TBIAutoPlanner.ViewModels
             if (PlanTemplates.Any()) sb.Append(ConfigurationUIHelper.PrintTBIPlanTemplateConfigurationParameters(PlanTemplates.ToList()));
             return sb;
         }
+
+        protected override void PerformOptimizationStructureDerivation(List<StructureOperationModel> operations)
+        {
+            throw new NotImplementedException();
+        }
         #endregion
     }
 }

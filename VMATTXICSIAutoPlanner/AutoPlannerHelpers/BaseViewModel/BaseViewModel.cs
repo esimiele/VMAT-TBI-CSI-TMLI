@@ -189,7 +189,8 @@ namespace AutoPlannerHelpers.BaseViewModel
 
             SpecifyTargets = new SpecifyTargetsView { DataContext = new SetTargetsViewModel() };
             TSGeneration = new TSGenerationView { DataContext = new TSGenerationViewModel() };
-            TSManipulation = new TSManipulationView { DataContext = new TSManipulationViewModel(_structureIdsPostUnion) };
+            //TSManipulation = new TSManipulationView { DataContext = new TSManipulationViewModel(_structureIdsPostUnion) };
+            TSManipulation = new StructureDerivationsView { DataContext = new StructureDerivationsViewModel(_structureIdsPostUnion, false) };
             BeamPlacement = new BeamPlacementView { DataContext = new BeamPlacementViewModel(type) };
             OptimizationSetup = new OptimizationSetupView { DataContext = new OptimizationSetupViewModel(_structureIdsPostUnion, type) };
             PlanPreparation = new PlanPreparationView { DataContext = new PlanPreparationViewModel() };
@@ -214,6 +215,10 @@ namespace AutoPlannerHelpers.BaseViewModel
             {
                 List<RequestedTSStructureModel> tsGenerationStructures = WeakReferenceMessenger.Default.Send(new RequestTSGenerationStructures());
                 PerformTSStructureGenerationManipulation(tsGenerationStructures, m.RequestedTSManipulations);
+            });
+            WeakReferenceMessenger.Default.Register<RequestPerformOptimizationStructureDerivations>(this, (r, m) =>
+            {
+                PerformOptimizationStructureDerivation(m.StructureOperations);
             });
             WeakReferenceMessenger.Default.Register<RequestGenerateAndPlaceBeams>(this, (r, m) =>
             {
@@ -279,6 +284,7 @@ namespace AutoPlannerHelpers.BaseViewModel
         protected abstract bool VerifyTargetsIntegrity(List<PlanTargetsModel> parsedTargets);
 
         protected abstract void PerformTSStructureGenerationManipulation(List<RequestedTSStructureModel> structuresToGenerate, List<RequestedTSManipulationModel> manipulations);
+        protected abstract void PerformOptimizationStructureDerivation(List<StructureOperationModel> operations);
 
         protected abstract void GeneratePlansAndPlaceBeams(string linac, string energy, bool contourOverlap, double overlapMargin, List<PlanIsocenterModel> PlanIsocenters);
 

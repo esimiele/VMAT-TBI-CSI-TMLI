@@ -33,6 +33,42 @@ namespace AutoPlannerHelpers.Messengers
     #endregion
 
     #region structure generation and manipulation
+    public class RequestUpdateOptimizationStructureDerivations : RequestUpdateStructureDerivations
+    {
+        public RequestUpdateOptimizationStructureDerivations(List<StructureOperationModel> structureOperations)
+        {
+            this.StructureOperations = structureOperations;
+        }
+    }
+    public class RequestUpdateTargetDerivationOperations : RequestUpdateStructureDerivations
+    {
+        public RequestUpdateTargetDerivationOperations(List<StructureOperationModel> structureOperations)
+        {
+            this.StructureOperations = structureOperations;
+        }
+    }
+
+    public abstract class RequestUpdateStructureDerivations
+    {
+        public List<StructureOperationModel> StructureOperations { get; protected set; }
+    }
+
+    public class RequestPerformTargetDerivations : RequestUpdateStructureDerivations
+    {
+        public RequestPerformTargetDerivations(IEnumerable<StructureOperationModel> structureOperations)
+        {
+            this.StructureOperations = structureOperations.ToList();
+        }
+    }
+    public class RequestPerformOptimizationStructureDerivations : RequestUpdateStructureDerivations
+    {
+        public RequestPerformOptimizationStructureDerivations(IEnumerable<StructureOperationModel> structureOperations)
+        {
+            this.StructureOperations = structureOperations.ToList();
+        }
+    }
+
+
     public class RequestGenerateManipulateTuningStructuresMessage
     {
         public List<RequestedTSManipulationModel> RequestedTSManipulations { get; private set; }

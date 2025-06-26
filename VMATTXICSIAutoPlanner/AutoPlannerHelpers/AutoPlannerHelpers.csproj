@@ -113,6 +113,7 @@
     <Compile Include="EnumTypeHelpers\FlashTypeHelper.cs" />
     <Compile Include="EnumTypeHelpers\InequalityOperatorHelper.cs" />
     <Compile Include="EnumTypeHelpers\OptimizationTypeHelper.cs" />
+    <Compile Include="EnumTypeHelpers\StructureOperationTypeHelper.cs" />
     <Compile Include="EnumTypeHelpers\TSManipulationTypeHelper.cs" />
     <Compile Include="EnumTypeHelpers\UnitsTypeHelper.cs" />
     <Compile Include="EqualityComparers\RequestedTSStructureModelComparer.cs" />
@@ -192,6 +193,7 @@
     <Compile Include="ViewModels\SimpleProgressWindowViewModel.cs" />
     <Compile Include="ViewModels\SSImportViewModel.cs" />
     <Compile Include="ViewModels\StructureCropOverlapViewModel.cs" />
+    <Compile Include="ViewModels\StructureDerivationsViewModel.cs" />
     <Compile Include="ViewModels\TSGenerationViewModel.cs" />
     <Compile Include="ViewModels\TSManipulationViewModel.cs" />
     <Compile Include="Views\BeamPlacementView.xaml.cs">
@@ -231,6 +233,9 @@
     </Compile>
     <Compile Include="Views\StructureCropOverlapView.xaml.cs">
       <DependentUpon>StructureCropOverlapView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\StructureDerivationsView.xaml.cs">
+      <DependentUpon>StructureDerivationsView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\TSGenerationView.xaml.cs">
       <DependentUpon>TSGenerationView.xaml</DependentUpon>
@@ -306,6 +311,10 @@
     <Page Include="Views\StructureCropOverlapView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\StructureDerivationsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\TSGenerationView.xaml">
       <Generator>MSBuild:Compile</Generator>

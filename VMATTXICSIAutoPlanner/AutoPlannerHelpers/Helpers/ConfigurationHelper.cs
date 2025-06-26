@@ -262,6 +262,7 @@ namespace AutoPlannerHelpers.Helpers
                         if (line.Equals(":begin template case configuration:"))
                         {
                             //preparation
+                            List<StructureOperationModel> targetDerivations_temp = new List<StructureOperationModel> { };
                             List<RequestedTSManipulationModel> TSManipulation_temp = new List<RequestedTSManipulationModel> { };
                             List<RequestedTSStructureModel> TSstructures_temp = new List<RequestedTSStructureModel> { };
                             List<RequestedTSStructureModel> prelimTargets_temp = new List<RequestedTSStructureModel> { };
@@ -291,6 +292,7 @@ namespace AutoPlannerHelpers.Helpers
                                             if (int.TryParse(value, out int initFx)) tempTemplate.InitialRxNumberOfFractions = initFx;
                                         }
                                     }
+                                    else if (line.Contains("add target derivation")) targetDerivations_temp.Add(ParseTargetDerivation(line));
                                     else if (line.Contains("add target TS manipulation")) TSManipulation_temp.Add(ParseTargetTSManipulation(line));
                                     else if (line.Contains("add OAR TS manipulation")) TSManipulation_temp.Add(ParseOARTSManipulation(line));
                                     else if (line.Contains("add opt constraint")) initOptConst_temp.Add(ParseOptimizationConstraint(line));
@@ -304,6 +306,7 @@ namespace AutoPlannerHelpers.Helpers
                                 }
                             }
 
+                            if (targetDerivations_temp.Any()) tempTemplate.TargetDerivationOperations = new List<StructureOperationModel>(targetDerivations_temp);
                             if (TSManipulation_temp.Any()) tempTemplate.TSManipulations = new List<RequestedTSManipulationModel>(TSManipulation_temp);
                             if (TSstructures_temp.Any()) tempTemplate.CreateTSStructures = new List<RequestedTSStructureModel>(TSstructures_temp);
                             if (prelimTargets_temp.Any()) tempTemplate.RequestedPreliminaryTargets = new List<RequestedTSStructureModel>(prelimTargets_temp);
@@ -455,6 +458,33 @@ namespace AutoPlannerHelpers.Helpers
             line = CropLine(line, ",");
             val = double.Parse(line.Substring(0, line.IndexOf("}")));
             return new RequestedTSManipulationModel(structure, TSManipulationTypeHelper.GetTSManipulationType(spareType), val);
+        }
+
+        public static StructureOperationModel ParseTargetDerivation(string line)
+        {
+            //structure a id, margin a (cm), operation type, structure b id, margin b (cm), output structure id, is temporary
+            string structureA;
+            double marginA;
+            string operation;
+            string structureB;
+            double marginB;
+            string outputStructure;
+            bool isTemp;
+            line = CropLine(line, "{");
+            structureA = line.Substring(0, line.IndexOf(","));
+            line = CropLine(line, ",");
+            marginA = double.Parse(line.Substring(0, line.IndexOf(",")));
+            line = CropLine(line, ",");
+            operation = line.Substring(0, line.IndexOf(","));
+            line = CropLine(line, ",");
+            structureB = line.Substring(0, line.IndexOf(","));
+            line = CropLine(line, ",");
+            marginB = double.Parse(line.Substring(0, line.IndexOf(",")));
+            line = CropLine(line, ",");
+            outputStructure = line.Substring(0, line.IndexOf(","));
+            line = CropLine(line, ",");
+            isTemp = bool.Parse(line.Substring(0, line.IndexOf("}")));
+            return new StructureOperationModel(structureA, StructureOperationTypeHelper.GetStructureDerivationType(operation), structureB, outputStructure, marginA, marginB, isTemp);
         }
 
         /// <summary>

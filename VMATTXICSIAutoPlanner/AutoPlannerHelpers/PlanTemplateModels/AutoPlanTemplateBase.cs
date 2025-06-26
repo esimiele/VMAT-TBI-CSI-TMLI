@@ -12,6 +12,8 @@ namespace AutoPlannerHelpers.PlanTemplateModels
         public List<PlanTargetsModel> PlanTargets { get; set; } = new List<PlanTargetsModel>();
         public List<RequestedTSStructureModel> CreateTSStructures { get; set; } = new List<RequestedTSStructureModel> { };
         public List<RequestedTSManipulationModel> TSManipulations { get; set; } = new List<RequestedTSManipulationModel> { };
+        public List<StructureOperationModel> TargetDerivationOperations { get; set; } = new List<StructureOperationModel> { };
+        public List<StructureOperationModel> OptimizationStructureDerivations { get; set; } = new List<StructureOperationModel> { };
         public List<PlanObjectiveModel> PlanObjectives { get; set; } = new List<PlanObjectiveModel> { };
         public List<RequestedPlanMetricModel> RequestedPlanMetrics { get; set; } = new List<RequestedPlanMetricModel> { };
         public List<RequestedOptimizationTSStructureModel> RequestedOptimizationTSStructures { get; set; } = new List<RequestedOptimizationTSStructureModel> { };

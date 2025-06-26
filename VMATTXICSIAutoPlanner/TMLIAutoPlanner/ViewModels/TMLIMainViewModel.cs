@@ -139,7 +139,8 @@ namespace TMLIAutoPlanner.ViewModels
 
             ExportCT = new CTExportView { DataContext = new CTExportViewModel() };
             ImportSS = new ImportSSView { DataContext = new ImportSSViewModel(TMLIAutoPlannerSettings.ImportExportData, PlanType.VMAT_CSI, (!ReferenceEquals(EclipseContext.GetInstance().Patient, null) ? EclipseContext.GetInstance().Patient.Id : "")) };
-            PrepForTargets = new PrepForTargetsView { DataContext = new PrepForTargetsViewModel() };
+            //PrepForTargets = new PrepForTargetsView { DataContext = new PrepForTargetsViewModel() };
+            PrepForTargets = new StructureDerivationsView { DataContext = new StructureDerivationsViewModel(_structureIdsPostUnion, true) };
             WeakReferenceMessenger.Default.Send(new RequestUpdateTargetStructures(TMLIAutoPlannerSettings.RequestedPreliminaryTargets));
 
             RingGeneration = new RingGenerationView { DataContext = new RingGenerationViewModel(_structureIdsPostUnion) };
@@ -436,6 +437,7 @@ namespace TMLIAutoPlanner.ViewModels
             WeakReferenceMessenger.Default.Send(new RequestAutoPlanTemplateChangedMessage(_selectedTemplate));
             List<RequestedTSStructureModel> prelimTargets = new List<RequestedTSStructureModel>(TMLIAutoPlannerSettings.RequestedPreliminaryTargets);
             prelimTargets.AddRange((_selectedTemplate as TMLIAutoPlanTemplate).RequestedPreliminaryTargets);
+            WeakReferenceMessenger.Default.Send(new RequestUpdateTargetDerivationOperations(_selectedTemplate.TargetDerivationOperations));
             WeakReferenceMessenger.Default.Send(new RequestUpdateTargetStructures(prelimTargets.Distinct(new RequestedTSStructureModelComparer()).ToList()));
             Logger.GetInstance().Template = _selectedTemplate.TemplateName;
         }
@@ -684,6 +686,11 @@ namespace TMLIAutoPlanner.ViewModels
 
             if (PlanTemplates.Any()) sb.Append(ConfigurationUIHelper.PrintTMLIPlanTemplateConfigurationParameters(PlanTemplates.ToList()));
             return sb;
+        }
+
+        protected override void PerformOptimizationStructureDerivation(List<StructureOperationModel> operations)
+        {
+            throw new NotImplementedException();
         }
         #endregion
     }

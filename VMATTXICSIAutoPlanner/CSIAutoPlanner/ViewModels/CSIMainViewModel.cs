@@ -672,6 +672,11 @@ namespace CSIAutoPlanner.ViewModels
             return sb;
         }
 
+        protected override void PerformOptimizationStructureDerivation(List<StructureOperationModel> operations)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
     }
 }

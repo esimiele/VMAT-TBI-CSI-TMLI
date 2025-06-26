@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
@@ -13,6 +14,12 @@ namespace AutoPlannerHelpers.ViewModels
             {
                 this.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
             }
+        }
+
+        public void AddRange(IEnumerable<T> items)
+        {
+            foreach(T itr in items) this.Items.Add(itr);
+            this.Refresh();
         }
     }
 }

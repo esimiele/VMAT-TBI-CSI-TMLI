@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using AutoPlannerHelpers.Logging;
 using System.Windows.Media.Media3D;
 using VMS.TPS.Common.Model.API;
 using VMS.TPS.Common.Model.Types;
@@ -47,6 +48,48 @@ namespace AutoPlannerHelpers.Helpers
                 fail = true;
             }
             return (fail, sb);
+        }
+
+        public static SegmentVolume ContourIntersection(Structure a, Structure b, double marginA, double marginB)
+        {
+            //margin is in cm
+            if (!ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return a.SegmentVolume.Margin(marginA * 10).And(b.SegmentVolume.Margin(marginB * 10));
+            return null;
+        }
+
+        public static SegmentVolume ContourUnion(Structure a, Structure b, double marginA, double marginB)
+        {
+            //margin is in cm
+            if (!ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return a.SegmentVolume.Margin(marginA * 10).Or(b.SegmentVolume.Margin(marginB * 10));
+            return null;
+        }
+
+        public static SegmentVolume CropStructureFromStructure(Structure a, Structure b, double marginA, double marginB)
+        {
+            //margin is in cm
+            if (!ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return a.SegmentVolume.Margin(marginA * 10).Sub(b.SegmentVolume.Margin(marginB * 10));
+            return null;
+        }
+
+        public static SegmentVolume ContourXOR(Structure a, Structure b, double marginA, double marginB)
+        {
+            //margin is in cm
+            if (!ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return a.SegmentVolume.Margin(marginA * 10).Xor(b.SegmentVolume.Margin(marginB * 10));
+            return null;
+        }
+
+        public static SegmentVolume CutStructureInfToStructure(Structure a, Structure b, double marginA, double marginB)
+        {
+            //margin is in cm
+            if (!ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return a.SegmentVolume.Margin(marginA * 10).Xor(b.SegmentVolume.Margin(marginB * 10));
+            return null;
+        }
+
+        public static SegmentVolume CutStructureSupToStructure(Structure a, Structure b, double marginA, double marginB)
+        {
+            //margin is in cm
+            if (!ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return a.SegmentVolume.Margin(marginA * 10).Xor(b.SegmentVolume.Margin(marginB * 10));
+            return null;
         }
 
         /// <summary>

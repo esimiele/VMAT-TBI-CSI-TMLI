@@ -14,12 +14,14 @@
         ContourOuterStructure,
     };
 
-    public enum StructureManipulationOperation
+    public enum StructureDerivationOperation
     {
         Intersection,
         Union,
         Crop,
         XOR,
+        CutInferiorTo,
+        CutSuperiorTo,
         None
     }
 
