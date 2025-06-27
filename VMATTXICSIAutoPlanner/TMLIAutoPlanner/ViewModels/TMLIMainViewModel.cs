@@ -192,6 +192,7 @@ namespace TMLIAutoPlanner.ViewModels
                     new ExportCTModel("3", "CT 3", 300, "2020-10-10"),
                 };
                 WeakReferenceMessenger.Default.Send(new RequestUpdateCTList(models));
+                WeakReferenceMessenger.Default.Send(new RequestUpdateStructureIds(PlanTemplates.SelectMany(x => x.GenerateStructureIdList()).Distinct()));
             }
             InitializeTMLIMessengers();
         }
@@ -438,6 +439,7 @@ namespace TMLIAutoPlanner.ViewModels
             List<RequestedTSStructureModel> prelimTargets = new List<RequestedTSStructureModel>(TMLIAutoPlannerSettings.RequestedPreliminaryTargets);
             prelimTargets.AddRange((_selectedTemplate as TMLIAutoPlanTemplate).RequestedPreliminaryTargets);
             WeakReferenceMessenger.Default.Send(new RequestUpdateTargetDerivationOperations(_selectedTemplate.TargetDerivationOperations));
+            WeakReferenceMessenger.Default.Send(new RequestUpdateOptimizationStructureDerivations(_selectedTemplate.OptimizationStructureDerivations));
             WeakReferenceMessenger.Default.Send(new RequestUpdateTargetStructures(prelimTargets.Distinct(new RequestedTSStructureModelComparer()).ToList()));
             Logger.GetInstance().Template = _selectedTemplate.TemplateName;
         }

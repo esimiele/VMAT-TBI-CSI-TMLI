@@ -263,6 +263,7 @@ namespace AutoPlannerHelpers.Helpers
                         {
                             //preparation
                             List<StructureOperationModel> targetDerivations_temp = new List<StructureOperationModel> { };
+                            List<StructureOperationModel> optStructureDerivations_temp = new List<StructureOperationModel> { };
                             List<RequestedTSManipulationModel> TSManipulation_temp = new List<RequestedTSManipulationModel> { };
                             List<RequestedTSStructureModel> TSstructures_temp = new List<RequestedTSStructureModel> { };
                             List<RequestedTSStructureModel> prelimTargets_temp = new List<RequestedTSStructureModel> { };
@@ -292,14 +293,13 @@ namespace AutoPlannerHelpers.Helpers
                                             if (int.TryParse(value, out int initFx)) tempTemplate.InitialRxNumberOfFractions = initFx;
                                         }
                                     }
-                                    else if (line.Contains("add target derivation")) targetDerivations_temp.Add(ParseTargetDerivation(line));
-                                    else if (line.Contains("add target TS manipulation")) TSManipulation_temp.Add(ParseTargetTSManipulation(line));
-                                    else if (line.Contains("add OAR TS manipulation")) TSManipulation_temp.Add(ParseOARTSManipulation(line));
+                                    else if (line.Contains("add target derivation")) targetDerivations_temp.Add(ParseStructureDerivation(line));
+                                    else if (line.Contains("add opt structure derivation")) optStructureDerivations_temp.Add(ParseStructureDerivation(line));
                                     else if (line.Contains("add opt constraint")) initOptConst_temp.Add(ParseOptimizationConstraint(line));
                                     else if (line.Contains("create ring")) createRings_temp.Add(ParseCreateRing(line));
                                     else if (line.Contains("create TS")) TSstructures_temp.Add(ParseCreateTS(line));
                                     else if (line.Contains("create preliminary target")) prelimTargets_temp.Add(ParseCreateTS(line));
-                                    else if (line.Contains("add target")) targets_temp.Add(ParseTargets(line));
+                                    else if (line.Contains("add prescription target")) targets_temp.Add(ParseTargets(line));
                                     else if (line.Contains("add optimization TS structure")) requestedTSstructures_temp.Add(ParseOptimizationTSstructure(line));
                                     else if (line.Contains("add plan objective")) planObj_temp.Add(ParsePlanObjective(line));
                                     else if (line.Contains("add requested plan metric")) planDoseInfo_temp.Add(ParseRequestedPlanDoseInfo(line));
@@ -307,7 +307,7 @@ namespace AutoPlannerHelpers.Helpers
                             }
 
                             if (targetDerivations_temp.Any()) tempTemplate.TargetDerivationOperations = new List<StructureOperationModel>(targetDerivations_temp);
-                            if (TSManipulation_temp.Any()) tempTemplate.TSManipulations = new List<RequestedTSManipulationModel>(TSManipulation_temp);
+                            if (optStructureDerivations_temp.Any()) tempTemplate.OptimizationStructureDerivations = new List<StructureOperationModel>(optStructureDerivations_temp);
                             if (TSstructures_temp.Any()) tempTemplate.CreateTSStructures = new List<RequestedTSStructureModel>(TSstructures_temp);
                             if (prelimTargets_temp.Any()) tempTemplate.RequestedPreliminaryTargets = new List<RequestedTSStructureModel>(prelimTargets_temp);
                             if (createRings_temp.Any()) tempTemplate.Rings = new List<TSRingStructureModel>(createRings_temp);
@@ -460,7 +460,7 @@ namespace AutoPlannerHelpers.Helpers
             return new RequestedTSManipulationModel(structure, TSManipulationTypeHelper.GetTSManipulationType(spareType), val);
         }
 
-        public static StructureOperationModel ParseTargetDerivation(string line)
+        public static StructureOperationModel ParseStructureDerivation(string line)
         {
             //structure a id, margin a (cm), operation type, structure b id, margin b (cm), output structure id, is temporary
             string structureA;

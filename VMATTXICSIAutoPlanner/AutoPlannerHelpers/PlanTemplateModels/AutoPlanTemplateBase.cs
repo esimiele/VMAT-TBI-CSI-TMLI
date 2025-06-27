@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using AutoPlannerHelpers.Models;
 
 namespace AutoPlannerHelpers.PlanTemplateModels
@@ -17,5 +18,18 @@ namespace AutoPlannerHelpers.PlanTemplateModels
         public List<PlanObjectiveModel> PlanObjectives { get; set; } = new List<PlanObjectiveModel> { };
         public List<RequestedPlanMetricModel> RequestedPlanMetrics { get; set; } = new List<RequestedPlanMetricModel> { };
         public List<RequestedOptimizationTSStructureModel> RequestedOptimizationTSStructures { get; set; } = new List<RequestedOptimizationTSStructureModel> { };
+
+        public List<string> GenerateStructureIdList()
+        {
+            List<string> ids = PlanTargets.SelectMany(x => x.Targets).Select(x => x.TargetId).ToList();
+            ids.AddRange(TargetDerivationOperations.Select(x => x.StructureA));
+            ids.AddRange(TargetDerivationOperations.Select(x => x.StructureB));
+            ids.AddRange(TargetDerivationOperations.Select(x => x.OutputStructure));
+            ids.AddRange(OptimizationStructureDerivations.Select(x => x.StructureA));
+            ids.AddRange(OptimizationStructureDerivations.Select(x => x.StructureB));
+            ids.AddRange(OptimizationStructureDerivations.Select(x => x.OutputStructure));
+            ids.AddRange(PlanObjectives.Select(x => x.StructureId));
+            return ids.Distinct().ToList();
+        }
     }
 }

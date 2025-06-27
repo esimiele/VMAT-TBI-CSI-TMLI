@@ -73,6 +73,12 @@ namespace AutoPlannerHelpers.ViewModels
                     AutoPlanTemplateSelectionChanged(m.StructureOperations);
                 });
             }
+            WeakReferenceMessenger.Default.Register<RequestUpdateStructureIds>(this, (r, m) =>
+            {
+                StructureIds.Clear();
+                StructureIds.AddRange(m.StructureIds);
+                StructureIds.Refresh();
+            });
         }
 
         public void AutoPlanTemplateSelectionChanged(List<StructureOperationModel> operations)
