@@ -10,6 +10,7 @@ using AutoPlannerHelpers.Enums;
 using System.Text;
 using VMS.TPS.Common.Model.Types;
 using System;
+using AutoPlannerHelpers.Delegates;
 
 namespace TMLIAutoPlanner.Core
 {
@@ -37,7 +38,7 @@ namespace TMLIAutoPlanner.Core
         /// Constructor
         /// </summary>
         /// <param name="tgts"></param>
-        public GeneratePreliminaryTargets_TMLI(IEnumerable<RequestedTSStructureModel> tgts, 
+        public GeneratePreliminaryTargets_TMLI(IEnumerable<StructureOperationModel> tgts, 
                                                List<RequestedTSManipulationModel> manipulations, 
                                                bool includeTestesInPTV) :
             base(tgts, TMLIAutoPlannerSettings.CloseProgressWindowOnFinish)
@@ -91,27 +92,35 @@ namespace TMLIAutoPlanner.Core
         /// Contour the preliminary targets according to the standard practice rules for ctv_brain, ptv_brain, ctv_spine, ptv_spine, and ptv_csi
         /// </summary>
         /// <returns></returns>
-        protected override bool ContourTargetStructures()
+        protected override bool DeriveTargetStructures()
         {
             if (UnionLRStructures()) return true;
             UpdateUILabel("Contouring targets now:");
             int counter = 0;
-            int calcItems = _addedTargetIds.Count + 2;
-            foreach (string itr in _addedTargetIds.OrderBy(x => x.ElementAt(0)))
+            int calcItems = _targetsToDerive.Count + 2;
+            foreach(StructureOperationModel itr in _targetsToDerive)
             {
-                ProvideUIUpdate(100 * ++counter / calcItems, $"Contouring target: {itr}");
-                Structure theTarget = StructureTuningHelper.GetStructureFromId(itr, EclipseContext.GetInstance().StructureSet);
-                if(string.Equals(itr, "ptv_tmli_12", StringComparison.OrdinalIgnoreCase))
+                if (itr.IsValidOperation)
                 {
-                    GeneratePTV1200(theTarget);
-
+                    ProvideUIUpdate(100 * ++counter / calcItems, $"Contouring target: {itr}");
+                    if(ContourHelper.PerformStructureOperation(itr, UIUD)) return true;
                 }
-                else if (string.Equals(itr,  "ptv_tmli_20",StringComparison.OrdinalIgnoreCase) || string.Equals(itr, "ptv_tmli", StringComparison.OrdinalIgnoreCase))
-                {
-                    GeneratePTVTMLI(theTarget);
-                    ManipulatePTVTMLI(theTarget);
-                }
+                else ProvideUIUpdate($"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");
             }
+            //foreach (string itr in _addedTargetIds.OrderBy(x => x.ElementAt(0)))
+            //{
+            //    Structure theTarget = StructureTuningHelper.GetStructureFromId(itr, EclipseContext.GetInstance().StructureSet);
+            //    if(string.Equals(itr, "ptv_tmli_12", StringComparison.OrdinalIgnoreCase))
+            //    {
+            //        GeneratePTV1200(theTarget);
+
+            //    }
+            //    else if (string.Equals(itr,  "ptv_tmli_20",StringComparison.OrdinalIgnoreCase) || string.Equals(itr, "ptv_tmli", StringComparison.OrdinalIgnoreCase))
+            //    {
+            //        GeneratePTVTMLI(theTarget);
+            //        ManipulatePTVTMLI(theTarget);
+            //    }
+            //}
             
             ProvideUIUpdate(100, "Targets added and contoured!");
             ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
@@ -166,7 +175,7 @@ namespace TMLIAutoPlanner.Core
             ptv.SegmentVolume = ptv.Margin(5.0);
             ProvideUIUpdate("Expanded PTV_TMLI with uniform 5mm margin");
 
-            ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("bones_extrem", ss).Margin(10.0), ptv, 0.0);
+            //ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("bones_extrem", ss).Margin(10.0), ptv, 0.0);
             ProvideUIUpdate($"Unioned bones_extrem with PTV_TMLI with 10 mm outer margin");
             PostProcessPTVTMLI(ptv);
             return false;
@@ -240,12 +249,12 @@ namespace TMLIAutoPlanner.Core
                     {
                         ProvideUIUpdate($"Unioning target {target.Id} with structure {manipulationItem.StructureId} with margin {manipulationItem.MarginInCM} cm");
                         //crop target from structure
-                        (bool failUnion, StringBuilder errorUnionMessage) = ContourHelper.ContourUnion(theStructure, target, manipulationItem.MarginInCM);
-                        if (failUnion)
-                        {
-                            ProvideUIUpdate(errorUnionMessage.ToString());
-                            return true;
-                        }
+                        //(bool failUnion, StringBuilder errorUnionMessage) = ContourHelper.ContourUnion(theStructure, target, manipulationItem.MarginInCM);
+                        //if (failUnion)
+                        //{
+                        //    ProvideUIUpdate(errorUnionMessage.ToString());
+                        //    return true;
+                        //}
                     }
                 }
                 else
@@ -261,8 +270,8 @@ namespace TMLIAutoPlanner.Core
         {
             StructureSet ss = EclipseContext.GetInstance().StructureSet;
             ContourHelper.CopyStructureOntoStructure(StructureTuningHelper.GetStructureFromId("brain", ss), ptv, 0.5);
-            ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("liver", ss), ptv, 0.5);
-            ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("Rib", ss), ptv, 0.7);
+            //ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("liver", ss), ptv, 0.5);
+            //ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("Rib", ss), ptv, 0.7);
             ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("Lungs", ss), 0.5);
             ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("Heart", ss), 0.5);
             ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("Kidneys", ss), 0.5);

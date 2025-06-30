@@ -99,7 +99,7 @@ namespace AutoPlannerHelpers.ViewModels
                     string structureAId = StructureIds.First(x => string.Equals(x, itr.StructureA, StringComparison.OrdinalIgnoreCase));
                     string structureBId = StructureIds.First(x => string.Equals(x, itr.StructureB, StringComparison.OrdinalIgnoreCase));
                     if (!StructureIds.Any(x => string.Equals(x, itr.OutputStructure, StringComparison.OrdinalIgnoreCase))) StructureIds.Add(itr.OutputStructure);
-                    RequestedStructureOperations.Add(new StructureOperationModel(structureAId, itr.Operation, structureBId, itr.OutputStructure, itr.MarginAInCM, itr.MarginBInCM, itr.IsTemporary));
+                    RequestedStructureOperations.Add(new StructureOperationModel(structureAId, itr.Operation, structureBId, itr.OutputStructure, itr.MarginA, itr.MarginB, itr.IsTemporary));
                 }
             }
         }

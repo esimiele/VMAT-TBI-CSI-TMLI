@@ -7,6 +7,9 @@ using AutoPlannerHelpers.Logging;
 using System.Windows.Media.Media3D;
 using VMS.TPS.Common.Model.API;
 using VMS.TPS.Common.Model.Types;
+using AutoPlannerHelpers.Context;
+using AutoPlannerHelpers.Enums;
+using AutoPlannerHelpers.Models;
 
 namespace AutoPlannerHelpers.Helpers
 {
@@ -50,45 +53,93 @@ namespace AutoPlannerHelpers.Helpers
             return (fail, sb);
         }
 
-        public static SegmentVolume ContourIntersection(Structure a, Structure b, double marginA, double marginB)
+        public static bool PerformStructureOperation(StructureOperationModel structureOperation, UIUpdateMessageOnlyDelegate ProvideUIUpdate)
+        {
+            if (!StructureTuningHelper.DoesStructureExistInSS(structureOperation.StructureA, EclipseContext.GetInstance().StructureSet, true) && !StructureTuningHelper.DoesStructureExistInSS(structureOperation.StructureB, EclipseContext.GetInstance().StructureSet, true))
+            {
+                Structure StructureA = StructureTuningHelper.GetStructureFromId(structureOperation.StructureA, EclipseContext.GetInstance().StructureSet);
+                Structure StructureB = StructureTuningHelper.GetStructureFromId(structureOperation.StructureB, EclipseContext.GetInstance().StructureSet);
+                Structure OutputStructure = StructureTuningHelper.GetStructureFromId(structureOperation.OutputStructure, EclipseContext.GetInstance().StructureSet, true);
+                switch (structureOperation.Operation)
+                {
+                    case StructureDerivationOperation.Intersection:
+                        OutputStructure.SegmentVolume = ContourIntersection(StructureA, StructureB, structureOperation.MarginA, structureOperation.MarginB);
+                        if (OutputStructure.IsEmpty) ProvideUIUpdate($"Warning! Output structure ({OutputStructure.Id}) is empty following {structureOperation.Operation} operation!");
+                        break;
+                    case StructureDerivationOperation.Union:
+                        OutputStructure.SegmentVolume = ContourUnion(StructureA, StructureB, structureOperation.MarginA, structureOperation.MarginB);
+                        if (OutputStructure.IsEmpty) ProvideUIUpdate($"Warning! Output structure ({OutputStructure.Id}) is empty following {structureOperation.Operation} operation!");
+
+                        break;
+                    case StructureDerivationOperation.Crop:
+                        OutputStructure.SegmentVolume = CropStructureFromStructure(StructureA, StructureB, structureOperation.MarginA, structureOperation.MarginB);
+                        if (OutputStructure.IsEmpty) ProvideUIUpdate($"Warning! Output structure ({OutputStructure.Id}) is empty following {structureOperation.Operation} operation!");
+
+                        break;
+                    case StructureDerivationOperation.XOR:
+                        OutputStructure.SegmentVolume = ContourXOR(StructureA, StructureB, structureOperation.MarginA, structureOperation.MarginB);
+                        if (OutputStructure.IsEmpty) ProvideUIUpdate($"Warning! Output structure ({OutputStructure.Id}) is empty following {structureOperation.Operation} operation!");
+
+                        break;
+                    case StructureDerivationOperation.CutInferiorTo:
+                        OutputStructure.SegmentVolume = CutStructureInfToStructure(StructureA, StructureB, structureOperation.MarginA, structureOperation.MarginB);
+                        if (OutputStructure.IsEmpty) ProvideUIUpdate($"Warning! Output structure ({OutputStructure.Id}) is empty following {structureOperation.Operation} operation!");
+
+                        break;
+                    case StructureDerivationOperation.CutSuperiorTo:
+                        OutputStructure.SegmentVolume = CutStructureSupToStructure(StructureA, StructureB, structureOperation.MarginA, structureOperation.MarginB);
+                        if (OutputStructure.IsEmpty) ProvideUIUpdate($"Warning! Output structure ({OutputStructure.Id}) is empty following {structureOperation.Operation} operation!");
+                        break;
+                }
+            }
+            else
+            {
+                ProvideUIUpdate($"Error! Missing required structures for derivation! Exiting!", true);
+                ProvideUIUpdate($"{structureOperation.StructureA} {structureOperation.Operation} {structureOperation.StructureB}");
+                return true;
+            }
+            return false;
+        }
+
+        public static SegmentVolume ContourIntersection(Structure a, Structure b, StructureMarginModel marginA, StructureMarginModel marginB)
         {
             //margin is in cm
-            if (!ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return a.SegmentVolume.Margin(marginA * 10).And(b.SegmentVolume.Margin(marginB * 10));
+            if (!ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return a.SegmentVolume.AsymmetricMargin(marginA.AxisAlignedMargins).And(b.SegmentVolume.AsymmetricMargin(marginB.AxisAlignedMargins));
             return null;
         }
 
-        public static SegmentVolume ContourUnion(Structure a, Structure b, double marginA, double marginB)
+        public static SegmentVolume ContourUnion(Structure a, Structure b, StructureMarginModel marginA, StructureMarginModel marginB)
         {
             //margin is in cm
-            if (!ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return a.SegmentVolume.Margin(marginA * 10).Or(b.SegmentVolume.Margin(marginB * 10));
+            if (!ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return a.SegmentVolume.AsymmetricMargin(marginA.AxisAlignedMargins).Or(b.SegmentVolume.AsymmetricMargin(marginB.AxisAlignedMargins));
             return null;
         }
 
-        public static SegmentVolume CropStructureFromStructure(Structure a, Structure b, double marginA, double marginB)
+        public static SegmentVolume CropStructureFromStructure(Structure a, Structure b, StructureMarginModel marginA, StructureMarginModel marginB)
         {
             //margin is in cm
-            if (!ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return a.SegmentVolume.Margin(marginA * 10).Sub(b.SegmentVolume.Margin(marginB * 10));
+            if (!ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return a.SegmentVolume.AsymmetricMargin(marginA.AxisAlignedMargins).Sub(b.SegmentVolume.AsymmetricMargin(marginB.AxisAlignedMargins));
             return null;
         }
 
-        public static SegmentVolume ContourXOR(Structure a, Structure b, double marginA, double marginB)
+        public static SegmentVolume ContourXOR(Structure a, Structure b, StructureMarginModel marginA, StructureMarginModel marginB)
         {
             //margin is in cm
-            if (!ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return a.SegmentVolume.Margin(marginA * 10).Xor(b.SegmentVolume.Margin(marginB * 10));
+            if (!ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return a.SegmentVolume.AsymmetricMargin(marginA.AxisAlignedMargins).Xor(b.SegmentVolume.AsymmetricMargin(marginB.AxisAlignedMargins));
             return null;
         }
 
-        public static SegmentVolume CutStructureInfToStructure(Structure a, Structure b, double marginA, double marginB)
+        public static SegmentVolume CutStructureInfToStructure(Structure a, Structure b, StructureMarginModel marginA, StructureMarginModel marginB)
         {
             //margin is in cm
-            if (!ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return a.SegmentVolume.Margin(marginA * 10).Xor(b.SegmentVolume.Margin(marginB * 10));
+            //if (!ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return a.SegmentVolume.AsymmetricMargin(marginA.AxisAlignedMargins).Xor(b.SegmentVolume.AsymmetricMargin(marginB.AxisAlignedMargins));
             return null;
         }
 
-        public static SegmentVolume CutStructureSupToStructure(Structure a, Structure b, double marginA, double marginB)
+        public static SegmentVolume CutStructureSupToStructure(Structure a, Structure b, StructureMarginModel marginA, StructureMarginModel marginB)
         {
             //margin is in cm
-            if (!ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return a.SegmentVolume.Margin(marginA * 10).Xor(b.SegmentVolume.Margin(marginB * 10));
+            //if (!ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return a.SegmentVolume.AsymmetricMargin(marginA.AxisAlignedMargins).Xor(b.SegmentVolume.AsymmetricMargin(marginB.AxisAlignedMargins));
             return null;
         }
 
@@ -174,64 +225,6 @@ namespace AutoPlannerHelpers.Helpers
             else
             {
                 sb.AppendLine("Error either target or normal structures are missing! Can't contour overlap between target and normal structure!");
-                fail = true;
-            }
-            return (fail, sb);
-        }
-
-        /// <summary>
-        /// Helper method to contour the union between two structures ONTO structureToUnion
-        /// </summary>
-        /// <param name="baseStructure"></param>
-        /// <param name="structureToUnion"></param>
-        /// <param name="marginInCm"></param>
-        /// <returns></returns>
-        public static (bool, StringBuilder) ContourUnion(Structure baseStructure, Structure structureToUnion, double marginInCm)
-        {
-            StringBuilder sb = new StringBuilder();
-            bool fail = false;
-            //margin is in cm
-            if (!ReferenceEquals(baseStructure, null) && !ReferenceEquals(structureToUnion, null))
-            {
-                if (marginInCm >= -5.0 && marginInCm <= 5.0) structureToUnion.SegmentVolume = baseStructure.SegmentVolume.Or(structureToUnion.SegmentVolume.Margin(marginInCm * 10));
-                else
-                {
-                    sb.AppendLine("Added margin MUST be within +/- 5.0 cm!");
-                    fail = true;
-                }
-            }
-            else
-            {
-                sb.AppendLine("Error either target or normal structures are missing! Can't union target and normal structure!");
-                fail = true;
-            }
-            return (fail, sb);
-        }
-
-        /// <summary>
-        /// Helper method to contour the union between two structures ONTO structureToUnion
-        /// </summary>
-        /// <param name="baseStructure"></param>
-        /// <param name="structureToUnion"></param>
-        /// <param name="marginInCm"></param>
-        /// <returns></returns>
-        public static (bool, StringBuilder) ContourUnion(SegmentVolume baseStructure, Structure structureToUnion, double marginInCm)
-        {
-            StringBuilder sb = new StringBuilder();
-            bool fail = false;
-            //margin is in cm
-            if (!ReferenceEquals(baseStructure, null) && !ReferenceEquals(structureToUnion, null))
-            {
-                if (marginInCm >= -5.0 && marginInCm <= 5.0) structureToUnion.SegmentVolume = baseStructure.Or(structureToUnion.SegmentVolume.Margin(marginInCm * 10));
-                else
-                {
-                    sb.AppendLine("Added margin MUST be within +/- 5.0 cm!");
-                    fail = true;
-                }
-            }
-            else
-            {
-                sb.AppendLine("Error either target or normal structures are missing! Can't union target and normal structure!");
                 fail = true;
             }
             return (fail, sb);

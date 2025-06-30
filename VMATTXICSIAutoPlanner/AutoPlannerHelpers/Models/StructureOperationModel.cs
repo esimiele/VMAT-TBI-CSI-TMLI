@@ -1,4 +1,5 @@
 ﻿using AutoPlannerHelpers.Enums;
+using System.Collections.Generic;
 
 namespace AutoPlannerHelpers.Models
 {
@@ -8,24 +9,49 @@ namespace AutoPlannerHelpers.Models
                                               !string.IsNullOrEmpty(StructureB) &&
                                               !string.IsNullOrEmpty(OutputStructure) &&
                                               Operation != StructureDerivationOperation.None &&
-                                              (MarginAInCM >= -5.0 && MarginAInCM <= 5.0) &&
-                                              (MarginBInCM >= -5.0 && MarginBInCM <= 5.0); }
+                                              MarginA.IsValidMargin &&
+                                              MarginB.IsValidMargin; }
+
+        public List<string> StructureIdList { get => new List<string> { StructureA, StructureB, OutputStructure }; }
+        public string FriendlyName { get => $"{StructureA} ({MarginA.AxisAlignedMargins.ToString()}) {Operation} {StructureB} ({MarginB.AxisAlignedMargins.ToString()}) -> {OutputStructure} (Is temp = {IsTemporary})"; }
+
+        #region properties
         public string StructureA { get; set; } = string.Empty;
-        public double MarginAInCM { get; set; } = double.NaN;
+        public StructureMarginModel MarginA { get; set; } = new StructureMarginModel();
         public StructureDerivationOperation Operation { get; set; } = StructureDerivationOperation.None;
         public string StructureB { get; set; } = string.Empty;
         public string OutputStructure { get ; set; } = string.Empty;
-        public double MarginBInCM { get; set; } = double.NaN;
+        public StructureMarginModel MarginB { get; set; } = new StructureMarginModel();
         public bool IsTemporary { get; set; } = false;
-        public StructureOperationModel(string a, StructureDerivationOperation op, string b, string outStructure, double marginA = 0.0, double marginB = 0.0, bool isTemp = false)
+        #endregion
+
+        public StructureOperationModel(string a, StructureDerivationOperation op, string b, string outStructure, StructureMarginModel marginA, StructureMarginModel marginB, bool isTemp = false)
         {
             StructureA = a;
-            MarginAInCM = marginA;
+            MarginA = marginA;
             Operation = op;
             StructureB = b;
-            MarginBInCM = marginB;
+            MarginB = marginB;
             OutputStructure = outStructure;
             IsTemporary = isTemp;
+        }
+
+        public StructureOperationModel(string a, StructureDerivationOperation op, string b, string outStructure, bool isTemp = false)
+        {
+            StructureA = a;
+            MarginA = new StructureMarginModel(0.0);
+            Operation = op;
+            StructureB = b;
+            MarginB = new StructureMarginModel(0.0);
+            OutputStructure = outStructure;
+            IsTemporary = isTemp;
+        }
+
+        public void UpdateStructureIds(string newId)
+        {
+            if(string.Equals(newId, StructureA,System.StringComparison.OrdinalIgnoreCase)) StructureA = newId;
+            if(string.Equals(newId, StructureB,System.StringComparison.OrdinalIgnoreCase)) StructureB = newId;
+            if(string.Equals(newId, OutputStructure,System.StringComparison.OrdinalIgnoreCase)) OutputStructure = newId;
         }
     }
 }

@@ -94,10 +94,11 @@ namespace AutoPlannerHelpers.Helpers
                 //a structure already exists in the structure set with the intended name
                 if (DoesStructureExistInSS(newName, selectedSS)) newStructure = GetStructureFromId(newName, selectedSS);
                 else newStructure = selectedSS.AddStructure("CONTROL", newName);
-                (bool copyFail, StringBuilder copyMessage) = ContourHelper.CopyStructureOntoStructure(itr.Structure_Left, newStructure);
-                if (copyFail) return (true, copyMessage);
-                (bool unionFail, StringBuilder unionMessage) = ContourHelper.ContourUnion(itr.Structure_Right, newStructure, 0.0);
-                if (unionFail) return (true, unionMessage);
+                newStructure.SegmentVolume = ContourHelper.ContourUnion(itr.Structure_Left, itr.Structure_Right, new StructureMarginModel(0.0), new StructureMarginModel(0.0));
+                if(newStructure.IsEmpty)
+                {
+                    return (true, sb.AppendLine($"Error! {newStructure.Id} is empty following union of L/R structures!"));
+                }
             }
             catch (Exception except)
             {
@@ -123,12 +124,31 @@ namespace AutoPlannerHelpers.Helpers
             }
             else if (createIfEmpty)
             {
-                if (selectedSS.CanAddStructure("CONTROL", id))
+                //DICOM types
+                //Possible values are "AVOIDANCE", "CAVITY", "CONTRAST_AGENT", "CTV", "EXTERNAL", "GTV", "IRRAD_VOLUME", 
+                //"ORGAN", "PTV", "TREATED_VOLUME", "SUPPORT", "FIXATION", "CONTROL", and "DOSE_REGION". 
+                string dcmType = "CONTROL";
+                if (id.ToLower().Contains("gtv")) dcmType = "GTV";
+                else if (id.ToLower().Contains("ctv")) dcmType = "CTV";
+                else if (id.ToLower().Contains("ptv")) dcmType = "PTV";
+                if (selectedSS.CanAddStructure(dcmType, id))
                 {
-                    theStructure = selectedSS.AddStructure("CONTROL", id);
+                    theStructure = selectedSS.AddStructure(dcmType, id);
                 }
             }
             return theStructure;
+        }
+
+        public static List<Structure> GetStructuresFromIdList(IEnumerable<string> ids, StructureSet selectedSS, bool returnNonNullStructuresOnly = false)
+        {
+            List<Structure> theStructures = new List<Structure> { };
+            foreach (string itr in ids)
+            {
+                Structure s = GetStructureFromId(itr, selectedSS);
+                if (returnNonNullStructuresOnly && !ReferenceEquals(s, null)) theStructures.Add(s);
+                else theStructures.Add(s);
+            }
+            return theStructures;
         }
 
         /// <summary>

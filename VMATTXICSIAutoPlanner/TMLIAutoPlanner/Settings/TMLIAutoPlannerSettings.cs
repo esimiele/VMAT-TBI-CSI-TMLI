@@ -31,7 +31,6 @@ namespace TMLIAutoPlanner.Settings
         internal static double MaxFieldYExtent = 400.0; //in mm
         internal static double MinFieldOverlap = 20.0; //in mm
         internal static bool AllBeamsVMAT = false;
-        internal static List<RequestedTSStructureModel> RequestedPreliminaryTargets { get; set; } = new List<RequestedTSStructureModel> { };
         internal static int DefaultRingPriority = 60;
         internal static ImportExportDataModel ImportExportData { get; set; } = new ImportExportDataModel();
         internal static bool AutoDoseRecalculationDuringPlanPrep { get; set; } = true;

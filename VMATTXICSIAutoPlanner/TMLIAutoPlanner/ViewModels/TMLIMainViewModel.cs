@@ -141,7 +141,6 @@ namespace TMLIAutoPlanner.ViewModels
             ImportSS = new ImportSSView { DataContext = new ImportSSViewModel(TMLIAutoPlannerSettings.ImportExportData, PlanType.VMAT_CSI, (!ReferenceEquals(EclipseContext.GetInstance().Patient, null) ? EclipseContext.GetInstance().Patient.Id : "")) };
             //PrepForTargets = new PrepForTargetsView { DataContext = new PrepForTargetsViewModel() };
             PrepForTargets = new StructureDerivationsView { DataContext = new StructureDerivationsViewModel(_structureIdsPostUnion, true) };
-            WeakReferenceMessenger.Default.Send(new RequestUpdateTargetStructures(TMLIAutoPlannerSettings.RequestedPreliminaryTargets));
 
             RingGeneration = new RingGenerationView { DataContext = new RingGenerationViewModel(_structureIdsPostUnion) };
 
@@ -203,9 +202,9 @@ namespace TMLIAutoPlanner.ViewModels
             {
                 ExportCTImage(m.SelectedCTImage);
             });
-            WeakReferenceMessenger.Default.Register<RequestGeneratePreliminaryTargets>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<RequestPerformTargetDerivations>(this, (r, m) =>
             {
-                PreparePreliminaryTargets(m.Targets);
+                PreparePreliminaryTargets(m.StructureOperations);
             });
             WeakReferenceMessenger.Default.Register<RequestAreSeparatedPlansAutomaticallyRecalculated>(this, (r, m) =>
             {
@@ -246,7 +245,7 @@ namespace TMLIAutoPlanner.ViewModels
         #endregion
 
         #region specify targets
-        private void PreparePreliminaryTargets(List<RequestedTSStructureModel> preliminaryTargets)
+        private void PreparePreliminaryTargets(List<StructureOperationModel> preliminaryTargets)
         {
             if (!EclipseContext.GetInstance().IsInitialized || !preliminaryTargets.Any()) return;
             List<RequestedTSManipulationModel> targetCropOperations = new List<RequestedTSManipulationModel> { };
@@ -304,7 +303,7 @@ namespace TMLIAutoPlanner.ViewModels
         #endregion
 
         #region TS generation and manipulation
-        protected override void PerformTSStructureGenerationManipulation(List<RequestedTSStructureModel> structuresToGenerate, List<RequestedTSManipulationModel> manipulations)
+        protected override void PerformTSStructureGenerationManipulation(List<RequestedTSManipulationModel> manipulations)
         {
             if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
             {
@@ -313,8 +312,7 @@ namespace TMLIAutoPlanner.ViewModels
             }
             List<RequestedTSManipulationModel> tsManipulations = manipulations;
             List<TSRingStructureModel> rings = WeakReferenceMessenger.Default.Send(new RequestRingStructures());
-            TSGenerationManipulation_TMLI generateTS = new TSGenerationManipulation_TMLI(structuresToGenerate,
-                                                                                       tsManipulations,
+            TSGenerationManipulation_TMLI generateTS = new TSGenerationManipulation_TMLI(tsManipulations,
                                                                                        rings,
                                                                                        _prescriptions);
 
@@ -436,11 +434,9 @@ namespace TMLIAutoPlanner.ViewModels
             InitialDosePerFraction = _selectedTemplate.InitialRxDosePerFx;
             InitialNumberOfFractions = _selectedTemplate.InitialRxNumberOfFractions;
             WeakReferenceMessenger.Default.Send(new RequestAutoPlanTemplateChangedMessage(_selectedTemplate));
-            List<RequestedTSStructureModel> prelimTargets = new List<RequestedTSStructureModel>(TMLIAutoPlannerSettings.RequestedPreliminaryTargets);
-            prelimTargets.AddRange((_selectedTemplate as TMLIAutoPlanTemplate).RequestedPreliminaryTargets);
             WeakReferenceMessenger.Default.Send(new RequestUpdateTargetDerivationOperations(_selectedTemplate.TargetDerivationOperations));
             WeakReferenceMessenger.Default.Send(new RequestUpdateOptimizationStructureDerivations(_selectedTemplate.OptimizationStructureDerivations));
-            WeakReferenceMessenger.Default.Send(new RequestUpdateTargetStructures(prelimTargets.Distinct(new RequestedTSStructureModelComparer()).ToList()));
+            WeakReferenceMessenger.Default.Send(new RequestUpdateTargetStructures((_selectedTemplate as TMLIAutoPlanTemplate).RequestedPreliminaryTargets.Distinct(new RequestedTSStructureModelComparer()).ToList()));
             Logger.GetInstance().Template = _selectedTemplate.TemplateName;
         }
 
@@ -558,7 +554,6 @@ namespace TMLIAutoPlanner.ViewModels
                                 else if (parameter == "all beams VMAT") TMLIAutoPlannerSettings.AllBeamsVMAT = bool.Parse(value);
                                 else if (parameter == "auto dose recalculation") TMLIAutoPlannerSettings.AutoDoseRecalculationDuringPlanPrep = bool.Parse(value);
                             }
-                            else if (line.Contains("create preliminary target")) TMLIAutoPlannerSettings.RequestedPreliminaryTargets.Add(ConfigurationHelper.ParseCreateTS(line));
                             else if (line.Contains("add linac"))
                             {
                                 //parse the linacs that should be added. One entry per line

@@ -192,7 +192,7 @@ namespace TBIAutoPlanner.ViewModels
         #endregion
 
         #region TS generation and manipulation
-        protected override void PerformTSStructureGenerationManipulation(List<RequestedTSStructureModel> structuresToGenerate, List<RequestedTSManipulationModel> manipulations)
+        protected override void PerformTSStructureGenerationManipulation(List<RequestedTSManipulationModel> manipulations)
         {
             if(!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
             {
@@ -200,8 +200,7 @@ namespace TBIAutoPlanner.ViewModels
                 return;
             }
             List<RequestedTSManipulationModel> tsManipulations = manipulations;
-            TSGenerationManipulation_TBI generateTS = new TSGenerationManipulation_TBI(structuresToGenerate,
-                                                                                       tsManipulations,
+            TSGenerationManipulation_TBI generateTS = new TSGenerationManipulation_TBI(tsManipulations,
                                                                                        _prescriptions,
                                                                                        UseFlash,
                                                                                        FlashMargin,

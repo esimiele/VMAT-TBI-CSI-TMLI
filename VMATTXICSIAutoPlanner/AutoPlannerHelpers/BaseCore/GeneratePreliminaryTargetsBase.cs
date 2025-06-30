@@ -18,27 +18,27 @@ namespace AutoPlannerHelpers.BaseCore
     public abstract class GeneratePreliminaryTargetsBase : SimpleProgressWindowViewModel
     {
         // Get methods
-        public List<string> GetAddedTargetStructures() { return _addedTargetIds; }
+        public List<string> GetAddedTargetStructures() { return _targetsToDerive.Select(x => x.OutputStructure).Distinct().ToList(); }
         public string GetErrorStackTrace() { return _stackTraceError; }
 
         //DICOM types
         //Possible values are "AVOIDANCE", "CAVITY", "CONTRAST_AGENT", "CTV", "EXTERNAL", "GTV", "IRRAD_VOLUME", 
         //"ORGAN", "PTV", "TREATED_VOLUME", "SUPPORT", "FIXATION", "CONTROL", and "DOSE_REGION". 
         //Dicom type, structure Id
-        protected List<RequestedTSStructureModel> _createPrelimTargetList;
+        protected List<StructureOperationModel> _createPrelimTargetList;
         //Dicom type, structure Id
-        protected List<RequestedTSStructureModel> _missingTargets = new List<RequestedTSStructureModel> { };
-        protected List<string> _addedTargetIds = new List<string> { };
+        protected List<StructureOperationModel> _targetsToDerive = new List<StructureOperationModel> { };
         protected string _stackTraceError;
         protected ProvideUIUpdateDelegate PUUD;
+        protected UIUpdateMessageOnlyDelegate UIUD;
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="tgts"></param>
-        public GeneratePreliminaryTargetsBase(IEnumerable<RequestedTSStructureModel> tgts, bool closePWOnFinish)
+        public GeneratePreliminaryTargetsBase(IEnumerable<StructureOperationModel> tgts, bool closePWOnFinish)
         {
-            _createPrelimTargetList = new List<RequestedTSStructureModel>(tgts);
+            _createPrelimTargetList = new List<StructureOperationModel>(tgts);
             SetCloseOnFinish(closePWOnFinish, 3000);
         }
 
@@ -53,17 +53,13 @@ namespace AutoPlannerHelpers.BaseCore
             try
             {
                 PUUD = ProvideUIUpdate;
+                UIUD = ProvideUIUpdate;
                 if (PreliminaryChecks()) return true;
                 if (CheckForTargetStructures()) return true;
-                if (_missingTargets.Any())
+                if (_targetsToDerive.Any())
                 {
-                    ProvideUIUpdate("Preliminary Targets missing from the structure set! Creating them now!");
-                    if (CreateMissingTargetStructures()) return true;
-                }
-                if (_addedTargetIds.Any())
-                {
-                    ProvideUIUpdate("Contouring targets now");
-                    if (ContourTargetStructures()) return true;
+                    ProvideUIUpdate("Deriving preliminary targets now!");
+                    DeriveTargetStructures();
                 }
 
                 UpdateUILabel("Finished!");
@@ -122,51 +118,15 @@ namespace AutoPlannerHelpers.BaseCore
             ProvideUIUpdate(0, "Checking for missing target structures!");
             int calcItems = _createPrelimTargetList.Count;
             int counter = 0;
-            foreach (RequestedTSStructureModel itr in _createPrelimTargetList)
+            foreach (StructureOperationModel itr in _createPrelimTargetList)
             {
-                Structure tmp = StructureTuningHelper.GetStructureFromId(itr.StructureId, EclipseContext.GetInstance().StructureSet);
-                if (ReferenceEquals(tmp, null))
+                if (!StructureTuningHelper.DoesStructureExistInSS(itr.OutputStructure, EclipseContext.GetInstance().StructureSet,true))
                 {
-                    ProvideUIUpdate($"Target: {itr.StructureId} is missing");
-                    _missingTargets.Add(itr);
+                    ProvideUIUpdate($"Target: {itr.OutputStructure} is missing or empty!");
+                    _targetsToDerive.Add(itr);
                 }
-                else if (tmp.IsEmpty)
-                {
-                    ProvideUIUpdate($"Target: {itr.StructureId} exists, but is empty");
-                    _addedTargetIds.Add(tmp.Id);
-                }
-                else ProvideUIUpdate($"Target: {itr.StructureId} is exists and is contoured");
+                else ProvideUIUpdate($"Target: {itr.OutputStructure} is exists and is contoured! Skipping derivation step");
                 ProvideUIUpdate(100 * ++counter / calcItems);
-            }
-            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
-            return false;
-        }
-
-        /// <summary>
-        /// Create the identified missing preliminary targets
-        /// </summary>
-        /// <returns></returns>
-        private bool CreateMissingTargetStructures()
-        {
-            UpdateUILabel("Create Missing Target Structures: ");
-            ProvideUIUpdate(0, "Creating missing target structures!");
-            //create the CTV and PTV structures
-            //int calcItems = prospectiveTargets.Count;
-            int calcItems = _missingTargets.Count;
-            int counter = 0;
-            foreach (RequestedTSStructureModel itr in _missingTargets)
-            {
-                if (EclipseContext.GetInstance().StructureSet.CanAddStructure(itr.DICOMType, itr.StructureId))
-                {
-                    _addedTargetIds.Add(itr.StructureId);
-                    EclipseContext.GetInstance().StructureSet.AddStructure(itr.DICOMType, itr.StructureId);
-                    ProvideUIUpdate(100 * ++counter / calcItems, $"Added target: {itr.StructureId}");
-                }
-                else
-                {
-                    ProvideUIUpdate($"Can't add {itr.StructureId} to the structure set!", true);
-                    return true;
-                }
             }
             ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
@@ -175,7 +135,7 @@ namespace AutoPlannerHelpers.BaseCore
         /// <summary>
         /// Contour the preliminary targets according to the standard practice rules for the targets of interest
         /// <returns></returns>
-        protected abstract bool ContourTargetStructures();
+        protected abstract bool DeriveTargetStructures();
         #endregion
     }
 }

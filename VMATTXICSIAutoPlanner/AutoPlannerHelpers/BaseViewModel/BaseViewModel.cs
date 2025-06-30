@@ -112,7 +112,6 @@ namespace AutoPlannerHelpers.BaseViewModel
         private object _optimizationSetup;
         private object _tsManipulation;
         private object _beamPlacement;
-        private object _tsGeneration;
         private object _planPreparation;
         private object _scriptConfiguration;
 
@@ -120,12 +119,6 @@ namespace AutoPlannerHelpers.BaseViewModel
         {
             get { return _specifyTargets; }
             set { SetProperty(ref _specifyTargets, value); }
-        }
-
-        public object TSGeneration
-        {
-            get { return _tsGeneration; }
-            set { SetProperty(ref _tsGeneration, value); }
         }
 
         public object TSManipulation
@@ -188,7 +181,7 @@ namespace AutoPlannerHelpers.BaseViewModel
             }
 
             SpecifyTargets = new SpecifyTargetsView { DataContext = new SetTargetsViewModel() };
-            TSGeneration = new TSGenerationView { DataContext = new TSGenerationViewModel() };
+            //TSGeneration = new TSGenerationView { DataContext = new TSGenerationViewModel() };
             //TSManipulation = new TSManipulationView { DataContext = new TSManipulationViewModel(_structureIdsPostUnion) };
             TSManipulation = new StructureDerivationsView { DataContext = new StructureDerivationsViewModel(_structureIdsPostUnion, false) };
             BeamPlacement = new BeamPlacementView { DataContext = new BeamPlacementViewModel(type) };
@@ -213,8 +206,7 @@ namespace AutoPlannerHelpers.BaseViewModel
             });
             WeakReferenceMessenger.Default.Register<RequestGenerateManipulateTuningStructuresMessage>(this, (r, m) =>
             {
-                List<RequestedTSStructureModel> tsGenerationStructures = WeakReferenceMessenger.Default.Send(new RequestTSGenerationStructures());
-                PerformTSStructureGenerationManipulation(tsGenerationStructures, m.RequestedTSManipulations);
+                PerformTSStructureGenerationManipulation(m.RequestedTSManipulations);
             });
             WeakReferenceMessenger.Default.Register<RequestPerformOptimizationStructureDerivations>(this, (r, m) =>
             {
@@ -283,7 +275,7 @@ namespace AutoPlannerHelpers.BaseViewModel
 
         protected abstract bool VerifyTargetsIntegrity(List<PlanTargetsModel> parsedTargets);
 
-        protected abstract void PerformTSStructureGenerationManipulation(List<RequestedTSStructureModel> structuresToGenerate, List<RequestedTSManipulationModel> manipulations);
+        protected abstract void PerformTSStructureGenerationManipulation(List<RequestedTSManipulationModel> manipulations);
         protected abstract void PerformOptimizationStructureDerivation(List<StructureOperationModel> operations);
 
         protected abstract void GeneratePlansAndPlaceBeams(string linac, string energy, bool contourOverlap, double overlapMargin, List<PlanIsocenterModel> PlanIsocenters);

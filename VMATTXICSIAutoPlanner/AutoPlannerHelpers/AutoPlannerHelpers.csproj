@@ -152,8 +152,8 @@
     <Compile Include="Models\RequestedPlanMetricModel.cs" />
     <Compile Include="Models\RequestedTSManipulationModel.cs" />
     <Compile Include="Models\RequestedTSStructureModel.cs" />
+    <Compile Include="Models\StructureMarginModel.cs" />
     <Compile Include="Models\StructureOperationModel.cs" />
-    <Compile Include="Models\TargetDerivationModel.cs" />
     <Compile Include="Models\TargetModel.cs" />
     <Compile Include="Models\TSCoolerStructureModel.cs" />
     <Compile Include="Models\TSHeaterStructureModel.cs" />

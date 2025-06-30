@@ -25,6 +25,18 @@
         None
     }
 
+    public enum StructureMarginType
+    {
+        Uniform,
+        Asymmetric
+    }
+
+    public enum MarginGeometryType
+    {
+        Inner,
+        Outer
+    }
+
     /// <summary>
     /// Optimization objective type as an enum. Created own copy to include mean in list
     /// </summary>

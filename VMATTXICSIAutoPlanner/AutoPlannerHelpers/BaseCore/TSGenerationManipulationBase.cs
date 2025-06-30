@@ -19,16 +19,15 @@ namespace AutoPlannerHelpers.BaseCore
         public List<PlanIsocenterModel> PlanIsocentersList { get; protected set; } = new List<PlanIsocenterModel> { };
         public List<string> AddedStructureIds { get; protected set; } = new List<string> { };
         public List<PlanTargetsModel> PlanTargets { get; protected set; } = new List<PlanTargetsModel> { };
-        public List<RequestedTSManipulationModel> TSManipulationList { get; protected set; } = new List<RequestedTSManipulationModel> { };
         //flag to indicate to the main UI that the structure manipulation list needs to be updated
         public bool DoesTSManipulationListRequireUpdating { get; protected set; } = false;
         public string StrackTraceError { get; protected set; } = string.Empty;
+        protected List<StructureOperationModel> _structureOperations { get; set; } = new List<StructureOperationModel> { };
         #endregion
 
         #region virtual methods
         protected abstract bool PreliminaryChecks();
-        protected abstract bool CreateTSStructures();
-        protected abstract bool PerformTSStructureManipulation();
+        protected abstract bool PerformStructureDerivations();
         protected abstract bool CalculateNumIsos();
         #endregion
 
@@ -104,38 +103,38 @@ namespace AutoPlannerHelpers.BaseCore
         /// <returns></returns>
         protected bool ManipulateTargetTuningStructures(RequestedTSManipulationModel manipulationItem, Structure target)
         {
-            Structure theStructure = StructureTuningHelper.GetStructureFromId(manipulationItem.StructureId, EclipseContext.GetInstance().StructureSet);
-            if (manipulationItem.ManipulationType == TSManipulationType.CropTargetFromStructure)
-            {
-                ProvideUIUpdate($"Cropping target {target.Id} from {manipulationItem.StructureId} with margin {manipulationItem.MarginInCM} cm");
-                //crop target from structure
-                (bool failCrop, StringBuilder errorCropMessage) = ContourHelper.CropStructureFromStructure(target, theStructure, manipulationItem.MarginInCM);
-                if (failCrop)
-                {
-                    ProvideUIUpdate(errorCropMessage.ToString());
-                    return true;
-                }
-            }
-            else if (manipulationItem.ManipulationType == TSManipulationType.ContourOverlapWithTarget)
-            {
-                if (CreateOverlapStructure(target, theStructure, manipulationItem.MarginInCM)) return true;
-            }
-            else if (manipulationItem.ManipulationType == TSManipulationType.UnionWithTarget)
-            {
-                ProvideUIUpdate($"Unioning target {target.Id} with structure {manipulationItem.StructureId} with margin {manipulationItem.MarginInCM} cm");
-                //crop target from structure
-                (bool failUnion, StringBuilder errorUnionMessage) = ContourHelper.ContourUnion(theStructure, target, manipulationItem.MarginInCM);
-                if (failUnion)
-                {
-                    ProvideUIUpdate(errorUnionMessage.ToString());
-                    return true;
-                }
-            }
-            else
-            {
-                ProvideUIUpdate($"Error! Manipulation type {manipulationItem.ManipulationType} is not compatible with Manipulate Target Tuning Structures Method! Exiting", true);
-                return true;
-            }
+            //Structure theStructure = StructureTuningHelper.GetStructureFromId(manipulationItem.StructureId, EclipseContext.GetInstance().StructureSet);
+            //if (manipulationItem.Operation == TSManipulationType.CropTargetFromStructure)
+            //{
+            //    ProvideUIUpdate($"Cropping target {target.Id} from {manipulationItem.StructureId} with margin {manipulationItem.MarginInCM} cm");
+            //    //crop target from structure
+            //    (bool failCrop, StringBuilder errorCropMessage) = ContourHelper.CropStructureFromStructure(target, theStructure, manipulationItem.MarginInCM);
+            //    if (failCrop)
+            //    {
+            //        ProvideUIUpdate(errorCropMessage.ToString());
+            //        return true;
+            //    }
+            //}
+            //else if (manipulationItem.Operation == TSManipulationType.ContourOverlapWithTarget)
+            //{
+            //    if (CreateOverlapStructure(target, theStructure, manipulationItem.MarginInCM)) return true;
+            //}
+            //else if (manipulationItem.Operation == TSManipulationType.UnionWithTarget)
+            //{
+            //    ProvideUIUpdate($"Unioning target {target.Id} with structure {manipulationItem.StructureId} with margin {manipulationItem.MarginInCM} cm");
+            //    //crop target from structure
+            //    (bool failUnion, StringBuilder errorUnionMessage) = ContourHelper.ContourUnion(theStructure, target, manipulationItem.MarginInCM);
+            //    if (failUnion)
+            //    {
+            //        ProvideUIUpdate(errorUnionMessage.ToString());
+            //        return true;
+            //    }
+            //}
+            //else
+            //{
+            //    ProvideUIUpdate($"Error! Manipulation type {manipulationItem.Operation} is not compatible with Manipulate Target Tuning Structures Method! Exiting", true);
+            //    return true;
+            //}
             return false;
         }
 
@@ -147,27 +146,27 @@ namespace AutoPlannerHelpers.BaseCore
         /// <returns></returns>
         protected bool ManipulateOARTuningStructures(RequestedTSManipulationModel manipulationItem)
         {
-            Structure theStructure = StructureTuningHelper.GetStructureFromId(manipulationItem.StructureId, EclipseContext.GetInstance().StructureSet);
-            if (manipulationItem.ManipulationType == TSManipulationType.CropFromBody)
-            {
-                ProvideUIUpdate($"Cropping {manipulationItem.StructureId} from Body with margin {manipulationItem.MarginInCM} cm");
-                //crop from body
-                (bool failOp, StringBuilder errorOpMessage) = ContourHelper.CropStructureFromBody(theStructure, EclipseContext.GetInstance().StructureSet, manipulationItem.MarginInCM);
-                if (failOp)
-                {
-                    ProvideUIUpdate(errorOpMessage.ToString());
-                    return true;
-                }
-            }
-            else if (manipulationItem.ManipulationType == TSManipulationType.ContourSubStructure || manipulationItem.ManipulationType == TSManipulationType.ContourOuterStructure)
-            {
-                if (ContourInnerOuterStructure(theStructure, manipulationItem.MarginInCM)) return true;
-            }
-            else
-            {
-                ProvideUIUpdate($"Error! Manipulation type {manipulationItem.ManipulationType} is not compatible with Manipulate OAR Tuning Structures Method! Exiting", true);
-                return true;
-            }
+            //Structure theStructure = StructureTuningHelper.GetStructureFromId(manipulationItem.StructureId, EclipseContext.GetInstance().StructureSet);
+            //if (manipulationItem.Operation == TSManipulationType.CropFromBody)
+            //{
+            //    ProvideUIUpdate($"Cropping {manipulationItem.StructureId} from Body with margin {manipulationItem.MarginInCM} cm");
+            //    //crop from body
+            //    (bool failOp, StringBuilder errorOpMessage) = ContourHelper.CropStructureFromBody(theStructure, EclipseContext.GetInstance().StructureSet, manipulationItem.MarginInCM);
+            //    if (failOp)
+            //    {
+            //        ProvideUIUpdate(errorOpMessage.ToString());
+            //        return true;
+            //    }
+            //}
+            //else if (manipulationItem.Operation == TSManipulationType.ContourSubStructure || manipulationItem.Operation == TSManipulationType.ContourOuterStructure)
+            //{
+            //    if (ContourInnerOuterStructure(theStructure, manipulationItem.MarginInCM)) return true;
+            //}
+            //else
+            //{
+            //    ProvideUIUpdate($"Error! Manipulation type {manipulationItem.Operation} is not compatible with Manipulate OAR Tuning Structures Method! Exiting", true);
+            //    return true;
+            //}
             return false;
         }
 
@@ -282,19 +281,13 @@ namespace AutoPlannerHelpers.BaseCore
         /// <param name="highResManipulationItem"></param>
         /// <param name="lowResId"></param>
         /// <returns></returns>
-        private bool UpdateManipulationList(RequestedTSManipulationModel highResManipulationItem, string lowResId)
+        private void UpdateManipulationList(string originalId, string lowResId)
         {
-            bool fail = false;
             //get the index of the high resolution structure in the TS Manipulation list and repace this entry with the newly created low resolution structure
-            int index = TSManipulationList.IndexOf(highResManipulationItem);
-            if (index != -1)
+            foreach(StructureOperationModel itr in _structureOperations.Where(x => x.StructureIdList.Contains(originalId)))
             {
-                TSManipulationList.RemoveAt(index);
-                TSManipulationList.Insert(index,
-                                          new RequestedTSManipulationModel(lowResId, highResManipulationItem.ManipulationType, highResManipulationItem.MarginInCM));
+                itr.UpdateStructureIds(lowResId);
             }
-            else fail = true;
-            return fail;
         }
 
         /// <summary>
@@ -331,19 +324,13 @@ namespace AutoPlannerHelpers.BaseCore
         {
             UpdateUILabel("High-Res Structures: ");
             ProvideUIUpdate("Checking for high resolution structures in structure set: ");
-            List<RequestedTSManipulationModel> highResManipulationList = new List<RequestedTSManipulationModel> { };
-            foreach (RequestedTSManipulationModel itr in TSManipulationList)
+            List<StructureOperationModel> highResManipulationList = new List<StructureOperationModel> { };
+            foreach (StructureOperationModel itr in _structureOperations)
             {
-                //only need to check structures that will be involved in crop and contour overlap operations
-                if (itr.ManipulationType == TSManipulationType.CropTargetFromStructure || itr.ManipulationType == TSManipulationType.ContourOverlapWithTarget || itr.ManipulationType == TSManipulationType.CropFromBody)
+                //do any of the structures currently exist in the structure set?
+                if (StructureTuningHelper.DoesStructureExistInSS(itr.StructureIdList, EclipseContext.GetInstance().StructureSet, true))
                 {
-                    Structure tmp = StructureTuningHelper.GetStructureFromId(itr.StructureId, EclipseContext.GetInstance().StructureSet);
-                    if (tmp.IsEmpty)
-                    {
-                        ProvideUIUpdate($"Requested manipulation of {0}, but {itr.StructureId} is empty!", true);
-                        return true;
-                    }
-                    else if (tmp.IsHighResolution)
+                    if(StructureTuningHelper.GetStructuresFromIdList(itr.StructureIdList,EclipseContext.GetInstance().StructureSet,true).Any(x => x.IsHighResolution))
                     {
                         highResManipulationList.Add(itr);
                     }
@@ -353,13 +340,14 @@ namespace AutoPlannerHelpers.BaseCore
             if (highResManipulationList.Any())
             {
                 ProvideUIUpdate("High-resolution structures:");
-                foreach (RequestedTSManipulationModel itr in highResManipulationList)
+                IEnumerable<string> highResStructureIds = StructureTuningHelper.GetStructuresFromIdList(highResManipulationList.SelectMany(x => x.StructureIdList).Distinct(), EclipseContext.GetInstance().StructureSet, true).Where(x => x.IsHighResolution).Select(x => x.Id);
+                foreach (string itr in highResStructureIds)
                 {
-                    ProvideUIUpdate($"{itr.StructureId}");
+                    ProvideUIUpdate($"{itr}");
                 }
                 ProvideUIUpdate("Now converting to low-resolution!");
                 //convert high res structures queued for TS manipulation to low resolution and update the queue with the resulting low res structure
-                if (ConvertHighToLowRes(highResManipulationList)) return true;
+                if (ConvertHighToLowRes(highResStructureIds)) return true;
                 ProvideUIUpdate(100, "Finishing converting high resolution structures to default resolution");
             }
             else ProvideUIUpdate("No high resolution structures in the structure set!");
@@ -393,16 +381,16 @@ namespace AutoPlannerHelpers.BaseCore
         /// </summary>
         /// <param name="highResManipulationList"></param>
         /// <returns></returns>
-        private bool ConvertHighToLowRes(List<RequestedTSManipulationModel> highResManipulationList)
+        private bool ConvertHighToLowRes(IEnumerable<string> highResStructureIdList)
         {
             int percentComplete = 0;
-            int calcItems = highResManipulationList.Count * 5;
-            foreach (RequestedTSManipulationModel itr in highResManipulationList)
+            int calcItems = highResStructureIdList.Count() * 5;
+            foreach (string itr in highResStructureIdList)
             {
-                ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieving high resolution structure: {itr.StructureId}");
+                ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieving high resolution structure: {itr}");
                 //this structure should be present and contoured in structure set (checked previously)
-                Structure highResStruct = StructureTuningHelper.GetStructureFromId(itr.StructureId, EclipseContext.GetInstance().StructureSet);
-                ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Converting: {itr.StructureId} to low resolution");
+                Structure highResStruct = StructureTuningHelper.GetStructureFromId(itr, EclipseContext.GetInstance().StructureSet);
+                ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Converting: {itr} to low resolution");
 
                 //get the high res structure mesh geometry
                 MeshGeometry3D mesh = highResStruct.MeshGeometry;
@@ -420,7 +408,7 @@ namespace AutoPlannerHelpers.BaseCore
                 ContourLowResStructure(highResStruct, lowRes, startSlice, stopSlice);
 
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, String.Format("Removing existing high-res structure from manipulation list and replacing with low-res"));
-                if (UpdateManipulationList(itr, lowRes.Id)) return true;
+                UpdateManipulationList(itr, lowRes.Id);
             }
             //inform the main UI class that the UI needs to be updated
             DoesTSManipulationListRequireUpdating = true;

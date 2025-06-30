@@ -13,21 +13,16 @@ namespace AutoPlannerHelpers.ViewModels
 {
     public class SetTargetsViewModel : ObservableObject
     {
-        public ObservableCollectionPropertyNotify<UnstructuredTargetModel> Targets { get; set; }
-        public ObservableCollectionPropertyNotify<string> TargetIds { get; set; }
-        public List<PlanTargetsModel> PlanTargets { get => _planTargets; }
 
         #region properties
-        private List<string> _planIds;
-        private List<PlanTargetsModel> _planTargets;
-        private AutoPlanTemplateBase _selectedTemplate;
+        public ObservableCollectionPropertyNotify<UnstructuredTargetModel> Targets { get; set; }
+        public ObservableCollectionPropertyNotify<string> TargetIds { get; set; }
+        public ObservableCollectionPropertyNotify<string> PlanIds { get; set; }
 
-        public List<string> PlanIds
-        {
-            get { return _planIds; }
-            set { SetProperty(ref _planIds, value); }
-        }
+        #endregion
 
+        #region fields
+        private AutoPlanTemplateBase _selectedTemplate = null;
         #endregion
 
         #region commands
@@ -43,7 +38,7 @@ namespace AutoPlannerHelpers.ViewModels
         public SetTargetsViewModel()
         {
             TargetIds = new ObservableCollectionPropertyNotify<string> { " ", "--Add New--" };
-            PlanIds = new List<string> { " ", "--Add New--" };
+            PlanIds = new ObservableCollectionPropertyNotify<string> { " ", "--Add New--" };
             Targets = new ObservableCollectionPropertyNotify<UnstructuredTargetModel> { };
             AddTargetCommand = new RelayCommand(AddEmptyTarget);
             AddDefaultTargetsCommand = new RelayCommand(AddDefaultTargets);
@@ -141,8 +136,7 @@ namespace AutoPlannerHelpers.ViewModels
 
         public void SetTargets()
         {
-            _planTargets = GroupTargetsByPlanIdAndOrderByTargetRx(Targets.ToList());
-            WeakReferenceMessenger.Default.Send(new RequestSetTargetsMessage(_planTargets));
+            WeakReferenceMessenger.Default.Send(new RequestSetTargetsMessage(GroupTargetsByPlanIdAndOrderByTargetRx(Targets.ToList())));
         }
 
         /// <summary>

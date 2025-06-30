@@ -26,26 +26,20 @@ namespace TBIAutoPlanner.Core
         #endregion
 
         #region fields
-        //DICOM types
-        //Possible values are "AVOIDANCE", "CAVITY", "CONTRAST_AGENT", "CTV", "EXTERNAL", "GTV", "IRRAD_VOLUME", 
-        //"ORGAN", "PTV", "TREATED_VOLUME", "SUPPORT", "FIXATION", "CONTROL", and "DOSE_REGION". 
         private List<PrescriptionModel> prescriptions;
-        private List<RequestedTSStructureModel> TS_structures;
         private bool _useFlash;
         private double _flashMargin;
         private double _ptvMarginFromBody;
         #endregion
 
-        internal TSGenerationManipulation_TBI(List<RequestedTSStructureModel> ts,
-                                              List<RequestedTSManipulationModel> list,
+        internal TSGenerationManipulation_TBI(List<StructureOperationModel> list,
                                               List<PrescriptionModel> presc,
                                               bool flash,
                                               double flashMargin,
                                               double ptvMargin) 
         {
             prescriptions = new List<PrescriptionModel>(presc);
-            TS_structures = new List<RequestedTSStructureModel>(ts);
-            TSManipulationList = new List<RequestedTSManipulationModel>(list);
+            _structureOperations = new List<StructureOperationModel>(list);
             _useFlash = flash;
             _flashMargin = flashMargin;
             _ptvMarginFromBody = ptvMargin;
@@ -65,9 +59,9 @@ namespace TBIAutoPlanner.Core
                 PlanIsocentersList.Clear();
                 if (PreliminaryChecks()) return true;
                 if (UnionLRStructures()) return true;
-                if (TSManipulationList.Any()) if (CheckHighResolution()) return true;
-                if (CreateTSStructures()) return true;
-                if (PerformTSStructureManipulation()) return true;
+                if (_structureOperations.Any()) if (CheckHighResolution()) return true;
+                //if (CreateTSStructures()) return true;
+                if (PerformStructureDerivations()) return true;
                 if (_useFlash) if (CreateFlash()) return true;
                 if (CleanUpDummyBox()) return true;
                 if (CalculateNumIsos()) return true;
@@ -287,54 +281,54 @@ namespace TBIAutoPlanner.Core
         /// Method to direct and control the flow of TS generation for TBI
         /// </summary>
         /// <returns></returns>
-        protected override bool CreateTSStructures()
-        {
-            UpdateUILabel("Create TS Structures:");
-            ProvideUIUpdate("Adding remaining tuning structures to stack!");
-            if (RemoveOldTSStructures(TS_structures, true)) return true;
+        //protected override bool CreateTSStructures()
+        //{
+        //    UpdateUILabel("Create TS Structures:");
+        //    ProvideUIUpdate("Adding remaining tuning structures to stack!");
+        //    if (RemoveOldTSStructures(TS_structures, true)) return true;
 
-            int counter = 0;
-            int calcItems = TS_structures.Count;
+        //    int counter = 0;
+        //    int calcItems = TS_structures.Count;
 
-            foreach (RequestedTSStructureModel itr in TS_structures)
-            {
-                ProvideUIUpdate(100 * ++counter / calcItems, $"Adding {itr.StructureId} to the structure set!");
-                AddTSStructures(itr);
-            }
+        //    foreach (RequestedTSStructureModel itr in TS_structures)
+        //    {
+        //        ProvideUIUpdate(100 * ++counter / calcItems, $"Adding {itr.StructureId} to the structure set!");
+        //        AddTSStructures(itr);
+        //    }
 
-            ProvideUIUpdate(100, "Finished adding tuning structures!");
-            ProvideUIUpdate(0, "Contouring tuning structures!");
+        //    ProvideUIUpdate(100, "Finished adding tuning structures!");
+        //    ProvideUIUpdate(0, "Contouring tuning structures!");
 
-            counter = 0;
-            calcItems = AddedStructureIds.Count;
-            //now contour the various structures
-            foreach (string itr in AddedStructureIds)
-            {
-                ProvideUIUpdate($"Contouring TS: {itr}");
-                Structure addedStructure = StructureTuningHelper.GetStructureFromId(itr, EclipseContext.GetInstance().StructureSet);
-                ProvideUIUpdate($"Retrieved structure: {addedStructure.Id}");
-                if (itr.ToLower().Contains("human"))
-                {
-                    if (CopyBodyStructureOnToStructure(addedStructure)) return true;
-                }
-                else if (itr.ToLower().Contains("ptv_body"))
-                {
-                    if (GeneratePTVFromBody(addedStructure)) return true;
-                }
-                else if (itr.ToLower().Contains("_block"))
-                {
-                    if (ContourBlockVolume(addedStructure)) return true;
-                }
-                else if (itr.ToLower().Contains("_eval"))
-                {
-                    if (ContourLungsEvalVolume(addedStructure)) return true;
-                }
-                ProvideUIUpdate(100 * ++counter / calcItems);
-            }
+        //    counter = 0;
+        //    calcItems = AddedStructureIds.Count;
+        //    //now contour the various structures
+        //    foreach (string itr in AddedStructureIds)
+        //    {
+        //        ProvideUIUpdate($"Contouring TS: {itr}");
+        //        Structure addedStructure = StructureTuningHelper.GetStructureFromId(itr, EclipseContext.GetInstance().StructureSet);
+        //        ProvideUIUpdate($"Retrieved structure: {addedStructure.Id}");
+        //        if (itr.ToLower().Contains("human"))
+        //        {
+        //            if (CopyBodyStructureOnToStructure(addedStructure)) return true;
+        //        }
+        //        else if (itr.ToLower().Contains("ptv_body"))
+        //        {
+        //            if (GeneratePTVFromBody(addedStructure)) return true;
+        //        }
+        //        else if (itr.ToLower().Contains("_block"))
+        //        {
+        //            if (ContourBlockVolume(addedStructure)) return true;
+        //        }
+        //        else if (itr.ToLower().Contains("_eval"))
+        //        {
+        //            if (ContourLungsEvalVolume(addedStructure)) return true;
+        //        }
+        //        ProvideUIUpdate(100 * ++counter / calcItems);
+        //    }
 
-            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
-            return false;
-        }
+        //    ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
+        //    return false;
+        //}
 
         /// <summary>
         /// Simple helper method to copy the body structure onto the supplied structure, then crop the supplied structure from the body by the requested
@@ -360,11 +354,11 @@ namespace TBIAutoPlanner.Core
         /// Directory method for controlling the flow of TS structure manipulations
         /// </summary>
         /// <returns></returns>
-        protected override bool PerformTSStructureManipulation()
+        protected override bool PerformStructureDerivations()
         {
             UpdateUILabel("Perform TS Manipulations: ");
             int counter = 0;
-            int calcItems = TSManipulationList.Count * prescriptions.Count;
+            int calcItems = _structureOperations.Count * prescriptions.Count;
 
             List<TargetModel> tmpTSTargetList = new List<TargetModel> { };
             foreach (PrescriptionModel itr in prescriptions)
@@ -382,44 +376,44 @@ namespace TBIAutoPlanner.Core
                 }
             }
 
-            if (TSManipulationList.Any(x => !string.IsNullOrEmpty(x.TargetId)))
-            {
-                foreach (RequestedTSManipulationModel itr in TSManipulationList.Where(x => !string.IsNullOrEmpty(x.TargetId)))
-                {
-                    Structure target = null;
-                    if(string.Equals(itr.TargetId, "ptv_body", StringComparison.OrdinalIgnoreCase))
-                    {
-                        target = StructureTuningHelper.GetStructureFromId(itr.TargetId, EclipseContext.GetInstance().StructureSet);
-                    }
-                    //target operations
-                    else if (tmpTSTargetList.Any(x => string.Equals(x.TargetId, itr.TargetId, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        string tsTargetId = tmpTSTargetList.First(x => string.Equals(x.TargetId, itr.TargetId, StringComparison.OrdinalIgnoreCase)).TsTargetId;
-                        target = StructureTuningHelper.GetStructureFromId(tsTargetId, EclipseContext.GetInstance().StructureSet);
-                    }
-                    if (!ReferenceEquals(target, null))
-                    {
-                        if (ManipulateTargetTuningStructures(itr, target)) return true;
-                        ProvideUIUpdate(100 * ++counter / calcItems);
-                    }
-                    else
-                    {
-                        ProvideUIUpdate($"Error! Could not retrieve target structure {itr.TargetId} or its TS counterpart to perform structure manipulation! Exiting!", true);
-                        return true;
-                    }
-                }
-            }
-            else ProvideUIUpdate("No target TS manipulations requested!");
+            //if (TSManipulationList.Any(x => !string.IsNullOrEmpty(x.TargetId)))
+            //{
+            //    foreach (RequestedTSManipulationModel itr in TSManipulationList.Where(x => !string.IsNullOrEmpty(x.TargetId)))
+            //    {
+            //        Structure target = null;
+            //        if(string.Equals(itr.TargetId, "ptv_body", StringComparison.OrdinalIgnoreCase))
+            //        {
+            //            target = StructureTuningHelper.GetStructureFromId(itr.TargetId, EclipseContext.GetInstance().StructureSet);
+            //        }
+            //        //target operations
+            //        else if (tmpTSTargetList.Any(x => string.Equals(x.TargetId, itr.TargetId, StringComparison.OrdinalIgnoreCase)))
+            //        {
+            //            string tsTargetId = tmpTSTargetList.First(x => string.Equals(x.TargetId, itr.TargetId, StringComparison.OrdinalIgnoreCase)).TsTargetId;
+            //            target = StructureTuningHelper.GetStructureFromId(tsTargetId, EclipseContext.GetInstance().StructureSet);
+            //        }
+            //        if (!ReferenceEquals(target, null))
+            //        {
+            //            if (ManipulateTargetTuningStructures(itr, target)) return true;
+            //            ProvideUIUpdate(100 * ++counter / calcItems);
+            //        }
+            //        else
+            //        {
+            //            ProvideUIUpdate($"Error! Could not retrieve target structure {itr.TargetId} or its TS counterpart to perform structure manipulation! Exiting!", true);
+            //            return true;
+            //        }
+            //    }
+            //}
+            //else ProvideUIUpdate("No target TS manipulations requested!");
 
-            if (TSManipulationList.Any(x => string.IsNullOrEmpty(x.TargetId)))
-            {
-                foreach (RequestedTSManipulationModel itr in TSManipulationList.Where(x => string.IsNullOrEmpty(x.TargetId)))
-                {
-                    if (ManipulateOARTuningStructures(itr)) return true;
-                    ProvideUIUpdate(100 * ++counter / calcItems);
-                }
-            }
-            else ProvideUIUpdate("No OAR TS manipulations requested!");
+            //if (TSManipulationList.Any(x => string.IsNullOrEmpty(x.TargetId)))
+            //{
+            //    foreach (RequestedTSManipulationModel itr in TSManipulationList.Where(x => string.IsNullOrEmpty(x.TargetId)))
+            //    {
+            //        if (ManipulateOARTuningStructures(itr)) return true;
+            //        ProvideUIUpdate(100 * ++counter / calcItems);
+            //    }
+            //}
+            //else ProvideUIUpdate("No OAR TS manipulations requested!");
 
             if (!TBIAutoPlannerSettings.AllBeamsVMAT && prescriptions.Any(x => string.Equals(x.TargetId, "ptv_body", StringComparison.OrdinalIgnoreCase)) && StructureTuningHelper.DoesStructureExistInSS("ptv_body",EclipseContext.GetInstance().StructureSet, true))
             {

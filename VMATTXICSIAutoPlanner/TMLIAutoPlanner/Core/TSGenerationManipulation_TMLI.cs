@@ -30,18 +30,15 @@ namespace TMLIAutoPlanner.Core
         //Possible values are "AVOIDANCE", "CAVITY", "CONTRAST_AGENT", "CTV", "EXTERNAL", "GTV", "IRRAD_VOLUME", 
         //"ORGAN", "PTV", "TREATED_VOLUME", "SUPPORT", "FIXATION", "CONTROL", and "DOSE_REGION". 
         private List<PrescriptionModel> prescriptions;
-        private List<RequestedTSStructureModel> TS_structures;
         private List<TSRingStructureModel> _requestedRings;
         
         #endregion
 
-        internal TSGenerationManipulation_TMLI(List<RequestedTSStructureModel> ts, 
-                                               List<RequestedTSManipulationModel> manipulations, 
+        internal TSGenerationManipulation_TMLI(List<StructureOperationModel> operations,
                                                List<TSRingStructureModel> rings,
                                                List<PrescriptionModel> presc)
         {
-            TS_structures = new List<RequestedTSStructureModel>(ts);
-            TSManipulationList = new List<RequestedTSManipulationModel>(manipulations);
+            _structureOperations = new List<StructureOperationModel>(operations);
             _requestedRings = new List<TSRingStructureModel>(rings);
             prescriptions = new List<PrescriptionModel>(presc);
             SetCloseOnFinish(TMLIAutoPlannerSettings.CloseProgressWindowOnFinish, 3000);
@@ -55,9 +52,9 @@ namespace TMLIAutoPlanner.Core
                 PlanIsocentersList.Clear();
                 if (PreliminaryChecks()) return true;
                 if (UnionLRStructures()) return true;
-                if (TSManipulationList.Any()) if (CheckHighResolution()) return true;
-                if (CreateTSStructures()) return true;
-                if (PerformTSStructureManipulation()) return true;
+                if (_structureOperations.Any()) if (CheckHighResolution()) return true;
+                //if (CreateTSStructures()) return true;
+                if (PerformStructureDerivations()) return true;
                 if (_requestedRings.Any())
                 {
                     AddedRings = new List<TSRingStructureModel>(GenerateRings(_requestedRings));
@@ -130,45 +127,45 @@ namespace TMLIAutoPlanner.Core
         }
         #endregion
 
-        protected override bool CreateTSStructures()
-        {
-            UpdateUILabel("Create TS Structures:");
-            ProvideUIUpdate("Adding remaining tuning structures to stack!");
-            if (RemoveOldTSStructures(TS_structures, true)) return true;
+        //protected override bool CreateTSStructures()
+        //{
+        //    UpdateUILabel("Create TS Structures:");
+        //    ProvideUIUpdate("Adding remaining tuning structures to stack!");
+        //    if (RemoveOldTSStructures(TS_structures, true)) return true;
 
-            int counter = 0;
-            int calcItems = TS_structures.Count;
+        //    int counter = 0;
+        //    int calcItems = TS_structures.Count;
 
-            foreach (RequestedTSStructureModel itr in TS_structures)
-            {
-                ProvideUIUpdate(100 * ++counter / calcItems, $"Adding {itr.StructureId} to the structure set!");
-                AddTSStructures(itr);
-            }
+        //    foreach (RequestedTSStructureModel itr in TS_structures)
+        //    {
+        //        ProvideUIUpdate(100 * ++counter / calcItems, $"Adding {itr.StructureId} to the structure set!");
+        //        AddTSStructures(itr);
+        //    }
 
-            ProvideUIUpdate(100, "Finished adding tuning structures!");
-            ProvideUIUpdate(0, "Contouring tuning structures!");
+        //    ProvideUIUpdate(100, "Finished adding tuning structures!");
+        //    ProvideUIUpdate(0, "Contouring tuning structures!");
 
-            counter = 0;
-            calcItems = AddedStructureIds.Count;
-            //now contour the various structures
-            foreach (string itr in AddedStructureIds)
-            {
-                ProvideUIUpdate($"Contouring TS: {itr}");
-                Structure addedStructure = StructureTuningHelper.GetStructureFromId(itr, EclipseContext.GetInstance().StructureSet);
-                ProvideUIUpdate($"Retrieved structure: {addedStructure.Id}");
-                //logic goes here
-                //
-                ProvideUIUpdate(100 * ++counter / calcItems);
-            }
-            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
-            return false;
-        }
+        //    counter = 0;
+        //    calcItems = AddedStructureIds.Count;
+        //    //now contour the various structures
+        //    foreach (string itr in AddedStructureIds)
+        //    {
+        //        ProvideUIUpdate($"Contouring TS: {itr}");
+        //        Structure addedStructure = StructureTuningHelper.GetStructureFromId(itr, EclipseContext.GetInstance().StructureSet);
+        //        ProvideUIUpdate($"Retrieved structure: {addedStructure.Id}");
+        //        //logic goes here
+        //        //
+        //        ProvideUIUpdate(100 * ++counter / calcItems);
+        //    }
+        //    ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
+        //    return false;
+        //}
 
-        protected override bool PerformTSStructureManipulation()
+        protected override bool PerformStructureDerivations()
         {
             UpdateUILabel("Perform TS Manipulations: ");
             int counter = 0;
-            int calcItems = TSManipulationList.Count * prescriptions.Count;
+            int calcItems = _structureOperations.Count * prescriptions.Count;
 
             //construct all ts targets 
             //prescriptions are inherently sorted by increasing cumulative Rx to targets
@@ -185,31 +182,31 @@ namespace TMLIAutoPlanner.Core
                 }
             }
 
-            if(TSManipulationList.Any(x => !string.IsNullOrEmpty(x.TargetId)))
-            {
-                foreach (RequestedTSManipulationModel itr in TSManipulationList.Where(x => !string.IsNullOrEmpty(x.TargetId)))
-                {
-                    //target operations
-                    if (tmpTSTargetList.Any(x => string.Equals(x.TargetId, itr.TargetId, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        string tsTargetId = tmpTSTargetList.First(x => string.Equals(x.TargetId, itr.TargetId, StringComparison.OrdinalIgnoreCase)).TsTargetId;
-                        Structure tsTarget = StructureTuningHelper.GetStructureFromId(tsTargetId, EclipseContext.GetInstance().StructureSet);
-                        if (ManipulateTargetTuningStructures(itr, tsTarget)) return true;
-                        ProvideUIUpdate(100 * ++counter / calcItems);
-                    }
-                }
-            }
-            else ProvideUIUpdate("No target TS manipulations requested!");
+            //if(TSManipulationList.Any(x => !string.IsNullOrEmpty(x.TargetId)))
+            //{
+            //    foreach (RequestedTSManipulationModel itr in TSManipulationList.Where(x => !string.IsNullOrEmpty(x.TargetId)))
+            //    {
+            //        //target operations
+            //        if (tmpTSTargetList.Any(x => string.Equals(x.TargetId, itr.TargetId, StringComparison.OrdinalIgnoreCase)))
+            //        {
+            //            string tsTargetId = tmpTSTargetList.First(x => string.Equals(x.TargetId, itr.TargetId, StringComparison.OrdinalIgnoreCase)).TsTargetId;
+            //            Structure tsTarget = StructureTuningHelper.GetStructureFromId(tsTargetId, EclipseContext.GetInstance().StructureSet);
+            //            if (ManipulateTargetTuningStructures(itr, tsTarget)) return true;
+            //            ProvideUIUpdate(100 * ++counter / calcItems);
+            //        }
+            //    }
+            //}
+            //else ProvideUIUpdate("No target TS manipulations requested!");
 
-            if (TSManipulationList.Any(x => string.IsNullOrEmpty(x.TargetId)))
-            {
-                foreach (RequestedTSManipulationModel itr in TSManipulationList.Where(x => string.IsNullOrEmpty(x.TargetId)))
-                {
-                    if (ManipulateOARTuningStructures(itr)) return true;
-                    ProvideUIUpdate(100 * ++counter / calcItems);
-                }
-            }
-            else ProvideUIUpdate("No OAR TS manipulations requested!");
+            //if (TSManipulationList.Any(x => string.IsNullOrEmpty(x.TargetId)))
+            //{
+            //    foreach (RequestedTSManipulationModel itr in TSManipulationList.Where(x => string.IsNullOrEmpty(x.TargetId)))
+            //    {
+            //        if (ManipulateOARTuningStructures(itr)) return true;
+            //        ProvideUIUpdate(100 * ++counter / calcItems);
+            //    }
+            //}
+            //else ProvideUIUpdate("No OAR TS manipulations requested!");
 
             if (!TMLIAutoPlannerSettings.AllBeamsVMAT && StructureTuningHelper.DoesStructureExistInSS("matchline", EclipseContext.GetInstance().StructureSet, true))
             {

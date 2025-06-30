@@ -8,4 +8,5 @@ namespace AutoPlannerHelpers.Delegates
     /// <param name="msg"></param>
     /// <param name="f"></param>
     public delegate void ProvideUIUpdateDelegate(int comp, string msg = "", bool f = false);
+    public delegate void UIUpdateMessageOnlyDelegate(string msg = "", bool f = false);
 }

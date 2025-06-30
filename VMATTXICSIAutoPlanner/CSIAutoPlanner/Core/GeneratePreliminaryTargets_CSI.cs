@@ -8,6 +8,7 @@ using System.Text;
 using VMS.TPS.Common.Model.API;
 using VMS.TPS.Common.Model.Types;
 using AutoPlannerHelpers.BaseCore;
+using AutoPlannerHelpers.Delegates;
 
 namespace CSIAutoPlanner.Core
 {
@@ -18,10 +19,9 @@ namespace CSIAutoPlanner.Core
         /// Constructor
         /// </summary>
         /// <param name="tgts"></param>
-        public GeneratePreliminaryTargets_CSI(IEnumerable<RequestedTSStructureModel> tgts) :
+        public GeneratePreliminaryTargets_CSI(IEnumerable<StructureOperationModel> tgts) :
             base(tgts, CSIAutoPlannerSettings.CloseProgressWindowOnFinish)
-        {
-        }
+        { }
 
         #region preliminary checks and pre-processing
         /// <summary>
@@ -51,7 +51,6 @@ namespace CSIAutoPlanner.Core
             }
             ProvideUIUpdate(100 * ++counter / calcItems, "Brain and spinal cord structures exist");
 
-
             if (ContourHelper.CheckHighResolutionAndConvert(new List<string> { "brain", "spinal_cord", "spinalcord" }, EclipseContext.GetInstance().StructureSet, PUUD)) return true;
             ProvideUIUpdate(100 * ++counter / calcItems, "Check and converted any high res base targets");
 
@@ -66,83 +65,83 @@ namespace CSIAutoPlanner.Core
         /// Contour the preliminary targets according to the standard practice rules for ctv_brain, ptv_brain, ctv_spine, ptv_spine, and ptv_csi
         /// </summary>
         /// <returns></returns>
-        protected override bool ContourTargetStructures()
+        protected override bool DeriveTargetStructures()
         {
-            Structure tmp = null;
-            int counter = 0;
-            int calcItems = _addedTargetIds.Count + 2;
-            foreach (string itr in _addedTargetIds.OrderBy(x => x.ElementAt(0)))
-            {
-                ProvideUIUpdate(100 * ++counter / calcItems, $"Contouring target: {itr}");
-                Structure theTarget = StructureTuningHelper.GetStructureFromId(itr, EclipseContext.GetInstance().StructureSet);
-                if (itr.ToLower().Contains("brain"))
-                {
-                    tmp = StructureTuningHelper.GetStructureFromId("brain", EclipseContext.GetInstance().StructureSet);
-                    if (tmp != null && !tmp.IsEmpty)
-                    {
-                        if (itr.ToLower().Contains("ctv"))
-                        {
-                            //CTV structure. Brain CTV IS the brain structure
-                            theTarget.SegmentVolume = tmp.Margin(0.0);
-                        }
-                        else
-                        {
-                            //PTV structure
-                            //5 mm uniform margin to generate PTV
-                            theTarget.SegmentVolume = tmp.Margin(5.0);
-                        }
-                    }
-                    else
-                    {
-                        ProvideUIUpdate("Error! Could not retrieve brain structure! Exiting!", true);
-                        return true;
-                    }
-                }
-                else if (itr.ToLower().Contains("spine"))
-                {
-                    tmp = StructureTuningHelper.GetStructureFromId("spinalcord", EclipseContext.GetInstance().StructureSet);
-                    if (tmp == null) tmp = StructureTuningHelper.GetStructureFromId("spinal_cord", EclipseContext.GetInstance().StructureSet);
-                    if (tmp != null && !tmp.IsEmpty)
-                    {
-                        if (itr.ToLower().Contains("ctv"))
-                        {
-                            //CTV structure. Brain CTV IS the brain structure
-                            //AxisAlignedMargins(inner or outer margin, margin from negative x, margin for negative y, margin for negative z, margin for positive x, margin for positive y, margin for positive z)
-                            //according to Nataliya: CTV_spine = spinal_cord+0.5cm ANT, +1.5cm Inf, and +1.0 cm in all other directions
-                            theTarget.SegmentVolume = tmp.AsymmetricMargin(new AxisAlignedMargins(StructureMarginGeometry.Outer,
-                                                                                            10.0,
-                                                                                            5.0,
-                                                                                            15.0,
-                                                                                            10.0,
-                                                                                            10.0,
-                                                                                            10.0));
-                        }
-                        else
-                        {
-                            //PTV structure
-                            //5 mm uniform margin to generate PTV
-                            tmp = StructureTuningHelper.GetStructureFromId("CTV_Spine", EclipseContext.GetInstance().StructureSet);
-                            if (tmp != null && !tmp.IsEmpty) theTarget.SegmentVolume = tmp.Margin(5.0);
-                            else { ProvideUIUpdate("Error! Could not retrieve CTV_Spine structure! Exiting!", true); return true; }
-                        }
-                    }
-                    else
-                    {
-                        ProvideUIUpdate("Error! Could not retrieve spinal cord structure! Exiting!", true);
-                        return true;
-                    }
-                }
-            }
+            //Structure tmp = null;
+            //int counter = 0;
+            //int calcItems = _addedTargetIds.Count + 2;
+            //foreach (string itr in _addedTargetIds.OrderBy(x => x.ElementAt(0)))
+            //{
+            //    ProvideUIUpdate(100 * ++counter / calcItems, $"Contouring target: {itr}");
+            //    Structure theTarget = StructureTuningHelper.GetStructureFromId(itr, EclipseContext.GetInstance().StructureSet);
+            //    if (itr.ToLower().Contains("brain"))
+            //    {
+            //        tmp = StructureTuningHelper.GetStructureFromId("brain", EclipseContext.GetInstance().StructureSet);
+            //        if (tmp != null && !tmp.IsEmpty)
+            //        {
+            //            if (itr.ToLower().Contains("ctv"))
+            //            {
+            //                //CTV structure. Brain CTV IS the brain structure
+            //                theTarget.SegmentVolume = tmp.Margin(0.0);
+            //            }
+            //            else
+            //            {
+            //                //PTV structure
+            //                //5 mm uniform margin to generate PTV
+            //                theTarget.SegmentVolume = tmp.Margin(5.0);
+            //            }
+            //        }
+            //        else
+            //        {
+            //            ProvideUIUpdate("Error! Could not retrieve brain structure! Exiting!", true);
+            //            return true;
+            //        }
+            //    }
+            //    else if (itr.ToLower().Contains("spine"))
+            //    {
+            //        tmp = StructureTuningHelper.GetStructureFromId("spinalcord", EclipseContext.GetInstance().StructureSet);
+            //        if (tmp == null) tmp = StructureTuningHelper.GetStructureFromId("spinal_cord", EclipseContext.GetInstance().StructureSet);
+            //        if (tmp != null && !tmp.IsEmpty)
+            //        {
+            //            if (itr.ToLower().Contains("ctv"))
+            //            {
+            //                //CTV structure. Brain CTV IS the brain structure
+            //                //AxisAlignedMargins(inner or outer margin, margin from negative x, margin for negative y, margin for negative z, margin for positive x, margin for positive y, margin for positive z)
+            //                //according to Nataliya: CTV_spine = spinal_cord+0.5cm ANT, +1.5cm Inf, and +1.0 cm in all other directions
+            //                theTarget.SegmentVolume = tmp.AsymmetricMargin(new AxisAlignedMargins(StructureMarginGeometry.Outer,
+            //                                                                                10.0,
+            //                                                                                5.0,
+            //                                                                                15.0,
+            //                                                                                10.0,
+            //                                                                                10.0,
+            //                                                                                10.0));
+            //            }
+            //            else
+            //            {
+            //                //PTV structure
+            //                //5 mm uniform margin to generate PTV
+            //                tmp = StructureTuningHelper.GetStructureFromId("CTV_Spine", EclipseContext.GetInstance().StructureSet);
+            //                if (tmp != null && !tmp.IsEmpty) theTarget.SegmentVolume = tmp.Margin(5.0);
+            //                else { ProvideUIUpdate("Error! Could not retrieve CTV_Spine structure! Exiting!", true); return true; }
+            //            }
+            //        }
+            //        else
+            //        {
+            //            ProvideUIUpdate("Error! Could not retrieve spinal cord structure! Exiting!", true);
+            //            return true;
+            //        }
+            //    }
+            //}
 
-            if (_addedTargetIds.Any(x => string.Equals(x.ToLower(), "ptv_csi")))
-            {
-                if (ContourPTVCSI()) return true;
-                ProvideUIUpdate(100 * ++counter / calcItems, "PTV_CSI generated and contoured!");
-            }
-            else if (_createPrelimTargetList.Any(x => string.Equals(x.StructureId.ToLower(), "ptv_csi")))
-            {
-                ProvideUIUpdate(100 * ++counter / calcItems, "PTV_CSI already exists in the structure set! Skipping!");
-            }
+            //if (_addedTargetIds.Any(x => string.Equals(x.ToLower(), "ptv_csi")))
+            //{
+            //    if (ContourPTVCSI()) return true;
+            //    ProvideUIUpdate(100 * ++counter / calcItems, "PTV_CSI generated and contoured!");
+            //}
+            //else if (_createPrelimTargetList.Any(x => string.Equals(x.StructureId.ToLower(), "ptv_csi")))
+            //{
+            //    ProvideUIUpdate(100 * ++counter / calcItems, "PTV_CSI already exists in the structure set! Skipping!");
+            //}
             ProvideUIUpdate(100, "Targets added and contoured!");
             ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;

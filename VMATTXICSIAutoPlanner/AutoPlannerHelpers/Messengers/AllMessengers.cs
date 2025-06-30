@@ -68,7 +68,6 @@ namespace AutoPlannerHelpers.Messengers
         }
     }
 
-
     public class RequestGenerateManipulateTuningStructuresMessage
     {
         public List<RequestedTSManipulationModel> RequestedTSManipulations { get; private set; }
@@ -85,8 +84,6 @@ namespace AutoPlannerHelpers.Messengers
             this.RequestedTSManipulations = requestedTSManipulations;
         }
     }
-
-    public class RequestTSGenerationStructures : RequestMessage<List<RequestedTSStructureModel>> { }
 
     public class RequestCropOverlapStructures : RequestMessage<List<string>> { }
     public class RequestRingStructures : RequestMessage<List<TSRingStructureModel>> { }
