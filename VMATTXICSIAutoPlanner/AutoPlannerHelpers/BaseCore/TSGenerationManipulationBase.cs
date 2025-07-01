@@ -40,14 +40,14 @@ namespace AutoPlannerHelpers.BaseCore
         {
             UpdateUILabel("Unioning Structures: ");
             ProvideUIUpdate(0, "Checking for L and R structures to union!");
-            List<UnionStructureModel> structuresToUnion = StructureTuningHelper.CheckStructuresToUnion(EclipseContext.GetInstance().StructureSet);
+            List<UnionStructureModel> structuresToUnion = StructureTuningHelper.CheckStructuresToUnion(EclipseContext.GetInstance().StructureSet.Structures.Where(x => !x.IsEmpty).Select(x => x.Id));
             if (structuresToUnion.Any())
             {
                 int calcItems = structuresToUnion.Count;
                 int numUnioned = 0;
                 foreach (UnionStructureModel itr in structuresToUnion)
                 {
-                    (bool fail, StringBuilder output) = StructureTuningHelper.UnionLRStructures(itr, EclipseContext.GetInstance().StructureSet);
+                    (bool fail, StringBuilder output) = StructureTuningHelper.UnionLRStructures(itr);
                     if (!fail) ProvideUIUpdate(100 * ++numUnioned / calcItems, $"Unioned {itr.ProposedUnionStructureId}");
                     else
                     {
@@ -75,7 +75,7 @@ namespace AutoPlannerHelpers.BaseCore
             else newName = requestedTSTargetId;
             if (newName.Length > 16) newName = newName.Substring(0, 16);
             ProvideUIUpdate($"Retrieving TS target: {newName}");
-            Structure addedTSTarget = StructureTuningHelper.GetStructureFromId(newName, EclipseContext.GetInstance().StructureSet);
+            Structure addedTSTarget = StructureTuningHelper.GetStructureFromId(newName);
             if (addedTSTarget == null)
             {
                 //left here because of special logic to generate the structure if it doesn't exist
@@ -84,10 +84,10 @@ namespace AutoPlannerHelpers.BaseCore
             }
             if (addedTSTarget.IsEmpty)
             {
-                if (StructureTuningHelper.DoesStructureExistInSS(targetId, EclipseContext.GetInstance().StructureSet, true))
+                if (StructureTuningHelper.DoesStructureExistInSS(targetId, true))
                 {
                     ProvideUIUpdate($"Copying target {targetId} contours onto {newName}");
-                    (bool fail, StringBuilder errorMessage) = ContourHelper.CopyStructureOntoStructure(StructureTuningHelper.GetStructureFromId(targetId, EclipseContext.GetInstance().StructureSet), addedTSTarget);
+                    (bool fail, StringBuilder errorMessage) = ContourHelper.CopyStructureOntoStructure(StructureTuningHelper.GetStructureFromId(targetId), addedTSTarget);
                     if (fail) ProvideUIUpdate($"Error! Could not copy {targetId} onto {addedTSTarget.Id} because: {errorMessage}", true);
                 }
                 else ProvideUIUpdate($"Error! Could not retrieve {targetId} structure!", true);
@@ -183,7 +183,7 @@ namespace AutoPlannerHelpers.BaseCore
             int calcItems = 3 * requestedRings.Count();
             foreach (TSRingStructureModel itr in requestedRings)
             {
-                Structure target = StructureTuningHelper.GetStructureFromId(itr.TargetId, EclipseContext.GetInstance().StructureSet);
+                Structure target = StructureTuningHelper.GetStructureFromId(itr.TargetId);
                 if (target != null)
                 {
                     ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Retrieved target: {target.Id}");
@@ -204,7 +204,7 @@ namespace AutoPlannerHelpers.BaseCore
                     ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Created empty ring: {ring.Id}");
 
                     ProvideUIUpdate($"Contouring ring: {ring.Id}");
-                    (bool fail, StringBuilder errorMessage) = ContourHelper.CreateRing(target, ring, EclipseContext.GetInstance().StructureSet, itr.MarginFromTargetInCM, itr.RingThicknessInCM);
+                    (bool fail, StringBuilder errorMessage) = ContourHelper.CreateRing(target, ring, itr.MarginFromTargetInCM, itr.RingThicknessInCM);
                     if (fail)
                     {
                         ProvideUIUpdate(errorMessage.ToString(), true);
@@ -328,9 +328,9 @@ namespace AutoPlannerHelpers.BaseCore
             foreach (StructureOperationModel itr in _structureOperations)
             {
                 //do any of the structures currently exist in the structure set?
-                if (StructureTuningHelper.DoesStructureExistInSS(itr.StructureIdList, EclipseContext.GetInstance().StructureSet, true))
+                if (StructureTuningHelper.DoesStructureExistInSS(itr.StructureIdList, true))
                 {
-                    if(StructureTuningHelper.GetStructuresFromIdList(itr.StructureIdList,EclipseContext.GetInstance().StructureSet,true).Any(x => x.IsHighResolution))
+                    if(StructureTuningHelper.GetStructuresFromIdList(itr.StructureIdList,true).Any(x => x.IsHighResolution))
                     {
                         highResManipulationList.Add(itr);
                     }
@@ -340,7 +340,7 @@ namespace AutoPlannerHelpers.BaseCore
             if (highResManipulationList.Any())
             {
                 ProvideUIUpdate("High-resolution structures:");
-                IEnumerable<string> highResStructureIds = StructureTuningHelper.GetStructuresFromIdList(highResManipulationList.SelectMany(x => x.StructureIdList).Distinct(), EclipseContext.GetInstance().StructureSet, true).Where(x => x.IsHighResolution).Select(x => x.Id);
+                IEnumerable<string> highResStructureIds = StructureTuningHelper.GetStructuresFromIdList(highResManipulationList.SelectMany(x => x.StructureIdList).Distinct(), true).Where(x => x.IsHighResolution).Select(x => x.Id);
                 foreach (string itr in highResStructureIds)
                 {
                     ProvideUIUpdate($"{itr}");
@@ -389,7 +389,7 @@ namespace AutoPlannerHelpers.BaseCore
             {
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieving high resolution structure: {itr}");
                 //this structure should be present and contoured in structure set (checked previously)
-                Structure highResStruct = StructureTuningHelper.GetStructureFromId(itr, EclipseContext.GetInstance().StructureSet);
+                Structure highResStruct = StructureTuningHelper.GetStructureFromId(itr);
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Converting: {itr} to low resolution");
 
                 //get the high res structure mesh geometry
@@ -477,21 +477,26 @@ namespace AutoPlannerHelpers.BaseCore
         /// </summary>
         /// <param name="structuresToRemove"></param>
         /// <returns></returns>
-        private bool RemoveStructures(List<Structure> structuresToRemove)
+        private bool RemoveStructures(IEnumerable<string> structuresToRemove)
         {
-            int calcItems = structuresToRemove.Count;
+            int calcItems = structuresToRemove.Count();
             int counter = 0;
-            foreach (Structure itr in structuresToRemove)
+            foreach (string itr in structuresToRemove)
             {
-                if (EclipseContext.GetInstance().StructureSet.CanRemoveStructure(itr))
+                if(StructureTuningHelper.DoesStructureExistInSS(itr))
                 {
-                    ProvideUIUpdate(100 * ++counter / calcItems, $"Removing: {itr.Id}");
-                    EclipseContext.GetInstance().StructureSet.RemoveStructure(itr);
+
+                }
+                Structure s = StructureTuningHelper.GetStructureFromId(itr);
+                if (EclipseContext.GetInstance().StructureSet.CanRemoveStructure(s))
+                {
+                    ProvideUIUpdate(100 * ++counter / calcItems, $"Removing: {itr}");
+                    EclipseContext.GetInstance().StructureSet.RemoveStructure(s);
                 }
                 else
                 {
-                    ProvideUIUpdate($"Error! Could not remove structure: {itr.Id}!", true);
-                    if (string.IsNullOrEmpty(itr.DicomType)) ProvideUIUpdate($"{itr.Id} DICOM type: None");
+                    ProvideUIUpdate($"Error! Could not remove structure: {itr}!", true);
+                    if (string.IsNullOrEmpty(s.DicomType)) ProvideUIUpdate($"{itr} DICOM type: None");
                     return true;
                 }
             }
@@ -505,31 +510,29 @@ namespace AutoPlannerHelpers.BaseCore
         /// <param name="structures"></param>
         /// <param name="removeTSTargets"></param>
         /// <returns></returns>
-        protected bool RemoveOldTSStructures(List<RequestedTSStructureModel> structures, bool removeTSTargets = false)
+        protected bool RemoveOldTSStructures(List<StructureOperationModel> structures, bool removeTSTargets = false)
         {
             UpdateUILabel("Remove Prior Tuning Structures: ");
             ProvideUIUpdate(0, "Removing prior tuning structures");
 
             //Get the list of requested ts structures to remove (also add targets if requested)
-            List<RequestedTSStructureModel> structuresToRemove;
-            if (!removeTSTargets) structuresToRemove = structures.Where(x => !x.StructureId.ToLower().Contains("ctv") && !x.StructureId.ToLower().Contains("ptv")).ToList();
-            else structuresToRemove = structures;
+            IEnumerable<string> structuresToRemove;
+            if (!removeTSTargets) structuresToRemove = structures.Where(x => !x.OutputStructure.ToLower().Contains("ctv") && !x.OutputStructure.ToLower().Contains("ptv")).Select(x => x.OutputStructure);
+            else structuresToRemove = structures.Select(x => x.OutputStructure);
 
             //From the above list, get the list of structures that can actually be removed from the structure set
-            (bool fail, List<Structure> removeList) = VerifyRemoveTSStructures(structuresToRemove);
+            (bool fail, List<string> removeList) = VerifyRemoveTSStructures(structuresToRemove);
             if (fail) return true;
 
             ProvideUIUpdate(0, "Adding any remaining tuning structures to the stack");
             //now grab all existing structures in structure set where id starts with 'TS_'
-            List<Structure> tsStructs = EclipseContext.GetInstance().StructureSet.Structures.Where(x => x.Id.Length > 2 && string.Equals(x.Id.ToLower().Substring(0, 3), "ts_")).ToList();
+            IEnumerable<string> tsStructs = EclipseContext.GetInstance().StructureSet.Structures.Where(x => x.Id.Length > 2 && string.Equals(x.Id.ToLower().Substring(0, 3), "ts_")).Select(x => x.Id);
             //Add the difference between tsStructures and removeList to removeList (i.e., existing ts structures that need to be removed that weren't contained
             //in the requested ts generation structures for this run
             removeList.AddRange(tsStructs.Except(removeList));
             //remove the structures
             if (RemoveStructures(removeList)) return true;
 
-            //now re-add the structurestoremove list of structures to the structure set
-            if (VerifyAddTSStructures(structuresToRemove)) return true;
             ProvideUIUpdate(100, "Prior tuning structures successfully removed!");
             ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
@@ -541,15 +544,15 @@ namespace AutoPlannerHelpers.BaseCore
         /// </summary>
         /// <param name="structuresToRemove"></param>
         /// <returns></returns>
-        private (bool, List<Structure>) VerifyRemoveTSStructures(List<RequestedTSStructureModel> structuresToRemove)
+        private (bool, List<string>) VerifyRemoveTSStructures(IEnumerable<string> structuresToRemove)
         {
-            List<Structure> removeList = new List<Structure> { };
+            List<string> removeList = new List<string> { };
             bool fail = false;
-            int calcItems = structuresToRemove.Count;
+            int calcItems = structuresToRemove.Count();
             int counter = 0;
-            foreach (RequestedTSStructureModel itr in structuresToRemove)
+            foreach (string itr in structuresToRemove)
             {
-                Structure tmp = StructureTuningHelper.GetStructureFromId(itr.StructureId, EclipseContext.GetInstance().StructureSet);
+                Structure tmp = StructureTuningHelper.GetStructureFromId(itr);
                 //structure is present in selected structure set
                 if (tmp != null)
                 {
@@ -558,19 +561,19 @@ namespace AutoPlannerHelpers.BaseCore
                     {
                         if (EclipseContext.GetInstance().StructureSet.CanRemoveStructure(tmp))
                         {
-                            ProvideUIUpdate(100 * ++counter / calcItems, $"Adding: {itr.StructureId} to the structure removal list");
-                            removeList.Add(tmp);
+                            ProvideUIUpdate(100 * ++counter / calcItems, $"Adding: {itr} to the structure removal list");
+                            removeList.Add(itr);
                         }
                         else
                         {
-                            ProvideUIUpdate(0, $"Error! {itr.StructureId} can't be removed from the structure set!", true);
+                            ProvideUIUpdate(0, $"Error! {itr} can't be removed from the structure set!", true);
                             fail = true;
 
                         }
                     }
                     else
                     {
-                        ProvideUIUpdate(0, $"{itr.StructureId} is of DICOM type 'None'! ESAPI can't operate on DICOM type 'None'", true);
+                        ProvideUIUpdate(0, $"{itr} is of DICOM type 'None'! ESAPI can't operate on DICOM type 'None'", true);
                         fail = true;
                     }
                 }
@@ -587,11 +590,11 @@ namespace AutoPlannerHelpers.BaseCore
         {
             bool fail = false;
             Structure theStructure = null;
-            if (StructureTuningHelper.DoesStructureExistInSS(id, EclipseContext.GetInstance().StructureSet))
+            if (StructureTuningHelper.DoesStructureExistInSS(id))
             {
-                if (EclipseContext.GetInstance().StructureSet.CanRemoveStructure(StructureTuningHelper.GetStructureFromId(id, EclipseContext.GetInstance().StructureSet)))
+                if (EclipseContext.GetInstance().StructureSet.CanRemoveStructure(StructureTuningHelper.GetStructureFromId(id)))
                 {
-                    EclipseContext.GetInstance().StructureSet.RemoveStructure(StructureTuningHelper.GetStructureFromId(id, EclipseContext.GetInstance().StructureSet));
+                    EclipseContext.GetInstance().StructureSet.RemoveStructure(StructureTuningHelper.GetStructureFromId(id));
                 }
                 else
                 {
@@ -633,8 +636,8 @@ namespace AutoPlannerHelpers.BaseCore
         protected bool IsUserOriginInsideBody()
         {
             if (!EclipseContext.GetInstance().StructureSet.Image.HasUserOrigin ||
-                !StructureTuningHelper.DoesStructureExistInSS("Body", EclipseContext.GetInstance().StructureSet, true) ||
-                !StructureTuningHelper.GetStructureFromId("Body", EclipseContext.GetInstance().StructureSet).IsPointInsideSegment(EclipseContext.GetInstance().StructureSet.Image.UserOrigin))
+                !StructureTuningHelper.DoesStructureExistInSS("Body", true) ||
+                !StructureTuningHelper.GetStructureFromId("Body").IsPointInsideSegment(EclipseContext.GetInstance().StructureSet.Image.UserOrigin))
             {
                 ProvideUIUpdate("Did you forget to set the user origin? \nUser origin is NOT inside body contour! \nPlease fix and try again!", true);
                 return true;

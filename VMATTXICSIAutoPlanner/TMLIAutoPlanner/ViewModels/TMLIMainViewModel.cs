@@ -281,7 +281,7 @@ namespace TMLIAutoPlanner.ViewModels
             }
             foreach (TargetModel target in parsedTargets.SelectMany(x => x.Targets))
             {
-                if (!StructureTuningHelper.DoesStructureExistInSS(target.TargetId, EclipseContext.GetInstance().StructureSet, true))
+                if (!StructureTuningHelper.DoesStructureExistInSS(target.TargetId, true))
                 {
                     Logger.GetInstance().LogError($"Error! {target.TargetId} is either NOT present in structure set or is not contoured!");
                     return true;
@@ -289,7 +289,7 @@ namespace TMLIAutoPlanner.ViewModels
                 else
                 {
                     //structure is present and contoured
-                    StructureApprovalStatus approvalStatus = StructureTuningHelper.GetStructureFromId(target.TargetId, EclipseContext.GetInstance().StructureSet).ApprovalHistory.First().ApprovalStatus;
+                    StructureApprovalStatus approvalStatus = StructureTuningHelper.GetStructureFromId(target.TargetId).ApprovalHistory.First().ApprovalStatus;
                     if (approvalStatus != StructureApprovalStatus.Approved)
                     {
                         Logger.GetInstance().LogError($"Error! {target.TargetId} is NOT approved!" + Environment.NewLine + $"{target.TargetId} approval status: {approvalStatus}");
@@ -303,16 +303,15 @@ namespace TMLIAutoPlanner.ViewModels
         #endregion
 
         #region TS generation and manipulation
-        protected override void PerformTSStructureGenerationManipulation(List<RequestedTSManipulationModel> manipulations)
+        protected override void PerformOptimizationStructureDerivations(List<StructureOperationModel> operations)
         {
             if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
             {
                 Logger.GetInstance().LogError("Error! Script is not connected to aria or no structure set loaded! Cannot perform TS generation/manipulation!");
                 return;
             }
-            List<RequestedTSManipulationModel> tsManipulations = manipulations;
             List<TSRingStructureModel> rings = WeakReferenceMessenger.Default.Send(new RequestRingStructures());
-            TSGenerationManipulation_TMLI generateTS = new TSGenerationManipulation_TMLI(tsManipulations,
+            TSGenerationManipulation_TMLI generateTS = new TSGenerationManipulation_TMLI(operations,
                                                                                        rings,
                                                                                        _prescriptions);
 
@@ -321,14 +320,6 @@ namespace TMLIAutoPlanner.ViewModels
             Logger.GetInstance().AppendLogOutput("TS Generation and manipulation output:", generateTS.LogOutput);
             if (failed) return;
 
-            //does the structure sparing list need to be updated? This occurs when structures the user elected to spare with option of 'Mean Dose < Rx Dose' are high resolution. Since Eclipse can't perform
-            //boolean operations on structures of two different resolutions, code was added to the generateTS class to automatically convert these structures to low resolution with the name of
-            // '<original structure Id>_lowRes'. When these structures are converted to low resolution, the updateSparingList flag in the generateTS class is set to true to tell this class that the 
-            //structure sparing list needs to be updated with the new low resolution structures.
-            if (generateTS.DoesTSManipulationListRequireUpdating)
-            {
-                WeakReferenceMessenger.Default.Send(new RequestUpdateTSManipulationList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id), generateTS.TSManipulationList));
-            }
             _planIsocenters = generateTS.PlanIsocentersList;
 
             WeakReferenceMessenger.Default.Send(new RequestUpdatePlanIsocenterList(_planIsocenters));
@@ -341,7 +332,7 @@ namespace TMLIAutoPlanner.ViewModels
             BeamPlacementTabBackground = Brushes.PaleVioletRed;
 
             Logger.GetInstance().AddedStructures = generateTS.AddedStructureIds;
-            Logger.GetInstance().StructureManipulations = tsManipulations;
+            Logger.GetInstance().OptimizationStructureDerivations = operations;
             Logger.GetInstance().TSTargets = generateTS.PlanTargets.SelectMany(x => x.Targets).ToDictionary(x => x.TargetId, x => x.TsTargetId);
             Logger.GetInstance().NormalizationVolumes = generateTS.NormalizationVolumes;
             Logger.GetInstance().PlanIsocenters = generateTS.PlanIsocentersList;
@@ -685,10 +676,7 @@ namespace TMLIAutoPlanner.ViewModels
             return sb;
         }
 
-        protected override void PerformOptimizationStructureDerivation(List<StructureOperationModel> operations)
-        {
-            throw new NotImplementedException();
-        }
+        
         #endregion
     }
 }

@@ -120,7 +120,7 @@ namespace AutoPlannerHelpers.BaseCore
             int counter = 0;
             foreach (StructureOperationModel itr in _createPrelimTargetList)
             {
-                if (!StructureTuningHelper.DoesStructureExistInSS(itr.OutputStructure, EclipseContext.GetInstance().StructureSet,true))
+                if (!StructureTuningHelper.DoesStructureExistInSS(itr.OutputStructure,true))
                 {
                     ProvideUIUpdate($"Target: {itr.OutputStructure} is missing or empty!");
                     _targetsToDerive.Add(itr);

@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using AutoPlannerHelpers.Logging;
 using System.Windows.Media.Media3D;
 using VMS.TPS.Common.Model.API;
 using VMS.TPS.Common.Model.Types;
@@ -19,17 +18,17 @@ namespace AutoPlannerHelpers.Helpers
         /// Helper method to crop the given structure from the body structure
         /// </summary>
         /// <param name="theStructure"></param>
-        /// <param name="selectedSS"></param>
+        /// <param name="EclipseContext.GetInstance().StructureSet"></param>
         /// <param name="marginInCm"></param>
         /// <returns></returns>
-        public static (bool, StringBuilder) CropStructureFromBody(Structure theStructure, StructureSet selectedSS, double marginInCm, string bodyId = "Body")
+        public static (bool, StringBuilder) CropStructureFromBody(Structure theStructure, double marginInCm, string bodyId = "Body")
         {
             StringBuilder sb = new StringBuilder();
             bool fail = false;
             //margin is in cm
             if (!string.IsNullOrEmpty(bodyId))
             {
-                Structure body = StructureTuningHelper.GetStructureFromId(bodyId, selectedSS);
+                Structure body = StructureTuningHelper.GetStructureFromId(bodyId);
                 if (!ReferenceEquals(body, null))
                 {
                     if (marginInCm >= -5.0 && marginInCm <= 5.0) theStructure.SegmentVolume = theStructure.SegmentVolume.And(body.SegmentVolume.Margin(marginInCm * 10));
@@ -55,11 +54,15 @@ namespace AutoPlannerHelpers.Helpers
 
         public static bool PerformStructureOperation(StructureOperationModel structureOperation, UIUpdateMessageOnlyDelegate ProvideUIUpdate)
         {
-            if (!StructureTuningHelper.DoesStructureExistInSS(structureOperation.StructureA, EclipseContext.GetInstance().StructureSet, true) && !StructureTuningHelper.DoesStructureExistInSS(structureOperation.StructureB, EclipseContext.GetInstance().StructureSet, true))
+            if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
             {
-                Structure StructureA = StructureTuningHelper.GetStructureFromId(structureOperation.StructureA, EclipseContext.GetInstance().StructureSet);
-                Structure StructureB = StructureTuningHelper.GetStructureFromId(structureOperation.StructureB, EclipseContext.GetInstance().StructureSet);
-                Structure OutputStructure = StructureTuningHelper.GetStructureFromId(structureOperation.OutputStructure, EclipseContext.GetInstance().StructureSet, true);
+                throw new Exception("Error! Eclipse context not initialized! Unable to perform structure derivations!");
+            }
+            if (!StructureTuningHelper.DoesStructureExistInSS(structureOperation.StructureA, true) && !StructureTuningHelper.DoesStructureExistInSS(structureOperation.StructureB, true))
+            {
+                Structure StructureA = StructureTuningHelper.GetStructureFromId(structureOperation.StructureA);
+                Structure StructureB = StructureTuningHelper.GetStructureFromId(structureOperation.StructureB);
+                Structure OutputStructure = StructureTuningHelper.GetStructureFromId(structureOperation.OutputStructure, true);
                 switch (structureOperation.Operation)
                 {
                     case StructureDerivationOperation.Intersection:
@@ -260,11 +263,11 @@ namespace AutoPlannerHelpers.Helpers
         /// </summary>
         /// <param name="target"></param>
         /// <param name="ring"></param>
-        /// <param name="selectedSS"></param>
+        /// <param name="EclipseContext.GetInstance().StructureSet"></param>
         /// <param name="marginInCm"></param>
         /// <param name="thickness"></param>
         /// <returns></returns>
-        public static (bool, StringBuilder) CreateRing(Structure target, Structure ring, StructureSet selectedSS, double marginInCm, double thickness)
+        public static (bool, StringBuilder) CreateRing(Structure target, Structure ring, double marginInCm, double thickness)
         {
             StringBuilder sb = new StringBuilder();
             bool fail = false;
@@ -273,7 +276,7 @@ namespace AutoPlannerHelpers.Helpers
             {
                 ring.SegmentVolume = target.Margin((thickness + marginInCm) * 10);
                 ring.SegmentVolume = ring.Sub(target.Margin(marginInCm * 10));
-                CropStructureFromBody(ring, selectedSS, 0.0);
+                CropStructureFromBody(ring, 0.0);
             }
             else
             {
@@ -288,14 +291,14 @@ namespace AutoPlannerHelpers.Helpers
         /// </summary>
         /// <param name="baseStructureId"></param>
         /// <param name="PRVStructure"></param>
-        /// <param name="selectedSS"></param>
+        /// <param name="EclipseContext.GetInstance().StructureSet"></param>
         /// <param name="marginInCm"></param>
         /// <returns></returns>
-        public static (bool, StringBuilder) ContourPRVVolume(string baseStructureId, Structure PRVStructure, StructureSet selectedSS, double marginInCm)
+        public static (bool, StringBuilder) ContourPRVVolume(string baseStructureId, Structure PRVStructure, double marginInCm)
         {
             StringBuilder sb = new StringBuilder();
             bool fail = false;
-            Structure baseStructure = StructureTuningHelper.GetStructureFromId(baseStructureId, selectedSS);
+            Structure baseStructure = StructureTuningHelper.GetStructureFromId(baseStructureId);
             if (!ReferenceEquals(baseStructure, null))
             {
                 if (marginInCm >= -5.0 && marginInCm <= 5.0) PRVStructure.SegmentVolume = baseStructure.SegmentVolume.Margin(marginInCm * 10);
@@ -341,10 +344,10 @@ namespace AutoPlannerHelpers.Helpers
         /// <param name="target"></param>
         /// <param name="normal"></param>
         /// <param name="unionStructure"></param>
-        /// <param name="selectedSS"></param>
+        /// <param name="EclipseContext.GetInstance().StructureSet"></param>
         /// <param name="marginInCm"></param>
         /// <returns></returns>
-        public static (bool, StringBuilder) ContourOverlapAndUnion(Structure target, Structure normal, Structure unionStructure, StructureSet selectedSS, double marginInCm)
+        public static (bool, StringBuilder) ContourOverlapAndUnion(Structure target, Structure normal, Structure unionStructure, double marginInCm)
         {
             StringBuilder sb = new StringBuilder();
             bool fail = false;
@@ -353,10 +356,10 @@ namespace AutoPlannerHelpers.Helpers
             {
                 if (marginInCm >= -5.0 && marginInCm <= 5.0)
                 {
-                    Structure dummy = selectedSS.AddStructure("CONTROL", "Dummy");
+                    Structure dummy = EclipseContext.GetInstance().StructureSet.AddStructure("CONTROL", "Dummy");
                     dummy.SegmentVolume = target.And(normal.Margin(marginInCm * 10));
                     unionStructure.SegmentVolume = unionStructure.SegmentVolume.Or(dummy.SegmentVolume.Margin(0.0));
-                    selectedSS.RemoveStructure(dummy);
+                    EclipseContext.GetInstance().StructureSet.RemoveStructure(dummy);
                 }
                 else
                 {
@@ -474,21 +477,21 @@ namespace AutoPlannerHelpers.Helpers
         /// </summary>
         /// <param name="baseTargets"></param>
         /// <returns></returns>
-        public static bool CheckHighResolutionAndConvert(List<string> structures, StructureSet selectedSS, ProvideUIUpdateDelegate ProvideUIUpdate)
+        public static bool CheckHighResolutionAndConvert(List<string> structures, ProvideUIUpdateDelegate ProvideUIUpdate)
         {
             ProvideUIUpdate(0, "Checking for high res structures:");
             foreach (string itr in structures)
             {
-                if (StructureTuningHelper.DoesStructureExistInSS(itr, selectedSS, true))
+                if (StructureTuningHelper.DoesStructureExistInSS(itr, true))
                 {
-                    Structure tmp = StructureTuningHelper.GetStructureFromId(itr, selectedSS);
+                    Structure tmp = StructureTuningHelper.GetStructureFromId(itr);
                     ProvideUIUpdate(0, $"Checking if {tmp.Id} is high resolution");
                     if (tmp.IsHighResolution)
                     {
                         string id = tmp.Id;
                         ProvideUIUpdate(0, $"{id} is high resolution. Converting to default resolution now");
 
-                        if (OverWriteHighResStructureWithLowResStructure(tmp, selectedSS, ProvideUIUpdate))
+                        if (OverWriteHighResStructureWithLowResStructure(tmp, ProvideUIUpdate))
                         {
                             ProvideUIUpdate(0, $"Error! Unable to overwrite existing high res structure {tmp.Id} with default resolution structure! Exiting!", true);
                             return true;
@@ -508,10 +511,10 @@ namespace AutoPlannerHelpers.Helpers
         /// Overloaded method to account for the fact the Eclipse may or may not append numbers to the structure names (because it thinks the names are taken)
         /// </summary>
         /// <param name="structures"></param>
-        /// <param name="selectedSS"></param>
+        /// <param name="EclipseContext.GetInstance().StructureSet"></param>
         /// <param name="ProvideUIUpdate"></param>
         /// <returns></returns>
-        public static bool CheckHighResolutionAndConvert(List<Structure> structures, StructureSet selectedSS, ProvideUIUpdateDelegate ProvideUIUpdate)
+        public static bool CheckHighResolutionAndConvert(List<Structure> structures, ProvideUIUpdateDelegate ProvideUIUpdate)
         {
             ProvideUIUpdate(0, "Checking for high res structures:");
             foreach (Structure itr in structures)
@@ -522,7 +525,7 @@ namespace AutoPlannerHelpers.Helpers
                     string id = itr.Id;
                     ProvideUIUpdate(0, $"{id} is high resolution. Converting to default resolution now");
 
-                    if (OverWriteHighResStructureWithLowResStructure(itr, selectedSS, ProvideUIUpdate))
+                    if (OverWriteHighResStructureWithLowResStructure(itr, ProvideUIUpdate))
                     {
                         ProvideUIUpdate(0, $"Error! Unable to overwrite existing high res structure {itr.Id} with default resolution structure! Exiting!", true);
                         return true;
@@ -542,18 +545,18 @@ namespace AutoPlannerHelpers.Helpers
         /// </summary>
         /// <param name="theStructure"></param>
         /// <returns></returns>
-        private static bool OverWriteHighResStructureWithLowResStructure(Structure theStructure, StructureSet selectedSS, ProvideUIUpdateDelegate ProvideUIUpdate)
+        private static bool OverWriteHighResStructureWithLowResStructure(Structure theStructure, ProvideUIUpdateDelegate ProvideUIUpdate)
         {
             ProvideUIUpdate(0, $"Retrieving all contour points for: {theStructure.Id}");
-            int startSlice = CalculationHelper.ComputeSlice(theStructure.MeshGeometry.Positions.Min(p => p.Z), selectedSS.Image.Origin.z, selectedSS.Image.ZRes);
-            int stopSlice = CalculationHelper.ComputeSlice(theStructure.MeshGeometry.Positions.Max(p => p.Z), selectedSS.Image.Origin.z, selectedSS.Image.ZRes);
+            int startSlice = CalculationHelper.ComputeSlice(theStructure.MeshGeometry.Positions.Min(p => p.Z), EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes);
+            int stopSlice = CalculationHelper.ComputeSlice(theStructure.MeshGeometry.Positions.Max(p => p.Z), EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes);
             ProvideUIUpdate(0, $"Start slice: {startSlice}");
             ProvideUIUpdate(0, $"Stop slice: {stopSlice}");
             VVector[][][] structurePoints = GetAllContourPoints(theStructure, startSlice, stopSlice, ProvideUIUpdate);
             ProvideUIUpdate(0, $"Contour points for: {theStructure.Id} loaded");
 
             ProvideUIUpdate(0, $"Removing and re-adding {theStructure.Id} to structure set");
-            (bool fail, Structure lowResStructure) = RemoveAndReAddStructure(theStructure, selectedSS, ProvideUIUpdate);
+            (bool fail, Structure lowResStructure) = RemoveAndReAddStructure(theStructure, ProvideUIUpdate);
             if (fail) return true;
 
             ProvideUIUpdate(0, $"Contouring {lowResStructure.Id} now");
@@ -567,18 +570,18 @@ namespace AutoPlannerHelpers.Helpers
         /// </summary>
         /// <param name="theStructure"></param>
         /// <returns></returns>
-        private static (bool, Structure) RemoveAndReAddStructure(Structure theStructure, StructureSet selectedSS, ProvideUIUpdateDelegate ProvideUIUpdate)
+        private static (bool, Structure) RemoveAndReAddStructure(Structure theStructure, ProvideUIUpdateDelegate ProvideUIUpdate)
         {
             ProvideUIUpdate(0, "Removing and re-adding structure:");
             Structure newStructure = null;
             string id = theStructure.Id;
             string dicomType = theStructure.DicomType;
-            if (selectedSS.CanRemoveStructure(theStructure))
+            if (EclipseContext.GetInstance().StructureSet.CanRemoveStructure(theStructure))
             {
-                selectedSS.RemoveStructure(theStructure);
-                if (selectedSS.CanAddStructure(dicomType, id))
+                EclipseContext.GetInstance().StructureSet.RemoveStructure(theStructure);
+                if (EclipseContext.GetInstance().StructureSet.CanAddStructure(dicomType, id))
                 {
-                    newStructure = selectedSS.AddStructure(dicomType, id);
+                    newStructure = EclipseContext.GetInstance().StructureSet.AddStructure(dicomType, id);
                     ProvideUIUpdate(0, $"{newStructure.Id} has been added to the structure set");
                 }
                 else

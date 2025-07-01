@@ -41,7 +41,8 @@ namespace AutoPlannerHelpers.Logging
         public List<string> AddedPrelimTargetsStructures { set => addedPrelimTargets = new List<string>(value); }
         //ts generation and manipulation
         public List<string> AddedStructures { set => addedStructures = new List<string>(value); }
-        public List<RequestedTSManipulationModel> StructureManipulations { get; set; } = new List<RequestedTSManipulationModel>();
+        public List<StructureOperationModel> TargetStructureDerivations { get; set; } = new List<StructureOperationModel>();
+        public List<StructureOperationModel> OptimizationStructureDerivations { get; set; } = new List<StructureOperationModel>();
         //plan id, list<original target id, ts target id>
         public Dictionary<string, string> TSTargets { set => tsTargets = new Dictionary<string, string>(value); }
         //plan id, normalization volume for plan
@@ -232,7 +233,7 @@ namespace AutoPlannerHelpers.Logging
             sb.AppendLine("");
 
             sb.AppendLine("Structure manipulations:");
-            foreach (RequestedTSManipulationModel itr in StructureManipulations) sb.AppendLine($"    {{{itr.StructureId},{itr.ManipulationType},{itr.MarginInCM}}}");
+            foreach (StructureOperationModel itr in OptimizationStructureDerivations) sb.AppendLine($"    {{{itr.StructureA} [{itr.MarginA.AxisAlignedMargins}] {itr.Operation} {itr.StructureB} [{itr.MarginB.AxisAlignedMargins}] -> {itr.OutputStructure}}}");
             sb.AppendLine("");
 
             sb.AppendLine("Isocenter names:");

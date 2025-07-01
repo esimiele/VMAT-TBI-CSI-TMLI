@@ -291,12 +291,12 @@ namespace AutoPlannerHelpers.BaseCore
             }
             string targetId = prescriptions.First(x => string.Equals(x.PlanId, isoLocations.PlanId)).TargetId;
 
-            if (!StructureTuningHelper.DoesStructureExistInSS(targetId, EclipseContext.GetInstance().StructureSet, true))
+            if (!StructureTuningHelper.DoesStructureExistInSS(targetId, true))
             {
                 ProvideUIUpdate($"Error getting target structure ({targetId}) for plan: {isoLocations.PlanId}! Exiting!", true);
                 return true;
             }
-            Structure target_tmp = StructureTuningHelper.GetStructureFromId(targetId, EclipseContext.GetInstance().StructureSet);
+            Structure target_tmp = StructureTuningHelper.GetStructureFromId(targetId);
             ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Retrieved target: {target_tmp.Id} for plan: {isoLocations.PlanId}");
 
             //grab the image and get the z resolution and dicom origin (we only care about the z position of the dicom origin)

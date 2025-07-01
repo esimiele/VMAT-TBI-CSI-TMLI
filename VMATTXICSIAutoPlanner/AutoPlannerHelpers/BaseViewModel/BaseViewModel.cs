@@ -204,13 +204,9 @@ namespace AutoPlannerHelpers.BaseViewModel
             {
                 SetTargets(m.PlanTargets);
             });
-            WeakReferenceMessenger.Default.Register<RequestGenerateManipulateTuningStructuresMessage>(this, (r, m) =>
-            {
-                PerformTSStructureGenerationManipulation(m.RequestedTSManipulations);
-            });
             WeakReferenceMessenger.Default.Register<RequestPerformOptimizationStructureDerivations>(this, (r, m) =>
             {
-                PerformOptimizationStructureDerivation(m.StructureOperations);
+                PerformOptimizationStructureDerivations(m.StructureOperations);
             });
             WeakReferenceMessenger.Default.Register<RequestGenerateAndPlaceBeams>(this, (r, m) =>
             {
@@ -275,8 +271,7 @@ namespace AutoPlannerHelpers.BaseViewModel
 
         protected abstract bool VerifyTargetsIntegrity(List<PlanTargetsModel> parsedTargets);
 
-        protected abstract void PerformTSStructureGenerationManipulation(List<RequestedTSManipulationModel> manipulations);
-        protected abstract void PerformOptimizationStructureDerivation(List<StructureOperationModel> operations);
+        protected abstract void PerformOptimizationStructureDerivations(List<StructureOperationModel> operations);
 
         protected abstract void GeneratePlansAndPlaceBeams(string linac, string energy, bool contourOverlap, double overlapMargin, List<PlanIsocenterModel> PlanIsocenters);
 

@@ -24,7 +24,6 @@ namespace CSIAutoPlanner.Core
         public List<TSRingStructureModel> AddedRings { get; private set; } = new List<TSRingStructureModel> { };
 
         
-        private List<RequestedTSStructureModel> createTSStructureList;
         //plan id, structure id, num fx, dose per fx, cumulative dose
         private List<PrescriptionModel> prescriptions;
         private List<TSRingStructureModel> _requestedRings;
@@ -40,15 +39,13 @@ namespace CSIAutoPlanner.Core
         /// <param name="tgtRings"></param>
         /// <param name="presc"></param>
         /// <param name="cropStructs"></param>
-        public TSGenerationManipulation_CSI(List<RequestedTSStructureModel> ts, 
-                                            List<RequestedTSManipulationModel> manipulations, 
+        public TSGenerationManipulation_CSI(List<StructureOperationModel> ops, 
                                             List<TSRingStructureModel> tgtRings,
                                             List<PrescriptionModel> presc, 
                                             List<string> cropStructs)
         {
-            createTSStructureList = new List<RequestedTSStructureModel>(ts);
             _requestedRings = new List<TSRingStructureModel>(tgtRings);
-            TSManipulationList = new List<RequestedTSManipulationModel>(manipulations);
+            _structureOperations = new List<StructureOperationModel>(ops);
             prescriptions = new List<PrescriptionModel>(presc);
             cropAndOverlapStructures = new List<string>(cropStructs);
             SetCloseOnFinish(CSIAutoPlannerSettings.CloseProgressWindowOnFinish, 3000);
@@ -68,10 +65,10 @@ namespace CSIAutoPlanner.Core
                 PlanIsocentersList.Clear();
                 if (PreliminaryChecks()) return true;
                 if (UnionLRStructures()) return true;
-                if (TSManipulationList.Any()) if (CheckHighResolution()) return true;
-                if (RemoveOldTSStructures(createTSStructureList)) return true;
-                if (CreateTSStructures()) return true;
-                if (PerformTSStructureManipulation()) return true;
+                if (_structureOperations.Any()) if (CheckHighResolution()) return true;
+                if (RemoveOldTSStructures(_structureOperations)) return true;
+                if (CreateSpecialOptimizationStructures()) return true;
+                if (PerformStructureDerivations()) return true;
                 if (cropAndOverlapStructures.Any())
                 {
                     if (CropAndContourOverlapWithTargets()) return true;
@@ -108,7 +105,7 @@ namespace CSIAutoPlanner.Core
             int calcItems = 3;
             int counter = 0;
 
-            if (!StructureTuningHelper.DoesStructureExistInSS("body", EclipseContext.GetInstance().StructureSet, true))
+            if (!StructureTuningHelper.DoesStructureExistInSS("body", true))
             {
                 ProvideUIUpdate("Error! Body structure not found or is empty! Exiting", true);
                 return true;
@@ -120,7 +117,7 @@ namespace CSIAutoPlanner.Core
             ProvideUIUpdate(100 * ++counter / calcItems, "User origin is inside body");
 
             //only need spinal cord to determine number of spine isocenters. Otherwise, just need target structures for this class
-            if (!StructureTuningHelper.DoesStructureExistInSS(new List<string> { "spinalcord", "spinal_cord" }, EclipseContext.GetInstance().StructureSet, true))
+            if (!StructureTuningHelper.DoesStructureExistInSS(new List<string> { "spinalcord", "spinal_cord" }, true))
             {
                 ProvideUIUpdate("Missing brain and/or spine structures! Please add and try again!", true);
                 return true;
@@ -134,8 +131,6 @@ namespace CSIAutoPlanner.Core
         #endregion
 
         #region TS Structure Creation and Manipulation
-        
-
         /// <summary>
         /// Custom method to create a ring structure on a give CT slice. This method is used in the generation of TS_Eyes and TS_Lenses to avoid
         /// using the built-in methods of structure manipulation provided by the API (slow and prone to memory errors)
@@ -213,17 +208,17 @@ namespace CSIAutoPlanner.Core
             //6/11/23 THIS CODE WILL NEED TO BE MODIFIED FOR SIB PLANS
             string initTargetId = TargetsHelper.GetHighestRxTargetIdForPlan(prescriptions, prescriptions.First().PlanId);
 
-            if (!StructureTuningHelper.DoesStructureExistInSS(initTargetId, EclipseContext.GetInstance().StructureSet, true))
+            if (!StructureTuningHelper.DoesStructureExistInSS(initTargetId, true))
             {
                 ProvideUIUpdate(100 * ++counter / calcItems, $"Failed to retrieve {initTargetId} to generate partial ring! Exiting!", true);
                 return true;
             }
-            Structure targetStructure = StructureTuningHelper.GetStructureFromId(initTargetId, EclipseContext.GetInstance().StructureSet);
+            Structure targetStructure = StructureTuningHelper.GetStructureFromId(initTargetId);
             ProvideUIUpdate(100 * ++counter / calcItems, $"Retrieved initial plan target: {targetStructure.Id}");
 
-            if (StructureTuningHelper.DoesStructureExistInSS(normalId, EclipseContext.GetInstance().StructureSet, true))
+            if (StructureTuningHelper.DoesStructureExistInSS(normalId, true))
             {
-                Structure normal = StructureTuningHelper.GetStructureFromId(normalId, EclipseContext.GetInstance().StructureSet);
+                Structure normal = StructureTuningHelper.GetStructureFromId(normalId);
                 ProvideUIUpdate(100 * ++counter / calcItems, $"Retrieved structure: {normal.Id}");
                 ProvideUIUpdate($"Generating ring {addedStructureId} for target {targetStructure.Id}");
 
@@ -305,7 +300,7 @@ namespace CSIAutoPlanner.Core
         /// Method to create/generate the requested tuning structures
         /// </summary>
         /// <returns></returns>
-        protected override bool CreateTSStructures()
+        protected bool CreateSpecialOptimizationStructures()
         {
             UpdateUILabel("Create TS Structures:");
             ProvideUIUpdate("Adding remaining tuning structures to stack!");
@@ -329,7 +324,7 @@ namespace CSIAutoPlanner.Core
             foreach (string itr in AddedStructureIds.Where(x => !x.ToLower().Contains("ctv") && !x.ToLower().Contains("ptv")))
             {
                 ProvideUIUpdate(0, $"Contouring TS: {itr}");
-                Structure addedStructure = StructureTuningHelper.GetStructureFromId(itr, EclipseContext.GetInstance().StructureSet);
+                Structure addedStructure = StructureTuningHelper.GetStructureFromId(itr);
                 if (itr.ToLower().Contains("ts_eyes") || itr.ToLower().Contains("ts_lenses"))
                 {
                     if (GenerateTSGlobesLenses(addedStructure)) return true;
@@ -341,7 +336,7 @@ namespace CSIAutoPlanner.Core
                 else if (itr.ToLower().Contains("_prv"))
                 {
                     //leave margin as 0.3 cm outer by default
-                    (bool fail, StringBuilder errorMessage) = ContourHelper.ContourPRVVolume(addedStructure.Id.Substring(0, addedStructure.Id.LastIndexOf("_")), addedStructure, EclipseContext.GetInstance().StructureSet, 0.3);
+                    (bool fail, StringBuilder errorMessage) = ContourHelper.ContourPRVVolume(addedStructure.Id.Substring(0, addedStructure.Id.LastIndexOf("_")), addedStructure, 0.3);
                     if (fail)
                     {
                         ProvideUIUpdate(errorMessage.ToString());
@@ -367,13 +362,13 @@ namespace CSIAutoPlanner.Core
             ProvideUIUpdate("Preparing to contour TS_arms...");
             //generate arms avoid structures
             //need lungs, body, and ptv spine structures
-            if (!StructureTuningHelper.DoesStructureExistInSS("lungs", EclipseContext.GetInstance().StructureSet, true) || !StructureTuningHelper.DoesStructureExistInSS("body", EclipseContext.GetInstance().StructureSet, true))
+            if (!StructureTuningHelper.DoesStructureExistInSS("lungs", true) || !StructureTuningHelper.DoesStructureExistInSS("body", true))
             {
                 ProvideUIUpdate("Error! Body and/or lungs structures were not found or are empty! Exiting!", true);
                 return true;
             }
-            Structure lungs = StructureTuningHelper.GetStructureFromId("lungs", EclipseContext.GetInstance().StructureSet);
-            Structure body = StructureTuningHelper.GetStructureFromId("body", EclipseContext.GetInstance().StructureSet);
+            Structure lungs = StructureTuningHelper.GetStructureFromId("lungs");
+            Structure body = StructureTuningHelper.GetStructureFromId("body");
 
             //get longest target for initial plan (first item in gettargetlistforeachplan should be the plan,list of targets for initial plan)
             (bool fail, Structure initPlanTarget, double length, StringBuilder errorMessage) = TargetsHelper.GetLongestTargetInPlan(TargetsHelper.GetTargetListForEachPlan(prescriptions).First(), EclipseContext.GetInstance().StructureSet);
@@ -388,8 +383,8 @@ namespace CSIAutoPlanner.Core
             int stopSlice = CalculationHelper.ComputeSlice(lungs.MeshGeometry.Positions.Max(p => p.Z), EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes);
 
             //generate two dummy structures (L and R)
-            Structure dummyBoxL = StructureTuningHelper.GetStructureFromId("DummyBoxL", EclipseContext.GetInstance().StructureSet, true);
-            Structure dummyBoxR = StructureTuningHelper.GetStructureFromId("DummyBoxR", EclipseContext.GetInstance().StructureSet, true);
+            Structure dummyBoxL = StructureTuningHelper.GetStructureFromId("DummyBoxL", true);
+            Structure dummyBoxR = StructureTuningHelper.GetStructureFromId("DummyBoxR", true);
 
             //use the center point of the lungs as the y axis anchor
             //extend box in y direction +/- 20 cm
@@ -458,7 +453,7 @@ namespace CSIAutoPlanner.Core
 
             ProvideUIUpdate(100 * ++counter / calcItems, "Contouring overlap between arms avoid and body with 5mm outer margin!");
             //contour the arms as the overlap between the current armsAvoid structure and the body with a 5mm outer margin
-            (bool failCrop, StringBuilder cropErrorMessage) = ContourHelper.CropStructureFromBody(armsAvoid, EclipseContext.GetInstance().StructureSet, 0.5);
+            (bool failCrop, StringBuilder cropErrorMessage) = ContourHelper.CropStructureFromBody(armsAvoid, 0.5);
             if (failCrop)
             {
                 ProvideUIUpdate(cropErrorMessage.ToString());
@@ -476,11 +471,11 @@ namespace CSIAutoPlanner.Core
         /// Method to perform tuning structure manipulations
         /// </summary>
         /// <returns></returns>
-        protected override bool PerformTSStructureManipulation()
+        protected override bool PerformStructureDerivations()
         {
             UpdateUILabel("Perform TS Manipulations: ");
             int counter = 0;
-            int calcItems = TSManipulationList.Count * prescriptions.Count;
+            int calcItems = _structureOperations.Count * prescriptions.Count;
             string tmpPlanId = prescriptions.First().PlanId;
             List<TargetModel> tmpTSTargetList = new List<TargetModel> { };
             string prevTargetId = "";
@@ -503,7 +498,7 @@ namespace CSIAutoPlanner.Core
 
                 //ensure the target is cropped 3mm from body
                 ProvideUIUpdate($"Cropping TS target from body with {3.0} mm inner margin");
-                (bool fail, StringBuilder errorMessage) = ContourHelper.CropStructureFromBody(addedTSTarget, EclipseContext.GetInstance().StructureSet, -0.3);
+                (bool fail, StringBuilder errorMessage) = ContourHelper.CropStructureFromBody(addedTSTarget,-0.3);
                 if (fail)
                 {
                     ProvideUIUpdate(errorMessage.ToString());
@@ -522,7 +517,7 @@ namespace CSIAutoPlanner.Core
                     if (PlanTargets.SelectMany(x => x.Targets).Any(x => string.Equals(x.TargetId, itr.TargetId, StringComparison.OrdinalIgnoreCase)))
                     {
                         string tsTargetId = PlanTargets.SelectMany(x => x.Targets).First(x => string.Equals(x.TargetId, itr.TargetId, StringComparison.OrdinalIgnoreCase)).TsTargetId;
-                        Structure tsTarget = StructureTuningHelper.GetStructureFromId(tsTargetId, EclipseContext.GetInstance().StructureSet);
+                        Structure tsTarget = StructureTuningHelper.GetStructureFromId(tsTargetId);
                         if (ManipulateTargetTuningStructures(itr, tsTarget)) return true;
                         ProvideUIUpdate(100 * ++counter / calcItems);
                     }
@@ -598,7 +593,7 @@ namespace CSIAutoPlanner.Core
             Dictionary<string, string> highResCropOverlapStructures = new Dictionary<string, string> { };
             foreach (string itr in cropAndOverlapStructures)
             {
-                Structure normal = StructureTuningHelper.GetStructureFromId(itr, EclipseContext.GetInstance().StructureSet);
+                Structure normal = StructureTuningHelper.GetStructureFromId(itr);
                 if (normal != null)
                 {
                     ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Retrieved normal structure: {normal.Id}");
@@ -661,7 +656,7 @@ namespace CSIAutoPlanner.Core
             int calcItems = 2;
             foreach (KeyValuePair<string, string> itr1 in tgts)
             {
-                Structure target = StructureTuningHelper.GetStructureFromId(itr1.Value, EclipseContext.GetInstance().StructureSet);
+                Structure target = StructureTuningHelper.GetStructureFromId(itr1.Value);
                 if (target != null)
                 {
                     ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved target structure: {target.Id}");
@@ -776,9 +771,9 @@ namespace CSIAutoPlanner.Core
                 for (int i = 0; i < sortedPrescriptions.Count(); i++)
                 {
                     string targetId = $"TS_{sortedPrescriptions.ElementAt(i).TargetId}";
-                    if (StructureTuningHelper.DoesStructureExistInSS(targetId, EclipseContext.GetInstance().StructureSet, true))
+                    if (StructureTuningHelper.DoesStructureExistInSS(targetId, true))
                     {
-                        Structure target = StructureTuningHelper.GetStructureFromId(targetId, EclipseContext.GetInstance().StructureSet);
+                        Structure target = StructureTuningHelper.GetStructureFromId(targetId);
                         ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved target: {targetId}");
 
                         (bool fail, Structure cropStructure) cropResult = CreateCropStructure(target);
@@ -791,16 +786,16 @@ namespace CSIAutoPlanner.Core
 
                         foreach (string itr in cropAndOverlapStructures)
                         {
-                            if (!StructureTuningHelper.DoesStructureExistInSS(itr, EclipseContext.GetInstance().StructureSet, true))
+                            if (!StructureTuningHelper.DoesStructureExistInSS(itr, true))
                             {
                                 ProvideUIUpdate($"Error! Requested normal for crop/overlap structure ({itr}) is empty or missing from structure set! Please fix and try again!", true);
                                 return true;
                             }
-                            Structure normal = StructureTuningHelper.GetStructureFromId(itr, EclipseContext.GetInstance().StructureSet);
+                            Structure normal = StructureTuningHelper.GetStructureFromId(itr);
                             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved normal structure: {normal.Id}");
 
                             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Contouring overlap between structure ({itr}) and target ({target.Id})");
-                            (bool fail, StringBuilder errorMessage) cropAndContourOverlapResult = ContourHelper.ContourOverlapAndUnion(normal, target, overlapRresult.overlapStructure, EclipseContext.GetInstance().StructureSet, 0.0);
+                            (bool fail, StringBuilder errorMessage) cropAndContourOverlapResult = ContourHelper.ContourOverlapAndUnion(normal, target, overlapRresult.overlapStructure, 0.0);
                             if (cropAndContourOverlapResult.fail)
                             {
                                 ProvideUIUpdate(cropAndContourOverlapResult.errorMessage.ToString(), true);
@@ -841,8 +836,8 @@ namespace CSIAutoPlanner.Core
             int percentComplete = 0;
             int calcItems = 9;
 
-            Structure ptvBrain = StructureTuningHelper.GetStructureFromId("PTV_Brain", EclipseContext.GetInstance().StructureSet, true);
-            Structure ptvSpine = StructureTuningHelper.GetStructureFromId("PTV_Spine", EclipseContext.GetInstance().StructureSet, true);
+            Structure ptvBrain = StructureTuningHelper.GetStructureFromId("PTV_Brain", true);
+            Structure ptvSpine = StructureTuningHelper.GetStructureFromId("PTV_Spine", true);
             if (ptvBrain == null || ptvSpine == null)
             {
                 ProvideUIUpdate($"Error! PTV_Brain or PTV_Spine are null! Fix and try again!", true);
@@ -869,7 +864,7 @@ namespace CSIAutoPlanner.Core
             cutSlice = CalculationHelper.ComputeSlice(cutPos, EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes);
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Z cut slice: {cutSlice}");
 
-            Structure csiInitTarget = StructureTuningHelper.GetStructureFromId(TargetsHelper.GetHighestRxTargetIdForPlan(prescriptions, prescriptions.First().PlanId), EclipseContext.GetInstance().StructureSet);
+            Structure csiInitTarget = StructureTuningHelper.GetStructureFromId(TargetsHelper.GetHighestRxTargetIdForPlan(prescriptions, prescriptions.First().PlanId));
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved structure: {csiInitTarget.Id}");
 
             //stop slice for ptv spine is the cut plane
@@ -889,12 +884,12 @@ namespace CSIAutoPlanner.Core
         /// <returns></returns>
         private (bool, double) GetCutSliceZPosition()
         {
-            Structure cutStructure = StructureTuningHelper.GetStructureFromId("brain", EclipseContext.GetInstance().StructureSet);
+            Structure cutStructure = StructureTuningHelper.GetStructureFromId("brain");
             double cutPos = 0.0;
             if (cutStructure == null || cutStructure.IsEmpty)
             {
-                cutStructure = StructureTuningHelper.GetStructureFromId("spinal_cord", EclipseContext.GetInstance().StructureSet);
-                if (cutStructure == null) cutStructure = StructureTuningHelper.GetStructureFromId("spinalcord", EclipseContext.GetInstance().StructureSet);
+                cutStructure = StructureTuningHelper.GetStructureFromId("spinal_cord");
+                if (cutStructure == null) cutStructure = StructureTuningHelper.GetStructureFromId("spinalcord");
                 if (cutStructure == null || cutStructure.IsEmpty)
                 {
                     //give up
@@ -1076,9 +1071,9 @@ namespace CSIAutoPlanner.Core
         {
             bool fail = false;
             double spineTargetExtent = 0.0;
-            if (StructureTuningHelper.DoesStructureExistInSS("PTV_Spine", EclipseContext.GetInstance().StructureSet, true))
+            if (StructureTuningHelper.DoesStructureExistInSS("PTV_Spine", true))
             {
-                Structure spineTarget = StructureTuningHelper.GetStructureFromId("PTV_Spine", EclipseContext.GetInstance().StructureSet);
+                Structure spineTarget = StructureTuningHelper.GetStructureFromId("PTV_Spine");
                 ProvideUIUpdate("Retrieved spinal cord structure");
                 Point3DCollection pts = spineTarget.MeshGeometry.Positions;
                 //ESAPI default distances are in mm

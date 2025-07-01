@@ -36,7 +36,7 @@ namespace AutoPlannerHelpers.Helpers
         public static List<string> GenerateStructureIdListPostUnion(List<string> ids)
         {
             //check if structures need to be unioned before adding defaults
-            List<UnionStructureModel> structuresToUnion = new List<UnionStructureModel>(CheckStructuresToUnion(EclipseContext.GetInstance().StructureSet));
+            List<UnionStructureModel> structuresToUnion = new List<UnionStructureModel>(CheckStructuresToUnion(EclipseContext.GetInstance().StructureSet.Structures.Where(x => !x.IsEmpty).Select(x => x.Id)));
             ids.AddRange(structuresToUnion.Select(x => x.ProposedUnionStructureId));
             return ids;
         }
@@ -46,17 +46,17 @@ namespace AutoPlannerHelpers.Helpers
         /// </summary>
         /// <param name="selectedSS"></param>
         /// <returns></returns>
-        public static List<UnionStructureModel> CheckStructuresToUnion(StructureSet selectedSS)
+        public static List<UnionStructureModel> CheckStructuresToUnion(IEnumerable<string> structureIds)
         {
             //left structure, right structure, unioned structure name
             List<UnionStructureModel> structuresToUnion = new List<UnionStructureModel> { };
-            List<Structure> LStructs = selectedSS.Structures.Where(x => !x.IsEmpty && (x.Id.Substring(x.Id.Length - 2, 2).ToLower() == "_l" || x.Id.Substring(x.Id.Length - 2, 2).ToLower() == " l")).ToList();
-            List<Structure> RStructs = selectedSS.Structures.Where(x => !x.IsEmpty && (x.Id.Substring(x.Id.Length - 2, 2).ToLower() == "_r" || x.Id.Substring(x.Id.Length - 2, 2).ToLower() == " r")).ToList();
-            foreach (Structure itr in LStructs)
+            List<string> LStructs = structureIds.Where(x => (x.Substring(x.Length - 2, 2).ToLower() == "_l" || x.Substring(x.Length - 2, 2).ToLower() == " l")).ToList();
+            List<string> RStructs = structureIds.Where(x => (x.Substring(x.Length - 2, 2).ToLower() == "_r" || x.Substring(x.Length - 2, 2).ToLower() == " r")).ToList();
+            foreach (string itr in LStructs)
             {
-                Structure RStruct = RStructs.FirstOrDefault(x => x.Id.Substring(0, x.Id.Length - 2) == itr.Id.Substring(0, itr.Id.Length - 2));
-                string newName = AddProperEndingToName(itr.Id.Substring(0, itr.Id.Length - 2).ToLower());
-                if (!ReferenceEquals(RStruct, null) && !selectedSS.Structures.Any(x => string.Equals(x.Id.ToLower(), newName.ToLower()) && !x.IsEmpty))
+                string RStruct = RStructs.FirstOrDefault(x => x.Substring(0, x.Length - 2) == itr.Substring(0, itr.Length - 2));
+                string newName = AddProperEndingToName(itr.Substring(0, itr.Length - 2).ToLower());
+                if (!string.IsNullOrEmpty(RStruct) && !structureIds.Any(x => string.Equals(x.ToLower(), newName.ToLower())))
                 {
                     structuresToUnion.Add(new UnionStructureModel(itr, RStruct, newName));
                 }
@@ -84,17 +84,22 @@ namespace AutoPlannerHelpers.Helpers
         /// <param name="itr"></param>
         /// <param name="selectedSS"></param>
         /// <returns></returns>
-        public static (bool, StringBuilder) UnionLRStructures(UnionStructureModel itr, StructureSet selectedSS)
+        public static (bool, StringBuilder) UnionLRStructures(UnionStructureModel itr)
         {
+            if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
+            {
+                throw new Exception("Error! Eclipse context not initialized! Unable to union left and right structures!");
+            }
             StringBuilder sb = new StringBuilder();
             Structure newStructure;
             string newName = itr.ProposedUnionStructureId;
             try
             {
                 //a structure already exists in the structure set with the intended name
-                if (DoesStructureExistInSS(newName, selectedSS)) newStructure = GetStructureFromId(newName, selectedSS);
-                else newStructure = selectedSS.AddStructure("CONTROL", newName);
-                newStructure.SegmentVolume = ContourHelper.ContourUnion(itr.Structure_Left, itr.Structure_Right, new StructureMarginModel(0.0), new StructureMarginModel(0.0));
+                newStructure = GetStructureFromId(newName, true);
+                Structure L = GetStructureFromId(itr.Structure_Left);
+                Structure R = GetStructureFromId(itr.Structure_Right);
+                newStructure.SegmentVolume = ContourHelper.ContourUnion(L, R, new StructureMarginModel(0.0), new StructureMarginModel(0.0));
                 if(newStructure.IsEmpty)
                 {
                     return (true, sb.AppendLine($"Error! {newStructure.Id} is empty following union of L/R structures!"));
@@ -102,7 +107,7 @@ namespace AutoPlannerHelpers.Helpers
             }
             catch (Exception except)
             {
-                sb.Append($"Warning! Could not union {itr.Structure_Left.Id} and {itr.Structure_Right.Id} onto {newName}\nBecause: {except.Message}");
+                sb.Append($"Warning! Could not union {itr.Structure_Left} and {itr.Structure_Right} onto {newName}\nBecause: {except.Message}");
                 return (true, sb);
             }
             return (false, sb);
@@ -115,12 +120,16 @@ namespace AutoPlannerHelpers.Helpers
         /// <param name="selectedSS"></param>
         /// <param name="createIfEmpty"></param>
         /// <returns></returns>
-        public static Structure GetStructureFromId(string id, StructureSet selectedSS, bool createIfEmpty = false)
+        public static Structure GetStructureFromId(string id, bool createIfEmpty = false)
         {
-            Structure theStructure = null;
-            if (DoesStructureExistInSS(id, selectedSS))
+            if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
             {
-                theStructure = selectedSS.Structures.First(x => string.Equals(x.Id.ToLower(), id.ToLower()));
+                throw new Exception("Error! Eclipse context not initialized! Unable to retrieve structure object from structure set!");
+            }
+            Structure theStructure = null;
+            if (DoesStructureExistInSS(id))
+            {
+                theStructure = EclipseContext.GetInstance().StructureSet.Structures.First(x => string.Equals(x.Id.ToLower(), id.ToLower()));
             }
             else if (createIfEmpty)
             {
@@ -131,20 +140,20 @@ namespace AutoPlannerHelpers.Helpers
                 if (id.ToLower().Contains("gtv")) dcmType = "GTV";
                 else if (id.ToLower().Contains("ctv")) dcmType = "CTV";
                 else if (id.ToLower().Contains("ptv")) dcmType = "PTV";
-                if (selectedSS.CanAddStructure(dcmType, id))
+                if (EclipseContext.GetInstance().StructureSet.CanAddStructure(dcmType, id))
                 {
-                    theStructure = selectedSS.AddStructure(dcmType, id);
+                    theStructure = EclipseContext.GetInstance().StructureSet.AddStructure(dcmType, id);
                 }
             }
             return theStructure;
         }
 
-        public static List<Structure> GetStructuresFromIdList(IEnumerable<string> ids, StructureSet selectedSS, bool returnNonNullStructuresOnly = false)
+        public static List<Structure> GetStructuresFromIdList(IEnumerable<string> ids, bool returnNonNullStructuresOnly = false)
         {
             List<Structure> theStructures = new List<Structure> { };
             foreach (string itr in ids)
             {
-                Structure s = GetStructureFromId(itr, selectedSS);
+                Structure s = GetStructureFromId(itr);
                 if (returnNonNullStructuresOnly && !ReferenceEquals(s, null)) theStructures.Add(s);
                 else theStructures.Add(s);
             }
@@ -158,10 +167,14 @@ namespace AutoPlannerHelpers.Helpers
         /// <param name="selectedSS"></param>
         /// <param name="checkIsEmpty"></param>
         /// <returns></returns>
-        public static bool DoesStructureExistInSS(string id, StructureSet selectedSS, bool checkIsEmpty = false)
+        public static bool DoesStructureExistInSS(string id, bool checkIsEmpty = false)
         {
-            if (!checkIsEmpty) return selectedSS.Structures.Any(x => string.Equals(id.ToLower(), x.Id.ToLower()));
-            else return selectedSS.Structures.Any(x => string.Equals(id.ToLower(), x.Id.ToLower()) && !x.IsEmpty);
+            if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
+            {
+                throw new Exception("Error! Eclipse context not initialized! Unable to determine if structure exists in structure set!");
+            }
+            if (!checkIsEmpty) return EclipseContext.GetInstance().StructureSet.Structures.Any(x => string.Equals(id.ToLower(), x.Id.ToLower()));
+            else return EclipseContext.GetInstance().StructureSet.Structures.Any(x => string.Equals(id.ToLower(), x.Id.ToLower()) && !x.IsEmpty);
         }
 
         /// <summary>
@@ -171,17 +184,21 @@ namespace AutoPlannerHelpers.Helpers
         /// <param name="selectedSS"></param>
         /// <param name="checkIsEmpty"></param>
         /// <returns></returns>
-        public static bool DoesStructureExistInSS(List<string> ids, StructureSet selectedSS, bool checkIsEmpty = false)
+        public static bool DoesStructureExistInSS(List<string> ids, bool checkIsEmpty = false)
         {
+            if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
+            {
+                throw new Exception("Error! Eclipse context not initialized! Unable to determine if structure exists in structure set!");
+            }
             foreach (string itr in ids)
             {
                 if (checkIsEmpty)
                 {
-                    if (selectedSS.Structures.Any(x => string.Equals(itr.ToLower(), x.Id.ToLower()) && !x.IsEmpty)) return true;
+                    if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => string.Equals(itr.ToLower(), x.Id.ToLower()) && !x.IsEmpty)) return true;
                 }
                 else
                 {
-                    if (selectedSS.Structures.Any(x => string.Equals(itr.ToLower(), x.Id.ToLower()))) return true;
+                    if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => string.Equals(itr.ToLower(), x.Id.ToLower()))) return true;
                 }
             }
             return false;

@@ -192,15 +192,14 @@ namespace TBIAutoPlanner.ViewModels
         #endregion
 
         #region TS generation and manipulation
-        protected override void PerformTSStructureGenerationManipulation(List<RequestedTSManipulationModel> manipulations)
+        protected override void PerformOptimizationStructureDerivations(List<StructureOperationModel> operations)
         {
-            if(!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
+            if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
             {
                 Logger.GetInstance().LogError("Error! Script is not connected to aria or no structure set loaded! Cannot perform TS generation/manipulation!");
                 return;
             }
-            List<RequestedTSManipulationModel> tsManipulations = manipulations;
-            TSGenerationManipulation_TBI generateTS = new TSGenerationManipulation_TBI(tsManipulations,
+            TSGenerationManipulation_TBI generateTS = new TSGenerationManipulation_TBI(operations,
                                                                                        _prescriptions,
                                                                                        UseFlash,
                                                                                        FlashMargin,
@@ -211,14 +210,6 @@ namespace TBIAutoPlanner.ViewModels
             Logger.GetInstance().AppendLogOutput("TS Generation and manipulation output:", generateTS.LogOutput);
             if (failed) return;
 
-            //does the structure sparing list need to be updated? This occurs when structures the user elected to spare with option of 'Mean Dose < Rx Dose' are high resolution. Since Eclipse can't perform
-            //boolean operations on structures of two different resolutions, code was added to the generateTS class to automatically convert these structures to low resolution with the name of
-            // '<original structure Id>_lowRes'. When these structures are converted to low resolution, the updateSparingList flag in the generateTS class is set to true to tell this class that the 
-            //structure sparing list needs to be updated with the new low resolution structures.
-            if (generateTS.DoesTSManipulationListRequireUpdating)
-            {
-                WeakReferenceMessenger.Default.Send(new RequestUpdateTSManipulationList(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id), generateTS.TSManipulationList));
-            }
             _planIsocenters = generateTS.PlanIsocentersList;
 
             WeakReferenceMessenger.Default.Send(new RequestUpdatePlanIsocenterList(_planIsocenters));
@@ -230,7 +221,7 @@ namespace TBIAutoPlanner.ViewModels
             BeamPlacementTabBackground = Brushes.PaleVioletRed;
 
             Logger.GetInstance().AddedStructures = generateTS.AddedStructureIds;
-            Logger.GetInstance().StructureManipulations = tsManipulations;
+            Logger.GetInstance().OptimizationStructureDerivations = operations;
             Logger.GetInstance().TSTargets = generateTS.PlanTargets.SelectMany(x => x.Targets).ToDictionary(x => x.TargetId, x => x.TsTargetId);
             Logger.GetInstance().NormalizationVolumes = generateTS.NormalizationVolumes;
             Logger.GetInstance().PlanIsocenters = generateTS.PlanIsocentersList;
@@ -537,11 +528,6 @@ namespace TBIAutoPlanner.ViewModels
 
             if (PlanTemplates.Any()) sb.Append(ConfigurationUIHelper.PrintTBIPlanTemplateConfigurationParameters(PlanTemplates.ToList()));
             return sb;
-        }
-
-        protected override void PerformOptimizationStructureDerivation(List<StructureOperationModel> operations)
-        {
-            throw new NotImplementedException();
         }
         #endregion
     }

@@ -80,7 +80,7 @@ namespace TMLIAutoPlanner.Core
             int calcItems = 4;
             int counter = 0;
             //check body structure exists and is contoured
-            if (!StructureTuningHelper.DoesStructureExistInSS("body", EclipseContext.GetInstance().StructureSet, true))
+            if (!StructureTuningHelper.DoesStructureExistInSS("body", true))
             {
                 ProvideUIUpdate("Error! Body structure is either empty or null! Fix and try again!", true);
                 return true;
@@ -107,11 +107,11 @@ namespace TMLIAutoPlanner.Core
         private bool CheckBodyExtentAndMatchline()
         {
             //get the points collection for the Body (used for calculating number of isocenters)
-            Structure body = StructureTuningHelper.GetStructureFromId("Body", EclipseContext.GetInstance().StructureSet);
+            Structure body = StructureTuningHelper.GetStructureFromId("Body");
             Point3DCollection pts = body.MeshGeometry.Positions;
 
             //check if patient length is > 116cm, if so, check for matchline contour
-            if ((pts.Max(p => p.Z) - pts.Min(p => p.Z)) > 1160.0 && !StructureTuningHelper.DoesStructureExistInSS("matchline", EclipseContext.GetInstance().StructureSet, true))
+            if ((pts.Max(p => p.Z) - pts.Min(p => p.Z)) > 1160.0 && !StructureTuningHelper.DoesStructureExistInSS("matchline", true))
             {
                 ProvideUIUpdate($"Body extent ({pts.Max(p => p.Z) - pts.Min(p => p.Z)} mm) is greater than 116.0 cm and no matchline structure was found!");
                 //check to see if the user wants to proceed even though there is no matchplane contour or the matchplane contour exists, but is not filled
@@ -208,16 +208,16 @@ namespace TMLIAutoPlanner.Core
             //}
             //else ProvideUIUpdate("No OAR TS manipulations requested!");
 
-            if (!TMLIAutoPlannerSettings.AllBeamsVMAT && StructureTuningHelper.DoesStructureExistInSS("matchline", EclipseContext.GetInstance().StructureSet, true))
+            if (!TMLIAutoPlannerSettings.AllBeamsVMAT && StructureTuningHelper.DoesStructureExistInSS("matchline", true))
             {
                 ProvideUIUpdate($"Cutting {tmpTSTargetList.Last().TsTargetId} at the matchline!");
 
                 //find the image plane where the matchline is location. Record this value and break the loop. Also find the first slice where the ptv_body contour starts and record this value
-                Structure matchline = StructureTuningHelper.GetStructureFromId("matchline", EclipseContext.GetInstance().StructureSet);
+                Structure matchline = StructureTuningHelper.GetStructureFromId("matchline");
                 ProvideUIUpdate($"Retrieved matchline structure: {matchline.Id}");
 
-                if (ContourTSLegs("TS_PTV_Legs", matchline, StructureTuningHelper.GetStructureFromId(tmpTSTargetList.Last().TsTargetId, EclipseContext.GetInstance().StructureSet))) return true;
-                if (CutTSPTVAtMatchline(StructureTuningHelper.GetStructureFromId(tmpTSTargetList.Last().TsTargetId, EclipseContext.GetInstance().StructureSet), matchline)) return true;
+                if (ContourTSLegs("TS_PTV_Legs", matchline, StructureTuningHelper.GetStructureFromId(tmpTSTargetList.Last().TsTargetId))) return true;
+                if (CutTSPTVAtMatchline(StructureTuningHelper.GetStructureFromId(tmpTSTargetList.Last().TsTargetId), matchline)) return true;
             }
 
             ////prescriptions are inherently sorted by increasing cumulative Rx to targets
@@ -306,7 +306,7 @@ namespace TMLIAutoPlanner.Core
             UpdateUILabel("Calculate number of isos:");
             int percentComplete = 0;
             int calcItems = 5;
-            Structure body = StructureTuningHelper.GetStructureFromId("body", EclipseContext.GetInstance().StructureSet);
+            Structure body = StructureTuningHelper.GetStructureFromId("body");
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved body structure");
             Point3DCollection pts = body.MeshGeometry.Positions;
             double bodyExtent = pts.Max(p => p.Z) - pts.Min(p => p.Z);
@@ -382,7 +382,7 @@ namespace TMLIAutoPlanner.Core
             List<PlanIsocenterModel> planIsos = new List<PlanIsocenterModel>();
 
             //calculate number of required isocenters
-            if (!StructureTuningHelper.DoesStructureExistInSS("matchline", EclipseContext.GetInstance().StructureSet))
+            if (!StructureTuningHelper.DoesStructureExistInSS("matchline"))
             {
                 ProvideUIUpdate("matchline structure not present in structure set");
                 //no matchline implying that this patient will be treated with VMAT only. For these cases the maximum number of allowed isocenters is 3.
@@ -394,7 +394,7 @@ namespace TMLIAutoPlanner.Core
             else
             {
                 //matchline structure is present, but empty
-                if (!StructureTuningHelper.DoesStructureExistInSS("matchline", EclipseContext.GetInstance().StructureSet, true))
+                if (!StructureTuningHelper.DoesStructureExistInSS("matchline", true))
                 {
                     ConfirmPrompt CP = new ConfirmPrompt("I found a matchline structure in the structure set, but it's empty!" + Environment.NewLine + Environment.NewLine + "Do you want to continue without using the matchline structure?!");
                     CP.ShowDialog();
@@ -410,7 +410,7 @@ namespace TMLIAutoPlanner.Core
                 else
                 {
                     calcItems += 2;
-                    Structure matchline = StructureTuningHelper.GetStructureFromId("matchline", EclipseContext.GetInstance().StructureSet);
+                    Structure matchline = StructureTuningHelper.GetStructureFromId("matchline");
                     ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved matchline structure");
                     //get number of isos for PTV superior to matchplane (always truncate this value to a maximum of 4 isocenters)
                     NumberofVMATIsocenters = (int)Math.Ceiling((bodyZMax - matchline.CenterPoint.z) / (TMLIAutoPlannerSettings.MaxFieldYExtent - TMLIAutoPlannerSettings.MinFieldOverlap));
