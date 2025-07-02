@@ -40,15 +40,7 @@ namespace CSIAutoPlanner.Core
             }
             ProvideUIUpdate(100 * ++counter / calcItems);
 
-            //verify brain and spine structures are present
-            if (!StructureTuningHelper.DoesStructureExistInSS("brain", true) || !StructureTuningHelper.DoesStructureExistInSS("spinalcord", true))
-            {
-                ProvideUIUpdate("Missing brain and/or spine structures! Please add and try again!", true);
-                return true;
-            }
-            ProvideUIUpdate(100 * ++counter / calcItems, "Brain and spinal cord structures exist");
-
-            if (ContourHelper.CheckHighResolutionAndConvert(new List<string> { "brain", "spinal_cord", "spinalcord" }, PUUD)) return true;
+            if (ContourHelper.CheckHighResolutionAndConvert(_createPrelimTargetList.SelectMany(x => x.StructureIdList).Distinct().ToList(), PUUD)) return true;
             ProvideUIUpdate(100 * ++counter / calcItems, "Check and converted any high res base targets");
 
             ProvideUIUpdate(100, "Preliminary checks complete!");
@@ -139,6 +131,18 @@ namespace CSIAutoPlanner.Core
             //{
             //    ProvideUIUpdate(100 * ++counter / calcItems, "PTV_CSI already exists in the structure set! Skipping!");
             //}
+
+            int counter = 0;
+            int calcItems = _targetsToDerive.Count + 2;
+            foreach (StructureOperationModel itr in _targetsToDerive)
+            {
+                if (itr.IsValidOperation)
+                {
+                    ProvideUIUpdate(100 * ++counter / calcItems, $"Contouring target: {itr}");
+                    if (ContourHelper.PerformStructureOperation(itr, UIUD)) return true;
+                }
+                else ProvideUIUpdate($"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");
+            }
             ProvideUIUpdate(100, "Targets added and contoured!");
             ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;

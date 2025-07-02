@@ -239,8 +239,8 @@ namespace CSIAutoPlanner.ViewModels
             Logger.GetInstance().AppendLogOutput("Preliminary target generation output:", generateTargets.LogOutput);
             Logger.GetInstance().OpType = ScriptOperationType.GeneratePrelimTargets;
             if (result) return;
-            Logger.GetInstance().AddedPrelimTargetsStructures = generateTargets.GetAddedTargetStructures();
-            PrepForTargetsBackground = System.Windows.Media.Brushes.ForestGreen;
+            Logger.GetInstance().AddedPrelimTargetsStructures = generateTargets.AddedTargetstructures;
+            PrepForTargetsBackground = Brushes.ForestGreen;
             MessageBox.Show("Structure set is prepared and ready for physician to review targets!");
         }
 
@@ -258,9 +258,9 @@ namespace CSIAutoPlanner.ViewModels
             _planOptimizationSetup = BuildPlanOptimizationSetupList();
             Logger.GetInstance().Prescriptions = _prescriptions;
 
-            SpecifyTargetsTabBackground = System.Windows.Media.Brushes.ForestGreen;
-            StructureTuningTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
-            OptimizationStructureDerivationBackground = System.Windows.Media.Brushes.PaleVioletRed;
+            SpecifyTargetsTabBackground = Brushes.ForestGreen;
+            StructureTuningTabBackground = Brushes.PaleVioletRed;
+            OptimizationStructureDerivationBackground = Brushes.PaleVioletRed;
         }
 
         protected override bool VerifyTargetsIntegrity(List<PlanTargetsModel> parsedTargets)

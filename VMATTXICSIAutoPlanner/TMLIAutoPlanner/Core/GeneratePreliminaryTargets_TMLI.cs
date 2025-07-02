@@ -16,35 +16,13 @@ namespace TMLIAutoPlanner.Core
 {
     internal class GeneratePreliminaryTargets_TMLI : GeneratePreliminaryTargetsBase
     {
-        private List<string> _requiredStructuresForTarget = new List<string>
-        {
-            "body",
-            "bones_trunk",
-            "bones_face",
-            "lymphnodes",
-            "spinalcanal",
-            "spleen",
-            "bones_extrem",
-            "brain",
-            "OralCavity",
-            "Rib",
-            "Eyes",
-        };
-
-        private List<RequestedTSManipulationModel> _manipulations;
-        private bool _includeTestesInPTV;
-
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="tgts"></param>
-        public GeneratePreliminaryTargets_TMLI(IEnumerable<StructureOperationModel> tgts, 
-                                               List<RequestedTSManipulationModel> manipulations, 
-                                               bool includeTestesInPTV) :
+        public GeneratePreliminaryTargets_TMLI(IEnumerable<StructureOperationModel> tgts) :
             base(tgts, TMLIAutoPlannerSettings.CloseProgressWindowOnFinish)
         {
-            _manipulations = manipulations;
-            _includeTestesInPTV = includeTestesInPTV;
         }
 
         #region preliminary checks and pre-processing
@@ -67,18 +45,7 @@ namespace TMLIAutoPlanner.Core
             }
             ProvideUIUpdate(100 * ++counter / calcItems);
 
-            //verify brain and spine structures are present
-            foreach (string itr in _requiredStructuresForTarget)
-            {
-                if (!StructureTuningHelper.DoesStructureExistInSS(itr, true))
-                {
-                    ProvideUIUpdate($"Error! {itr} structure is either empty or null! Fix and try again!", true);
-                    return true;
-                }
-            }
-            ProvideUIUpdate(100 * ++counter / calcItems, "All structures necessary for target creation present and not empty");
-
-            if (ContourHelper.CheckHighResolutionAndConvert(_requiredStructuresForTarget, PUUD)) return true;
+            if (ContourHelper.CheckHighResolutionAndConvert(_createPrelimTargetList.SelectMany(x => x.StructureIdList).Distinct().ToList(), PUUD)) return true;
             ProvideUIUpdate(100 * ++counter / calcItems, "Check and converted any high res base targets");
 
             ProvideUIUpdate(100, "Preliminary checks complete!");
@@ -127,36 +94,35 @@ namespace TMLIAutoPlanner.Core
             return false;
         }
 
-        private bool GeneratePTVTMLI(Structure ptv)
+        //private bool GeneratePTVTMLI(Structure ptv)
+        //{
+        //    ContourHelper.CopyStructureOntoStructure(StructureTuningHelper.GetStructureFromId("bones_trunk"), ptv);
+        //    ProvideUIUpdate($"Unioned bones_trunk with PTV_TMLI");
+        //    ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("bones_face"), 0.0);
+        //    ProvideUIUpdate($"Cropped bones_face from PTV_TMLI");
+
+        //    List<Structure> structures = new List<Structure>
+        //    {
+        //        StructureTuningHelper.GetStructureFromId("lymphnodes"),
+        //        StructureTuningHelper.GetStructureFromId("spinalcanal"),
+        //        StructureTuningHelper.GetStructureFromId("spleen"),
+        //    };
+        //    //need to know target dosing
+        //    if (StructureTuningHelper.DoesStructureExistInSS("testes", true)) structures.Add(StructureTuningHelper.GetStructureFromId("testes"));
+
+        //    ContourHelper.ContourUnion(structures, ptv, 0.0);
+        //    foreach (string itr in structures.Select(x => x.Id)) ProvideUIUpdate($"Unioned {itr} with PTV_TMLI");
+        //    ptv.SegmentVolume = ptv.Margin(5.0);
+        //    ProvideUIUpdate("Expanded PTV_TMLI with uniform 5mm margin");
+
+        //    //ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("bones_extrem", ss).Margin(10.0), ptv, 0.0);
+        //    ProvideUIUpdate($"Unioned bones_extrem with PTV_TMLI with 10 mm outer margin");
+        //    //PostProcessPTVTMLI(ptv);
+        //    return false;
+        //}
+
+        protected override bool TargetPostProcessing()
         {
-            ContourHelper.CopyStructureOntoStructure(StructureTuningHelper.GetStructureFromId("bones_trunk"), ptv);
-            ProvideUIUpdate($"Unioned bones_trunk with PTV_TMLI");
-            ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("bones_face"), 0.0);
-            ProvideUIUpdate($"Cropped bones_face from PTV_TMLI");
-
-            List<Structure> structures = new List<Structure>
-            {
-                StructureTuningHelper.GetStructureFromId("lymphnodes"),
-                StructureTuningHelper.GetStructureFromId("spinalcanal"),
-                StructureTuningHelper.GetStructureFromId("spleen"),
-            };
-            //need to know target dosing
-            if (_includeTestesInPTV && StructureTuningHelper.DoesStructureExistInSS("testes", true)) structures.Add(StructureTuningHelper.GetStructureFromId("testes"));
-
-            ContourHelper.ContourUnion(structures, ptv, 0.0);
-            foreach (string itr in structures.Select(x => x.Id)) ProvideUIUpdate($"Unioned {itr} with PTV_TMLI");
-            ptv.SegmentVolume = ptv.Margin(5.0);
-            ProvideUIUpdate("Expanded PTV_TMLI with uniform 5mm margin");
-
-            //ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("bones_extrem", ss).Margin(10.0), ptv, 0.0);
-            ProvideUIUpdate($"Unioned bones_extrem with PTV_TMLI with 10 mm outer margin");
-            PostProcessPTVTMLI(ptv);
-            return false;
-        }
-
-        private bool PostProcessPTVTMLI(Structure target)
-        {
-
             Structure expandedBrain = StructureTuningHelper.GetStructureFromId("brain+1.0cm", true);
             expandedBrain.SegmentVolume = StructureTuningHelper.GetStructureFromId("Brain").Margin(10.0);
             int supOralCavitySlice = CalculationHelper.ComputeSlice(StructureTuningHelper.GetStructureFromId("oralcavity").MeshGeometry.Positions.Max(p => p.Z),
@@ -169,88 +135,90 @@ namespace TMLIAutoPlanner.Core
             double zPos = StructureTuningHelper.GetStructureFromId("eyes").MeshGeometry.Positions.OrderByDescending(x => x.Z).First().Z + 15.0 - EclipseContext.GetInstance().StructureSet.Image.UserOrigin.z;
             ProvideUIUpdate($"{zPos}");
 
-            Structure tmp = EclipseContext.GetInstance().StructureSet.AddStructure("CONTROL", "_tmp");
-
-            int percentComplete = 0;
-            int calcItems = supSlice - supOralCavitySlice + 1;
-            for (int i = supOralCavitySlice; i <= supSlice; i++)
+            foreach (Structure target in StructureTuningHelper.GetStructuresFromIdList(new List<string> { "PTV_TMLI", "PTV_TMLI_12", "PTV_TMLI_20" }, true))
             {
-                VVector[][] ptvPoints = target.GetContoursOnImagePlane(i);
-                target.ClearAllContoursOnImagePlane(i);
-                for(int j = 0; j < ptvPoints.Count(); j ++)
+                Structure tmp = EclipseContext.GetInstance().StructureSet.AddStructure("CONTROL", "_tmp");
+                int percentComplete = 0;
+                int calcItems = supSlice - supOralCavitySlice + 1;
+                for (int i = supOralCavitySlice; i <= supSlice; i++)
                 {
-                    List<VVector> ptvContourPoints = ptvPoints[j].ToList();
-                    if (ptvContourPoints.Any(x => tmp.IsPointInsideSegment(x)))
+                    VVector[][] ptvPoints = target.GetContoursOnImagePlane(i);
+                    target.ClearAllContoursOnImagePlane(i);
+                    for (int j = 0; j < ptvPoints.Count(); j++)
                     {
-                        //points inside ptv contour --> subtract this segment
-                        tmp.SubtractContourOnImagePlane(ptvPoints[j], i);
-                        ProvideUIUpdate($"Points inside ptv. Subtracting contours from image slice: {i}");
-                    }
-                    else
-                    {
-                        tmp.AddContourOnImagePlane(ptvPoints[j], i);
-                        ProvideUIUpdate($"Adding contours on image slice: {i}");
-                    }
-                }
-                ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Image slice: {i}");
-            }
-
-            ContourHelper.ContourOverlapAndUnion(expandedBrain, tmp, target, 0.0);
-            EclipseContext.GetInstance().StructureSet.RemoveStructure(tmp);
-            return false;
-        }
-
-        private bool ManipulatePTVTMLI(Structure target)
-        {
-            foreach(RequestedTSManipulationModel manipulationItem in _manipulations)
-            {
-                Structure theStructure = StructureTuningHelper.GetStructureFromId(manipulationItem.StructureId);
-                if(!ReferenceEquals(theStructure, null) && !theStructure.IsEmpty)
-                {
-                    if (manipulationItem.ManipulationType == TSManipulationType.CropTargetFromStructure)
-                    {
-                        ProvideUIUpdate($"Cropping target {target.Id} from {manipulationItem.StructureId} with margin {manipulationItem.MarginInCM} cm");
-                        //crop target from structure
-                        (bool failCrop, StringBuilder errorCropMessage) = ContourHelper.CropStructureFromStructure(target, theStructure, manipulationItem.MarginInCM);
-                        if (failCrop)
+                        List<VVector> ptvContourPoints = ptvPoints[j].ToList();
+                        if (ptvContourPoints.Any(x => tmp.IsPointInsideSegment(x)))
                         {
-                            ProvideUIUpdate(errorCropMessage.ToString());
-                            return true;
+                            //points inside ptv contour --> subtract this segment
+                            tmp.SubtractContourOnImagePlane(ptvPoints[j], i);
+                            ProvideUIUpdate($"Points inside ptv. Subtracting contours from image slice: {i}");
+                        }
+                        else
+                        {
+                            tmp.AddContourOnImagePlane(ptvPoints[j], i);
+                            ProvideUIUpdate($"Adding contours on image slice: {i}");
                         }
                     }
-                    else if (manipulationItem.ManipulationType == TSManipulationType.UnionWithTarget)
-                    {
-                        ProvideUIUpdate($"Unioning target {target.Id} with structure {manipulationItem.StructureId} with margin {manipulationItem.MarginInCM} cm");
-                        //crop target from structure
-                        //(bool failUnion, StringBuilder errorUnionMessage) = ContourHelper.ContourUnion(theStructure, target, manipulationItem.MarginInCM);
-                        //if (failUnion)
-                        //{
-                        //    ProvideUIUpdate(errorUnionMessage.ToString());
-                        //    return true;
-                        //}
-                    }
+                    ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Image slice: {i}");
                 }
-                else
-                {
-                    ProvideUIUpdate($"Normal structure {manipulationItem.StructureId} is null or empty! Skipping manipulation");
-                }
+                ContourHelper.ContourOverlapAndUnion(expandedBrain, tmp, target, 0.0);
+                EclipseContext.GetInstance().StructureSet.RemoveStructure(tmp);
             }
-            ContourHelper.CropStructureFromBody(target, -0.3);
+            
             return false;
         }
 
-        private bool GeneratePTV1200(Structure ptv)
-        {
-            StructureSet ss = EclipseContext.GetInstance().StructureSet;
-            ContourHelper.CopyStructureOntoStructure(StructureTuningHelper.GetStructureFromId("brain"), ptv, 0.5);
-            //ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("liver", ss), ptv, 0.5);
-            //ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("Rib", ss), ptv, 0.7);
-            ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("Lungs"), 0.5);
-            ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("Heart"), 0.5);
-            ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("Kidneys"), 0.5);
-            ContourHelper.CropStructureFromBody(ptv, -0.3);
-            return false;
-        }
+        //private bool ManipulatePTVTMLI(Structure target)
+        //{
+            //foreach(RequestedTSManipulationModel manipulationItem in _manipulations)
+            //{
+            //    Structure theStructure = StructureTuningHelper.GetStructureFromId(manipulationItem.StructureId);
+            //    if(!ReferenceEquals(theStructure, null) && !theStructure.IsEmpty)
+            //    {
+            //        if (manipulationItem.ManipulationType == TSManipulationType.CropTargetFromStructure)
+            //        {
+            //            ProvideUIUpdate($"Cropping target {target.Id} from {manipulationItem.StructureId} with margin {manipulationItem.MarginInCM} cm");
+            //            //crop target from structure
+            //            (bool failCrop, StringBuilder errorCropMessage) = ContourHelper.CropStructureFromStructure(target, theStructure, manipulationItem.MarginInCM);
+            //            if (failCrop)
+            //            {
+            //                ProvideUIUpdate(errorCropMessage.ToString());
+            //                return true;
+            //            }
+            //        }
+            //        else if (manipulationItem.ManipulationType == TSManipulationType.UnionWithTarget)
+            //        {
+            //            ProvideUIUpdate($"Unioning target {target.Id} with structure {manipulationItem.StructureId} with margin {manipulationItem.MarginInCM} cm");
+            //            //crop target from structure
+            //            //(bool failUnion, StringBuilder errorUnionMessage) = ContourHelper.ContourUnion(theStructure, target, manipulationItem.MarginInCM);
+            //            //if (failUnion)
+            //            //{
+            //            //    ProvideUIUpdate(errorUnionMessage.ToString());
+            //            //    return true;
+            //            //}
+            //        }
+            //    }
+            //    else
+            //    {
+            //        ProvideUIUpdate($"Normal structure {manipulationItem.StructureId} is null or empty! Skipping manipulation");
+            //    }
+            //}
+        //    ContourHelper.CropStructureFromBody(target, -0.3);
+        //    return false;
+        //}
+
+        //private bool GeneratePTV1200(Structure ptv)
+        //{
+        //    StructureSet ss = EclipseContext.GetInstance().StructureSet;
+        //    ContourHelper.CopyStructureOntoStructure(StructureTuningHelper.GetStructureFromId("brain"), ptv, 0.5);
+        //    //ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("liver", ss), ptv, 0.5);
+        //    //ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("Rib", ss), ptv, 0.7);
+        //    ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("Lungs"), 0.5);
+        //    ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("Heart"), 0.5);
+        //    ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("Kidneys"), 0.5);
+        //    ContourHelper.CropStructureFromBody(ptv, -0.3);
+        //    return false;
+        //}
         #endregion
     }
 }

@@ -465,8 +465,6 @@ namespace CSIAutoPlanner.Core
         protected override bool PerformStructureDerivations()
         {
             UpdateUILabel("Contouring opt structures now:");
-            int counter = 0;
-            int calcItems = _structureOperations.Count * prescriptions.Count;
             string tmpPlanId = prescriptions.First().PlanId;
             List<TargetModel> tmpTSTargetList = new List<TargetModel> { };
             string prevTargetId = "";
@@ -500,8 +498,8 @@ namespace CSIAutoPlanner.Core
             NormalizationVolumes.Add(tmpPlanId, prevTargetId);
             PlanTargets.Add(new PlanTargetsModel(tmpPlanId, new List<TargetModel>(tmpTSTargetList)));
 
-            counter = 0;
-            calcItems = _structureOperations.Count + 2;
+            int counter = 0;
+            int calcItems = _structureOperations.Count + 2;
             foreach (StructureOperationModel itr in _structureOperations)
             {
                 if (itr.IsValidOperation)

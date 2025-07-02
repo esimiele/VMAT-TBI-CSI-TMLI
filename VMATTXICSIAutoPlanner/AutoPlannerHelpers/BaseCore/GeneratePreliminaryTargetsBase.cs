@@ -3,27 +3,20 @@ using AutoPlannerHelpers.Delegates;
 using AutoPlannerHelpers.Helpers;
 using AutoPlannerHelpers.Models;
 using AutoPlannerHelpers.ViewModels;
-using SimpleProgressWindow;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.ExceptionServices;
-using System.Text;
-using System.Threading.Tasks;
 using VMS.TPS.Common.Model.API;
-using VMS.TPS.Common.Model.Types;
 
 namespace AutoPlannerHelpers.BaseCore
 {
     public abstract class GeneratePreliminaryTargetsBase : SimpleProgressWindowViewModel
     {
         // Get methods
-        public List<string> GetAddedTargetStructures() { return _targetsToDerive.Select(x => x.OutputStructure).Distinct().ToList(); }
-        public string GetErrorStackTrace() { return _stackTraceError; }
+        public List<string> AddedTargetstructures { get => _targetsToDerive.Select(x => x.OutputStructure).Distinct().ToList(); }
+        public string ErrorStackTrace { get => _stackTraceError; }
 
-        //DICOM types
-        //Possible values are "AVOIDANCE", "CAVITY", "CONTRAST_AGENT", "CTV", "EXTERNAL", "GTV", "IRRAD_VOLUME", 
-        //"ORGAN", "PTV", "TREATED_VOLUME", "SUPPORT", "FIXATION", "CONTROL", and "DOSE_REGION". 
         //Dicom type, structure Id
         protected List<StructureOperationModel> _createPrelimTargetList;
         //Dicom type, structure Id
@@ -60,6 +53,7 @@ namespace AutoPlannerHelpers.BaseCore
                 {
                     ProvideUIUpdate("Deriving preliminary targets now!");
                     DeriveTargetStructures();
+                    TargetPostProcessing();
                 }
 
                 UpdateUILabel("Finished!");
@@ -136,6 +130,11 @@ namespace AutoPlannerHelpers.BaseCore
         /// Contour the preliminary targets according to the standard practice rules for the targets of interest
         /// <returns></returns>
         protected abstract bool DeriveTargetStructures();
+
+        protected virtual bool TargetPostProcessing()
+        {
+            return false;
+        }
         #endregion
     }
 }
