@@ -39,11 +39,13 @@ namespace CSIAutoPlanner.Core
         /// <param name="tgtRings"></param>
         /// <param name="presc"></param>
         /// <param name="cropStructs"></param>
-        public TSGenerationManipulation_CSI(List<StructureOperationModel> ops, 
+        public TSGenerationManipulation_CSI(List<SpecialOptimizationStructureModel> specialOptStructs,
+                                            List<StructureOperationModel> ops, 
                                             List<TSRingStructureModel> tgtRings,
                                             List<PrescriptionModel> presc, 
                                             List<string> cropStructs)
         {
+            _specialOptimizationStructures = specialOptStructs;
             _requestedRings = new List<TSRingStructureModel>(tgtRings);
             _structureOperations = new List<StructureOperationModel>(ops);
             prescriptions = new List<PrescriptionModel>(presc);
@@ -64,7 +66,7 @@ namespace CSIAutoPlanner.Core
             {
                 PlanIsocentersList.Clear();
                 if (PreliminaryChecks()) return true;
-                if (UnionLRStructures()) return true;
+                if (StructureTuningHelper.UnionLRStructures(PUUD)) return true;
                 if (_structureOperations.Any()) if (CheckHighResolution()) return true;
                 if (RemoveOldTSStructures(_structureOperations)) return true;
                 if (CreateSpecialOptimizationStructures()) return true;
@@ -300,40 +302,29 @@ namespace CSIAutoPlanner.Core
         /// Method to create/generate the requested tuning structures
         /// </summary>
         /// <returns></returns>
-        protected bool CreateSpecialOptimizationStructures()
+        protected override bool CreateSpecialOptimizationStructures()
         {
             UpdateUILabel("Create TS Structures:");
             ProvideUIUpdate("Adding remaining tuning structures to stack!");
             //get all TS structures that do not contain 'ctv' or 'ptv' in the title
-            List<RequestedTSStructureModel> remainingTS = createTSStructureList.Where(x => !x.StructureId.ToLower().Contains("ctv") && !x.StructureId.ToLower().Contains("ptv")).ToList();
-            int calcItems = remainingTS.Count;
-            int counter = 0;
-            foreach (RequestedTSStructureModel itr in remainingTS)
-            {
-                //if those structures have NOT been added to the added structure list, go ahead and add them to stack
-                if (!AddedStructureIds.Any(x => string.Equals(x.ToLower(), itr.StructureId)))
-                {
-                    ProvideUIUpdate(100 * ++counter / calcItems, $"Adding TS to added structures: {itr.StructureId}");
-                    AddTSStructures(itr);
-                }
-            }
+            List<SpecialOptimizationStructureModel> remainingTS = _specialOptimizationStructures.Where(x => !x.StructureId.ToLower().Contains("ctv") && !x.StructureId.ToLower().Contains("ptv")).ToList();
 
             ProvideUIUpdate(100, "Finished adding tuning structures!");
             ProvideUIUpdate(0, "Contouring tuning structures!");
             //now contour the various structures
-            foreach (string itr in AddedStructureIds.Where(x => !x.ToLower().Contains("ctv") && !x.ToLower().Contains("ptv")))
+            foreach (SpecialOptimizationStructureModel itr in _specialOptimizationStructures)
             {
                 ProvideUIUpdate(0, $"Contouring TS: {itr}");
-                Structure addedStructure = StructureTuningHelper.GetStructureFromId(itr);
-                if (itr.ToLower().Contains("ts_eyes") || itr.ToLower().Contains("ts_lenses"))
+                Structure addedStructure = StructureTuningHelper.GetStructureFromId(itr.StructureId,true, itr.DICOMType);
+                if (itr.StructureId.ToLower().Contains("ts_eyes") || itr.StructureId.ToLower().Contains("ts_lenses"))
                 {
                     if (GenerateTSGlobesLenses(addedStructure)) return true;
                 }
-                else if (itr.ToLower().Contains("armsavoid"))
+                else if (itr.StructureId.ToLower().Contains("armsavoid"))
                 {
                     if (CreateArmsAvoid(addedStructure)) return true;
                 }
-                else if (itr.ToLower().Contains("_prv"))
+                else if (itr.StructureId.ToLower().Contains("_prv"))
                 {
                     //leave margin as 0.3 cm outer by default
                     (bool fail, StringBuilder errorMessage) = ContourHelper.ContourPRVVolume(addedStructure.Id.Substring(0, addedStructure.Id.LastIndexOf("_")), addedStructure, 0.3);
@@ -473,7 +464,7 @@ namespace CSIAutoPlanner.Core
         /// <returns></returns>
         protected override bool PerformStructureDerivations()
         {
-            UpdateUILabel("Perform TS Manipulations: ");
+            UpdateUILabel("Contouring opt structures now:");
             int counter = 0;
             int calcItems = _structureOperations.Count * prescriptions.Count;
             string tmpPlanId = prescriptions.First().PlanId;
@@ -509,33 +500,45 @@ namespace CSIAutoPlanner.Core
             NormalizationVolumes.Add(tmpPlanId, prevTargetId);
             PlanTargets.Add(new PlanTargetsModel(tmpPlanId, new List<TargetModel>(tmpTSTargetList)));
 
-            if (TSManipulationList.Any(x => !string.IsNullOrEmpty(x.TargetId)))
+            counter = 0;
+            calcItems = _structureOperations.Count + 2;
+            foreach (StructureOperationModel itr in _structureOperations)
             {
-                foreach (RequestedTSManipulationModel itr in TSManipulationList.Where(x => !string.IsNullOrEmpty(x.TargetId)))
+                if (itr.IsValidOperation)
                 {
-                    //target operations
-                    if (PlanTargets.SelectMany(x => x.Targets).Any(x => string.Equals(x.TargetId, itr.TargetId, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        string tsTargetId = PlanTargets.SelectMany(x => x.Targets).First(x => string.Equals(x.TargetId, itr.TargetId, StringComparison.OrdinalIgnoreCase)).TsTargetId;
-                        Structure tsTarget = StructureTuningHelper.GetStructureFromId(tsTargetId);
-                        if (ManipulateTargetTuningStructures(itr, tsTarget)) return true;
-                        ProvideUIUpdate(100 * ++counter / calcItems);
-                    }
+                    ProvideUIUpdate(100 * ++counter / calcItems, $"Contouring target: {itr}");
+                    if (ContourHelper.PerformStructureOperation(itr, UIUD)) return true;
                 }
+                else ProvideUIUpdate($"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");
             }
-            else ProvideUIUpdate("No target TS manipulations requested!");
 
-            if (TSManipulationList.Any(x => string.IsNullOrEmpty(x.TargetId)))
-            {
-                foreach (RequestedTSManipulationModel itr in TSManipulationList.Where(x => string.IsNullOrEmpty(x.TargetId)))
-                {
-                    if (ManipulateOARTuningStructures(itr)) return true;
-                    ProvideUIUpdate(100 * ++counter / calcItems);
-                }
-            }
-            else ProvideUIUpdate("No OAR TS manipulations requested!");
+            //if (TSManipulationList.Any(x => !string.IsNullOrEmpty(x.TargetId)))
+            //{
+            //    foreach (RequestedTSManipulationModel itr in TSManipulationList.Where(x => !string.IsNullOrEmpty(x.TargetId)))
+            //    {
+            //        //target operations
+            //        if (PlanTargets.SelectMany(x => x.Targets).Any(x => string.Equals(x.TargetId, itr.TargetId, StringComparison.OrdinalIgnoreCase)))
+            //        {
+            //            string tsTargetId = PlanTargets.SelectMany(x => x.Targets).First(x => string.Equals(x.TargetId, itr.TargetId, StringComparison.OrdinalIgnoreCase)).TsTargetId;
+            //            Structure tsTarget = StructureTuningHelper.GetStructureFromId(tsTargetId);
+            //            if (ManipulateTargetTuningStructures(itr, tsTarget)) return true;
+            //            ProvideUIUpdate(100 * ++counter / calcItems);
+            //        }
+            //    }
+            //}
+            //else ProvideUIUpdate("No target TS manipulations requested!");
 
-            ProvideUIUpdate("Finished performing TS manipulations");
+            //if (TSManipulationList.Any(x => string.IsNullOrEmpty(x.TargetId)))
+            //{
+            //    foreach (RequestedTSManipulationModel itr in TSManipulationList.Where(x => string.IsNullOrEmpty(x.TargetId)))
+            //    {
+            //        if (ManipulateOARTuningStructures(itr)) return true;
+            //        ProvideUIUpdate(100 * ++counter / calcItems);
+            //    }
+            //}
+            //else ProvideUIUpdate("No OAR TS manipulations requested!");
+
+            ProvideUIUpdate("Finished performing optimization structure generation");
             ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             //prescriptions are inherently sorted by increasing cumulative Rx to targets
             //foreach (PrescriptionModel itr in prescriptions)
@@ -699,7 +702,7 @@ namespace CSIAutoPlanner.Core
             Structure cropStructure;
             if (!string.Equals(cropName, target.Id))
             {
-                cropStructure = AddTSStructures(new RequestedTSStructureModel("CONTROL", cropName));
+                cropStructure = AddTSStructures(new SpecialOptimizationStructureModel("CONTROL", cropName));
                 if (cropStructure == null)
                 {
                     ProvideUIUpdate($"Error! Could not create crop structure: {cropName}! Exiting", true);
@@ -734,7 +737,7 @@ namespace CSIAutoPlanner.Core
                 ProvideUIUpdate($"Warning! Ran out of characters for structure Id! Using structure Id: TS_overlap{prescriptionCount}");
                 overlapName = $"TS_overlap{prescriptionCount}";
             }
-            overlapStructure = AddTSStructures(new RequestedTSStructureModel("CONTROL", overlapName));
+            overlapStructure = AddTSStructures(new SpecialOptimizationStructureModel("CONTROL", overlapName));
             if (overlapStructure == null)
             {
                 ProvideUIUpdate($"Error! Could not create overlap structure: {overlapName}! Exiting");

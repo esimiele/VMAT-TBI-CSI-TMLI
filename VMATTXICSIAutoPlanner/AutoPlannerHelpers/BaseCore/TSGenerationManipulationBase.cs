@@ -10,6 +10,7 @@ using VMS.TPS.Common.Model.API;
 using VMS.TPS.Common.Model.Types;
 using AutoPlannerHelpers.Context;
 using AutoPlannerHelpers.ViewModels;
+using AutoPlannerHelpers.Delegates;
 
 namespace AutoPlannerHelpers.BaseCore
 {
@@ -22,46 +23,29 @@ namespace AutoPlannerHelpers.BaseCore
         //flag to indicate to the main UI that the structure manipulation list needs to be updated
         public bool DoesTSManipulationListRequireUpdating { get; protected set; } = false;
         public string StrackTraceError { get; protected set; } = string.Empty;
-        protected List<StructureOperationModel> _structureOperations { get; set; } = new List<StructureOperationModel> { };
         #endregion
+
+        #region fields
+        protected List<StructureOperationModel> _structureOperations { get; set; } = new List<StructureOperationModel> { };
+        protected List<SpecialOptimizationStructureModel> _specialOptimizationStructures { get; set; } = new List<SpecialOptimizationStructureModel> { };
+        protected ProvideUIUpdateDelegate PUUD;
+        protected UIUpdateMessageOnlyDelegate UIUD;
+        #endregion
+
+        protected TSGenerationManipulationBase() 
+        {
+            PUUD = ProvideUIUpdate;
+            UIUD = ProvideUIUpdate;
+        }
 
         #region virtual methods
         protected abstract bool PreliminaryChecks();
+        protected abstract bool CreateSpecialOptimizationStructures();
         protected abstract bool PerformStructureDerivations();
         protected abstract bool CalculateNumIsos();
         #endregion
 
         #region helper functions related to TS generation and manipulation
-        /// <summary>
-        /// Helper method to union all identified left and right structures
-        /// </summary>
-        /// <returns></returns>
-        protected bool UnionLRStructures()
-        {
-            UpdateUILabel("Unioning Structures: ");
-            ProvideUIUpdate(0, "Checking for L and R structures to union!");
-            List<UnionStructureModel> structuresToUnion = StructureTuningHelper.CheckStructuresToUnion(EclipseContext.GetInstance().StructureSet.Structures.Where(x => !x.IsEmpty).Select(x => x.Id));
-            if (structuresToUnion.Any())
-            {
-                int calcItems = structuresToUnion.Count;
-                int numUnioned = 0;
-                foreach (UnionStructureModel itr in structuresToUnion)
-                {
-                    (bool fail, StringBuilder output) = StructureTuningHelper.UnionLRStructures(itr);
-                    if (!fail) ProvideUIUpdate(100 * ++numUnioned / calcItems, $"Unioned {itr.ProposedUnionStructureId}");
-                    else
-                    {
-                        ProvideUIUpdate(output.ToString(), true);
-                        return true;
-                    }
-                }
-                ProvideUIUpdate(100, "Structures unioned successfully!");
-            }
-            else ProvideUIUpdate(100, "No structures to union!");
-            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
-            return false;
-        }
-
         /// <summary>
         /// Helper method to retrieve a tuning/optimization structure target with id equal to TS_<targetId> or requestedTSTargetId
         /// </summary>
@@ -80,7 +64,7 @@ namespace AutoPlannerHelpers.BaseCore
             {
                 //left here because of special logic to generate the structure if it doesn't exist
                 ProvideUIUpdate($"TS target {newName} does not exist. Creating it now!");
-                addedTSTarget = AddTSStructures(new RequestedTSStructureModel("CONTROL", newName));
+                addedTSTarget = AddTSStructures(new SpecialOptimizationStructureModel("CONTROL", newName));
             }
             if (addedTSTarget.IsEmpty)
             {
@@ -199,7 +183,7 @@ namespace AutoPlannerHelpers.BaseCore
                         }
                     }
 
-                    Structure ring = AddTSStructures(new RequestedTSStructureModel("CONTROL", ringName));
+                    Structure ring = AddTSStructures(new SpecialOptimizationStructureModel("CONTROL", ringName));
                     if (ReferenceEquals(ring, null)) return new List<TSRingStructureModel> { };
                     ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Created empty ring: {ring.Id}");
 
@@ -240,7 +224,7 @@ namespace AutoPlannerHelpers.BaseCore
             //add a new structure (default resolution by default)
             if (EclipseContext.GetInstance().StructureSet.CanAddStructure("CONTROL", overlapName))
             {
-                Structure overlapStructure = AddTSStructures(new RequestedTSStructureModel("CONTROL", overlapName));
+                Structure overlapStructure = AddTSStructures(new SpecialOptimizationStructureModel("CONTROL", overlapName));
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Created empty structure {overlapName}");
 
                 (bool copyFail, StringBuilder errorMessage) = ContourHelper.CopyStructureOntoStructure(OAR, overlapStructure);
@@ -454,13 +438,13 @@ namespace AutoPlannerHelpers.BaseCore
         /// </summary>
         /// <param name="structuresToAdd"></param>
         /// <returns></returns>
-        protected bool VerifyAddTSStructures(List<RequestedTSStructureModel> structuresToAdd)
+        protected bool VerifyAddTSStructures(List<SpecialOptimizationStructureModel> structuresToAdd)
         {
             bool fail = false;
             ProvideUIUpdate("Verifying requested TS structures can be added to the structure set!");
             int counter = 0;
             int calcItems = structuresToAdd.Count;
-            foreach (RequestedTSStructureModel itr in structuresToAdd)
+            foreach (SpecialOptimizationStructureModel itr in structuresToAdd)
             {
                 if (!EclipseContext.GetInstance().StructureSet.CanAddStructure(itr.DICOMType, itr.StructureId))
                 {
@@ -602,9 +586,9 @@ namespace AutoPlannerHelpers.BaseCore
                     fail = true;
                 }
             }
-            if (!VerifyAddTSStructures(new List<RequestedTSStructureModel> { new RequestedTSStructureModel("CONTROL", id) }))
+            if (!VerifyAddTSStructures(new List<SpecialOptimizationStructureModel> { new SpecialOptimizationStructureModel("CONTROL", id) }))
             {
-                theStructure = AddTSStructures(new RequestedTSStructureModel("CONTROL", id));
+                theStructure = AddTSStructures(new SpecialOptimizationStructureModel("CONTROL", id));
             }
             else fail = true;
             return (fail, theStructure);
@@ -615,7 +599,7 @@ namespace AutoPlannerHelpers.BaseCore
         /// </summary>
         /// <param name="itr1"></param>
         /// <returns></returns>
-        protected Structure AddTSStructures(RequestedTSStructureModel itr1)
+        protected Structure AddTSStructures(SpecialOptimizationStructureModel itr1)
         {
             Structure addedStructure = null;
             string dicomType = itr1.DICOMType;

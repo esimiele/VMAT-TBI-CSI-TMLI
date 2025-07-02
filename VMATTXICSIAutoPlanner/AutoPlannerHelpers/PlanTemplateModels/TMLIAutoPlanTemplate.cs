@@ -9,7 +9,7 @@ namespace AutoPlannerHelpers.PlanTemplateModels
         //this is only here for the display name data binding. All other references to the template name use the explicit get method
         public List<OptimizationConstraintModel> InitialOptimizationConstraints { get; set; } = new List<OptimizationConstraintModel> { };
         public List<TSRingStructureModel> Rings { get; set; } = new List<TSRingStructureModel>();
-        public List<RequestedTSStructureModel> RequestedPreliminaryTargets { get; set; } = new List<RequestedTSStructureModel> { };
+        public List<SpecialOptimizationStructureModel> RequestedPreliminaryTargets { get; set; } = new List<SpecialOptimizationStructureModel> { };
         #endregion
 
         /// <summary>

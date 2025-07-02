@@ -173,7 +173,7 @@ namespace AutoPlannerHelpers.UIHelpers
             {
                 sb.AppendLine($" {itr.TemplateName} additional tuning structures:");
                 sb.AppendLine(String.Format("  {0, -10} | {1, -15} |", "DICOM type", "Structure Id"));
-                foreach (RequestedTSStructureModel ts in itr.CreateTSStructures) sb.AppendLine(String.Format("  {0, -10} | {1, -15} |", ts.DICOMType, ts.StructureId));
+                foreach (SpecialOptimizationStructureModel ts in itr.CreateTSStructures) sb.AppendLine(String.Format("  {0, -10} | {1, -15} |", ts.DICOMType, ts.StructureId));
                 sb.AppendLine(Environment.NewLine);
             }
             else sb.AppendLine($" No additional tuning structures for template: {itr.TemplateName}");

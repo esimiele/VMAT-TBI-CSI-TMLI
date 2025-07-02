@@ -36,7 +36,7 @@ namespace AutoPlannerHelpers.BaseViewModel
         protected double _initialPlanTotalDose;
         private System.Windows.Media.SolidColorBrush _specifyTargetsTabBackground;
         private System.Windows.Media.SolidColorBrush _structureTuningTabBackground;
-        private System.Windows.Media.SolidColorBrush _tsManipulationTabBackground;
+        private System.Windows.Media.SolidColorBrush _optimizationStructureDerivationBackground;
         private System.Windows.Media.SolidColorBrush _beamPlacementTabBackground;
         private System.Windows.Media.SolidColorBrush _optimizationSetupTabBackground;
 
@@ -88,10 +88,10 @@ namespace AutoPlannerHelpers.BaseViewModel
             set { SetProperty(ref _structureTuningTabBackground, value); }
         }
 
-        public System.Windows.Media.SolidColorBrush TSManipulationTabBackground
+        public System.Windows.Media.SolidColorBrush OptimizationStructureDerivationBackground
         {
-            get { return _tsManipulationTabBackground; }
-            set { SetProperty(ref _tsManipulationTabBackground, value); }
+            get { return _optimizationStructureDerivationBackground; }
+            set { SetProperty(ref _optimizationStructureDerivationBackground, value); }
         }
 
         public System.Windows.Media.SolidColorBrush BeamPlacementTabBackground
@@ -110,7 +110,8 @@ namespace AutoPlannerHelpers.BaseViewModel
         #region view objects
         private object _specifyTargets;
         private object _optimizationSetup;
-        private object _tsManipulation;
+        private object _specialOptimizationStructures;
+        private object _optimizationStructureDerivations;
         private object _beamPlacement;
         private object _planPreparation;
         private object _scriptConfiguration;
@@ -121,10 +122,16 @@ namespace AutoPlannerHelpers.BaseViewModel
             set { SetProperty(ref _specifyTargets, value); }
         }
 
-        public object TSManipulation
+        public object SpecialOptimizationStructures
         {
-            get { return _tsManipulation; }
-            set { SetProperty(ref _tsManipulation, value); }
+            get { return _specialOptimizationStructures; }
+            set { SetProperty(ref _specialOptimizationStructures, value); }
+        }
+
+        public object OptimizationStructureDerivations
+        {
+            get { return _optimizationStructureDerivations; }
+            set { SetProperty(ref _optimizationStructureDerivations, value); }
         }
 
         public object OptimizationSetup
@@ -181,9 +188,8 @@ namespace AutoPlannerHelpers.BaseViewModel
             }
 
             SpecifyTargets = new SpecifyTargetsView { DataContext = new SetTargetsViewModel() };
-            //TSGeneration = new TSGenerationView { DataContext = new TSGenerationViewModel() };
-            //TSManipulation = new TSManipulationView { DataContext = new TSManipulationViewModel(_structureIdsPostUnion) };
-            TSManipulation = new StructureDerivationsView { DataContext = new StructureDerivationsViewModel(_structureIdsPostUnion, false) };
+            SpecialOptimizationStructures = new SpecialOptimizationStructuresView { DataContext = new SpecialOptimizationStructuresViewModel() };
+            OptimizationStructureDerivations = new StructureDerivationsView { DataContext = new StructureDerivationsViewModel(_structureIdsPostUnion, false) };
             BeamPlacement = new BeamPlacementView { DataContext = new BeamPlacementViewModel(type) };
             OptimizationSetup = new OptimizationSetupView { DataContext = new OptimizationSetupViewModel(_structureIdsPostUnion, type) };
             PlanPreparation = new PlanPreparationView { DataContext = new PlanPreparationViewModel() };
@@ -192,7 +198,7 @@ namespace AutoPlannerHelpers.BaseViewModel
             WindowClosingCommand = new RelayCommand(WindowClosing);
 
             StructureTuningTabBackground = System.Windows.Media.Brushes.LightGray;
-            TSManipulationTabBackground = System.Windows.Media.Brushes.LightGray;
+            OptimizationStructureDerivationBackground = System.Windows.Media.Brushes.LightGray;
             BeamPlacementTabBackground = System.Windows.Media.Brushes.LightGray;
             OptimizationSetupTabBackground = System.Windows.Media.Brushes.LightGray;
             InitializeMessengers();
@@ -243,7 +249,7 @@ namespace AutoPlannerHelpers.BaseViewModel
             _planOptimizationSetup = BuildPlanOptimizationSetupList();
             SpecifyTargetsTabBackground = System.Windows.Media.Brushes.ForestGreen;
             StructureTuningTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
-            TSManipulationTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
+            OptimizationStructureDerivationBackground = System.Windows.Media.Brushes.PaleVioletRed;
         }
 
         public List<PlanOptimizationSetupModel> BuildPlanOptimizationSetupList()

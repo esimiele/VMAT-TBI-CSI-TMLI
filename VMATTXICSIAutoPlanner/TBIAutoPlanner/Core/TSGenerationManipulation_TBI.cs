@@ -32,13 +32,15 @@ namespace TBIAutoPlanner.Core
         private double _ptvMarginFromBody;
         #endregion
 
-        internal TSGenerationManipulation_TBI(List<StructureOperationModel> list,
+        internal TSGenerationManipulation_TBI(List<SpecialOptimizationStructureModel> specialOptStruct,
+                                              List<StructureOperationModel> list,
                                               List<PrescriptionModel> presc,
                                               bool flash,
                                               double flashMargin,
                                               double ptvMargin) 
         {
             prescriptions = new List<PrescriptionModel>(presc);
+            _specialOptimizationStructures = specialOptStruct;
             _structureOperations = new List<StructureOperationModel>(list);
             _useFlash = flash;
             _flashMargin = flashMargin;
@@ -58,9 +60,10 @@ namespace TBIAutoPlanner.Core
             {
                 PlanIsocentersList.Clear();
                 if (PreliminaryChecks()) return true;
-                if (UnionLRStructures()) return true;
+                if (StructureTuningHelper.UnionLRStructures(PUUD)) return true;
                 if (_structureOperations.Any()) if (CheckHighResolution()) return true;
-                //if (CreateTSStructures()) return true;
+                if (RemoveOldTSStructures(_structureOperations)) return true;
+                if (CreateSpecialOptimizationStructures()) return true;
                 if (PerformStructureDerivations()) return true;
                 if (_useFlash) if (CreateFlash()) return true;
                 if (CleanUpDummyBox()) return true;
@@ -90,7 +93,7 @@ namespace TBIAutoPlanner.Core
             int calcItems = 4;
             int counter = 0;
             //check body structure exists and is contoured
-            if (!StructureTuningHelper.DoesStructureExistInSS("body", EclipseContext.GetInstance().StructureSet, true))
+            if (!StructureTuningHelper.DoesStructureExistInSS("body", true))
             {
                 ProvideUIUpdate("Error! Body structure is either empty or null! Fix and try again!", true);
                 return true;
@@ -115,13 +118,13 @@ namespace TBIAutoPlanner.Core
         /// <returns></returns>
         private bool CheckIfScriptRunPreviously()
         {
-            if (StructureTuningHelper.DoesStructureExistInSS("human_body", EclipseContext.GetInstance().StructureSet, true))
+            if (StructureTuningHelper.DoesStructureExistInSS("human_body", true))
             {
                 if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => x.Id.ToLower().Contains("flash")))
                 {
                     //copy human_body back onto body if flash was used in previous run of the script
-                    Structure body = StructureTuningHelper.GetStructureFromId("body", EclipseContext.GetInstance().StructureSet);
-                    Structure humanBody = StructureTuningHelper.GetStructureFromId("human_body", EclipseContext.GetInstance().StructureSet);
+                    Structure body = StructureTuningHelper.GetStructureFromId("body");
+                    Structure humanBody = StructureTuningHelper.GetStructureFromId("human_body");
                     (bool failCopyTarget, StringBuilder copyErrorMessage) = ContourHelper.CopyStructureOntoStructure(humanBody, body);
                     if (failCopyTarget)
                     {
@@ -143,11 +146,11 @@ namespace TBIAutoPlanner.Core
         private bool CheckBodyExtentAndMatchline()
         {
             //get the points collection for the Body (used for calculating number of isocenters)
-            Structure body = StructureTuningHelper.GetStructureFromId("Body", EclipseContext.GetInstance().StructureSet);
+            Structure body = StructureTuningHelper.GetStructureFromId("Body");
             Point3DCollection pts = body.MeshGeometry.Positions;
 
             //check if patient length is > 116cm, if so, check for matchline contour
-            if ((pts.Max(p => p.Z) - pts.Min(p => p.Z)) > 1160.0 && !StructureTuningHelper.DoesStructureExistInSS("matchline", EclipseContext.GetInstance().StructureSet, true))
+            if ((pts.Max(p => p.Z) - pts.Min(p => p.Z)) > 1160.0 && !StructureTuningHelper.DoesStructureExistInSS("matchline", true))
             {
                 ProvideUIUpdate($"Body extent ({pts.Max(p => p.Z) - pts.Min(p => p.Z)} mm) is greater than 116.0 cm and no matchline structure was found!");
                 //check to see if the user wants to proceed even though there is no matchplane contour or the matchplane contour exists, but is not filled
@@ -171,9 +174,9 @@ namespace TBIAutoPlanner.Core
         private bool CleanUpDummyBox()
         {
             UpdateUILabel("Cleaning up:");
-            if (StructureTuningHelper.DoesStructureExistInSS("DummyBox", EclipseContext.GetInstance().StructureSet))
+            if (StructureTuningHelper.DoesStructureExistInSS("DummyBox"))
             {
-                Structure dummyBox = StructureTuningHelper.GetStructureFromId("dummybox", EclipseContext.GetInstance().StructureSet);
+                Structure dummyBox = StructureTuningHelper.GetStructureFromId("dummybox");
                 ProvideUIUpdate($"Removing {dummyBox.Id} structure now!");
                 EclipseContext.GetInstance().StructureSet.RemoveStructure(dummyBox);
             }
@@ -188,7 +191,7 @@ namespace TBIAutoPlanner.Core
         /// <returns></returns>
         private bool CopyBodyStructureOnToStructure(Structure addedStructure)
         {
-            (bool fail, StringBuilder message) = ContourHelper.CopyStructureOntoStructure(StructureTuningHelper.GetStructureFromId("Body", EclipseContext.GetInstance().StructureSet), addedStructure);
+            (bool fail, StringBuilder message) = ContourHelper.CopyStructureOntoStructure(StructureTuningHelper.GetStructureFromId("Body"), addedStructure);
             if (fail)
             {
                 ProvideUIUpdate(message.ToString(), true);
@@ -205,9 +208,9 @@ namespace TBIAutoPlanner.Core
         /// <returns></returns>
         private bool ContourLungsEvalVolume(Structure addedStructure)
         {
-            Structure lung_block_left = StructureTuningHelper.GetStructureFromId("lung_block_l", EclipseContext.GetInstance().StructureSet);
+            Structure lung_block_left = StructureTuningHelper.GetStructureFromId("lung_block_l");
             ProvideUIUpdate("Retrived left lung block structure");
-            Structure lung_block_right = StructureTuningHelper.GetStructureFromId("lung_block_r", EclipseContext.GetInstance().StructureSet);
+            Structure lung_block_right = StructureTuningHelper.GetStructureFromId("lung_block_r");
             ProvideUIUpdate("Retrived right lung block structure");
             if (lung_block_left == null || lung_block_left.IsEmpty)
             {
@@ -237,22 +240,22 @@ namespace TBIAutoPlanner.Core
             if (addedStructure.Id.ToLower().Contains("lung_block_l"))
             {
                 //AxisAlignedMargins(inner or outer margin, margin from negative x, margin for negative y, margin for negative z, margin for positive x, margin for positive y, margin for positive z)
-                baseStructure = StructureTuningHelper.GetStructureFromId("lung_l", EclipseContext.GetInstance().StructureSet);
+                baseStructure = StructureTuningHelper.GetStructureFromId("lung_l");
                 margins = new AxisAlignedMargins(StructureMarginGeometry.Inner, 10.0, 10.0, 15.0, 10.0, 10.0, 10.0);
             }
             else if (addedStructure.Id.ToLower().Contains("lung_block_r"))
             {
-                baseStructure = StructureTuningHelper.GetStructureFromId("lung_r", EclipseContext.GetInstance().StructureSet);
+                baseStructure = StructureTuningHelper.GetStructureFromId("lung_r");
                 margins = new AxisAlignedMargins(StructureMarginGeometry.Inner, 10.0, 10.0, 15.0, 10.0, 10.0, 10.0);
             }
             else if (addedStructure.Id.ToLower().Contains("kidney_block_l"))
             {
-                baseStructure = StructureTuningHelper.GetStructureFromId("kidney_l", EclipseContext.GetInstance().StructureSet);
+                baseStructure = StructureTuningHelper.GetStructureFromId("kidney_l");
                 margins = new AxisAlignedMargins(StructureMarginGeometry.Outer, 5.0, 20.0, 20.0, 20.0, 20.0, 20.0);
             }
             else
             {
-                baseStructure = StructureTuningHelper.GetStructureFromId("kidney_r", EclipseContext.GetInstance().StructureSet);
+                baseStructure = StructureTuningHelper.GetStructureFromId("kidney_r");
                 margins = new AxisAlignedMargins(StructureMarginGeometry.Outer, 5.0, 20.0, 20.0, 20.0, 20.0, 20.0);
             }
             if (baseStructure == null || baseStructure.IsEmpty)
@@ -330,6 +333,11 @@ namespace TBIAutoPlanner.Core
         //    return false;
         //}
 
+        protected override bool CreateSpecialOptimizationStructures()
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Simple helper method to copy the body structure onto the supplied structure, then crop the supplied structure from the body by the requested
         /// inner margin
@@ -339,7 +347,7 @@ namespace TBIAutoPlanner.Core
         private bool GeneratePTVFromBody(Structure addedStructure)
         {
             if (CopyBodyStructureOnToStructure(addedStructure)) return true;
-            (bool fail, StringBuilder errorMessage) = ContourHelper.CropStructureFromBody(addedStructure, EclipseContext.GetInstance().StructureSet, -_ptvMarginFromBody);
+            (bool fail, StringBuilder errorMessage) = ContourHelper.CropStructureFromBody(addedStructure, -_ptvMarginFromBody);
             if (fail)
             {
                 ProvideUIUpdate(errorMessage.ToString());
@@ -356,7 +364,7 @@ namespace TBIAutoPlanner.Core
         /// <returns></returns>
         protected override bool PerformStructureDerivations()
         {
-            UpdateUILabel("Perform TS Manipulations: ");
+            UpdateUILabel("Contouring opt structures now:");
             int counter = 0;
             int calcItems = _structureOperations.Count * prescriptions.Count;
 
@@ -374,6 +382,16 @@ namespace TBIAutoPlanner.Core
                         return true;
                     }
                 }
+            }
+
+            foreach (StructureOperationModel itr in _structureOperations)
+            {
+                if (itr.IsValidOperation)
+                {
+                    ProvideUIUpdate(100 * ++counter / calcItems, $"Contouring target: {itr}");
+                    if (ContourHelper.PerformStructureOperation(itr, UIUD)) return true;
+                }
+                else ProvideUIUpdate($"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");
             }
 
             //if (TSManipulationList.Any(x => !string.IsNullOrEmpty(x.TargetId)))
@@ -415,10 +433,10 @@ namespace TBIAutoPlanner.Core
             //}
             //else ProvideUIUpdate("No OAR TS manipulations requested!");
 
-            if (!TBIAutoPlannerSettings.AllBeamsVMAT && prescriptions.Any(x => string.Equals(x.TargetId, "ptv_body", StringComparison.OrdinalIgnoreCase)) && StructureTuningHelper.DoesStructureExistInSS("ptv_body",EclipseContext.GetInstance().StructureSet, true))
+            if (!TBIAutoPlannerSettings.AllBeamsVMAT && prescriptions.Any(x => string.Equals(x.TargetId, "ptv_body", StringComparison.OrdinalIgnoreCase)) && StructureTuningHelper.DoesStructureExistInSS("ptv_body", true))
             {
                 //ts_ptv_vmat needs to be handled AFTER ts manipulation because ptv_body itself needs to be cropped from all the relevant structures
-                (bool fail, string tsPTVVMATId) = GenerateTSPTVBodyTarget(StructureTuningHelper.GetStructureFromId("ptv_body", EclipseContext.GetInstance().StructureSet), "TS_PTV_VMAT");
+                (bool fail, string tsPTVVMATId) = GenerateTSPTVBodyTarget(StructureTuningHelper.GetStructureFromId("ptv_body"), "TS_PTV_VMAT");
                 if (fail) return true;
                 PrescriptionModel presc = prescriptions.First(x => string.Equals(x.TargetId, "ptv_body", StringComparison.OrdinalIgnoreCase));
                 tmpTSTargetList.Add(new TargetModel(presc.TargetId, presc.CumulativeDoseToTarget, tsPTVVMATId));
@@ -484,12 +502,12 @@ namespace TBIAutoPlanner.Core
             Structure addedTSTarget = GetTSTarget(baseTarget.Id, requestedTsTargetId);
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Contoured TS target: {addedTSTarget.Id}");
 
-            if (StructureTuningHelper.DoesStructureExistInSS("matchline", EclipseContext.GetInstance().StructureSet, true))
+            if (StructureTuningHelper.DoesStructureExistInSS("matchline", true))
             {
                 ProvideUIUpdate($"Cutting {addedTSTarget} at the matchline!");
 
                 //find the image plane where the matchline is location. Record this value and break the loop. Also find the first slice where the ptv_body contour starts and record this value
-                Structure matchline = StructureTuningHelper.GetStructureFromId("matchline", EclipseContext.GetInstance().StructureSet);
+                Structure matchline = StructureTuningHelper.GetStructureFromId("matchline");
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved matchline structure: {matchline.Id}");
 
                 (bool failContourDummyBox, Structure dummyBox) = ContourDummyBox(matchline, addedTSTarget);
@@ -626,7 +644,7 @@ namespace TBIAutoPlanner.Core
         {
             //add user-specified margin on top of structure of interest to generate flash. 
             //8 -14-2020, an asymmetric margin is used because I might intend to change this code so flash is added in all directions except for sup/inf/post
-            Structure body = StructureTuningHelper.GetStructureFromId("body", EclipseContext.GetInstance().StructureSet);
+            Structure body = StructureTuningHelper.GetStructureFromId("body");
             bolusFlash.SegmentVolume = body.AsymmetricMargin(new AxisAlignedMargins(StructureMarginGeometry.Outer,
                                                                                     _flashMargin * 10.0,
                                                                                     _flashMargin * 10.0,
@@ -646,7 +664,7 @@ namespace TBIAutoPlanner.Core
             UpdateUILabel("Create flash:");
             int percentComplete = 0;
             int calcItems = 10 + TSManipulationList.Count(x => x.ManipulationType == TSManipulationType.ContourOverlapWithTarget || x.ManipulationType == TSManipulationType.CropTargetFromStructure);
-            if (StructureTuningHelper.DoesStructureExistInSS("matchline", EclipseContext.GetInstance().StructureSet, true)) calcItems += 4;
+            if (StructureTuningHelper.DoesStructureExistInSS("matchline", true)) calcItems += 4;
             //create flash for the plan per the users request
             //NOTE: IT IS IMPORTANT THAT ALL OF THE STRUCTURES CREATED IN THIS METHOD (I.E., ALL STRUCTURES USED TO GENERATE FLASH HAVE THE KEYWORD 'FLASH' SOMEWHERE IN THE STRUCTURE ID)!
             //first need to create a bolus structure (remove it if it already exists)
@@ -659,16 +677,11 @@ namespace TBIAutoPlanner.Core
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Contoured bolus structure: {bolusFlash.Id}");
 
             //get body structure
-            Structure body = StructureTuningHelper.GetStructureFromId("body", EclipseContext.GetInstance().StructureSet);
+            Structure body = StructureTuningHelper.GetStructureFromId("body");
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved body structure: {body.Id}");
 
             //now subtract the body structure from the newly-created bolus structure
-            (bool failCrop, StringBuilder cropMessage) = ContourHelper.CropStructureFromStructure(bolusFlash, body, 0.0);
-            if (failCrop)
-            {
-                ProvideUIUpdate(cropMessage.ToString(), true);
-                return true;
-            }
+            bolusFlash.SegmentVolume = ContourHelper.CropStructureFromStructure(bolusFlash, body, new StructureMarginModel(0.0), new StructureMarginModel(0.0));
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Cropped {body.Id} from {bolusFlash.Id}");
 
             //if the subtracted structre is empty, then that indicates that the structure used to generate the flash was NOT close enough to the body surface to generate flash for the user-specified margin
@@ -682,23 +695,18 @@ namespace TBIAutoPlanner.Core
             bolusFlash.SetAssignedHU(0.0);
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Assigned {bolusFlash.Id} HU to 0.0");
 
-            if (StructureTuningHelper.DoesStructureExistInSS("matchline", EclipseContext.GetInstance().StructureSet, true))
+            if (StructureTuningHelper.DoesStructureExistInSS("matchline", true))
             {
                 //crop flash at matchline ONLY if global flash is used
-                Structure dummyBox = StructureTuningHelper.GetStructureFromId("dummybox", EclipseContext.GetInstance().StructureSet);
+                Structure dummyBox = StructureTuningHelper.GetStructureFromId("dummybox");
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved dummy box structure: {dummyBox.Id}");
 
-                if (CutTSTargetFromMatchline(bolusFlash, StructureTuningHelper.GetStructureFromId("matchline", EclipseContext.GetInstance().StructureSet), dummyBox)) return true;
+                if (CutTSTargetFromMatchline(bolusFlash, StructureTuningHelper.GetStructureFromId("matchline"), dummyBox)) return true;
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Cut {bolusFlash.Id} structure at matchline structure");
             }
 
             //Now extend the body contour to include the bolus_flash structure. The reason for this is because Eclipse automatically sets the dose calculation grid to the body structure contour (no overriding this)
-            (bool unionFail, StringBuilder unionMessage) = ContourHelper.ContourUnion(bolusFlash, body, 0.0);
-            if (unionFail)
-            {
-                ProvideUIUpdate(unionMessage.ToString(), true);
-                return true;
-            }
+            body.SegmentVolume = ContourHelper.ContourUnion(bolusFlash, body, new StructureMarginModel(0.0), new StructureMarginModel(0.0));
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Contour union betwen between {bolusFlash.Id} and body onto body");
 
             //now create the ptv_flash structure
@@ -730,13 +738,13 @@ namespace TBIAutoPlanner.Core
             }
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Copied structure {ptvBodyFlash.Id} onto {TSPTVFlash.Id}");
 
-            if (StructureTuningHelper.DoesStructureExistInSS("matchline", EclipseContext.GetInstance().StructureSet, true))
+            if (StructureTuningHelper.DoesStructureExistInSS("matchline", true))
             {
                 //crop flash at matchline ONLY if global flash is used
-                Structure dummyBox = StructureTuningHelper.GetStructureFromId("dummybox", EclipseContext.GetInstance().StructureSet);
+                Structure dummyBox = StructureTuningHelper.GetStructureFromId("dummybox");
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved dummy box structure: {dummyBox.Id}");
 
-                if (CutTSTargetFromMatchline(TSPTVFlash, StructureTuningHelper.GetStructureFromId("matchline", EclipseContext.GetInstance().StructureSet), dummyBox)) return true;
+                if (CutTSTargetFromMatchline(TSPTVFlash, StructureTuningHelper.GetStructureFromId("matchline"), dummyBox)) return true;
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Cut {TSPTVFlash.Id} structure at matchline structure");
             }
             NormalizationVolumes = new Dictionary<string, string>(UpdateNormVolumesWithFlash(NormalizationVolumes));
@@ -786,14 +794,14 @@ namespace TBIAutoPlanner.Core
             UpdateUILabel("Calculate number of isos:");
             int percentComplete = 0;
             int calcItems = 5;
-            Structure body = StructureTuningHelper.GetStructureFromId("body", EclipseContext.GetInstance().StructureSet);
+            Structure body = StructureTuningHelper.GetStructureFromId("body");
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved body structure");
             Point3DCollection pts = body.MeshGeometry.Positions;
             double bodyExtent = pts.Max(p => p.Z) - pts.Min(p => p.Z);
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Calculated maximum extent of body: {bodyExtent:0.0} mm");
 
             //calculate number of required isocenters
-            if (!StructureTuningHelper.DoesStructureExistInSS("matchline", EclipseContext.GetInstance().StructureSet))
+            if (!StructureTuningHelper.DoesStructureExistInSS("matchline"))
             {
                 ProvideUIUpdate("matchline structure not present in structure set");
                 //no matchline implying that this patient will be treated with VMAT only. For these cases the maximum number of allowed isocenters is 3.
@@ -805,7 +813,7 @@ namespace TBIAutoPlanner.Core
             else
             {
                 //matchline structure is present, but empty
-                if (!StructureTuningHelper.DoesStructureExistInSS("matchline", EclipseContext.GetInstance().StructureSet, true))
+                if (!StructureTuningHelper.DoesStructureExistInSS("matchline", true))
                 {
                     ConfirmPrompt CP = new ConfirmPrompt("I found a matchline structure in the structure set, but it's empty!" + Environment.NewLine + Environment.NewLine + "Do you want to continue without using the matchline structure?!");
                     CP.ShowDialog();
@@ -821,7 +829,7 @@ namespace TBIAutoPlanner.Core
                 else
                 {
                     calcItems += 2;
-                    Structure matchline = StructureTuningHelper.GetStructureFromId("matchline", EclipseContext.GetInstance().StructureSet);
+                    Structure matchline = StructureTuningHelper.GetStructureFromId("matchline");
                     ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved matchline structure");
                     //get number of isos for PTV superior to matchplane (always truncate this value to a maximum of 4 isocenters)
                     NumberofVMATIsocenters = (int)Math.Ceiling((pts.Max(p => p.Z) - matchline.CenterPoint.z) / (TBIAutoPlannerSettings.MaxFieldYExtent - TBIAutoPlannerSettings.MinFieldOverlap));

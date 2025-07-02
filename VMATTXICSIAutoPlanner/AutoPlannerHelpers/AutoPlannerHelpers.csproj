@@ -151,7 +151,7 @@
     <Compile Include="Models\RequestedOptimizationTSStructureModel.cs" />
     <Compile Include="Models\RequestedPlanMetricModel.cs" />
     <Compile Include="Models\RequestedTSManipulationModel.cs" />
-    <Compile Include="Models\RequestedTSStructureModel.cs" />
+    <Compile Include="Models\SpecialOptimizationStructureModel.cs" />
     <Compile Include="Models\StructureMarginModel.cs" />
     <Compile Include="Models\StructureOperationModel.cs" />
     <Compile Include="Models\TargetModel.cs" />
@@ -194,7 +194,7 @@
     <Compile Include="ViewModels\SSImportViewModel.cs" />
     <Compile Include="ViewModels\StructureCropOverlapViewModel.cs" />
     <Compile Include="ViewModels\StructureDerivationsViewModel.cs" />
-    <Compile Include="ViewModels\TSGenerationViewModel.cs" />
+    <Compile Include="ViewModels\SpecialOptimizationStructuresViewModel.cs" />
     <Compile Include="ViewModels\TSManipulationViewModel.cs" />
     <Compile Include="Views\BeamPlacementView.xaml.cs">
       <DependentUpon>BeamPlacementView.xaml</DependentUpon>
@@ -237,8 +237,8 @@
     <Compile Include="Views\StructureDerivationsView.xaml.cs">
       <DependentUpon>StructureDerivationsView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\TSGenerationView.xaml.cs">
-      <DependentUpon>TSGenerationView.xaml</DependentUpon>
+    <Compile Include="Views\SpecialOptimizationStructuresView.xaml.cs">
+      <DependentUpon>SpecialOptimizationStructuresView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\TSManipulationView.xaml.cs">
       <DependentUpon>TSManipulationView.xaml</DependentUpon>
@@ -316,7 +316,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\TSGenerationView.xaml">
+    <Page Include="Views\SpecialOptimizationStructuresView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

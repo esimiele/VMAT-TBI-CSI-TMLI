@@ -11,7 +11,7 @@ namespace AutoPlannerHelpers.PlanTemplateModels
         public double InitialRxDosePerFx { get; set; } = 0.1;
         public int InitialRxNumberOfFractions { get; set; } = 1;
         public List<PlanTargetsModel> PlanTargets { get; set; } = new List<PlanTargetsModel>();
-        public List<RequestedTSStructureModel> CreateTSStructures { get; set; } = new List<RequestedTSStructureModel> { };
+        public List<SpecialOptimizationStructureModel> CreateTSStructures { get; set; } = new List<SpecialOptimizationStructureModel> { };
         public List<RequestedTSManipulationModel> TSManipulations { get; set; } = new List<RequestedTSManipulationModel> { };
         public List<StructureOperationModel> TargetDerivationOperations { get; set; } = new List<StructureOperationModel> { };
         public List<StructureOperationModel> OptimizationStructureDerivations { get; set; } = new List<StructureOperationModel> { };

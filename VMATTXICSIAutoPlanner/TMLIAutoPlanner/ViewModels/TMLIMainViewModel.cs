@@ -212,6 +212,7 @@ namespace TMLIAutoPlanner.ViewModels
             });
         }
 
+        #region CT export
         public void ExportCTImage(ExportCTModel selectedImage)
         {
             if (ReferenceEquals(selectedImage, null) || !EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().Patient,null) || !EclipseContext.GetInstance().CTImages.Any()) return;
@@ -226,6 +227,7 @@ namespace TMLIAutoPlanner.ViewModels
             if (result) return;
             Application.Current.MainWindow.Close();
         }
+        #endregion
 
         #region information and help guides
         private void LaunchQuickStartGuide()
@@ -310,8 +312,10 @@ namespace TMLIAutoPlanner.ViewModels
                 Logger.GetInstance().LogError("Error! Script is not connected to aria or no structure set loaded! Cannot perform TS generation/manipulation!");
                 return;
             }
+            List<SpecialOptimizationStructureModel> specialOptStructures = WeakReferenceMessenger.Default.Send(new RequestSpecialOptimizationStructures());
             List<TSRingStructureModel> rings = WeakReferenceMessenger.Default.Send(new RequestRingStructures());
-            TSGenerationManipulation_TMLI generateTS = new TSGenerationManipulation_TMLI(operations,
+            TSGenerationManipulation_TMLI generateTS = new TSGenerationManipulation_TMLI(specialOptStructures,
+                                                                                       operations,
                                                                                        rings,
                                                                                        _prescriptions);
 
@@ -328,7 +332,7 @@ namespace TMLIAutoPlanner.ViewModels
             _planOptimizationSetup = UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
 
             StructureTuningTabBackground = Brushes.ForestGreen;
-            TSManipulationTabBackground = Brushes.ForestGreen;
+            OptimizationStructureDerivationBackground = Brushes.ForestGreen;
             BeamPlacementTabBackground = Brushes.PaleVioletRed;
 
             Logger.GetInstance().AddedStructures = generateTS.AddedStructureIds;
@@ -444,7 +448,7 @@ namespace TMLIAutoPlanner.ViewModels
                     List<string> energy_temp = new List<string> { };
                     List<VRect<double>> jawPos_temp = new List<VRect<double>> { };
                     List<RequestedTSManipulationModel> defaultTSManipulations_temp = new List<RequestedTSManipulationModel> { };
-                    List<RequestedTSStructureModel> defaultTSstructures_temp = new List<RequestedTSStructureModel> { };
+                    List<SpecialOptimizationStructureModel> defaultTSstructures_temp = new List<SpecialOptimizationStructureModel> { };
 
                     while ((line = reader.ReadLine()) != null)
                     {

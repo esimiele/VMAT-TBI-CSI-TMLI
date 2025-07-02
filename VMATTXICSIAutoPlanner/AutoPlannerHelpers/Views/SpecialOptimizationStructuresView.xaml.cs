@@ -18,9 +18,9 @@ namespace AutoPlannerHelpers.Views
     /// <summary>
     /// Interaction logic for TSGenerationView.xaml
     /// </summary>
-    public partial class TSGenerationView : UserControl
+    public partial class SpecialOptimizationStructuresView : UserControl
     {
-        public TSGenerationView()
+        public SpecialOptimizationStructuresView()
         {
             InitializeComponent();
         }

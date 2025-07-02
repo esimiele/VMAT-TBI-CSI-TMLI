@@ -29,7 +29,7 @@ namespace CSIAutoPlanner.Settings
         internal static bool UseGPUForOptimization { get; set; } = false;
         internal static string MRLevelRestart { get; set; } = "MR3";
         internal static ImportExportDataModel ImportExportData { get; set; } = new ImportExportDataModel();
-        internal static List<RequestedTSStructureModel> RequestedPreliminaryTargets { get; set; } = new List<RequestedTSStructureModel> { };
+        internal static List<SpecialOptimizationStructureModel> RequestedPreliminaryTargets { get; set; } = new List<SpecialOptimizationStructureModel> { };
         internal static bool AutoDoseRecalculationDuringPlanPrep { get; set; } = true;
     }
 }

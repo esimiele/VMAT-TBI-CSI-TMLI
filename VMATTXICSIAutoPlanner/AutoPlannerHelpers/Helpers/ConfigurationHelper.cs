@@ -99,8 +99,8 @@ namespace AutoPlannerHelpers.Helpers
                         {
                             //preparation
                             List<RequestedTSManipulationModel> TSManipulation_temp = new List<RequestedTSManipulationModel> { };
-                            List<RequestedTSStructureModel> TSstructures_temp = new List<RequestedTSStructureModel> { };
-                            List<RequestedTSStructureModel> prelimTargets_temp = new List<RequestedTSStructureModel> { };
+                            List<SpecialOptimizationStructureModel> TSstructures_temp = new List<SpecialOptimizationStructureModel> { };
+                            List<SpecialOptimizationStructureModel> prelimTargets_temp = new List<SpecialOptimizationStructureModel> { };
                             List<TSRingStructureModel> createRings_temp = new List<TSRingStructureModel> { };
                             List<OptimizationConstraintModel> initOptConst_temp = new List<OptimizationConstraintModel> { };
                             List<OptimizationConstraintModel> bstOptConst_temp = new List<OptimizationConstraintModel> { };
@@ -155,7 +155,7 @@ namespace AutoPlannerHelpers.Helpers
                             if (TSManipulation_temp.Any()) tempTemplate.TSManipulations = new List<RequestedTSManipulationModel>(TSManipulation_temp);
                             if (createRings_temp.Any()) tempTemplate.Rings = new List<TSRingStructureModel>(createRings_temp);
                             if (cropAndContourOverlapStructures_temp.Any()) tempTemplate.CropAndOverlapStructures = new List<string>(cropAndContourOverlapStructures_temp);
-                            if (prelimTargets_temp.Any()) tempTemplate.RequestedPreliminaryTargets = new List<RequestedTSStructureModel>(prelimTargets_temp);
+                            if (prelimTargets_temp.Any()) tempTemplate.RequestedPreliminaryTargets = new List<SpecialOptimizationStructureModel>(prelimTargets_temp);
                             if (TSstructures_temp.Any()) tempTemplate.CreateTSStructures = TSstructures_temp;
                             if (initOptConst_temp.Any()) tempTemplate.InitialOptimizationConstraints = new List<OptimizationConstraintModel>(initOptConst_temp);
                             if (bstOptConst_temp.Any()) tempTemplate.BoostOptimizationConstraints = new List<OptimizationConstraintModel>(bstOptConst_temp);
@@ -191,7 +191,7 @@ namespace AutoPlannerHelpers.Helpers
                         {
                             //preparation
                             List<RequestedTSManipulationModel> TSManipulation_temp = new List<RequestedTSManipulationModel> { };
-                            List<RequestedTSStructureModel> TSstructures_temp = new List<RequestedTSStructureModel> { };
+                            List<SpecialOptimizationStructureModel> TSstructures_temp = new List<SpecialOptimizationStructureModel> { };
                             List<OptimizationConstraintModel> initOptConst_temp = new List<OptimizationConstraintModel> { };
                             List<PlanTargetsModel> targets_temp = new List<PlanTargetsModel> { };
                             //optimization loop
@@ -265,8 +265,8 @@ namespace AutoPlannerHelpers.Helpers
                             List<StructureOperationModel> targetDerivations_temp = new List<StructureOperationModel> { };
                             List<StructureOperationModel> optStructureDerivations_temp = new List<StructureOperationModel> { };
                             List<RequestedTSManipulationModel> TSManipulation_temp = new List<RequestedTSManipulationModel> { };
-                            List<RequestedTSStructureModel> TSstructures_temp = new List<RequestedTSStructureModel> { };
-                            List<RequestedTSStructureModel> prelimTargets_temp = new List<RequestedTSStructureModel> { };
+                            List<SpecialOptimizationStructureModel> TSstructures_temp = new List<SpecialOptimizationStructureModel> { };
+                            List<SpecialOptimizationStructureModel> prelimTargets_temp = new List<SpecialOptimizationStructureModel> { };
                             List<TSRingStructureModel> createRings_temp = new List<TSRingStructureModel> { };
                             List<OptimizationConstraintModel> initOptConst_temp = new List<OptimizationConstraintModel> { };
                             List<PlanTargetsModel> targets_temp = new List<PlanTargetsModel> { };
@@ -308,8 +308,8 @@ namespace AutoPlannerHelpers.Helpers
 
                             if (targetDerivations_temp.Any()) tempTemplate.TargetDerivationOperations = new List<StructureOperationModel>(targetDerivations_temp);
                             if (optStructureDerivations_temp.Any()) tempTemplate.OptimizationStructureDerivations = new List<StructureOperationModel>(optStructureDerivations_temp);
-                            if (TSstructures_temp.Any()) tempTemplate.CreateTSStructures = new List<RequestedTSStructureModel>(TSstructures_temp);
-                            if (prelimTargets_temp.Any()) tempTemplate.RequestedPreliminaryTargets = new List<RequestedTSStructureModel>(prelimTargets_temp);
+                            if (TSstructures_temp.Any()) tempTemplate.CreateTSStructures = new List<SpecialOptimizationStructureModel>(TSstructures_temp);
+                            if (prelimTargets_temp.Any()) tempTemplate.RequestedPreliminaryTargets = new List<SpecialOptimizationStructureModel>(prelimTargets_temp);
                             if (createRings_temp.Any()) tempTemplate.Rings = new List<TSRingStructureModel>(createRings_temp);
                             if (initOptConst_temp.Any()) tempTemplate.InitialOptimizationConstraints = new List<OptimizationConstraintModel>(initOptConst_temp);
                             if (targets_temp.Any()) tempTemplate.PlanTargets = new List<PlanTargetsModel>(TargetsHelper.GroupTargetsByPlanIdAndOrderByTargetRx(targets_temp));
@@ -366,7 +366,7 @@ namespace AutoPlannerHelpers.Helpers
         /// </summary>
         /// <param name="line"></param>
         /// <returns></returns>
-        public static RequestedTSStructureModel ParseCreateTS(string line)
+        public static SpecialOptimizationStructureModel ParseCreateTS(string line)
         {
             //known array format --> can take shortcuts in parsing the data
             //structure id, sparing type, added margin in cm (ignored if sparing type is Dmax ~ Rx Dose)
@@ -376,7 +376,7 @@ namespace AutoPlannerHelpers.Helpers
             dicomType = line.Substring(0, line.IndexOf(","));
             line = CropLine(line, ",");
             TSstructure = line.Substring(0, line.IndexOf("}"));
-            return new RequestedTSStructureModel(dicomType, TSstructure);
+            return new SpecialOptimizationStructureModel(dicomType, TSstructure);
         }
 
         /// <summary>

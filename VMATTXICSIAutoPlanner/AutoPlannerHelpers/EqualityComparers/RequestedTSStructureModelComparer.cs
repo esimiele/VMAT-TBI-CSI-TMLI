@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace AutoPlannerHelpers.EqualityComparers
 {
-    public class RequestedTSStructureModelComparer : IEqualityComparer<RequestedTSStructureModel>
+    public class RequestedTSStructureModelComparer : IEqualityComparer<SpecialOptimizationStructureModel>
     {
-        public bool Equals(RequestedTSStructureModel x, RequestedTSStructureModel y)
+        public bool Equals(SpecialOptimizationStructureModel x, SpecialOptimizationStructureModel y)
         {
             if (x == null && y == null) return true;
             else if (x == null || y == null) return false;
@@ -17,7 +17,7 @@ namespace AutoPlannerHelpers.EqualityComparers
             return string.Equals(x.StructureId, y.StructureId, StringComparison.OrdinalIgnoreCase);
         }
 
-        public int GetHashCode(RequestedTSStructureModel obj)
+        public int GetHashCode(SpecialOptimizationStructureModel obj)
         {
             return obj.GetHashCode();
         }

@@ -1,11 +1,11 @@
 ﻿namespace AutoPlannerHelpers.Models
 {
-    public class RequestedTSStructureModel
+    public class SpecialOptimizationStructureModel
     {
         public string DICOMType { get; set; } = string.Empty;
         public string StructureId { get; set; } = string.Empty;
 
-        public RequestedTSStructureModel(string dICOMType, string structureId)
+        public SpecialOptimizationStructureModel(string dICOMType, string structureId)
         {
             DICOMType = dICOMType;
             StructureId = structureId;

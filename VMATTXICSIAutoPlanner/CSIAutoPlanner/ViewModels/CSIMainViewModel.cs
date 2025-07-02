@@ -199,6 +199,7 @@ namespace CSIAutoPlanner.ViewModels
             });
         }
 
+        #region CT export
         public void ExportCTImage(ExportCTModel selectedImage)
         {
             if (ReferenceEquals(selectedImage, null) || !EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().Patient, null) || !EclipseContext.GetInstance().CTImages.Any()) return;
@@ -213,6 +214,7 @@ namespace CSIAutoPlanner.ViewModels
             if (result) return;
             Application.Current.MainWindow.Close();
         }
+        #endregion
 
         #region information and help guides
         private void LaunchQuickStartGuide()
@@ -258,7 +260,7 @@ namespace CSIAutoPlanner.ViewModels
 
             SpecifyTargetsTabBackground = System.Windows.Media.Brushes.ForestGreen;
             StructureTuningTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
-            TSManipulationTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
+            OptimizationStructureDerivationBackground = System.Windows.Media.Brushes.PaleVioletRed;
         }
 
         protected override bool VerifyTargetsIntegrity(List<PlanTargetsModel> parsedTargets)
@@ -301,9 +303,11 @@ namespace CSIAutoPlanner.ViewModels
                 Logger.GetInstance().LogError("Error! Script is not connected to aria or no structure set loaded! Cannot perform TS generation/manipulation!");
                 return;
             }
+            List<SpecialOptimizationStructureModel> specialOptStructures = WeakReferenceMessenger.Default.Send(new RequestSpecialOptimizationStructures());
             List<TSRingStructureModel> rings = WeakReferenceMessenger.Default.Send(new RequestRingStructures());
             List<string> cropOverlapStructures = WeakReferenceMessenger.Default.Send(new RequestCropOverlapStructures());
-            TSGenerationManipulation_CSI generateTS = new TSGenerationManipulation_CSI(operations,
+            TSGenerationManipulation_CSI generateTS = new TSGenerationManipulation_CSI(specialOptStructures,
+                                                                                       operations,
                                                                                        rings, 
                                                                                        _prescriptions, 
                                                                                        cropOverlapStructures);
@@ -322,7 +326,7 @@ namespace CSIAutoPlanner.ViewModels
             _planOptimizationSetup = UpdateOptimizationConstraintsWithCropOverlapStructures(generateTS.TargetCropOverlapManipulations, _planOptimizationSetup);
 
             StructureTuningTabBackground = System.Windows.Media.Brushes.ForestGreen;
-            TSManipulationTabBackground = System.Windows.Media.Brushes.ForestGreen;
+            OptimizationStructureDerivationBackground = System.Windows.Media.Brushes.ForestGreen;
             BeamPlacementTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
 
             Logger.GetInstance().AddedStructures = generateTS.AddedStructureIds;

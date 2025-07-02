@@ -94,7 +94,7 @@ namespace TMLIAutoPlanner.Core
         /// <returns></returns>
         protected override bool DeriveTargetStructures()
         {
-            if (UnionLRStructures()) return true;
+            if (StructureTuningHelper.UnionLRStructures(PUUD)) return true;
             UpdateUILabel("Contouring targets now:");
             int counter = 0;
             int calcItems = _targetsToDerive.Count + 2;
@@ -123,32 +123,6 @@ namespace TMLIAutoPlanner.Core
             //}
             
             ProvideUIUpdate(100, "Targets added and contoured!");
-            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
-            return false;
-        }
-
-        private bool UnionLRStructures()
-        {
-            UpdateUILabel("Unioning Structures:");
-            ProvideUIUpdate(0, "Checking for L and R structures to union!");
-            List<UnionStructureModel> structuresToUnion = StructureTuningHelper.CheckStructuresToUnion(EclipseContext.GetInstance().StructureSet.Structures.Where(x => !x.IsEmpty).Select(x => x.Id));
-            if (structuresToUnion.Any())
-            {
-                int calcItems = structuresToUnion.Count;
-                int numUnioned = 0;
-                foreach (UnionStructureModel itr in structuresToUnion)
-                {
-                    (bool fail, StringBuilder output) = StructureTuningHelper.UnionLRStructures(itr);
-                    if (!fail) ProvideUIUpdate(100 * ++numUnioned / calcItems, $"Unioned {itr.ProposedUnionStructureId}");
-                    else
-                    {
-                        ProvideUIUpdate(output.ToString(), true);
-                        return true;
-                    }
-                }
-                ProvideUIUpdate(100, "Structures unioned successfully!");
-            }
-            else ProvideUIUpdate(100, "No structures to union!");
             ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }

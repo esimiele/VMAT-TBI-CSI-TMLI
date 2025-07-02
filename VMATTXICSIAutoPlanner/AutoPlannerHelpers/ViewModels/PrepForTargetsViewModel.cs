@@ -14,28 +14,28 @@ namespace AutoPlannerHelpers.ViewModels
 {
     public class PrepForTargetsViewModel : ObservableObject
     {
-        public ObservableCollectionPropertyNotify<RequestedTSStructureModel> RequestedPreliminaryTargets { get; set; }
+        public ObservableCollectionPropertyNotify<SpecialOptimizationStructureModel> RequestedPreliminaryTargets { get; set; }
 
         #region fields
-        private List<RequestedTSStructureModel> _originalRequestedTargets;
+        private List<SpecialOptimizationStructureModel> _originalRequestedTargets;
         #endregion
 
         #region commands
         public ICommand DisplayInfoCommand { get; set; }
         public ICommand AddDefaultTSStructuresCommand { get; set; }
         public ICommand RemoveAllTSStructuresCommand { get; set; }
-        public RelayCommand<RequestedTSStructureModel> ClearRowCommand { get; set; }
+        public RelayCommand<SpecialOptimizationStructureModel> ClearRowCommand { get; set; }
         public ICommand RunPrepForTargetsCommand { get; set; }
         #endregion
 
         public PrepForTargetsViewModel()
         {
-            _originalRequestedTargets = new List<RequestedTSStructureModel> { };
-            RequestedPreliminaryTargets = new ObservableCollectionPropertyNotify<RequestedTSStructureModel> { };
+            _originalRequestedTargets = new List<SpecialOptimizationStructureModel> { };
+            RequestedPreliminaryTargets = new ObservableCollectionPropertyNotify<SpecialOptimizationStructureModel> { };
             DisplayInfoCommand = new RelayCommand(DisplayPrepForTargetsInfo);
             AddDefaultTSStructuresCommand = new RelayCommand(AddDefaultTSStructures);
             RemoveAllTSStructuresCommand = new RelayCommand(RemoveAllTSStructures);
-            ClearRowCommand = new RelayCommand<RequestedTSStructureModel>(ClearRow);
+            ClearRowCommand = new RelayCommand<SpecialOptimizationStructureModel>(ClearRow);
             RunPrepForTargetsCommand = new RelayCommand(RunPrepForTargets);
             InitializeMessengers();
         }
@@ -48,12 +48,12 @@ namespace AutoPlannerHelpers.ViewModels
             });
         }
 
-        public void UpdateRequestedTargetStructures(List<RequestedTSStructureModel> targets)
+        public void UpdateRequestedTargetStructures(List<SpecialOptimizationStructureModel> targets)
         {
             if (!targets.Any()) return;
             RequestedPreliminaryTargets.Clear();
-            _originalRequestedTargets = new List<RequestedTSStructureModel>(targets);
-            foreach (RequestedTSStructureModel itr in _originalRequestedTargets) RequestedPreliminaryTargets.Add(itr);
+            _originalRequestedTargets = new List<SpecialOptimizationStructureModel>(targets);
+            foreach (SpecialOptimizationStructureModel itr in _originalRequestedTargets) RequestedPreliminaryTargets.Add(itr);
         }
 
         private void DisplayPrepForTargetsInfo()
@@ -66,10 +66,10 @@ namespace AutoPlannerHelpers.ViewModels
         public void AddDefaultTSStructures()
         {
             RequestedPreliminaryTargets.Clear();
-            foreach (RequestedTSStructureModel itr in _originalRequestedTargets) RequestedPreliminaryTargets.Add(itr);
+            foreach (SpecialOptimizationStructureModel itr in _originalRequestedTargets) RequestedPreliminaryTargets.Add(itr);
         }
 
-        public void ClearRow(RequestedTSStructureModel o)
+        public void ClearRow(SpecialOptimizationStructureModel o)
         {
             RequestedPreliminaryTargets.Remove(o);
         }

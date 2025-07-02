@@ -11,9 +11,9 @@ using CommunityToolkit.Mvvm.Messaging;
 
 namespace AutoPlannerHelpers.ViewModels
 {
-    public class TSGenerationViewModel : ObservableObject
+    public class SpecialOptimizationStructuresViewModel : ObservableObject
     {
-        public ObservableCollectionPropertyNotify<RequestedTSStructureModel> RequestedTuningStructures { get; set; }
+        public ObservableCollectionPropertyNotify<SpecialOptimizationStructureModel> RequestedSpecialOptimizationStructures { get; set; }
 
         #region properties
         private AutoPlanTemplateBase _selectedTemplate;
@@ -23,16 +23,16 @@ namespace AutoPlannerHelpers.ViewModels
         public ICommand DisplayInfoCommand { get; set; }
         public ICommand AddDefaultTSStructuresCommand { get; set; }
         public ICommand RemoveAllTSStructuresCommand { get; set; }
-        public RelayCommand<RequestedTSStructureModel> ClearRowCommand { get; set; }
+        public RelayCommand<SpecialOptimizationStructureModel> ClearRowCommand { get; set; }
         #endregion
 
-        public TSGenerationViewModel()
+        public SpecialOptimizationStructuresViewModel()
         {
-            RequestedTuningStructures = new ObservableCollectionPropertyNotify<RequestedTSStructureModel> { };
+            RequestedSpecialOptimizationStructures = new ObservableCollectionPropertyNotify<SpecialOptimizationStructureModel> { };
             DisplayInfoCommand = new RelayCommand(DisplayTSGenerationInfo);
             AddDefaultTSStructuresCommand = new RelayCommand(AddDefaultTSStructures);
             RemoveAllTSStructuresCommand = new RelayCommand(RemoveAllTSStructures);
-            ClearRowCommand = new RelayCommand<RequestedTSStructureModel>(ClearRow);
+            ClearRowCommand = new RelayCommand<SpecialOptimizationStructureModel>(ClearRow);
             InitializeMessengers();
         }
 
@@ -42,9 +42,9 @@ namespace AutoPlannerHelpers.ViewModels
             {
                 AutoPlanTemplateSelectionChanged(m.AutoPlanTemplate);
             });
-            WeakReferenceMessenger.Default.Register<RequestTSGenerationStructures>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<RequestSpecialOptimizationStructures>(this, (r, m) =>
             {
-                m.Reply(this.RequestedTuningStructures.ToList());
+                m.Reply(this.RequestedSpecialOptimizationStructures.ToList());
             });
         }
 
@@ -75,20 +75,20 @@ namespace AutoPlannerHelpers.ViewModels
             UpdateViewWithAutoPlanTemplateTSStructures();
         }
 
-        public void ClearRow(RequestedTSStructureModel o)
+        public void ClearRow(SpecialOptimizationStructureModel o)
         {
-            RequestedTuningStructures.Remove(o);
+            RequestedSpecialOptimizationStructures.Remove(o);
         }
 
         public void UpdateViewWithAutoPlanTemplateTSStructures()
         {
-            RequestedTuningStructures.Clear();
-            foreach (RequestedTSStructureModel itr in _selectedTemplate.CreateTSStructures) RequestedTuningStructures.Add(itr);
+            RequestedSpecialOptimizationStructures.Clear();
+            foreach (SpecialOptimizationStructureModel itr in _selectedTemplate.CreateTSStructures) RequestedSpecialOptimizationStructures.Add(itr);
         }
 
         private void RemoveAllTSStructures()
         {
-            RequestedTuningStructures.Clear();
+            RequestedSpecialOptimizationStructures.Clear();
         }
     }
 }

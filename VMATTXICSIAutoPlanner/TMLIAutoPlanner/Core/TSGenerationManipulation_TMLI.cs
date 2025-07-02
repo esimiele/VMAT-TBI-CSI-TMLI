@@ -34,10 +34,12 @@ namespace TMLIAutoPlanner.Core
         
         #endregion
 
-        internal TSGenerationManipulation_TMLI(List<StructureOperationModel> operations,
+        internal TSGenerationManipulation_TMLI(List<SpecialOptimizationStructureModel> specialOptStructs,
+                                               List<StructureOperationModel> operations,
                                                List<TSRingStructureModel> rings,
                                                List<PrescriptionModel> presc)
         {
+            _specialOptimizationStructures = specialOptStructs;
             _structureOperations = new List<StructureOperationModel>(operations);
             _requestedRings = new List<TSRingStructureModel>(rings);
             prescriptions = new List<PrescriptionModel>(presc);
@@ -51,9 +53,10 @@ namespace TMLIAutoPlanner.Core
             {
                 PlanIsocentersList.Clear();
                 if (PreliminaryChecks()) return true;
-                if (UnionLRStructures()) return true;
+                if (StructureTuningHelper.UnionLRStructures(PUUD)) return true;
                 if (_structureOperations.Any()) if (CheckHighResolution()) return true;
-                //if (CreateTSStructures()) return true;
+                if (RemoveOldTSStructures(_structureOperations)) return true;
+                if (CreateSpecialOptimizationStructures()) return true;
                 if (PerformStructureDerivations()) return true;
                 if (_requestedRings.Any())
                 {
@@ -180,6 +183,16 @@ namespace TMLIAutoPlanner.Core
                     ProvideUIUpdate($"Error! Target structure: {itr.TargetId} is null or empty! Cannot perform tuning structure manipulations! Exiting!", true);
                     return true;
                 }
+            }
+
+            foreach (StructureOperationModel itr in _structureOperations)
+            {
+                if (itr.IsValidOperation)
+                {
+                    ProvideUIUpdate(100 * ++counter / calcItems, $"Contouring target: {itr}");
+                    if (ContourHelper.PerformStructureOperation(itr, UIUD)) return true;
+                }
+                else ProvideUIUpdate($"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");
             }
 
             //if(TSManipulationList.Any(x => !string.IsNullOrEmpty(x.TargetId)))

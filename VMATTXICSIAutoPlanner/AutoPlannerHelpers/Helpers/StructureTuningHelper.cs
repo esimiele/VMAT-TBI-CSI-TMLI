@@ -1,4 +1,5 @@
 ﻿using AutoPlannerHelpers.Context;
+using AutoPlannerHelpers.Delegates;
 using AutoPlannerHelpers.Models;
 using System;
 using System.Collections.Generic;
@@ -79,38 +80,34 @@ namespace AutoPlannerHelpers.Helpers
         }
 
         /// <summary>
-        /// Utility method to take the supplied left and right structures and union them together
+        /// Helper method to union all identified left and right structures
         /// </summary>
-        /// <param name="itr"></param>
-        /// <param name="selectedSS"></param>
         /// <returns></returns>
-        public static (bool, StringBuilder) UnionLRStructures(UnionStructureModel itr)
+        public static bool UnionLRStructures(ProvideUIUpdateDelegate ProvideUIUpdate)
         {
-            if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
+            ProvideUIUpdate(0, "Checking for L and R structures to union!");
+            List<UnionStructureModel> structuresToUnion = CheckStructuresToUnion(EclipseContext.GetInstance().StructureSet.Structures.Where(x => !x.IsEmpty).Select(x => x.Id));
+            if (structuresToUnion.Any())
             {
-                throw new Exception("Error! Eclipse context not initialized! Unable to union left and right structures!");
-            }
-            StringBuilder sb = new StringBuilder();
-            Structure newStructure;
-            string newName = itr.ProposedUnionStructureId;
-            try
-            {
-                //a structure already exists in the structure set with the intended name
-                newStructure = GetStructureFromId(newName, true);
-                Structure L = GetStructureFromId(itr.Structure_Left);
-                Structure R = GetStructureFromId(itr.Structure_Right);
-                newStructure.SegmentVolume = ContourHelper.ContourUnion(L, R, new StructureMarginModel(0.0), new StructureMarginModel(0.0));
-                if(newStructure.IsEmpty)
+                int calcItems = structuresToUnion.Count;
+                int numUnioned = 0;
+                foreach (UnionStructureModel itr in structuresToUnion)
                 {
-                    return (true, sb.AppendLine($"Error! {newStructure.Id} is empty following union of L/R structures!"));
+                    Structure newStructure = GetStructureFromId(itr.ProposedUnionStructureId, true);
+                    Structure L = GetStructureFromId(itr.Structure_Left);
+                    Structure R = GetStructureFromId(itr.Structure_Right);
+                    newStructure.SegmentVolume = ContourHelper.ContourUnion(L, R, new StructureMarginModel(0.0), new StructureMarginModel(0.0));
+                    if (newStructure.IsEmpty)
+                    {
+                        ProvideUIUpdate(0, $"Error! {newStructure.Id} is empty following union of L/R structures!", true);
+                        return true;
+                    }
+                    ProvideUIUpdate(100* (++numUnioned / calcItems), $"Unioned {itr.ProposedUnionStructureId}");
                 }
+                ProvideUIUpdate(100, "Structures unioned successfully!");
             }
-            catch (Exception except)
-            {
-                sb.Append($"Warning! Could not union {itr.Structure_Left} and {itr.Structure_Right} onto {newName}\nBecause: {except.Message}");
-                return (true, sb);
-            }
-            return (false, sb);
+            else ProvideUIUpdate(100, "No structures to union!");
+            return false;
         }
 
         /// <summary>
@@ -120,7 +117,7 @@ namespace AutoPlannerHelpers.Helpers
         /// <param name="selectedSS"></param>
         /// <param name="createIfEmpty"></param>
         /// <returns></returns>
-        public static Structure GetStructureFromId(string id, bool createIfEmpty = false)
+        public static Structure GetStructureFromId(string id, bool createIfEmpty = false, string dcmType = "")
         {
             if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
             {
@@ -136,10 +133,14 @@ namespace AutoPlannerHelpers.Helpers
                 //DICOM types
                 //Possible values are "AVOIDANCE", "CAVITY", "CONTRAST_AGENT", "CTV", "EXTERNAL", "GTV", "IRRAD_VOLUME", 
                 //"ORGAN", "PTV", "TREATED_VOLUME", "SUPPORT", "FIXATION", "CONTROL", and "DOSE_REGION". 
-                string dcmType = "CONTROL";
-                if (id.ToLower().Contains("gtv")) dcmType = "GTV";
-                else if (id.ToLower().Contains("ctv")) dcmType = "CTV";
-                else if (id.ToLower().Contains("ptv")) dcmType = "PTV";
+                if(string.IsNullOrEmpty(dcmType))
+                {
+                    //try and figure out the dcm type based on supplied structure id
+                    dcmType = "CONTROL";
+                    if (id.ToLower().Contains("gtv")) dcmType = "GTV";
+                    else if (id.ToLower().Contains("ctv")) dcmType = "CTV";
+                    else if (id.ToLower().Contains("ptv")) dcmType = "PTV";
+                }
                 if (EclipseContext.GetInstance().StructureSet.CanAddStructure(dcmType, id))
                 {
                     theStructure = EclipseContext.GetInstance().StructureSet.AddStructure(dcmType, id);

@@ -242,15 +242,15 @@
                             </TabItem>
                         </TabControl>
                     </TabItem>
-                    <TabItem Header="Structure Tuning" Background="{Binding StructureTuningTabBackground, FallbackValue=LightGray}" BorderThickness="0,1,1,0" x:Name="structureTuningTabItem" Margin="0,0,1,1">
+                    <TabItem Header="Opt Structure Tuning" Background="{Binding StructureTuningTabBackground, FallbackValue=LightGray}" BorderThickness="0,1,1,0" x:Name="structureTuningTabItem" Margin="0,0,1,1">
                         <TabControl Background="DarkGray">
-                            <TabItem Header="Structure Generation" Content="{Binding TSGeneration}" BorderThickness="1,1,1,1" Width="153">
+                            <TabItem Header="Special Opt Structures" Content="{Binding SpecialOptimizationStructures}" BorderThickness="1,1,1,1" Width="Auto">
                             </TabItem>
-                            <TabItem Header="Ring Generation" Content="{Binding RingGeneration}" BorderThickness="0,1,1,1" Width="124">
+                            <TabItem Header="Ring Generation" Content="{Binding RingGeneration}" BorderThickness="0,1,1,1" Width="Auto">
                             </TabItem>
-                            <TabItem Header="Crop/Contour Overlap" Content="{Binding StructureCropOverlap}" Width="150" BorderThickness="0,1,1,1">
+                            <TabItem Header="Crop/Contour Overlap" Content="{Binding StructureCropOverlap}" Width="Auto" BorderThickness="0,1,1,1">
                             </TabItem>
-                            <TabItem Header="Structure Manipulation" Content="{Binding TSManipulation}" Background="{Binding TSManipulationTabBackground, FallbackValue=LightGray}"  BorderThickness="0,1,1,1" Width="160" x:Name="TSManipulationTabItem">
+                            <TabItem Header="Structure Derivations" Content="{Binding OptimizationStructureDerivations}" Background="{Binding OptimizationStructureDerivationBackground, FallbackValue=LightGray}"  BorderThickness="0,1,1,1" Width="Auto" x:Name="TSManipulationTabItem">
                             </TabItem>
                         </TabControl>
                     </TabItem>

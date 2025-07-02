@@ -199,7 +199,10 @@ namespace TBIAutoPlanner.ViewModels
                 Logger.GetInstance().LogError("Error! Script is not connected to aria or no structure set loaded! Cannot perform TS generation/manipulation!");
                 return;
             }
-            TSGenerationManipulation_TBI generateTS = new TSGenerationManipulation_TBI(operations,
+            List<SpecialOptimizationStructureModel> specialOptStructures = WeakReferenceMessenger.Default.Send(new RequestSpecialOptimizationStructures());
+
+            TSGenerationManipulation_TBI generateTS = new TSGenerationManipulation_TBI(specialOptStructures,
+                                                                                       operations,
                                                                                        _prescriptions,
                                                                                        UseFlash,
                                                                                        FlashMargin,
@@ -217,7 +220,7 @@ namespace TBIAutoPlanner.ViewModels
             _planOptimizationSetup = UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
 
             StructureTuningTabBackground = Brushes.ForestGreen;
-            TSManipulationTabBackground = Brushes.ForestGreen;
+            OptimizationStructureDerivationBackground = Brushes.ForestGreen;
             BeamPlacementTabBackground = Brushes.PaleVioletRed;
 
             Logger.GetInstance().AddedStructures = generateTS.AddedStructureIds;

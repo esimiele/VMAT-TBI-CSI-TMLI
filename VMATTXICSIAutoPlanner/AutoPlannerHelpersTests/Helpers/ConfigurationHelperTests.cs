@@ -62,13 +62,13 @@ namespace AutoPlannerHelpers.Helpers.Tests
         public void ParseCreateTSTestPass()
         {
             string testCreateTS = "create TS{CONTROL,TS_Eyes}";
-            RequestedTSStructureModel expected = new RequestedTSStructureModel("CONTROL", "TS_Eyes");
-            RequestedTSStructureModel result = ConfigurationHelper.ParseCreateTS(testCreateTS);
+            SpecialOptimizationStructureModel expected = new SpecialOptimizationStructureModel("CONTROL", "TS_Eyes");
+            SpecialOptimizationStructureModel result = ConfigurationHelper.ParseCreateTS(testCreateTS);
             Assert.AreEqual(expected.StructureId, result.StructureId);
             Assert.AreEqual(expected.DICOMType, result.DICOMType);
 
             testCreateTS = "create TS{PTV,TS_Eyes}";
-            expected = new RequestedTSStructureModel("CONTROL", "TS_Eyes");
+            expected = new SpecialOptimizationStructureModel("CONTROL", "TS_Eyes");
             result = ConfigurationHelper.ParseCreateTS(testCreateTS);
             Assert.AreEqual(expected.StructureId, result.StructureId);
             Assert.AreNotEqual(expected.DICOMType, result.DICOMType);
