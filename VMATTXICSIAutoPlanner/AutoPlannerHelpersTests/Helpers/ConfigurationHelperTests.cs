@@ -59,17 +59,17 @@ namespace AutoPlannerHelpers.Helpers.Tests
         }
 
         [TestMethod()]
-        public void ParseCreateTSTestPass()
+        public void ParseAddSpecialOptimizationStructure()
         {
-            string testCreateTS = "create TS{CONTROL,TS_Eyes}";
+            string testCreateTS = "add special optimization structure{CONTROL,TS_Eyes}";
             SpecialOptimizationStructureModel expected = new SpecialOptimizationStructureModel("CONTROL", "TS_Eyes");
-            SpecialOptimizationStructureModel result = ConfigurationHelper.ParseCreateTS(testCreateTS);
+            SpecialOptimizationStructureModel result = ConfigurationHelper.ParseSpecialOptStructure(testCreateTS);
             Assert.AreEqual(expected.StructureId, result.StructureId);
             Assert.AreEqual(expected.DICOMType, result.DICOMType);
 
-            testCreateTS = "create TS{PTV,TS_Eyes}";
+            testCreateTS = "add special optimization structure{PTV,TS_Eyes}";
             expected = new SpecialOptimizationStructureModel("CONTROL", "TS_Eyes");
-            result = ConfigurationHelper.ParseCreateTS(testCreateTS);
+            result = ConfigurationHelper.ParseSpecialOptStructure(testCreateTS);
             Assert.AreEqual(expected.StructureId, result.StructureId);
             Assert.AreNotEqual(expected.DICOMType, result.DICOMType);
         }

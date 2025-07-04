@@ -9,6 +9,7 @@ using VMS.TPS.Common.Model.Types;
 using AutoPlannerHelpers.Context;
 using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.Models;
+using System.Windows.Media.Converters;
 
 namespace AutoPlannerHelpers.Helpers
 {
@@ -85,12 +86,12 @@ namespace AutoPlannerHelpers.Helpers
 
                         break;
                     case StructureDerivationOperation.CutInferiorTo:
-                        OutputStructure.SegmentVolume = CutStructureInfToStructure(StructureA, StructureB, structureOperation.MarginA, structureOperation.MarginB);
+                        OutputStructure.SegmentVolume = CutStructureInfToStructure(StructureA, StructureB);
                         if (OutputStructure.IsEmpty) ProvideUIUpdate($"Warning! Output structure ({OutputStructure.Id}) is empty following {structureOperation.Operation} operation!");
 
                         break;
                     case StructureDerivationOperation.CutSuperiorTo:
-                        OutputStructure.SegmentVolume = CutStructureSupToStructure(StructureA, StructureB, structureOperation.MarginA, structureOperation.MarginB);
+                        OutputStructure.SegmentVolume = CutStructureSupToStructure(StructureA, StructureB);
                         if (OutputStructure.IsEmpty) ProvideUIUpdate($"Warning! Output structure ({OutputStructure.Id}) is empty following {structureOperation.Operation} operation!");
                         break;
                 }
@@ -132,76 +133,24 @@ namespace AutoPlannerHelpers.Helpers
             return null;
         }
 
-        public static SegmentVolume CutStructureInfToStructure(Structure a, Structure b, StructureMarginModel marginA, StructureMarginModel marginB)
+        public static SegmentVolume CutStructureInfToStructure(Structure a, Structure b)
         {
-            //margin is in cm
-            //if (!ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return a.SegmentVolume.AsymmetricMargin(marginA.AxisAlignedMargins).Xor(b.SegmentVolume.AsymmetricMargin(marginB.AxisAlignedMargins));
-            return null;
+            int slice = CalculationHelper.ComputeSlice(b.MeshGeometry.Positions.Min(p => p.Z), EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes);
+            for (int i = 0; i < slice; i++)
+            {
+                a.ClearAllContoursOnImagePlane(i);
+            }
+            return a.SegmentVolume;
         }
 
-        public static SegmentVolume CutStructureSupToStructure(Structure a, Structure b, StructureMarginModel marginA, StructureMarginModel marginB)
+        public static SegmentVolume CutStructureSupToStructure(Structure a, Structure b)
         {
-            //margin is in cm
-            //if (!ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return a.SegmentVolume.AsymmetricMargin(marginA.AxisAlignedMargins).Xor(b.SegmentVolume.AsymmetricMargin(marginB.AxisAlignedMargins));
-            return null;
-        }
-
-        /// <summary>
-        /// Helper method to crop or subtract one structure from another ONTO structureToCrop
-        /// </summary>
-        /// <param name="structureToCrop"></param>
-        /// <param name="baseStructure"></param>
-        /// <param name="marginInCm"></param>
-        /// <returns></returns>
-        public static (bool, StringBuilder) CropStructureFromStructure(Structure structureToCrop, Structure baseStructure, double marginInCm)
-        {
-            StringBuilder sb = new StringBuilder();
-            bool fail = false;
-            //margin is in cm
-            if (!ReferenceEquals(structureToCrop, null) && !ReferenceEquals(baseStructure, null))
+            int slice = CalculationHelper.ComputeSlice(b.MeshGeometry.Positions.Max(p => p.Z), EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes);
+            for (int i = 0; i < slice; i++)
             {
-                if (marginInCm >= -5.0 && marginInCm <= 5.0) structureToCrop.SegmentVolume = structureToCrop.SegmentVolume.Sub(baseStructure.SegmentVolume.Margin(marginInCm * 10));
-                else
-                {
-                    sb.AppendLine("Cropping margin MUST be within +/- 5.0 cm!");
-                    fail = true;
-                }
+                a.ClearAllContoursOnImagePlane(i);
             }
-            else
-            {
-                sb.AppendLine("Error either target or normal structures are missing! Can't crop target from normal structure!");
-                fail = true;
-            }
-            return (fail, sb);
-        }
-
-        /// <summary>
-        /// Helper method to crop or subtract one structure from another ONTO structureToCrop
-        /// </summary>
-        /// <param name="structureToCrop"></param>
-        /// <param name="baseStructure"></param>
-        /// <param name="marginInCm"></param>
-        /// <returns></returns>
-        public static (bool, StringBuilder) CropStructureFromStructure(Structure structureToCrop, SegmentVolume baseStructure, double marginInCm)
-        {
-            StringBuilder sb = new StringBuilder();
-            bool fail = false;
-            //margin is in cm
-            if (!ReferenceEquals(structureToCrop, null) && !ReferenceEquals(baseStructure, null))
-            {
-                if (marginInCm >= -5.0 && marginInCm <= 5.0) structureToCrop.SegmentVolume = structureToCrop.SegmentVolume.Sub(baseStructure.Margin(marginInCm * 10));
-                else
-                {
-                    sb.AppendLine("Cropping margin MUST be within +/- 5.0 cm!");
-                    fail = true;
-                }
-            }
-            else
-            {
-                sb.AppendLine("Error either target or normal structures are missing! Can't crop target from normal structure!");
-                fail = true;
-            }
-            return (fail, sb);
+            return a.SegmentVolume;
         }
 
         /// <summary>
@@ -211,27 +160,27 @@ namespace AutoPlannerHelpers.Helpers
         /// <param name="normal"></param>
         /// <param name="marginInCm"></param>
         /// <returns></returns>
-        public static (bool, StringBuilder) ContourOverlap(Structure target, Structure normal, double marginInCm)
-        {
-            StringBuilder sb = new StringBuilder();
-            bool fail = false;
-            //margin is in cm
-            if (!ReferenceEquals(target, null) && !ReferenceEquals(normal, null))
-            {
-                if (marginInCm >= -5.0 && marginInCm <= 5.0) normal.SegmentVolume = target.SegmentVolume.And(normal.SegmentVolume.Margin(marginInCm * 10));
-                else
-                {
-                    sb.AppendLine("Added margin MUST be within +/- 5.0 cm!");
-                    fail = true;
-                }
-            }
-            else
-            {
-                sb.AppendLine("Error either target or normal structures are missing! Can't contour overlap between target and normal structure!");
-                fail = true;
-            }
-            return (fail, sb);
-        }
+        //public static (bool, StringBuilder) ContourOverlap(Structure target, Structure normal, double marginInCm)
+        //{
+        //    StringBuilder sb = new StringBuilder();
+        //    bool fail = false;
+        //    //margin is in cm
+        //    if (!ReferenceEquals(target, null) && !ReferenceEquals(normal, null))
+        //    {
+        //        if (marginInCm >= -5.0 && marginInCm <= 5.0) normal.SegmentVolume = target.SegmentVolume.And(normal.SegmentVolume.Margin(marginInCm * 10));
+        //        else
+        //        {
+        //            sb.AppendLine("Added margin MUST be within +/- 5.0 cm!");
+        //            fail = true;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        sb.AppendLine("Error either target or normal structures are missing! Can't contour overlap between target and normal structure!");
+        //        fail = true;
+        //    }
+        //    return (fail, sb);
+        //}
 
         /// <summary>
         /// Helper method to combine/union a list of structures onto structureToUnion

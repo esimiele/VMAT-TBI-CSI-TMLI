@@ -238,12 +238,7 @@ namespace AutoPlannerHelpers.BaseCore
                 }
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Copied {OAR.Id} onto {overlapName}");
 
-                (bool failOverlap, StringBuilder errorOverlapMessage) = ContourHelper.ContourOverlap(target, overlapStructure, margin);
-                if (failOverlap)
-                {
-                    ProvideUIUpdate(errorOverlapMessage.ToString());
-                    return true;
-                }
+                overlapStructure.SegmentVolume = ContourHelper.ContourIntersection(target, overlapStructure, new StructureMarginModel(0.0), new StructureMarginModel(margin));
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Contoured overlap between {target.Id} and {overlapName}");
 
                 if (overlapStructure.IsEmpty)

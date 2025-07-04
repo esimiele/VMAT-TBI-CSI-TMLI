@@ -40,11 +40,6 @@ namespace AutoPlannerHelpersTests.BaseViewModel
             throw new NotImplementedException();
         }
 
-        protected override void PerformTSStructureGenerationManipulation(List<SpecialOptimizationStructureModel> structuresToGenerate, List<RequestedTSManipulationModel> manipulations)
-        {
-            throw new NotImplementedException();
-        }
-
         protected override void UpdateUIWithSelectedPlanTemplate()
         {
             throw new NotImplementedException();
@@ -66,11 +61,6 @@ namespace AutoPlannerHelpersTests.BaseViewModel
         }
 
         protected override bool RecalculateDoseForSeparatePlans()
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override void PerformOptimizationStructureDerivation(List<StructureOperationModel> operations)
         {
             throw new NotImplementedException();
         }

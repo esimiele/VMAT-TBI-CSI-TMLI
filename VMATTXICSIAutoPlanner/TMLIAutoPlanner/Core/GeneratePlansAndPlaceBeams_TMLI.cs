@@ -301,7 +301,7 @@ namespace TMLIAutoPlanner.Core
             Image image = EclipseContext.GetInstance().StructureSet.Image;
             VVector userOrigin = image.UserOrigin;
             //manually calculate the target sup/inf extent to avoid having to figure out if flash was used or not
-            Structure target = StructureTuningHelper.GetStructureFromId("body", EclipseContext.GetInstance().StructureSet);
+            Structure target = StructureTuningHelper.GetStructureFromId("body");
             double targetSupExtent = target.MeshGeometry.Positions.Max(p => p.Z);
             double targetInfExtent = target.MeshGeometry.Positions.Min(p => p.Z);
 
@@ -309,7 +309,7 @@ namespace TMLIAutoPlanner.Core
             if (TMLIAutoPlannerSettings.CheckTTCollision)
             {
                 ProvideUIUpdate("Checking for potential couch collision");
-                if (StructureTuningHelper.DoesStructureExistInSS("couchsurface", EclipseContext.GetInstance().StructureSet, true))
+                if (StructureTuningHelper.DoesStructureExistInSS("couchsurface", true))
                 {
                     double TT = 0;
                     Structure couchSurface = EclipseContext.GetInstance().StructureSet.Structures.FirstOrDefault(x => x.Id.ToLower() == "couchsurface");
@@ -332,9 +332,9 @@ namespace TMLIAutoPlanner.Core
             else ProvideUIUpdate($"Couch collision check NOT requested. Skipping");
 
             //matchline is present and not empty
-            if (!TMLIAutoPlannerSettings.AllBeamsVMAT && StructureTuningHelper.DoesStructureExistInSS("matchline", EclipseContext.GetInstance().StructureSet, true))
+            if (!TMLIAutoPlannerSettings.AllBeamsVMAT && StructureTuningHelper.DoesStructureExistInSS("matchline", true))
             {
-                Structure matchline = StructureTuningHelper.GetStructureFromId("matchline", EclipseContext.GetInstance().StructureSet);
+                Structure matchline = StructureTuningHelper.GetStructureFromId("matchline");
                 allIsocenters.Add(new PlanIsocenterModel(vmatPlan.Id, CalculateVMATIsoPositions(targetSupExtent, matchline.CenterPoint.z, 10.0, 400.0, 20.0, offsetY, planIsocenters.First().Isocenters)));
                 List<IsocenterModel> legsIsoModels = CalculateAPPAIsoPositions(matchline.CenterPoint.z,
                                                                                                 targetInfExtent,
@@ -454,7 +454,7 @@ namespace TMLIAutoPlanner.Core
             int percentComplete = 0;
             int calcItems = 3 + planIso.Isocenters.First().NumberOfBeams * 5;
 
-            Structure target = StructureTuningHelper.GetStructureFromId("body", EclipseContext.GetInstance().StructureSet);
+            Structure target = StructureTuningHelper.GetStructureFromId("body");
             ProvideUIUpdate(100 * ++percentComplete / calcItems, "Retrieved body structure");
             double targetInfExtent = target.MeshGeometry.Positions.Min(p => p.Z);
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Calculated target inferior extent: {targetInfExtent}");
@@ -473,7 +473,7 @@ namespace TMLIAutoPlanner.Core
             x2 = CalculateX2JawPosition(planIso.Isocenters.First().IsocenterPosition.z, targetInfExtent, 20.0);
             if (isLastIso)
             {
-                double legsTargetExtent = StructureTuningHelper.GetStructureFromId("matchline", EclipseContext.GetInstance().StructureSet).CenterPoint.z - targetInfExtent;
+                double legsTargetExtent = StructureTuningHelper.GetStructureFromId("matchline").CenterPoint.z - targetInfExtent;
 
                 if (legsPlans.Count() > 1 && legsTargetExtent < 600.0)
                 {

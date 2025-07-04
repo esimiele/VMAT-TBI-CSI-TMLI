@@ -63,16 +63,16 @@ namespace AutoPlannerHelpers.Helpers.Tests
 
             List<UnionStructureModel> expected = new List<UnionStructureModel>
             {
-                new UnionStructureModel(ss.Structures.First(x => x.Id == "Lens_L"), ss.Structures.First(x => x.Id == "Lens_R"), "lenses"),
-                new UnionStructureModel(ss.Structures.First(x => x.Id == "Lung_L"), ss.Structures.First(x => x.Id == "Lung_R"), "lungs"),
-                new UnionStructureModel(ss.Structures.First(x => x.Id == "Kidney_L"), ss.Structures.First(x => x.Id == "Kidney_R"), "kidneys"),
+                new UnionStructureModel("Lens_L", "Lens_R", "lenses"),
+                new UnionStructureModel("Lung_L", "Lung_R", "lungs"),
+                new UnionStructureModel("Kidney_L", "Kidney_R", "kidneys"),
             };
 
-            List<UnionStructureModel> result = StructureTuningHelper.CheckStructuresToUnion(ss);
+            List<UnionStructureModel> result = StructureTuningHelper.CheckStructuresToUnion(ss.Structures.Select(x => x.Id));
             int count = 0;
             foreach (UnionStructureModel itr in result)
             {
-                Console.WriteLine($"{itr.Structure_Left.Id}, {itr.Structure_Right.Id}, {itr.ProposedUnionStructureId}");
+                Console.WriteLine($"{itr.Structure_Left}, {itr.Structure_Right}, {itr.ProposedUnionStructureId}");
                 Assert.AreEqual(itr.Structure_Left, expected.ElementAt(count).Structure_Left);
                 Assert.AreEqual(itr.Structure_Right, expected.ElementAt(count).Structure_Right);
                 Assert.AreEqual(itr.ProposedUnionStructureId, expected.ElementAt(count).ProposedUnionStructureId);
@@ -109,10 +109,10 @@ namespace AutoPlannerHelpers.Helpers.Tests
             StructureSet ss = BuildTestStructureSet();
 
             Structure expected = ss.Structures.First(x => x.Id == "Kidney_R");
-            Structure result = StructureTuningHelper.GetStructureFromId("Kidney_R", ss, false);
+            Structure result = StructureTuningHelper.GetStructureFromId("Kidney_R", false);
             Assert.AreEqual(expected, result);
 
-            Structure wrongStructure = StructureTuningHelper.GetStructureFromId("Kidney_L", ss, false);
+            Structure wrongStructure = StructureTuningHelper.GetStructureFromId("Kidney_L", false);
             Assert.AreNotEqual(expected, wrongStructure);
         }
 
@@ -121,19 +121,19 @@ namespace AutoPlannerHelpers.Helpers.Tests
         {
             StructureSet ss = BuildTestStructureSet();
             bool expected = false;
-            bool result = StructureTuningHelper.DoesStructureExistInSS("brain", ss, false);
+            bool result = StructureTuningHelper.DoesStructureExistInSS("brain", false);
             Assert.AreEqual(expected, result);
 
             expected = true;
-            result = StructureTuningHelper.DoesStructureExistInSS("Lung_R", ss, false);
+            result = StructureTuningHelper.DoesStructureExistInSS("Lung_R", false);
             Assert.AreEqual(expected, result);
 
             expected = false;
-            result = StructureTuningHelper.DoesStructureExistInSS(new List<string> { "testes, brain, bones, stomach" }, ss, false);
+            result = StructureTuningHelper.DoesStructureExistInSS(new List<string> { "testes, brain, bones, stomach" }, false);
             Assert.AreEqual(expected, result);
 
             expected = true;
-            result = StructureTuningHelper.DoesStructureExistInSS(new List<string> { "testes, brain, bones, stomach", "Liver" }, ss, false);
+            result = StructureTuningHelper.DoesStructureExistInSS(new List<string> { "testes, brain, bones, stomach", "Liver" }, false);
             Assert.AreEqual(expected, result);
         }
     }

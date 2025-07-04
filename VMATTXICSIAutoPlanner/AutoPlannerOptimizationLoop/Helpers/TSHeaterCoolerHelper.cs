@@ -65,11 +65,11 @@ namespace AutoPlannerOptimizationLoop.Helpers
                 dummy.ConvertDoseLevelToStructure(d, new DoseValue(ts.UpperDoseValue * plan.TotalDose.Dose / 100, DoseValue.DoseUnit.cGy));
                 //subtract the higher isodose volume from the heater structure and assign it to the heater structure. 
                 //This is the heater structure that will be used for optimization. Create a new optimization objective for this tunning structure
-                ContourHelper.CropStructureFromStructure(heaterStructure, dummy, 0.0);
+                ContourHelper.CropStructureFromStructure(heaterStructure, dummy, new StructureMarginModel(0.0), new StructureMarginModel(0.0));
                 //clean up
                 ss.RemoveStructure(dummy);
                 //only keep the overlapping regions of the heater structure with the taget structure
-                ContourHelper.ContourOverlap(target, heaterStructure, 0.0);
+                ContourHelper.ContourIntersection(target, heaterStructure, new StructureMarginModel(0.0), new StructureMarginModel(0.0));
             }
             return heaterStructure;
         }

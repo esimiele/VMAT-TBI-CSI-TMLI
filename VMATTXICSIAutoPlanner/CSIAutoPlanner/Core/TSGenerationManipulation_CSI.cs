@@ -248,12 +248,7 @@ namespace CSIAutoPlanner.Core
                 }
 
                 ProvideUIUpdate($"Contouring overlap between ring and {normalId}");
-                (bool overlapFail, StringBuilder overlapErrorMessage) = ContourHelper.ContourOverlap(normal, addedStructure, 0.0);
-                if (overlapFail)
-                {
-                    ProvideUIUpdate(overlapErrorMessage.ToString());
-                    return true;
-                }
+                addedStructure.SegmentVolume = ContourHelper.ContourIntersection(normal, addedStructure, new StructureMarginModel(0.0), new StructureMarginModel(0.0));
                 ProvideUIUpdate(100 * ++counter / calcItems, "Overlap Contoured!");
 
                 if (CheckTSGlobesLensesStructureIntegrity(addedStructure)) return true;
@@ -804,12 +799,7 @@ namespace CSIAutoPlanner.Core
                             }
 
                             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Cropping structure ({itr}) from target ({target.Id})");
-                            (bool failCrop, StringBuilder errorCropMessage) = ContourHelper.CropStructureFromStructure(cropResult.cropStructure, normal, 0.0);
-                            if (failCrop)
-                            {
-                                ProvideUIUpdate(errorCropMessage.ToString());
-                                return true;
-                            }
+                            cropResult.cropStructure.SegmentVolume = ContourHelper.CropStructureFromStructure(cropResult.cropStructure, normal, new StructureMarginModel(0.0), new StructureMarginModel(0.0));
                         }
                         NormalizationVolumes.Add(sortedPrescriptions.ElementAt(i).PlanId, cropResult.Item2.Id);
                         TargetCropOverlapManipulations.Add(new TSTargetCropOverlapModel(sortedPrescriptions.ElementAt(i).PlanId, target.Id, cropResult.cropStructure.Id, AutoPlannerHelpers.Enums.TSManipulationType.CropTargetFromStructure));

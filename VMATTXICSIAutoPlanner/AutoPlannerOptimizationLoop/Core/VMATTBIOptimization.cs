@@ -131,7 +131,7 @@ namespace AutoPlannerOptimizationLoop.Core
                     if (plans.Any(x => x == itr))
                     {
                         //force the plan to normalize to TS_PTV_VMAT after removing flash
-                        double normalizationValue = NormalizePlan(itr, TargetsHelper.GetTargetStructureForPlanType(_data.StructureSet, "", false, _data.PlanType), _data.TreatmentPercentage, _data.TargetCoverageNormalization);
+                        double normalizationValue = NormalizePlan(itr, TargetsHelper.GetTargetStructureForPlanType("", false, _data.PlanType), _data.TreatmentPercentage, _data.TargetCoverageNormalization);
                         if (double.IsNaN(normalizationValue)) return true;
                         itr.PlanNormalizationValue = normalizationValue;
                         ProvideUIUpdate(100 * ++overallPercentCompletion / overallCalcItems, $"{itr.Id} normalized. Normalization value = {normalizationValue:0.0}%");

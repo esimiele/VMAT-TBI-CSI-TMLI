@@ -142,12 +142,7 @@ namespace CSIAutoPlanner.Core
             }
 
             //union TS_ArmsAvoid and body onto the body structure
-            (bool unionFail, StringBuilder unionMessage) = ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("TS_ArmsAvoid", EclipseContext.GetInstance().StructureSet), body, 0.0);
-            if (unionFail)
-            {
-                ProvideUIUpdate(unionMessage.ToString(), true);
-                return true;
-            }
+            body.SegmentVolume = ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("TS_ArmsAvoid"), body, new StructureMarginModel(0), new StructureMarginModel(0));
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Contour union betwen between TS_ArmsAvoid and body onto body");
             return false;
         }
@@ -161,9 +156,9 @@ namespace CSIAutoPlanner.Core
         {
             int percentComplete = 0;
             int calcItems = 4;
-            Structure bodyCopy = StructureTuningHelper.GetStructureFromId("human_body", EclipseContext.GetInstance().StructureSet);
+            Structure bodyCopy = StructureTuningHelper.GetStructureFromId("human_body");
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved body copy structure: {bodyCopy.Id}");
-            Structure body = StructureTuningHelper.GetStructureFromId("body", EclipseContext.GetInstance().StructureSet);
+            Structure body = StructureTuningHelper.GetStructureFromId("body");
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved body structure: {body.Id}");
 
             (bool failCopyTarget, StringBuilder copyErrorMessage) = ContourHelper.CopyStructureOntoStructure(bodyCopy, body);
@@ -201,12 +196,12 @@ namespace CSIAutoPlanner.Core
             double brainZCenter = 0.0;
             ProvideUIUpdate(100 * ++counter / calcItems, "Retrieving Brain Structure");
             //shouldn't matter if its brain or PTV_brain (ideally would be the same, but the center points should be within 5mm of each other)
-            Structure ptvBrain = StructureTuningHelper.GetStructureFromId("Brain", EclipseContext.GetInstance().StructureSet);
+            Structure ptvBrain = StructureTuningHelper.GetStructureFromId("Brain");
             if (ptvBrain == null || ptvBrain.IsEmpty)
             {
                 calcItems += 1;
                 ProvideUIUpdate(100 * ++counter / calcItems, "Failed to find Brain Structure! Retrieving PTV_Brain structure");
-                ptvBrain = StructureTuningHelper.GetStructureFromId("PTV_Brain", EclipseContext.GetInstance().StructureSet, true);
+                ptvBrain = StructureTuningHelper.GetStructureFromId("PTV_Brain", true);
                 if (ptvBrain == null || ptvBrain.IsEmpty)
                 {
                     ProvideUIUpdate("Failed to retrieve PTV_Brain structure! Cannot calculate isocenter positions! Exiting", true);
@@ -266,14 +261,14 @@ namespace CSIAutoPlanner.Core
             double spineZMin = 0.0;
             calcItems += 5;
 
-            if (!StructureTuningHelper.DoesStructureExistInSS("PTV_Spine", EclipseContext.GetInstance().StructureSet, true) || !StructureTuningHelper.DoesStructureExistInSS("SpinalCord", EclipseContext.GetInstance().StructureSet, true))
+            if (!StructureTuningHelper.DoesStructureExistInSS("PTV_Spine", true) || !StructureTuningHelper.DoesStructureExistInSS("SpinalCord", true))
             {
                 ProvideUIUpdate("Error! Either PTV_Spine or SpinalCord structure are missing or empty! Correct and try again!", true);
                 return (true, spineYMin, spineZMin, spineZMax);
             }
             ProvideUIUpdate(100 * ++counter / calcItems, "Retrieving PTV_Spine Structure");
-            Structure ptvSpine = StructureTuningHelper.GetStructureFromId("PTV_Spine", EclipseContext.GetInstance().StructureSet);
-            Structure spine = StructureTuningHelper.GetStructureFromId("SpinalCord", EclipseContext.GetInstance().StructureSet);
+            Structure ptvSpine = StructureTuningHelper.GetStructureFromId("PTV_Spine");
+            Structure spine = StructureTuningHelper.GetStructureFromId("SpinalCord");
 
             ProvideUIUpdate("Calculating anterior extent of PTV_Spine");
             spineYMin = ptvSpine.MeshGeometry.Positions.Min(p => p.Y);
@@ -412,7 +407,7 @@ namespace CSIAutoPlanner.Core
                         //overlap between brain iso and lower spine iso
                         //inf field superior edge.ptv spine + 18 cm = iso position + 20 cm Y field extent)
                         double infIsoFieldSupEdge = spineZMin + 180.0 + 200.0;
-                        Structure brainTarget = StructureTuningHelper.GetStructureFromId("PTV_Brain", EclipseContext.GetInstance().StructureSet);
+                        Structure brainTarget = StructureTuningHelper.GetStructureFromId("PTV_Brain");
                         //brain field inferior extent (ptv brain inf extent - 5 cm margin)
                         double supFieldInfExtent = brainTarget.MeshGeometry.Positions.Min(p => p.Z) - 50.0;
                         //place the iso at the midpoint between the brain field inf extent and low spine file sup extent
@@ -564,7 +559,7 @@ namespace CSIAutoPlanner.Core
             {
                 ProvideUIUpdate("First isocenter in initial CSI plan!");
                 //first isocenter in brain
-                Structure brain = StructureTuningHelper.GetStructureFromId("PTV_Brain", EclipseContext.GetInstance().StructureSet);
+                Structure brain = StructureTuningHelper.GetStructureFromId("PTV_Brain");
                 if (brain == null || brain.IsEmpty)
                 {
                     ProvideUIUpdate("Error! Could not retrieve brain target structure! Exiting", true);
@@ -573,17 +568,17 @@ namespace CSIAutoPlanner.Core
                 double InfMargin = margins.Y1 + 20.0;
                 ProvideUIUpdate($"Adjusting inf field margin to >= 5cm");
 
-                if (StructureTuningHelper.DoesStructureExistInSS("larynx", EclipseContext.GetInstance().StructureSet, true))
+                if (StructureTuningHelper.DoesStructureExistInSS("larynx", true))
                 {
-                    Structure larynx = StructureTuningHelper.GetStructureFromId("larynx", EclipseContext.GetInstance().StructureSet);
+                    Structure larynx = StructureTuningHelper.GetStructureFromId("larynx");
                     ProvideUIUpdate($"Retrieved Larynx structure");
                     ProvideUIUpdate($"Larynx z min: {larynx.MeshGeometry.Positions.Min(p => p.Z):0.0} mm");
                     InfMargin = Math.Max(InfMargin, brain.MeshGeometry.Positions.Min(p => p.Z) - larynx.MeshGeometry.Positions.Min(p => p.Z));
                     ProvideUIUpdate($"Max of current inf margin and larynx z min: {InfMargin:0.0} cm");
                 }
-                else if (StructureTuningHelper.DoesStructureExistInSS("thyroid", EclipseContext.GetInstance().StructureSet, true))
+                else if (StructureTuningHelper.DoesStructureExistInSS("thyroid", true))
                 {
-                    Structure thyroid = StructureTuningHelper.GetStructureFromId("thyroid", EclipseContext.GetInstance().StructureSet);
+                    Structure thyroid = StructureTuningHelper.GetStructureFromId("thyroid");
                     ProvideUIUpdate($"Retrieved Thyroid structure");
                     ProvideUIUpdate($"Larynx z min: {thyroid.MeshGeometry.Positions.Min(p => p.Z):0.0} mm");
                     InfMargin = Math.Max(InfMargin, brain.MeshGeometry.Positions.Min(p => p.Z) - thyroid.CenterPoint.z);
@@ -595,7 +590,7 @@ namespace CSIAutoPlanner.Core
                     ProvideUIUpdate("Only two isocenters in plan. Need to verify there will be adequate overlap between brain and spine fields");
                     //special logic for spine iso in case there are only two isos, and the spine iso field extent does not cover the entire PTV_spine
                     //in this case, we need to verify the inf margin placed on the brain fields to ensure at least 5cm of overlap
-                    Structure spine = StructureTuningHelper.GetStructureFromId("PTV_Spine", EclipseContext.GetInstance().StructureSet);
+                    Structure spine = StructureTuningHelper.GetStructureFromId("PTV_Spine");
                     double infSpineIso = spine.MeshGeometry.Positions.Min(p => p.Z) + 180.0;
                     ProvideUIUpdate($"Inferior spine location: {infSpineIso:0.0} mm");
                     if (iso.z - infSpineIso >= 200.0)
@@ -621,7 +616,7 @@ namespace CSIAutoPlanner.Core
             else
             {
                 ProvideUIUpdate("Spine isocenter(s) in initial CSI plan!");
-                Structure spine = StructureTuningHelper.GetStructureFromId("PTV_Spine", EclipseContext.GetInstance().StructureSet);
+                Structure spine = StructureTuningHelper.GetStructureFromId("PTV_Spine");
                 if (spine == null || spine.IsEmpty) return (true, new VRect<double>());
                 y2 = spine.MeshGeometry.Positions.Max(p => p.Z) - iso.z + margins.Y2;
                 y1 = spine.MeshGeometry.Positions.Min(p => p.Z) - iso.z - margins.Y1;
@@ -631,7 +626,7 @@ namespace CSIAutoPlanner.Core
                 ProvideUIUpdate($"Start position: {startZ} mm");
                 ProvideUIUpdate($"Stop position: {stopZ} mm");
             }
-            Structure ptv_csi = StructureTuningHelper.GetStructureFromId("PTV_CSI", EclipseContext.GetInstance().StructureSet);
+            Structure ptv_csi = StructureTuningHelper.GetStructureFromId("PTV_CSI");
             if (ptv_csi == null || ptv_csi.IsEmpty) return (true, new VRect<double>());
             (double latProjection, StringBuilder message) = ContourHelper.GetMaxLatProjectionDistance(GetLateralStructureBoundingBox(ptv_csi, startZ, stopZ), iso);
             ProvideUIUpdate(message.ToString());

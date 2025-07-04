@@ -208,17 +208,16 @@ namespace TBIAutoPlanner.Core
             ProvideUIUpdate("Copying human_body structure onto body structure");
             int percentComplete = 0;
             int calcItems = 3;
-            StructureSet ss = VMATPlan.StructureSet;
-            ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved structure set ({ss.Id}) used for plan: {VMATPlan.Id}");
+            ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved structure set ({EclipseContext.GetInstance().StructureSet.Id}) used for plan: {VMATPlan.Id}");
 
             //from the generateTS class, the human_body structure was a copy of the body structure BEFORE flash was added. Therefore, if this structure still exists, we can just copy it back onto the body
-            if (StructureTuningHelper.DoesStructureExistInSS("human_body", ss, true))
+            if (StructureTuningHelper.DoesStructureExistInSS("human_body", true))
             {
                 ProvideUIUpdate($"Human_body structure exists in structure set");
-                Structure body = StructureTuningHelper.GetStructureFromId("body", ss);
+                Structure body = StructureTuningHelper.GetStructureFromId("body");
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved body structure: {body.Id}");
 
-                Structure bodyCopy = StructureTuningHelper.GetStructureFromId("human_body", ss);
+                Structure bodyCopy = StructureTuningHelper.GetStructureFromId("human_body");
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved human_body structure: {bodyCopy.Id}");
 
                 (bool fail, StringBuilder message) = ContourHelper.CopyStructureOntoStructure(bodyCopy, body);
@@ -229,10 +228,10 @@ namespace TBIAutoPlanner.Core
                 }
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Copied {bodyCopy.Id} onto {body.Id}");
 
-                if (ss.CanRemoveStructure(bodyCopy))
+                if (EclipseContext.GetInstance().StructureSet.CanRemoveStructure(bodyCopy))
                 {
                     ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Removing {bodyCopy.Id} structure from structure set");
-                    ss.RemoveStructure(bodyCopy);
+                    EclipseContext.GetInstance().StructureSet.RemoveStructure(bodyCopy);
                 }
                 else
                 {
