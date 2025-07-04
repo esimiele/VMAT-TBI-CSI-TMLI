@@ -143,7 +143,7 @@ namespace AutoPlannerOptimizationLoop.UIHelpers
                         structureId = OptimizationLoopHelper.GetNormaliztionVolumeIdForPlan(plan.Id, normalizationVolumes);
                     }
                     else structureId = itr.StructureId;
-                    Structure structure = StructureTuningHelper.GetStructureFromId(structureId, plan.StructureSet);
+                    Structure structure = StructureTuningHelper.GetStructureFromId(structureId);
                     if (structure != null)
                     {
                         if (itr.DVHMetric == DVHMetric.Dmax || itr.DVHMetric == DVHMetric.Dmin)

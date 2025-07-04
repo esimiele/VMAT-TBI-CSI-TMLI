@@ -534,7 +534,6 @@ namespace CSIAutoPlanner.ViewModels
                                 else if (parameter == "contour field overlap margin") { if (value != "") CSIAutoPlannerSettings.ContourFieldOverlapMarginInCM = double.Parse(value); }
                                 else if (parameter == "auto dose recalculation") CSIAutoPlannerSettings.AutoDoseRecalculationDuringPlanPrep = bool.Parse(value);
                             }
-                            else if (line.Contains("create preliminary target")) CSIAutoPlannerSettings.RequestedPreliminaryTargets.Add(ConfigurationHelper.ParseCreateTS(line));
                             else if (line.Contains("add linac"))
                             {
                                 //parse the linacs that should be added. One entry per line

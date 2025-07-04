@@ -2,21 +2,21 @@
 using System.Text;
 using System.Windows;
 using System.Linq;
-using AutoPlannerHelpers.PlanTemplateModels;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using AutoPlannerHelpers.Messengers;
 using CommunityToolkit.Mvvm.Messaging;
+using System.Collections.Generic;
 
 namespace AutoPlannerHelpers.ViewModels
 {
     public class SpecialOptimizationStructuresViewModel : ObservableObject
     {
+        #region properties
         public ObservableCollectionPropertyNotify<SpecialOptimizationStructureModel> RequestedSpecialOptimizationStructures { get; set; }
 
-        #region properties
-        private AutoPlanTemplateBase _selectedTemplate;
+        private List<SpecialOptimizationStructureModel> _defualtSpecialOptStructures = new List<SpecialOptimizationStructureModel> { };
         #endregion
 
         #region commands
@@ -40,7 +40,7 @@ namespace AutoPlannerHelpers.ViewModels
         {
             WeakReferenceMessenger.Default.Register<RequestAutoPlanTemplateChangedMessage>(this, (r, m) =>
             {
-                AutoPlanTemplateSelectionChanged(m.AutoPlanTemplate);
+                AutoPlanTemplateSelectionChanged(m.AutoPlanTemplate.SpecialOptimizationStructures);
             });
             WeakReferenceMessenger.Default.Register<RequestSpecialOptimizationStructures>(this, (r, m) =>
             {
@@ -62,17 +62,17 @@ namespace AutoPlannerHelpers.ViewModels
             MessageBox.Show(sb.ToString());
         }
 
-        public void AutoPlanTemplateSelectionChanged(AutoPlanTemplateBase template)
+        public void AutoPlanTemplateSelectionChanged(IEnumerable<SpecialOptimizationStructureModel> templateSpecialOpStructures)
         {
-            if (ReferenceEquals(template, null)) return;
-            _selectedTemplate = template;
-            UpdateViewWithAutoPlanTemplateTSStructures();
+            if (!templateSpecialOpStructures.Any()) return;
+            _defualtSpecialOptStructures = new List<SpecialOptimizationStructureModel>(templateSpecialOpStructures);
+            UpdateViewWithAutoPlanTemplateTSStructures(_defualtSpecialOptStructures);
         }
 
         public void AddDefaultTSStructures()
         {
-            if (ReferenceEquals(_selectedTemplate, null)) return;
-            UpdateViewWithAutoPlanTemplateTSStructures();
+            if (!_defualtSpecialOptStructures.Any()) return;
+            UpdateViewWithAutoPlanTemplateTSStructures(_defualtSpecialOptStructures);
         }
 
         public void ClearRow(SpecialOptimizationStructureModel o)
@@ -80,10 +80,10 @@ namespace AutoPlannerHelpers.ViewModels
             RequestedSpecialOptimizationStructures.Remove(o);
         }
 
-        public void UpdateViewWithAutoPlanTemplateTSStructures()
+        public void UpdateViewWithAutoPlanTemplateTSStructures(List<SpecialOptimizationStructureModel> ops)
         {
             RequestedSpecialOptimizationStructures.Clear();
-            foreach (SpecialOptimizationStructureModel itr in _selectedTemplate.CreateTSStructures) RequestedSpecialOptimizationStructures.Add(itr);
+            foreach (SpecialOptimizationStructureModel itr in ops) RequestedSpecialOptimizationStructures.Add(itr);
         }
 
         private void RemoveAllTSStructures()

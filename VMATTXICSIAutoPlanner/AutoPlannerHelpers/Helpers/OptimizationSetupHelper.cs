@@ -358,34 +358,22 @@ namespace AutoPlannerHelpers.Helpers
             {
                 if (planTargets.Any())
                 {
+                    if (selectedTemplate.InitialOptimizationConstraints.Any()) list.Add(new PlanOptimizationSetupModel(planTargets.ElementAt(0).Key, selectedTemplate.InitialOptimizationConstraints));
                     if (type == PlanType.VMAT_CSI)
                     {
-                        if ((selectedTemplate as CSIAutoPlanTemplate).InitialOptimizationConstraints.Any()) list.Add(new PlanOptimizationSetupModel(planTargets.ElementAt(0).Key, (selectedTemplate as CSIAutoPlanTemplate).InitialOptimizationConstraints));
                         if (planTargets.Count > 1 && (selectedTemplate as CSIAutoPlanTemplate).BoostOptimizationConstraints.Any()) list.Add(new PlanOptimizationSetupModel(planTargets.ElementAt(1).Key, (selectedTemplate as CSIAutoPlanTemplate).BoostOptimizationConstraints));
-                    }
-                    else if (type == PlanType.VMAT_TBI)
-                    {
-                        if ((selectedTemplate as TBIAutoPlanTemplate).InitialOptimizationConstraints.Any()) list.Add(new PlanOptimizationSetupModel(planTargets.ElementAt(0).Key, (selectedTemplate as TBIAutoPlanTemplate).InitialOptimizationConstraints));
-                    }
-                    else if (type == PlanType.VMAT_TMLI)
-                    {
-                        if ((selectedTemplate as TMLIAutoPlanTemplate).InitialOptimizationConstraints.Any()) list.Add(new PlanOptimizationSetupModel(planTargets.ElementAt(0).Key, (selectedTemplate as TMLIAutoPlanTemplate).InitialOptimizationConstraints));
                     }
                 }
                 else
                 {
-                    if (type == PlanType.VMAT_CSI)
+                    string planId = "";
+                    if (type == PlanType.VMAT_CSI) planId = "CSI-init";
+                    else if (type == PlanType.VMAT_TBI) planId = "VMAT-TBI";
+                    else if (type == PlanType.VMAT_TMLI) planId = "VMAT-TMLI";
+                    if (selectedTemplate.InitialOptimizationConstraints.Any()) list.Add(new PlanOptimizationSetupModel(planId, selectedTemplate.InitialOptimizationConstraints));
+                    if (type == PlanType.VMAT_CSI && (selectedTemplate as CSIAutoPlanTemplate).BoostRxDosePerFx != 0.1 && (selectedTemplate as CSIAutoPlanTemplate).BoostOptimizationConstraints.Any())
                     {
-                        if ((selectedTemplate as CSIAutoPlanTemplate).InitialOptimizationConstraints.Any()) list.Add(new PlanOptimizationSetupModel("CSI-init", (selectedTemplate as CSIAutoPlanTemplate).InitialOptimizationConstraints));
-                        if ((selectedTemplate as CSIAutoPlanTemplate).BoostRxDosePerFx != 0.1 && (selectedTemplate as CSIAutoPlanTemplate).BoostOptimizationConstraints.Any()) list.Add(new PlanOptimizationSetupModel("CSI-bst", (selectedTemplate as CSIAutoPlanTemplate).BoostOptimizationConstraints));
-                    }
-                    else if (type == PlanType.VMAT_TBI)
-                    {
-                        if ((selectedTemplate as TBIAutoPlanTemplate).InitialOptimizationConstraints.Any()) list.Add(new PlanOptimizationSetupModel("VMAT-TBI", (selectedTemplate as TBIAutoPlanTemplate).InitialOptimizationConstraints));
-                    }
-                    else if (type == PlanType.VMAT_TMLI)
-                    {
-                        if ((selectedTemplate as TMLIAutoPlanTemplate).InitialOptimizationConstraints.Any()) list.Add(new PlanOptimizationSetupModel("VMAT-TMLI", (selectedTemplate as TMLIAutoPlanTemplate).InitialOptimizationConstraints));
+                        list.Add(new PlanOptimizationSetupModel("CSI-bst", (selectedTemplate as CSIAutoPlanTemplate).BoostOptimizationConstraints));
                     }
                 }
             }
@@ -410,7 +398,7 @@ namespace AutoPlannerHelpers.Helpers
             {
                 double dose = opt.QueryDose;
                 if (opt.QueryDoseUnits == Units.Percent) dose *= VMATplan.TotalDose.Dose / 100.0;
-                Structure s = StructureTuningHelper.GetStructureFromId(opt.StructureId, VMATplan.StructureSet);
+                Structure s = StructureTuningHelper.GetStructureFromId(opt.StructureId);
                 if (opt.ConstraintType != OptimizationObjectiveType.Mean) VMATplan.OptimizationSetup.AddPointObjective(s,
                                                                                                                        OptimizationTypeHelper.GetObjectiveOperator(opt.ConstraintType),
                                                                                                                        new DoseValue(dose, DoseValue.DoseUnit.cGy),

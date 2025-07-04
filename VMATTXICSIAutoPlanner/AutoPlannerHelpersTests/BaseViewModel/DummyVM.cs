@@ -74,5 +74,10 @@ namespace AutoPlannerHelpersTests.BaseViewModel
         {
             throw new NotImplementedException();
         }
+
+        protected override void PerformOptimizationStructureDerivations(List<StructureOperationModel> operations)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

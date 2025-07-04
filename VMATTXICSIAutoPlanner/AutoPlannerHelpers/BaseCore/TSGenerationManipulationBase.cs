@@ -40,7 +40,10 @@ namespace AutoPlannerHelpers.BaseCore
 
         #region virtual methods
         protected abstract bool PreliminaryChecks();
-        protected abstract bool CreateSpecialOptimizationStructures();
+        protected virtual bool CreateSpecialOptimizationStructures()
+        {
+            return false;
+        }
         protected abstract bool PerformStructureDerivations();
         protected abstract bool CalculateNumIsos();
         #endregion

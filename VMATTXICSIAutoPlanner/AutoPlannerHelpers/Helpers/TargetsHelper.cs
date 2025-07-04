@@ -138,13 +138,13 @@ namespace AutoPlannerHelpers.Helpers
             {
                 foreach (TargetModel itr in planTargetModel.Targets)
                 {
-                    if (!StructureTuningHelper.DoesStructureExistInSS(itr.TargetId, selectedSS, true))
+                    if (!StructureTuningHelper.DoesStructureExistInSS(itr.TargetId, true))
                     {
                         sb.AppendLine($"Error! No structure named: {itr.TargetId} found or contoured!");
                         fail = true;
                         return (fail, longestTargetInPlan, maxTargetLength, sb);
                     }
-                    Structure targStruct = StructureTuningHelper.GetStructureFromId(itr.TargetId, selectedSS);
+                    Structure targStruct = StructureTuningHelper.GetStructureFromId(itr.TargetId);
                     Point3DCollection pts = targStruct.MeshGeometry.Positions;
                     double diff = pts.Max(p => p.Z) - pts.Min(p => p.Z);
                     if (diff > maxTargetLength)
@@ -278,7 +278,7 @@ namespace AutoPlannerHelpers.Helpers
         /// <param name="useFlash"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static Structure GetTargetStructureForPlanType(StructureSet ss, string targetId, bool useFlash, PlanType type)
+        public static Structure GetTargetStructureForPlanType(string targetId, bool useFlash, PlanType type)
         {
             Structure target;
             if (string.IsNullOrEmpty(targetId))
@@ -287,14 +287,14 @@ namespace AutoPlannerHelpers.Helpers
                 if (type == PlanType.VMAT_TBI)
                 {
                     //flash should only be present for vmat tbi plans
-                    if (useFlash) target = StructureTuningHelper.GetStructureFromId("ts_ptv_flash", ss);
-                    else target = StructureTuningHelper.GetStructureFromId("ts_ptv_vmat", ss);
+                    if (useFlash) target = StructureTuningHelper.GetStructureFromId("ts_ptv_flash");
+                    else target = StructureTuningHelper.GetStructureFromId("ts_ptv_vmat");
                 }
-                else target = StructureTuningHelper.GetStructureFromId("ts_ptv_csi", ss);
+                else target = StructureTuningHelper.GetStructureFromId("ts_ptv_csi");
             }
             else
             {
-                target = StructureTuningHelper.GetStructureFromId(targetId, ss);
+                target = StructureTuningHelper.GetStructureFromId(targetId);
             }
             return target;
         }

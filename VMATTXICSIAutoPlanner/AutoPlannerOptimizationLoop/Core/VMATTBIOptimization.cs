@@ -98,7 +98,7 @@ namespace AutoPlannerOptimizationLoop.Core
             ProvideUIUpdate(100 * ++overallPercentCompletion / overallCalcItems, Environment.NewLine + "Removing flash, recalculating dose, and renormalizing to TS_PTV_VMAT!");
             ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
 
-            Structure bolus = StructureTuningHelper.GetStructureFromId("bolus_flash", _data.StructureSet); ;
+            Structure bolus = StructureTuningHelper.GetStructureFromId("bolus_flash"); ;
             if (bolus == null)
             {
                 //no structure named bolus_flash found. This is a problem. 

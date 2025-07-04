@@ -130,40 +130,6 @@ namespace TMLIAutoPlanner.Core
         }
         #endregion
 
-        //protected override bool CreateTSStructures()
-        //{
-        //    UpdateUILabel("Create TS Structures:");
-        //    ProvideUIUpdate("Adding remaining tuning structures to stack!");
-        //    if (RemoveOldTSStructures(TS_structures, true)) return true;
-
-        //    int counter = 0;
-        //    int calcItems = TS_structures.Count;
-
-        //    foreach (RequestedTSStructureModel itr in TS_structures)
-        //    {
-        //        ProvideUIUpdate(100 * ++counter / calcItems, $"Adding {itr.StructureId} to the structure set!");
-        //        AddTSStructures(itr);
-        //    }
-
-        //    ProvideUIUpdate(100, "Finished adding tuning structures!");
-        //    ProvideUIUpdate(0, "Contouring tuning structures!");
-
-        //    counter = 0;
-        //    calcItems = AddedStructureIds.Count;
-        //    //now contour the various structures
-        //    foreach (string itr in AddedStructureIds)
-        //    {
-        //        ProvideUIUpdate($"Contouring TS: {itr}");
-        //        Structure addedStructure = StructureTuningHelper.GetStructureFromId(itr, EclipseContext.GetInstance().StructureSet);
-        //        ProvideUIUpdate($"Retrieved structure: {addedStructure.Id}");
-        //        //logic goes here
-        //        //
-        //        ProvideUIUpdate(100 * ++counter / calcItems);
-        //    }
-        //    ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
-        //    return false;
-        //}
-
         protected override bool PerformStructureDerivations()
         {
             UpdateUILabel("Perform TS Manipulations: ");

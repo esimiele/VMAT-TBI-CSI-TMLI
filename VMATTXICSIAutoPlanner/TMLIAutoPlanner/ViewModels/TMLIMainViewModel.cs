@@ -250,23 +250,14 @@ namespace TMLIAutoPlanner.ViewModels
         private void PreparePreliminaryTargets(List<StructureOperationModel> preliminaryTargets)
         {
             if (!EclipseContext.GetInstance().IsInitialized || !preliminaryTargets.Any()) return;
-            List<RequestedTSManipulationModel> targetCropOperations = new List<RequestedTSManipulationModel> { };
-            bool includeTestesInPTV = true;
-            if (!ReferenceEquals(_selectedTemplate, null))
-            {
-                targetCropOperations.AddRange(_selectedTemplate.TSManipulations.Where(x => x.ManipulationType == TSManipulationType.CropTargetFromStructure));
-                if(_selectedTemplate.PlanTargets.Any() && _selectedTemplate.PlanTargets.SelectMany(x => x.Targets).OrderByDescending(x => x.TargetRxDose).First().TargetRxDose <= 200) includeTestesInPTV = false;
-            }
-            GeneratePreliminaryTargets_TMLI generateTargets = new GeneratePreliminaryTargets_TMLI(preliminaryTargets, 
-                                                                                                  targetCropOperations,
-                                                                                                  includeTestesInPTV);
+            GeneratePreliminaryTargets_TMLI generateTargets = new GeneratePreliminaryTargets_TMLI(preliminaryTargets);
             EclipseContext.GetInstance().Patient.BeginModifications();
             bool result = generateTargets.Execute();
             //grab the log output regardless if it passes or fails
             Logger.GetInstance().AppendLogOutput("Preliminary target generation output:", generateTargets.LogOutput);
             Logger.GetInstance().OpType = ScriptOperationType.GeneratePrelimTargets;
             if (result) return;
-            Logger.GetInstance().AddedPrelimTargetsStructures = generateTargets.GetAddedTargetStructures();
+            Logger.GetInstance().AddedPrelimTargetsStructures = generateTargets.AddedTargetstructures;
             PrepForTargetsBackground = Brushes.ForestGreen;
             MessageBox.Show("Structure set is prepared and ready for physician to review targets!");
         }
@@ -431,7 +422,6 @@ namespace TMLIAutoPlanner.ViewModels
             WeakReferenceMessenger.Default.Send(new RequestAutoPlanTemplateChangedMessage(_selectedTemplate));
             WeakReferenceMessenger.Default.Send(new RequestUpdateTargetDerivationOperations(_selectedTemplate.TargetDerivationOperations));
             WeakReferenceMessenger.Default.Send(new RequestUpdateOptimizationStructureDerivations(_selectedTemplate.OptimizationStructureDerivations));
-            WeakReferenceMessenger.Default.Send(new RequestUpdateTargetStructures((_selectedTemplate as TMLIAutoPlanTemplate).RequestedPreliminaryTargets.Distinct(new RequestedTSStructureModelComparer()).ToList()));
             Logger.GetInstance().Template = _selectedTemplate.TemplateName;
         }
 

@@ -326,8 +326,7 @@ namespace AutoPlannerOptimizationLoop.Core
                     ProvideUIUpdate(100 * ++percentComplete / calcItems, "Dose calculated, normalizing plan!");
                     //normalize
                     double normalizationValue = NormalizePlan(itr,
-                                                              TargetsHelper.GetTargetStructureForPlanType(_data.StructureSet,
-                                                                                                          OptimizationLoopHelper.GetNormaliztionVolumeIdForPlan(itr.Id, _data.NormalizationVolumes),
+                                                              TargetsHelper.GetTargetStructureForPlanType(OptimizationLoopHelper.GetNormaliztionVolumeIdForPlan(itr.Id, _data.NormalizationVolumes),
                                                                                                           _data.UseFlash,
                                                                                                           _data.PlanType),
                                                               _data.TreatmentPercentage,

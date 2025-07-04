@@ -5,11 +5,6 @@ namespace AutoPlannerHelpers.PlanTemplateModels
 {
     public class TBIAutoPlanTemplate : AutoPlanTemplateBase
     {
-        #region Properties
-        //this is only here for the display name data binding. All other references to the template name use the explicit get method
-        public List<OptimizationConstraintModel> InitialOptimizationConstraints { get; set; } = new List<OptimizationConstraintModel> { };
-        #endregion
-
         /// <summary>
         /// Constructor
         /// </summary>

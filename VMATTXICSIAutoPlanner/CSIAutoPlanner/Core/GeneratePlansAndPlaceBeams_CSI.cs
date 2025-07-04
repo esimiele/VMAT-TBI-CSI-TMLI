@@ -112,7 +112,7 @@ namespace CSIAutoPlanner.Core
         /// <returns></returns>
         private bool CheckTSArmsAvoid()
         {
-            return StructureTuningHelper.DoesStructureExistInSS("TS_ArmsAvoid", EclipseContext.GetInstance().StructureSet, true);
+            return StructureTuningHelper.DoesStructureExistInSS("TS_ArmsAvoid", true);
         }
 
         /// <summary>
@@ -125,7 +125,7 @@ namespace CSIAutoPlanner.Core
             int percentComplete = 0;
             int calcItems = 4;
 
-            Structure body = StructureTuningHelper.GetStructureFromId("body", EclipseContext.GetInstance().StructureSet);
+            Structure body = StructureTuningHelper.GetStructureFromId("body");
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved body structure: {body.Id}");
             if (EclipseContext.GetInstance().StructureSet.CanAddStructure("CONTROL", "human_body"))
             {

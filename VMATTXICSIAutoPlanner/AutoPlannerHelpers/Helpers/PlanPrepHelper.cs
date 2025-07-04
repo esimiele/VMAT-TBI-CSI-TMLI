@@ -128,9 +128,9 @@ namespace AutoPlannerHelpers.Helpers
             //create the message
             double TT = -1;
             //grab the couch surface
-            if (StructureTuningHelper.DoesStructureExistInSS("couchsurface", vmatPlan.StructureSet, true))
+            if (StructureTuningHelper.DoesStructureExistInSS("couchsurface", true))
             {
-                Structure couchSurface = StructureTuningHelper.GetStructureFromId("couchsurface", vmatPlan.StructureSet);
+                Structure couchSurface = StructureTuningHelper.GetStructureFromId("couchsurface");
                 TT = (vmatPlan.Beams.First(x => !x.IsSetupField).IsocenterPosition.y - couchSurface.MeshGeometry.Positions.Min(p => p.Y)) / 10;
             }
 
@@ -208,9 +208,9 @@ namespace AutoPlannerHelpers.Helpers
             //create the message
             double TT = -1;
             //grab the couch surface
-            if (StructureTuningHelper.DoesStructureExistInSS("couchsurface", vmatPlan.StructureSet, true))
+            if (StructureTuningHelper.DoesStructureExistInSS("couchsurface", true))
             {
-                Structure couchSurface = StructureTuningHelper.GetStructureFromId("couchsurface", vmatPlan.StructureSet);
+                Structure couchSurface = StructureTuningHelper.GetStructureFromId("couchsurface");
                 TT = (vmatPlan.Beams.First(x => !x.IsSetupField).IsocenterPosition.y - couchSurface.MeshGeometry.Positions.Min(p => p.Y)) / 10;
             }
 

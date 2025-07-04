@@ -168,24 +168,6 @@ namespace AutoPlannerHelpers.UIHelpers
                 sb.AppendLine(Environment.NewLine);
             }
             else sb.AppendLine($" No targets set for template: {itr.TemplateName}");
-
-            if (itr.CreateTSStructures.Any())
-            {
-                sb.AppendLine($" {itr.TemplateName} additional tuning structures:");
-                sb.AppendLine(String.Format("  {0, -10} | {1, -15} |", "DICOM type", "Structure Id"));
-                foreach (SpecialOptimizationStructureModel ts in itr.CreateTSStructures) sb.AppendLine(String.Format("  {0, -10} | {1, -15} |", ts.DICOMType, ts.StructureId));
-                sb.AppendLine(Environment.NewLine);
-            }
-            else sb.AppendLine($" No additional tuning structures for template: {itr.TemplateName}");
-
-            if (itr.TSManipulations.Any())
-            {
-                sb.AppendLine($" {itr.TemplateName} additional sparing structures:");
-                sb.AppendLine(String.Format("  {0, -15} | {1, -26} | {2, -11} |", "structure Id", "sparing type", "margin (cm)"));
-                foreach (RequestedTSManipulationModel spare in itr.TSManipulations) sb.AppendLine(String.Format("  {0, -15} | {1, -26} | {2,-11:N1} |", spare.StructureId, spare.ManipulationType, spare.MarginInCM));
-                sb.AppendLine(Environment.NewLine);
-            }
-            else sb.AppendLine($" No additional sparing structures for template: {itr.TemplateName}");
             return sb;
         }
 

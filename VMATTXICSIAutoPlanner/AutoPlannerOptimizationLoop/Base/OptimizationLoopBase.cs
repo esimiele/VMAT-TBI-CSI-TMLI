@@ -140,7 +140,7 @@ namespace AutoPlannerOptimizationLoop.Base
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Imaging device Id: {ss.Image.Series.ImagingDeviceId}");
 
             //is the user origin set, does the body exist, and is the user origin inside the body
-            if (!ss.Image.HasUserOrigin || !StructureTuningHelper.DoesStructureExistInSS("body", ss, true) || !StructureTuningHelper.GetStructureFromId("body", ss).IsPointInsideSegment(ss.Image.UserOrigin))
+            if (!ss.Image.HasUserOrigin || !StructureTuningHelper.DoesStructureExistInSS("body", true) || !StructureTuningHelper.GetStructureFromId("body").IsPointInsideSegment(ss.Image.UserOrigin))
             {
                 ProvideUIUpdate("Did you forget to set the user origin?" + Environment.NewLine + "User origin is NOT inside body contour!" + Environment.NewLine + "Please fix and try again!", true);
                 return true;
@@ -154,7 +154,7 @@ namespace AutoPlannerOptimizationLoop.Base
             }
             foreach (string itr in targetIDs)
             {
-                if (!StructureTuningHelper.DoesStructureExistInSS(itr, ss, true))
+                if (!StructureTuningHelper.DoesStructureExistInSS(itr, true))
                 {
                     ProvideUIUpdate($"Error! Target: {itr} is missing from structure set or empty! Please fix and try again!", true);
                     return true;
@@ -302,8 +302,7 @@ namespace AutoPlannerOptimizationLoop.Base
 
                 //normalize
                 double normalizationValue = NormalizePlan(itr,
-                                                          TargetsHelper.GetTargetStructureForPlanType(_data.StructureSet,
-                                                                                                      OptimizationLoopHelper.GetNormaliztionVolumeIdForPlan(itr.Id, _data.NormalizationVolumes),
+                                                          TargetsHelper.GetTargetStructureForPlanType(OptimizationLoopHelper.GetNormaliztionVolumeIdForPlan(itr.Id, _data.NormalizationVolumes),
                                                                                                       _data.UseFlash,
                                                                                                       _data.PlanType),
                                                           _data.TreatmentPercentage,
@@ -366,8 +365,7 @@ namespace AutoPlannerOptimizationLoop.Base
                 ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
 
                 double normalizationValue = NormalizePlan(plan,
-                                                          TargetsHelper.GetTargetStructureForPlanType(_data.StructureSet,
-                                                                                                      OptimizationLoopHelper.GetNormaliztionVolumeIdForPlan(plan.Id, _data.NormalizationVolumes),
+                                                          TargetsHelper.GetTargetStructureForPlanType(OptimizationLoopHelper.GetNormaliztionVolumeIdForPlan(plan.Id, _data.NormalizationVolumes),
                                                                                                       _data.UseFlash,
                                                                                                       _data.PlanType),
                                                           _data.TreatmentPercentage,
@@ -543,7 +541,7 @@ namespace AutoPlannerOptimizationLoop.Base
                 if (opt.QueryDoseUnits == Units.Percent) dose *= plan.TotalDose.Dose / 100.0;
                 if (opt.ConstraintType != OptimizationObjectiveType.Mean)
                 {
-                    plan.OptimizationSetup.AddPointObjective(StructureTuningHelper.GetStructureFromId(opt.StructureId, plan.StructureSet),
+                    plan.OptimizationSetup.AddPointObjective(StructureTuningHelper.GetStructureFromId(opt.StructureId),
                                                              OptimizationTypeHelper.GetObjectiveOperator(opt.ConstraintType),
                                                              new DoseValue(dose, DoseValue.DoseUnit.cGy),
                                                              opt.QueryVolume,
@@ -551,7 +549,7 @@ namespace AutoPlannerOptimizationLoop.Base
                 }
                 else
                 {
-                    plan.OptimizationSetup.AddMeanDoseObjective(StructureTuningHelper.GetStructureFromId(opt.StructureId, plan.StructureSet),
+                    plan.OptimizationSetup.AddMeanDoseObjective(StructureTuningHelper.GetStructureFromId(opt.StructureId),
                                                                 new DoseValue(dose, DoseValue.DoseUnit.cGy),
                                                                 opt.Priority);
                 }
@@ -707,10 +705,10 @@ namespace AutoPlannerOptimizationLoop.Base
             {
                 ProvideUIUpdate(100 * ++percentComplete / calcItems);
                 //used to account for the case where there is a template plan objective that is not included in the current case (e.g., testes are not always spared)
-                if (StructureTuningHelper.DoesStructureExistInSS(itr.StructureId, plan.StructureSet, true))
+                if (StructureTuningHelper.DoesStructureExistInSS(itr.StructureId, true))
                 {
                     //similar to code to the foreach loop used to cycle through the optimization parameters
-                    Structure s = StructureTuningHelper.GetStructureFromId(itr.StructureId, plan.StructureSet);
+                    Structure s = StructureTuningHelper.GetStructureFromId(itr.StructureId);
                     double diff = PlanEvaluationHelper.GetDifferenceFromGoal(plan, itr, s);
                     if (diff <= 0.0)
                     {
@@ -748,7 +746,7 @@ namespace AutoPlannerOptimizationLoop.Base
             {
                 ProvideUIUpdate(100 * ++percentComplete / calcItems);
                 //get the structure for each optimization object in optParams and its associated DVH
-                Structure s = StructureTuningHelper.GetStructureFromId(itr.StructureId, _data.StructureSet);
+                Structure s = StructureTuningHelper.GetStructureFromId(itr.StructureId);
                 //dose representation in optimization objectives is always absolute!
                 double diff = PlanEvaluationHelper.GetDifferenceFromGoal(plan, itr, s);
 
@@ -876,7 +874,7 @@ namespace AutoPlannerOptimizationLoop.Base
             string targetId = "";
             if (plansTargets.Any(x => string.Equals(x.Key, plan.Id))) targetId = plansTargets.First(x => string.Equals(x.Key, plan.Id)).Value;
 
-            Structure target = TargetsHelper.GetTargetStructureForPlanType(_data.StructureSet, targetId, _data.UseFlash, _data.PlanType);
+            Structure target = TargetsHelper.GetTargetStructureForPlanType(targetId, _data.UseFlash, _data.PlanType);
             ProvideUIUpdate($"Retrieved target: {target.Id} for plan: {plan.Id} to evaluate requested heater/cooler structures");
             if (ReferenceEquals(target, null) || target.IsEmpty)
             {

@@ -304,7 +304,7 @@ namespace TBIAutoPlanner.Core
             Image image = EclipseContext.GetInstance().StructureSet.Image;
             VVector userOrigin = image.UserOrigin;
             //manually calculate the target sup/inf extent to avoid having to figure out if flash was used or not
-            Structure target = StructureTuningHelper.GetStructureFromId("body", EclipseContext.GetInstance().StructureSet);
+            Structure target = StructureTuningHelper.GetStructureFromId("body");
             double targetSupExtent = target.MeshGeometry.Positions.Max(p => p.Z) - targetMargin;
             double targetInfExtent = target.MeshGeometry.Positions.Min(p => p.Z) + targetMargin;
 
@@ -312,7 +312,7 @@ namespace TBIAutoPlanner.Core
             if (TBIAutoPlannerSettings.CheckTTCollision)
             {
                 ProvideUIUpdate("Checking for potential couch collision");
-                if (StructureTuningHelper.DoesStructureExistInSS("couchsurface", EclipseContext.GetInstance().StructureSet, true))
+                if (StructureTuningHelper.DoesStructureExistInSS("couchsurface", true))
                 {
                     double TT = 0;
                     Structure couchSurface = EclipseContext.GetInstance().StructureSet.Structures.FirstOrDefault(x => x.Id.ToLower() == "couchsurface");

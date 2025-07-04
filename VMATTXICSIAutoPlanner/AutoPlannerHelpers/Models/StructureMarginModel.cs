@@ -29,13 +29,14 @@ namespace AutoPlannerHelpers.Models
         public StructureMarginType MarginType { get; set; } = StructureMarginType.Uniform;
         public MarginGeometryType GeometryType { get; set; } = MarginGeometryType.Outer;
         public double x1 { get; set; } = double.NaN;
-        public double x2 { get; set; } = double.NaN;
         public double y1 { get; set; } = double.NaN;
-        public double y2 { get; set; } = double.NaN;
         public double z1 { get; set; } = double.NaN;
+        public double x2 { get; set; } = double.NaN;
+        public double y2 { get; set; } = double.NaN;
         public double z2 { get; set; } = double.NaN;
 
         public StructureMarginModel() { }
+
         public StructureMarginModel(double margin) 
         { 
             MarginType = StructureMarginType.Uniform;

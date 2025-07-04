@@ -113,6 +113,7 @@
     <Compile Include="EnumTypeHelpers\FlashTypeHelper.cs" />
     <Compile Include="EnumTypeHelpers\InequalityOperatorHelper.cs" />
     <Compile Include="EnumTypeHelpers\OptimizationTypeHelper.cs" />
+    <Compile Include="EnumTypeHelpers\StructureMarginTypeHelper.cs" />
     <Compile Include="EnumTypeHelpers\StructureOperationTypeHelper.cs" />
     <Compile Include="EnumTypeHelpers\TSManipulationTypeHelper.cs" />
     <Compile Include="EnumTypeHelpers\UnitsTypeHelper.cs" />
