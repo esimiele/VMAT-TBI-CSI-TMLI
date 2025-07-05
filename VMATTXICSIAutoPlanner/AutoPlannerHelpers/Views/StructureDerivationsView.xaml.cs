@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AutoPlannerHelpers.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +24,15 @@ namespace AutoPlannerHelpers.Views
         public StructureDerivationsView()
         {
             InitializeComponent();
+            Loaded += ViewLoaded;
+        }
+
+        private void ViewLoaded(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is StructureDerivationsViewModel vm)
+            {
+                vm.RequestedReEvaluationOfCanExecute();
+            }
         }
     }
 }

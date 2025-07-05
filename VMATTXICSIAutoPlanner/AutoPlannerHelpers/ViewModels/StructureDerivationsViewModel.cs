@@ -1,13 +1,17 @@
 ﻿using AutoPlannerHelpers.Messengers;
 using AutoPlannerHelpers.Models;
 using AutoPlannerHelpers.Prompts;
+using AutoPlannerHelpers.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace AutoPlannerHelpers.ViewModels
 {
@@ -35,6 +39,7 @@ namespace AutoPlannerHelpers.ViewModels
         public ICommand AddStructureOperationCommand { get; set; }
         public ICommand AddDefaultStructureOperationsCommand { get; set; }
         public ICommand RemoveAllStructureOperationsCommand { get; set; }
+        public RelayCommand<(string,StructureMarginModel)> ModifyMarginCommand { get; set; }
         public ICommand PerformTSGenerationManipulationCommand { get; set; }
         public RelayCommand<StructureOperationModel> StructureSelectionChangedCommand { get; set; }
         public RelayCommand<StructureOperationModel> ClearRowCommand { get; set; }
@@ -46,6 +51,7 @@ namespace AutoPlannerHelpers.ViewModels
             AddDefaultStructureOperationsCommand = new RelayCommand(AddDefaultTSManipulations);
             PerformTSGenerationManipulationCommand = new RelayCommand(PerformTSGenerationManipulation);
             RemoveAllStructureOperationsCommand = new RelayCommand(RemoveAllTSManipulations);
+            ModifyMarginCommand = new RelayCommand<(string, StructureMarginModel)>(ModifyMargin, CanModifyMargin);
             StructureSelectionChangedCommand = new RelayCommand<StructureOperationModel>(StructureSelectionChanged);
             ClearRowCommand = new RelayCommand<StructureOperationModel>(ClearRow);
             StructureIds = new ObservableCollectionPropertyNotify<string> { "--Add New--" };
@@ -54,6 +60,7 @@ namespace AutoPlannerHelpers.ViewModels
             _isUsedForTargetDerivations = isUsedForTargetDerivations;
             if (isUsedForTargetDerivations) ViewHeaderLabel = "Target Derivation Operations";
             else ViewHeaderLabel = "Optimization Structure Derivations";
+            RequestedStructureOperations.CollectionChanged += RequestedStructureOperations_CollectionChanged;
             InitializeMessengers(isUsedForTargetDerivations);
         }
 
@@ -99,14 +106,36 @@ namespace AutoPlannerHelpers.ViewModels
                     string structureAId = StructureIds.First(x => string.Equals(x, itr.StructureA, StringComparison.OrdinalIgnoreCase));
                     string structureBId = StructureIds.First(x => string.Equals(x, itr.StructureB, StringComparison.OrdinalIgnoreCase));
                     if (!StructureIds.Any(x => string.Equals(x, itr.OutputStructure, StringComparison.OrdinalIgnoreCase))) StructureIds.Add(itr.OutputStructure);
-                    RequestedStructureOperations.Add(new StructureOperationModel(structureAId, itr.Operation, structureBId, itr.OutputStructure, itr.MarginA, itr.MarginB, itr.IsTemporary));
+                    StructureOperationModel newItem = new StructureOperationModel(structureAId, itr.Operation, structureBId, itr.OutputStructure, itr.MarginA, itr.MarginB, itr.IsTemporary);
+                    newItem.PropertyChanged += RequestedStructureOperation_PropertyChanged;
+                    RequestedStructureOperations.Add(newItem);
                 }
+            }
+        }
+
+        private void RequestedStructureOperations_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            RequestedReEvaluationOfCanExecute();
+        }
+
+        public void RequestedReEvaluationOfCanExecute()
+        {
+            Application.Current.Dispatcher.BeginInvoke(() => { ModifyMarginCommand.NotifyCanExecuteChanged(); }, DispatcherPriority.Render);
+        }
+
+        private void RequestedStructureOperation_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName is nameof(StructureOperationModel.StructureA) or nameof(StructureOperationModel.MarginA))
+            {
+                RequestedReEvaluationOfCanExecute();
             }
         }
 
         private void AddTSManipulation()
         {
-            RequestedStructureOperations.Add(new StructureOperationModel(StructureIds.ElementAt(1), Enums.StructureDerivationOperation.None, StructureIds.ElementAt(1), StructureIds.ElementAt(1)));
+            StructureOperationModel newItem = new StructureOperationModel(StructureIds.ElementAt(1), Enums.StructureDerivationOperation.None, StructureIds.ElementAt(1), StructureIds.ElementAt(1));
+            newItem.PropertyChanged += RequestedStructureOperation_PropertyChanged;
+            RequestedStructureOperations.Add(newItem);
         }
 
         private void AddDefaultTSManipulations()
@@ -136,6 +165,17 @@ namespace AutoPlannerHelpers.ViewModels
                     RequestedStructureOperations.Refresh();
                 }
             }
+        }
+
+        private void ModifyMargin((string structureid, StructureMarginModel model) parameters)
+        {
+            ModifyMarginView view = new ModifyMarginView { DataContext = new ModifyMarginViewModel(parameters.structureid, parameters.model) };
+            view.ShowDialog();
+        }
+
+        private bool CanModifyMargin((string structureid, StructureMarginModel model) parameters)
+        {
+            return !string.IsNullOrEmpty(parameters.structureid) && !ReferenceEquals(parameters.model, null);
         }
 
         private void ClearRow(StructureOperationModel item)

@@ -1,9 +1,10 @@
 ﻿using AutoPlannerHelpers.Enums;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.Generic;
 
 namespace AutoPlannerHelpers.Models
 {
-    public class StructureOperationModel
+    public class StructureOperationModel : ObservableObject
     {
         public bool IsValidOperation { get => !string.IsNullOrEmpty(StructureA) &&
                                               !string.IsNullOrEmpty(StructureB) &&

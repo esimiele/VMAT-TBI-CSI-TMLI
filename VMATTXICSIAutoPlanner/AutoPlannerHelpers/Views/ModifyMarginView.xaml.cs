@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿using AutoPlannerHelpers.ViewModels;
+using System;
+using System.Windows;
 
 namespace AutoPlannerHelpers.Views
 {
@@ -10,6 +12,19 @@ namespace AutoPlannerHelpers.Views
         public ModifyMarginView()
         {
             InitializeComponent();
+            Loaded += ViewLoaded;
+        }
+        private void ViewLoaded(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is ModifyMarginViewModel vm)
+            {
+                vm.RequestClose += OnRequestClose;
+            }
+        }
+
+        private void OnRequestClose(object? sender, EventArgs e)
+        {
+            this.Close();
         }
     }
 }

@@ -244,6 +244,7 @@
     <Compile Include="Views\TSManipulationView.xaml.cs">
       <DependentUpon>TSManipulationView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\TupleConverter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

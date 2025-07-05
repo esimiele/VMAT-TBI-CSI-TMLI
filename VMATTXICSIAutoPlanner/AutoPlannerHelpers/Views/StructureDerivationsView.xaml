@@ -140,6 +140,7 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <local:TupleConverter x:Key="TupleConverter" />
     </UserControl.Resources>
     <Grid>
         <Border Margin="0" BorderThickness="1,0,0,0" BorderBrush="Black">
@@ -166,10 +167,24 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
                                     <ComboBox Grid.Column="0" HorizontalContentAlignment="Center" ItemsSource="{Binding Path=DataContext.StructureIds, ElementName=StructureDerivationSP}" SelectedItem="{Binding StructureA}" Margin="1"/>
-                                    <Button Grid.Column="1" Content="Margin A" HorizontalContentAlignment="Center" Command="{Binding ModifyMarginACommand}" ToolTip="{Binding MarginA.AxisAlignedMargins}" Margin="1"/>
+                                    <Button Grid.Column="1" Content="Margin A" HorizontalContentAlignment="Center" Command="{Binding DataContext.ModifyMarginCommand, ElementName=StructureDerivationSP, Mode=TwoWay}" ToolTip="{Binding MarginA.AxisAlignedMargins}" Margin="1">
+                                        <Button.CommandParameter>
+                                            <MultiBinding Converter="{StaticResource TupleConverter}">
+                                                <Binding Path="StructureA" />
+                                                <Binding Path="MarginA" />
+                                            </MultiBinding>
+                                        </Button.CommandParameter>
+                                    </Button>
                                     <ComboBox Grid.Column="2" HorizontalContentAlignment="Center" SelectedItem="{Binding Operation}" ItemsSource="{Binding Source={local:EnumBindingSource {x:Type enum:StructureDerivationOperation}}}" Margin="1"/>
                                     <ComboBox Grid.Column="3" HorizontalContentAlignment="Center" ItemsSource="{Binding Path=DataContext.StructureIds, ElementName=StructureDerivationSP}" SelectedItem="{Binding StructureB}" Margin="1"/>
-                                    <Button Grid.Column="4" Content="Margin B" HorizontalContentAlignment="Center" Command="{Binding ModifyMarginBCommand}" ToolTip="{Binding MarginB.AxisAlignedMargins}" Margin="1"/>
+                                    <Button Grid.Column="4" Content="Margin B" HorizontalContentAlignment="Center" Command="{Binding DataContext.ModifyMarginCommand, ElementName=StructureDerivationSP, Mode=TwoWay}" ToolTip="{Binding MarginB.AxisAlignedMargins}" Margin="1">
+                                        <Button.CommandParameter>
+                                            <MultiBinding Converter="{StaticResource TupleConverter}">
+                                                <Binding Path="StructureB" />
+                                                <Binding Path="MarginB" />
+                                            </MultiBinding>
+                                        </Button.CommandParameter>
+                                    </Button>
                                     <ComboBox Grid.Column="5" HorizontalContentAlignment="Center" ItemsSource="{Binding Path=DataContext.StructureIds, ElementName=StructureDerivationSP}" SelectedItem="{Binding OutputStructure}" Margin="1">
                                         <Behaviors:Interaction.Triggers>
                                             <Behaviors:EventTrigger EventName="SelectionChanged">
