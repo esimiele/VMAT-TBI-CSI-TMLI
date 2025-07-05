@@ -126,7 +126,7 @@ namespace CSIAutoPlanner.ViewModels
             
             ExportCT = new CTExportView { DataContext = new CTExportViewModel() };
             ImportSS = new ImportSSView { DataContext = new ImportSSViewModel(CSIAutoPlannerSettings.ImportExportData, PlanType.VMAT_CSI, (!ReferenceEquals(EclipseContext.GetInstance().Patient, null) ? EclipseContext.GetInstance().Patient.Id : "")) };
-            PrepForTargets = new PrepForTargetsView { DataContext = new PrepForTargetsViewModel() };
+            PrepForTargets = new StructureDerivationsView { DataContext = new StructureDerivationsViewModel(_structureIdsPostUnion, true) };
             WeakReferenceMessenger.Default.Send(new RequestUpdateTargetStructures(CSIAutoPlannerSettings.RequestedPreliminaryTargets));
 
             RingGeneration = new RingGenerationView { DataContext = new RingGenerationViewModel(_structureIdsPostUnion) };

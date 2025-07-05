@@ -254,7 +254,7 @@ namespace AutoPlannerHelpers.Helpers
         /// <param name="line"></param>
         /// <param name="cropChar"></param>
         /// <returns></returns>
-        public static string CropLine(string line, string cropChar) { return line.Substring(line.IndexOf(cropChar) + 1, line.Length - line.IndexOf(cropChar) - 1); }
+        public static string CropLine(string line, string cropChar) { return line.Substring(line.IndexOf(cropChar) + cropChar.Length, line.Length - line.IndexOf(cropChar) - cropChar.Length); }
 
         /// <summary>
         /// Helper function to parse requested jaw positions for the fields. As the fields are added to each isocenter, the jaws will be set in the order the jaw positions were parsed from the
@@ -396,14 +396,14 @@ namespace AutoPlannerHelpers.Helpers
             line = CropLine(line, "{");
             structureA = line.Substring(0, line.IndexOf(","));
             line = CropLine(line, ",");
-            marginA = ParseStructureOperationMargin(line.Substring(1, line.IndexOf(",") - 1));
-            line = CropLine(line, ",");
+            marginA = ParseStructureOperationMargin(line.Substring(1, line.IndexOf("]") - 1));
+            line = CropLine(line, "],");
             operation = line.Substring(0, line.IndexOf(","));
             line = CropLine(line, ",");
             structureB = line.Substring(0, line.IndexOf(","));
             line = CropLine(line, ",");
-            marginB = ParseStructureOperationMargin(line.Substring(1, line.IndexOf(",") - 1));
-            line = CropLine(line, ",");
+            marginB = ParseStructureOperationMargin(line.Substring(1, line.IndexOf("]") - 1));
+            line = CropLine(line, "],");
             outputStructure = line.Substring(0, line.IndexOf(","));
             line = CropLine(line, ",");
             isTemp = bool.Parse(line.Substring(0, line.IndexOf("}")));

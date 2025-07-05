@@ -143,12 +143,6 @@ namespace AutoPlannerHelpers.Messengers
         public List<SpecialOptimizationStructureModel> Structures { get; private set; }
         public RequestUpdateTargetStructures(List<SpecialOptimizationStructureModel> structures) { this.Structures = structures; }
     }
-
-    public class RequestGeneratePreliminaryTargets
-    {
-        public List<SpecialOptimizationStructureModel> Targets { get; private set; }
-        public RequestGeneratePreliminaryTargets(List<SpecialOptimizationStructureModel> structures) { this.Targets = structures; }
-    }
     #endregion
 
     #region export ct

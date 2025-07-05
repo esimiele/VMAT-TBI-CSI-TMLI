@@ -184,10 +184,10 @@
     <Compile Include="ViewModels\BeamPlacementViewModel.cs" />
     <Compile Include="ViewModels\CTExportViewModel.cs" />
     <Compile Include="ViewModels\ImportSSViewModel.cs" />
+    <Compile Include="ViewModels\ModifyMarginViewModel.cs" />
     <Compile Include="ViewModels\ObservableCollectionPropertyNotify.cs" />
     <Compile Include="ViewModels\OptimizationSetupViewModel.cs" />
     <Compile Include="ViewModels\PlanPreparationViewModel.cs" />
-    <Compile Include="ViewModels\PrepForTargetsViewModel.cs" />
     <Compile Include="ViewModels\RingGenerationViewModel.cs" />
     <Compile Include="ViewModels\ScriptConfigurationViewModel.cs" />
     <Compile Include="ViewModels\SetTargetsViewModel.cs" />
@@ -199,6 +199,9 @@
     <Compile Include="ViewModels\TSManipulationViewModel.cs" />
     <Compile Include="Views\BeamPlacementView.xaml.cs">
       <DependentUpon>BeamPlacementView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ModifyMarginView.xaml.cs">
+      <DependentUpon>ModifyMarginView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\CTExportView.xaml.cs">
       <DependentUpon>CTExportView.xaml</DependentUpon>
@@ -212,9 +215,6 @@
     </Compile>
     <Compile Include="Views\PlanPreparationView.xaml.cs">
       <DependentUpon>PlanPreparationView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\PrepForTargetsView.xaml.cs">
-      <DependentUpon>PrepForTargetsView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\RingGenerationView.xaml.cs">
       <DependentUpon>RingGenerationView.xaml</DependentUpon>
@@ -269,6 +269,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Views\ModifyMarginView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Views\CTExportView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -282,10 +286,6 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\PlanPreparationView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Views\PrepForTargetsView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

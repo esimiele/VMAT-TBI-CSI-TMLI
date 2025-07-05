@@ -121,7 +121,7 @@ namespace AutoPlannerHelpers.ViewModels
 
         private void StructureSelectionChanged(StructureOperationModel item)
         {
-            if (string.Equals(item.StructureA, "--Add New--") || string.Equals(item.StructureB, "--Add New--") || string.Equals(item.OutputStructure, "--Add New--"))
+            if (item.StructureIdList.Any(x => string.Equals(x, "--Add New--")))
             {
                 string msg = "Enter the Id of the requested structure!";
                 EnterMissingInfoPrompt EMIP = new EnterMissingInfoPrompt(msg, "Id:");

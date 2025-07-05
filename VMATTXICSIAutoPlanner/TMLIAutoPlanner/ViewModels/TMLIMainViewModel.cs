@@ -139,7 +139,6 @@ namespace TMLIAutoPlanner.ViewModels
 
             ExportCT = new CTExportView { DataContext = new CTExportViewModel() };
             ImportSS = new ImportSSView { DataContext = new ImportSSViewModel(TMLIAutoPlannerSettings.ImportExportData, PlanType.VMAT_CSI, (!ReferenceEquals(EclipseContext.GetInstance().Patient, null) ? EclipseContext.GetInstance().Patient.Id : "")) };
-            //PrepForTargets = new PrepForTargetsView { DataContext = new PrepForTargetsViewModel() };
             PrepForTargets = new StructureDerivationsView { DataContext = new StructureDerivationsViewModel(_structureIdsPostUnion, true) };
 
             RingGeneration = new RingGenerationView { DataContext = new RingGenerationViewModel(_structureIdsPostUnion) };
@@ -590,7 +589,7 @@ namespace TMLIAutoPlanner.ViewModels
             catch (Exception e)
             {
                 Logger.GetInstance().LogError($"Error could not load plan template file because: {e.Message}");
-                Logger.GetInstance().LogError(e.StackTrace, true);
+                Logger.GetInstance().LogError(e.StackTrace);
                 return true;
             }
             return false;
