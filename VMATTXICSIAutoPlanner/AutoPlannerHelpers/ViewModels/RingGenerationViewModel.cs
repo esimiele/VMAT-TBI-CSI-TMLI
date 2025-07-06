@@ -1,6 +1,9 @@
-﻿using AutoPlannerHelpers.Messengers;
+﻿using AutoPlannerHelpers.Context;
+using AutoPlannerHelpers.Logging;
+using AutoPlannerHelpers.Messengers;
 using AutoPlannerHelpers.Models;
 using AutoPlannerHelpers.PlanTemplateModels;
+using AutoPlannerHelpers.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -63,7 +66,7 @@ namespace AutoPlannerHelpers.ViewModels
             });
         }
 
-        public void AutoPlanTemplateSelectionChanged(AutoPlanTemplateBase template, bool skipStructureCheck = false)
+        public void AutoPlanTemplateSelectionChanged(AutoPlanTemplateBase template, bool skipStructureCheck = true)
         {
             if (ReferenceEquals(template, null)) return;
             _selectedTemplate = template;
@@ -117,8 +120,18 @@ namespace AutoPlannerHelpers.ViewModels
         private void SpecifyAdditionalOperation(TSRingStructureModel model)
         {
             //open new view with current additional operation
-
-            //assign updated additional operations to argument property
+            string ringName = $"TS_ring{model.DoseLevel}";
+            if (_structureIdsPostUnion.Any(x => string.Equals(x, ringName)))
+            {
+                ringName += "_1";
+                if (_structureIdsPostUnion.Any(x => string.Equals(x, ringName)))
+                {
+                    Logger.GetInstance().LogError($"Error! Unable to update ring structure Id to: {ringName}! Exiting");
+                    return;
+                }
+            }
+            AdditionalRingOperationView view = new AdditionalRingOperationView { DataContext = new AdditionalRingOperationViewModel(ringName, model.AdditionalStructureOperation, _structureIdsPostUnion) };
+            view.ShowDialog();
         }
     }
 }

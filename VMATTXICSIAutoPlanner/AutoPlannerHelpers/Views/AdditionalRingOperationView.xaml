@@ -1,11 +1,14 @@
-﻿<UserControl x:Class="AutoPlannerHelpers.Views.RingGenerationView"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:AutoPlannerHelpers.Views"
-             mc:Ignorable="d">
-    <UserControl.Resources>
+﻿<Window x:Class="AutoPlannerHelpers.Views.AdditionalRingOperationView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AutoPlannerHelpers.Views"
+        xmlns:enum="clr-namespace:AutoPlannerHelpers.Enums"
+        xmlns:Behaviors="clr-namespace:Microsoft.Xaml.Behaviors;assembly=Microsoft.Xaml.Behaviors"
+        mc:Ignorable="d"
+        WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight" Background="DarkGray">
+    <Window.Resources>
         <Style TargetType="TextBox">
             <Setter Property="Background" Value="White"/>
         </Style>
@@ -138,41 +141,54 @@
                 </Setter.Value>
             </Setter>
         </Style>
-    </UserControl.Resources>
+        <local:TupleConverter x:Key="TupleConverter" />
+    </Window.Resources>
     <Grid>
         <Border Margin="0" BorderThickness="1,0,0,0" BorderBrush="Black">
             <StackPanel HorizontalAlignment="Center" Margin="0">
-                <Label Content="Create Ring Structures" FontSize="20" FontStyle="Normal" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,0,0,0"></Label>
-                <Grid Height="25" Width ="560" HorizontalAlignment="Center" Margin="0,5,0,0">
-                    <Button Content="Add Ring" Width="100" HorizontalAlignment="Left" VerticalAlignment="Top" Command="{Binding AddRingCommand}"/>
-                    <Button Content="Add Defaults" Width="100" HorizontalAlignment="Center" VerticalAlignment="Top" Command="{Binding AddDefaultRingsCommand}"/>
-                    <Button Content="Clear List" Width="100" HorizontalAlignment="Right" VerticalAlignment="Top" Command="{Binding ClearRingListCommand}"/>
+                <Label Content="Additional Structure Operation for TS Ring" HorizontalContentAlignment="Center"></Label>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Content="Ring Structure:" Grid.Column="0" HorizontalAlignment="Center"/>
+                    <TextBox Text="{Binding RingId}" Grid.Column="1" HorizontalContentAlignment="Center" Width="120" IsReadOnly="True"/>
                 </Grid>
-                <ScrollViewer Height="360" Width="515" Margin="0,5,0,0" HorizontalAlignment="Center" VerticalAlignment="Bottom" Style="{StaticResource ScrollViewerStyle}">
-                    <ItemsControl x:Name="RingStructuresSP" ItemsSource="{Binding RequestedRingStructures}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="1.2*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <ComboBox Grid.Column="0" HorizontalAlignment="Center" HorizontalContentAlignment="Center" ItemsSource="{Binding DataContext.StructureIdsPostUnion, ElementName=RingStructuresSP}" SelectedItem="{Binding TargetId}" MinWidth="120"/>
-                                    <TextBox Grid.Column="1" HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Text="{Binding MarginFromTargetInCM}" MinWidth="80"/>
-                                    <TextBox Grid.Column="2" HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Text="{Binding RingThicknessInCM}" MinWidth="80"/>
-                                    <TextBox Grid.Column="3" HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Text="{Binding DoseLevel}" MinWidth="80"/>
-                                    <Button Content="Additional Operation" Grid.Column="4" ToolTip="{Binding AdditionalStructureOperation.FriendlyName}" Command="{Binding Path=DataContext.SpecifyAdditionalOperationCommand, ElementName=RingStructuresSP}" CommandParameter="{Binding}" Width="90" Margin="1"/>
-                                    <Button Content="Clear" Grid.Column="5" Command="{Binding Path=DataContext.ClearRowCommand, ElementName=RingStructuresSP}" CommandParameter="{Binding}" Width="90" Margin="1"/>
-                                </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+                <Grid DataContext="{Binding AdditionalRingOperation}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0" HorizontalContentAlignment="Center" Text="{Binding StructureA}" IsReadOnly="True" Margin="1"/>
+                    <Button Grid.Column="1" Content="Margin A" HorizontalContentAlignment="Center" Command="{Binding DataContext.ModifyMarginCommand, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}" ToolTip="{Binding MarginA.AxisAlignedMargins}" Margin="1">
+                        <Button.CommandParameter>
+                            <MultiBinding Converter="{StaticResource TupleConverter}">
+                                <Binding Path="StructureA" />
+                                <Binding Path="MarginA" />
+                            </MultiBinding>
+                        </Button.CommandParameter>
+                    </Button>
+                    <ComboBox Grid.Column="2" HorizontalContentAlignment="Center" SelectedItem="{Binding Operation}" ItemsSource="{Binding Source={local:EnumBindingSource {x:Type enum:StructureDerivationOperation}}}" Margin="1"/>
+                    <ComboBox Grid.Column="3" HorizontalContentAlignment="Center" ItemsSource="{Binding Path=DataContext.StructureIds, RelativeSource={RelativeSource AncestorType=Window}}" SelectedItem="{Binding StructureB}" Margin="1"/>
+                    <Button Grid.Column="4" Content="Margin B" HorizontalContentAlignment="Center" Command="{Binding DataContext.ModifyMarginCommand, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}" ToolTip="{Binding MarginB.AxisAlignedMargins}" Margin="1">
+                        <Button.CommandParameter>
+                            <MultiBinding Converter="{StaticResource TupleConverter}">
+                                <Binding Path="StructureB" />
+                                <Binding Path="MarginB" />
+                            </MultiBinding>
+                        </Button.CommandParameter>
+                    </Button>
+                    <TextBox Grid.Column="5" HorizontalContentAlignment="Center" Text="{Binding OutputStructure}" IsReadOnly="True" Margin="1"/>
+                    <CheckBox IsChecked="{Binding IsTemporary}" Grid.Column="6" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,3,0,0"/>
+                </Grid>
+                <Button Content="Set Structure Operation" FontWeight="Bold" Width="180" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="5" Command="{Binding SetAdditionalRingOperationCommand}"/>
             </StackPanel>
-        </Border>
+        </Border> 
     </Grid>
-</UserControl>
+</Window>

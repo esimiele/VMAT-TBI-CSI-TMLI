@@ -202,6 +202,9 @@
     <Compile Include="Views\BeamPlacementView.xaml.cs">
       <DependentUpon>BeamPlacementView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\AdditionalRingOperationView.xaml.cs">
+      <DependentUpon>AdditionalRingOperationView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\ModifyMarginView.xaml.cs">
       <DependentUpon>ModifyMarginView.xaml</DependentUpon>
     </Compile>
@@ -269,6 +272,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\BeamPlacementView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\AdditionalRingOperationView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

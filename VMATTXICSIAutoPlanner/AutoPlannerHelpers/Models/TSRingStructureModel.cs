@@ -7,7 +7,7 @@
         public double MarginFromTargetInCM { get; set; } = double.NaN;
         public double RingThicknessInCM { get; set; } = double.NaN;
         public double DoseLevel { get; set; } = double.NaN;
-        public StructureOperationModel AdditionalStructureOperation { get; set; } = null;
+        public StructureOperationModel AdditionalStructureOperation { get; set; } = new StructureOperationModel();
 
         public TSRingStructureModel(string id, double margin, double thickness, double dose, string ringId = "")
         {

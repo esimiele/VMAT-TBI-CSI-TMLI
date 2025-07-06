@@ -5,9 +5,9 @@ using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace AutoPlannerHelpers.ViewModels
 {
@@ -15,6 +15,7 @@ namespace AutoPlannerHelpers.ViewModels
     {
         #region properties
         private StructureOperationModel _additionalRingOperation;
+        private StructureOperationModel _originalOperationCopy;
 
         public StructureOperationModel AdditionalRingOperation
         {
@@ -22,13 +23,15 @@ namespace AutoPlannerHelpers.ViewModels
             set { SetProperty(ref _additionalRingOperation, value); }
         }
 
-        private List<string> _structureIdsPostUnion;
+        private List<string> _structureIds;
 
-        public List<string> StructureIdsPostUnion
+        public List<string> StructureIds
         {
-            get { return _structureIdsPostUnion; }
-            set { SetProperty(ref _structureIdsPostUnion, value); }
+            get { return _structureIds; }
+            set { SetProperty(ref _structureIds, value); }
         }
+
+        public string RingId { get; set; } = string.Empty;
         #endregion
 
         #region commands
@@ -36,16 +39,22 @@ namespace AutoPlannerHelpers.ViewModels
         public RelayCommand<(string, StructureMarginModel)> ModifyMarginCommand { get; set; }
         #endregion
 
+        #region events
+        public event EventHandler RequestClose;
+        #endregion
+
         public AdditionalRingOperationViewModel(string ringId, StructureOperationModel op, List<string> structureIds)
         {
-            StructureIdsPostUnion = new List<string>(structureIds);
-            if(ReferenceEquals(op, null) || !op.IsValidOperation)
+            StructureIds = new List<string>(structureIds);
+            RingId = ringId;
+            _originalOperationCopy = op;
+            if(op.IsValidOperation)
             {
-                AdditionalRingOperation = new StructureOperationModel(ringId, Enums.StructureDerivationOperation.None, _structureIdsPostUnion.First(), ringId);
+                AdditionalRingOperation = new StructureOperationModel(ringId, op.Operation, op.StructureB, ringId, op.MarginA, op.MarginA);
             }
             else
             {
-                AdditionalRingOperation = op;
+                AdditionalRingOperation = new StructureOperationModel(ringId, Enums.StructureDerivationOperation.None, _structureIds.First(), ringId);
             }
             SetAdditionalRingOperationCommand = new RelayCommand(SetAdditionalRingOperation);
             ModifyMarginCommand = new RelayCommand<(string, StructureMarginModel)>(ModifyMargin, CanModifyMargin);
@@ -57,6 +66,11 @@ namespace AutoPlannerHelpers.ViewModels
             view.ShowDialog();
         }
 
+        public void RequestedReEvaluationOfCanExecute()
+        {
+            Application.Current.Dispatcher.BeginInvoke(() => { ModifyMarginCommand.NotifyCanExecuteChanged(); }, DispatcherPriority.Render);
+        }
+
         private bool CanModifyMargin((string structureid, StructureMarginModel model) parameters)
         {
             return !string.IsNullOrEmpty(parameters.structureid) && !ReferenceEquals(parameters.model, null);
@@ -64,7 +78,17 @@ namespace AutoPlannerHelpers.ViewModels
 
         private void SetAdditionalRingOperation()
         {
-            
+            if (_additionalRingOperation.IsValidOperation)
+            {
+                if(ReferenceEquals(_originalOperationCopy,null)) _originalOperationCopy = new StructureOperationModel(_additionalRingOperation);
+                else _originalOperationCopy.UpdateStructureOperation(_additionalRingOperation);
+            }
+            CloseWindow();
+        }
+
+        private void CloseWindow()
+        {
+            RequestClose?.Invoke(this, EventArgs.Empty);
         }
     }
 }
