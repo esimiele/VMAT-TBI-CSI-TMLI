@@ -30,6 +30,7 @@ namespace AutoPlannerHelpers.ViewModels
         public ICommand AddRingCommand { get; set; }
         public ICommand AddDefaultRingsCommand { get; set; }
         public ICommand ClearRingListCommand { get; set; }
+        public RelayCommand<TSRingStructureModel> SpecifyAdditionalOperationCommand { get; set; }
         public RelayCommand<TSRingStructureModel> ClearRowCommand { get; set; }
         #endregion
 
@@ -43,6 +44,7 @@ namespace AutoPlannerHelpers.ViewModels
             StructureIdsPostUnion = new List<string>(ids);
             RequestedRingStructures = new ObservableCollectionPropertyNotify<TSRingStructureModel> { };
             AddRingCommand = new RelayCommand(AddRing);
+            SpecifyAdditionalOperationCommand = new RelayCommand<TSRingStructureModel>(SpecifyAdditionalOperation);
             AddDefaultRingsCommand = new RelayCommand(AddDefaultRings);
             ClearRingListCommand = new RelayCommand(ClearRingList);
             ClearRowCommand = new RelayCommand<TSRingStructureModel>(ClearRow);
@@ -110,6 +112,13 @@ namespace AutoPlannerHelpers.ViewModels
         public void ClearRow(TSRingStructureModel item)
         {
             RequestedRingStructures.Remove(item);
+        }
+
+        private void SpecifyAdditionalOperation(TSRingStructureModel model)
+        {
+            //open new view with current additional operation
+
+            //assign updated additional operations to argument property
         }
     }
 }

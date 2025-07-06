@@ -159,12 +159,14 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
                                     <ComboBox Grid.Column="0" HorizontalAlignment="Center" HorizontalContentAlignment="Center" ItemsSource="{Binding DataContext.StructureIdsPostUnion, ElementName=RingStructuresSP}" SelectedItem="{Binding TargetId}" MinWidth="120"/>
                                     <TextBox Grid.Column="1" HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Text="{Binding MarginFromTargetInCM}" MinWidth="80"/>
                                     <TextBox Grid.Column="2" HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Text="{Binding RingThicknessInCM}" MinWidth="80"/>
                                     <TextBox Grid.Column="3" HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Text="{Binding DoseLevel}" MinWidth="80"/>
-                                    <Button Content="Clear" Grid.Column="4" Command="{Binding Path=DataContext.ClearRowCommand, ElementName=RingStructuresSP}" CommandParameter="{Binding}" Width="90" Margin="1"/>
+                                    <Button Content="Additional Operation" Grid.Column="4" Command="{Binding Path=DataContext.SpecifyAdditionalOperationCommand, ElementName=RingStructuresSP}" CommandParameter="{Binding}" Width="90" Margin="1"/>
+                                    <Button Content="Clear" Grid.Column="5" Command="{Binding Path=DataContext.ClearRowCommand, ElementName=RingStructuresSP}" CommandParameter="{Binding}" Width="90" Margin="1"/>
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>

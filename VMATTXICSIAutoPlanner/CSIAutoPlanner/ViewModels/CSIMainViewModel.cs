@@ -273,24 +273,7 @@ namespace CSIAutoPlanner.ViewModels
                 Logger.GetInstance().LogError($"Error! More than 2 plan Ids entered! This script is only configured to auto-plan two or less CSI plans!");
                 return true;
             }
-            foreach (TargetModel target in parsedTargets.SelectMany(x =>x.Targets))
-            {
-                if (!StructureTuningHelper.DoesStructureExistInSS(target.TargetId, true))
-                {
-                    Logger.GetInstance().LogError($"Error! {target.TargetId} is either NOT present in structure set or is not contoured!");
-                    return true;
-                }
-                else
-                {
-                    //structure is present and contoured
-                    StructureApprovalStatus approvalStatus = StructureTuningHelper.GetStructureFromId(target.TargetId).ApprovalHistory.First().ApprovalStatus;
-                    if (approvalStatus != StructureApprovalStatus.Approved)
-                    {
-                        Logger.GetInstance().LogError($"Error! {target.TargetId} is NOT approved!" + Environment.NewLine + $"{target.TargetId} approval status: {approvalStatus}");
-                        return true;
-                    }
-                }
-            }
+            if (!base.AreRequestedPrescriptionTargetsApproved(parsedTargets.SelectMany(x => x.Targets))) return true;
             return false;
         }
         #endregion

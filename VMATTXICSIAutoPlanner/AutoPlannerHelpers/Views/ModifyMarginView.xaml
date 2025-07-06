@@ -145,14 +145,34 @@
     <Grid>
         <Border Margin="0" BorderThickness="1,0,0,0" BorderBrush="Black">
             <StackPanel HorizontalAlignment="Center" Margin="0">
-                <Label Content="Adjust structure operation margin"></Label>
+                <Label Content="Adjust structure operation margin" HorizontalContentAlignment="Center"></Label>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Label Content="Structure:" Grid.Column="0" HorizontalAlignment="Center"/>
-                    <TextBox Text="{Binding StructureId}" Grid.Column="1" HorizontalContentAlignment="Center" IsReadOnly="True"/>
+                    <TextBox Text="{Binding StructureId}" Grid.Column="1" HorizontalContentAlignment="Center" Width="120" IsReadOnly="True"/>
+                </Grid>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Content="Margin Type" Grid.Column="0"/>
+                    <Label Content="Geometry Type" Grid.Column="1"/>
+                    <Label Content="x1 (cm)" Grid.Column="2"/>
+                    <Label Content="y1 (cm)" Grid.Column="3"/>
+                    <Label Content="z1 (cm)" Grid.Column="4"/>
+                    <Label Content="x2 (cm)" Grid.Column="5"/>
+                    <Label Content="y2 (cm)" Grid.Column="6"/>
+                    <Label Content="z2 (cm)" Grid.Column="7"/>
                 </Grid>
                 <Grid DataContext="{Binding StructureMargin}">
                     <Grid.ColumnDefinitions>
@@ -180,7 +200,7 @@
                     <TextBox Grid.Column="6" HorizontalContentAlignment="Center" Text="{Binding y2}" Margin="1" Visibility="{Binding DataContext.AsymItemsVisible, RelativeSource={RelativeSource AncestorType=Window}}"/>
                     <TextBox Grid.Column="7" HorizontalContentAlignment="Center" Text="{Binding z2}" Margin="1" Visibility="{Binding DataContext.AsymItemsVisible, RelativeSource={RelativeSource AncestorType=Window}}"/>
                 </Grid>
-                <Button Content="Set Margin" FontWeight="Bold" Width="120" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,5,0,0" Command="{Binding SetMarginCommand}"/>
+                <Button Content="Set Margin" FontWeight="Bold" Width="120" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="5" Command="{Binding SetMarginCommand}"/>
             </StackPanel>
         </Border> 
     </Grid>

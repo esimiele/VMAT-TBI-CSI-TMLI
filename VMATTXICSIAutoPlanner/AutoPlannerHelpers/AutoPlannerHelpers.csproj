@@ -43,6 +43,7 @@
     <PlatformTarget>x64</PlatformTarget>
     <LangVersion>7.3</LangVersion>
     <ErrorReport>prompt</ErrorReport>
+    <LangVersion>preview</LangVersion>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug-v15|x64'">
@@ -181,6 +182,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Settings\AutoPlannerHelperSettings.cs" />
     <Compile Include="UIHelpers\ConfigurationUIHelper.cs" />
+    <Compile Include="ViewModels\AdditionalRingOperationViewModel.cs" />
     <Compile Include="ViewModels\BeamPlacementViewModel.cs" />
     <Compile Include="ViewModels\CTExportViewModel.cs" />
     <Compile Include="ViewModels\ImportSSViewModel.cs" />

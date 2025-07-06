@@ -2,7 +2,9 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using System.Windows;
 using System.Windows.Input;
+using System;
 using AutoPlannerHelpers.Context;
 using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.Helpers;
@@ -11,14 +13,13 @@ using AutoPlannerHelpers.Logging;
 using AutoPlannerHelpers.PlanTemplateModels;
 using AutoPlannerHelpers.ViewModels;
 using AutoPlannerHelpers.Views;
+using AutoPlannerHelpers.BaseCore;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using AutoPlannerHelpers.Messengers;
-using System;
 using VMS.TPS.Common.Model.API;
-using System.Windows;
-using AutoPlannerHelpers.BaseCore;
+using StructureApprovalStatus = VMS.TPS.Common.Model.Types.StructureApprovalStatus;
 
 namespace AutoPlannerHelpers.BaseViewModel
 {
@@ -250,6 +251,29 @@ namespace AutoPlannerHelpers.BaseViewModel
             SpecifyTargetsTabBackground = System.Windows.Media.Brushes.ForestGreen;
             StructureTuningTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
             OptimizationStructureDerivationBackground = System.Windows.Media.Brushes.PaleVioletRed;
+        }
+
+        protected bool AreRequestedPrescriptionTargetsApproved(IEnumerable<TargetModel> targets)
+        {
+            foreach (TargetModel target in targets)
+            {
+                if (!StructureTuningHelper.DoesStructureExistInSS(target.TargetId, true))
+                {
+                    Logger.GetInstance().LogError($"Error! {target.TargetId} is either NOT present in structure set or is not contoured!");
+                    return false;
+                }
+                else
+                {
+                    //structure is present and contoured
+                    StructureApprovalStatus approvalStatus = StructureTuningHelper.GetStructureFromId(target.TargetId).ApprovalHistory.First().ApprovalStatus;
+                    if (approvalStatus != StructureApprovalStatus.Approved)
+                    {
+                        Logger.GetInstance().LogError($"Error! {target.TargetId} is NOT approved!" + Environment.NewLine + $"{target.TargetId} approval status: {approvalStatus}");
+                        return false;
+                    }
+                }
+            }
+            return true;
         }
 
         public List<PlanOptimizationSetupModel> BuildPlanOptimizationSetupList()

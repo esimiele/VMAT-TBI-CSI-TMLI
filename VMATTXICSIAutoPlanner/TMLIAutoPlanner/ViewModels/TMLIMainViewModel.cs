@@ -140,7 +140,6 @@ namespace TMLIAutoPlanner.ViewModels
             ExportCT = new CTExportView { DataContext = new CTExportViewModel() };
             ImportSS = new ImportSSView { DataContext = new ImportSSViewModel(TMLIAutoPlannerSettings.ImportExportData, PlanType.VMAT_CSI, (!ReferenceEquals(EclipseContext.GetInstance().Patient, null) ? EclipseContext.GetInstance().Patient.Id : "")) };
             PrepForTargets = new StructureDerivationsView { DataContext = new StructureDerivationsViewModel(_structureIdsPostUnion, true) };
-
             RingGeneration = new RingGenerationView { DataContext = new RingGenerationViewModel(_structureIdsPostUnion) };
 
             if (TMLIAutoPlannerSettings.AllBeamsVMAT) WeakReferenceMessenger.Default.Send(new RequestHideNumberOfVMATIsocenters());
@@ -266,30 +265,13 @@ namespace TMLIAutoPlanner.ViewModels
             //verify selected targets are APPROVED
             //for tbi, we only want to make there is one plan (not configured for sequential boosts)
             if (!parsedTargets.Any()) return true;
+            if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null)) return false;
             if (parsedTargets.Select(x => x.PlanId).Distinct().Count() > 1)
             {
-                Logger.GetInstance().LogError($"Error! Multiple plan Ids entered! This script is only configured to auto-plan one TBI plan!");
+                Logger.GetInstance().LogError($"Error! Multiple plan Ids entered! This script is only configured to auto-plan one TMLI plan!");
                 return true;
             }
-            foreach (TargetModel target in parsedTargets.SelectMany(x => x.Targets))
-            {
-                if (!StructureTuningHelper.DoesStructureExistInSS(target.TargetId, true))
-                {
-                    Logger.GetInstance().LogError($"Error! {target.TargetId} is either NOT present in structure set or is not contoured!");
-                    return true;
-                }
-                else
-                {
-                    //structure is present and contoured
-                    StructureApprovalStatus approvalStatus = StructureTuningHelper.GetStructureFromId(target.TargetId).ApprovalHistory.First().ApprovalStatus;
-                    if (approvalStatus != StructureApprovalStatus.Approved)
-                    {
-                        Logger.GetInstance().LogError($"Error! {target.TargetId} is NOT approved!" + Environment.NewLine + $"{target.TargetId} approval status: {approvalStatus}");
-                        return true;
-                    }
-                }
-            }
-
+            if (!base.AreRequestedPrescriptionTargetsApproved(parsedTargets.SelectMany(x => x.Targets))) return true;
             return false;
         }
         #endregion
