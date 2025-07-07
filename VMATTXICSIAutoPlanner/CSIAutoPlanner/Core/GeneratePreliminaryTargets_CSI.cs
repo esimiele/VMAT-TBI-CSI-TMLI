@@ -152,32 +152,32 @@ namespace CSIAutoPlanner.Core
         /// Helper method to contour PTV_CSI by combining ptv_brain and ptv_spine, then cropping the resulting structure 3 mm from body
         /// </summary>
         /// <returns></returns>
-        private bool ContourPTVCSI()
-        {
-            int counter = 0;
-            int calcItems = 4;
-            ProvideUIUpdate("Generating: PTV_CSI");
-            ProvideUIUpdate(100 * ++counter / calcItems, "Retrieving: PTV_CSI, PTV_Brain, and PTV_Spine");
-            //used to create the ptv_csi structures
-            Structure combinedTarget = StructureTuningHelper.GetStructureFromId("PTV_CSI");
-            Structure brainTarget = StructureTuningHelper.GetStructureFromId("PTV_Brain");
-            Structure spineTarget = StructureTuningHelper.GetStructureFromId("PTV_Spine");
-            ProvideUIUpdate(100 * ++counter / calcItems, "Unioning PTV_Brain and PTV_Spine to make PTV_CSI");
-            combinedTarget.SegmentVolume = brainTarget.Margin(0.0);
-            combinedTarget.SegmentVolume = combinedTarget.Or(spineTarget.Margin(0.0));
+        //private bool ContourPTVCSI()
+        //{
+        //    int counter = 0;
+        //    int calcItems = 4;
+        //    ProvideUIUpdate("Generating: PTV_CSI");
+        //    ProvideUIUpdate(100 * ++counter / calcItems, "Retrieving: PTV_CSI, PTV_Brain, and PTV_Spine");
+        //    //used to create the ptv_csi structures
+        //    Structure combinedTarget = StructureTuningHelper.GetStructureFromId("PTV_CSI");
+        //    Structure brainTarget = StructureTuningHelper.GetStructureFromId("PTV_Brain");
+        //    Structure spineTarget = StructureTuningHelper.GetStructureFromId("PTV_Spine");
+        //    ProvideUIUpdate(100 * ++counter / calcItems, "Unioning PTV_Brain and PTV_Spine to make PTV_CSI");
+        //    combinedTarget.SegmentVolume = brainTarget.Margin(0.0);
+        //    combinedTarget.SegmentVolume = combinedTarget.Or(spineTarget.Margin(0.0));
 
-            ProvideUIUpdate(100 * ++counter / calcItems, "Cropping PTV_CSI from body with 3 mm inner margin");
-            //1/3/2022, crop PTV structure from body by 3mm
-            (bool fail, StringBuilder errorMessage) = ContourHelper.CropStructureFromBody(combinedTarget, -0.3, EclipseContext.GetInstance().StructureSet.Structures.First(x => x.Id.ToLower().Contains("body")).Id);
-            if (fail)
-            {
-                ProvideUIUpdate(errorMessage.ToString(), true);
-                return true;
-            }
-            ProvideUIUpdate(100 * ++counter / calcItems, "PTV_CSI cropped from body with 3 mm inner margin");
-            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
-            return false;
-        }
+        //    ProvideUIUpdate(100 * ++counter / calcItems, "Cropping PTV_CSI from body with 3 mm inner margin");
+        //    //1/3/2022, crop PTV structure from body by 3mm
+        //    (bool fail, StringBuilder errorMessage) = ContourHelper.CropStructureFromBody(combinedTarget, -0.3, EclipseContext.GetInstance().StructureSet.Structures.First(x => x.Id.ToLower().Contains("body")).Id);
+        //    if (fail)
+        //    {
+        //        ProvideUIUpdate(errorMessage.ToString(), true);
+        //        return true;
+        //    }
+        //    ProvideUIUpdate(100 * ++counter / calcItems, "PTV_CSI cropped from body with 3 mm inner margin");
+        //    ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
+        //    return false;
+        //}
         #endregion
     }
 }

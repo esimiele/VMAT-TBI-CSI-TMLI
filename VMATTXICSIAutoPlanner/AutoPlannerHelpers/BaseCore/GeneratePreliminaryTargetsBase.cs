@@ -56,6 +56,7 @@ namespace AutoPlannerHelpers.BaseCore
                     TargetPostProcessing();
                 }
 
+                ContourHelper.CleanTemporaryStructures(_targetsToDerive);
                 UpdateUILabel("Finished!");
                 ProvideUIUpdate(100, "Finished Preparing Structure Set for Targets!");
                 ProvideUIUpdate($"Run time: {ElapsedRunTime} (mm:ss)");

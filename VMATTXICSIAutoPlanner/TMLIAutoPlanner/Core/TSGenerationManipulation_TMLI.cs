@@ -26,10 +26,6 @@ namespace TMLIAutoPlanner.Core
         #endregion
 
         #region fields
-        //DICOM types
-        //Possible values are "AVOIDANCE", "CAVITY", "CONTRAST_AGENT", "CTV", "EXTERNAL", "GTV", "IRRAD_VOLUME", 
-        //"ORGAN", "PTV", "TREATED_VOLUME", "SUPPORT", "FIXATION", "CONTROL", and "DOSE_REGION". 
-        private List<PrescriptionModel> prescriptions;
         private List<TSRingStructureModel> _requestedRings;
         
         #endregion
@@ -42,38 +38,8 @@ namespace TMLIAutoPlanner.Core
             _specialOptimizationStructures = specialOptStructs;
             _structureOperations = new List<StructureOperationModel>(operations);
             _requestedRings = new List<TSRingStructureModel>(rings);
-            prescriptions = new List<PrescriptionModel>(presc);
+            _prescriptions = new List<PrescriptionModel>(presc);
             SetCloseOnFinish(TMLIAutoPlannerSettings.CloseProgressWindowOnFinish, 3000);
-        }
-
-        [HandleProcessCorruptedStateExceptions]
-        protected override bool Run()
-        {
-            try
-            {
-                PlanIsocentersList.Clear();
-                if (PreliminaryChecks()) return true;
-                if (StructureTuningHelper.UnionLRStructures(PUUD)) return true;
-                if (_structureOperations.Any()) if (CheckHighResolution()) return true;
-                if (RemoveOldTSStructures(_structureOperations)) return true;
-                if (CreateSpecialOptimizationStructures()) return true;
-                if (PerformStructureDerivations()) return true;
-                if (_requestedRings.Any())
-                {
-                    AddedRings = new List<TSRingStructureModel>(GenerateRings(_requestedRings));
-                    if (!AddedRings.Any()) return true;
-                }
-                if (CalculateNumIsos()) return true; 
-                UpdateUILabel("Finished!");
-                ProvideUIUpdate(100, "Finished Structure Tuning!");
-                ProvideUIUpdate($"Run time: {ElapsedRunTime} (mm:ss)");
-            }
-            catch(Exception e)
-            {
-                ProvideUIUpdate($"{e.Message}", true);
-                return true;
-            }
-            return false;
         }
 
         #region preliminary checks
@@ -130,16 +96,17 @@ namespace TMLIAutoPlanner.Core
         }
         #endregion
 
+        #region structure derivation
         protected override bool PerformStructureDerivations()
         {
             UpdateUILabel("Perform TS Manipulations: ");
             int counter = 0;
-            int calcItems = _structureOperations.Count * prescriptions.Count;
+            int calcItems = _structureOperations.Count * _prescriptions.Count;
 
             //construct all ts targets 
             //prescriptions are inherently sorted by increasing cumulative Rx to targets
             List<TargetModel> tmpTSTargetList = new List<TargetModel> { };
-            foreach (PrescriptionModel itr in prescriptions)
+            foreach (PrescriptionModel itr in _prescriptions)
             {
                 //Generate a new TSTarget
                 Structure addedTSTarget = GetTSTarget(itr.TargetId);
@@ -149,6 +116,16 @@ namespace TMLIAutoPlanner.Core
                     ProvideUIUpdate($"Error! Target structure: {itr.TargetId} is null or empty! Cannot perform tuning structure manipulations! Exiting!", true);
                     return true;
                 }
+            }
+
+            if (StructureTuningHelper.DoesStructureExistInSS("matchline", true))
+            {
+                //main target structure won't always have the same id (ptv_tmli vs ptv_tmli_20 vs ptv_tmli_12)
+                string highestDoseTSTarget = tmpTSTargetList.Last().TsTargetId;
+                Structure TSPTVLegs = AddTSStructures(new SpecialOptimizationStructureModel("CONTROL", "TS_PTV_Legs"));
+                _structureOperations.Add(new StructureOperationModel("ts_ptv_legs", StructureDerivationOperation.Union, highestDoseTSTarget, "ts_ptv_legs", new StructureMarginModel(0), new StructureMarginModel(0)));
+                _structureOperations.Add(new StructureOperationModel(highestDoseTSTarget, StructureDerivationOperation.CutInferiorTo, "matchline", highestDoseTSTarget, new StructureMarginModel(0), new StructureMarginModel(0)));
+                _structureOperations.Add(new StructureOperationModel("ts_ptv_legs", StructureDerivationOperation.CutSuperiorTo, "matchline", "ts_ptv_legs", new StructureMarginModel(0), new StructureMarginModel(0)));
             }
 
             foreach (StructureOperationModel itr in _structureOperations)
@@ -187,17 +164,17 @@ namespace TMLIAutoPlanner.Core
             //}
             //else ProvideUIUpdate("No OAR TS manipulations requested!");
 
-            if (!TMLIAutoPlannerSettings.AllBeamsVMAT && StructureTuningHelper.DoesStructureExistInSS("matchline", true))
-            {
-                ProvideUIUpdate($"Cutting {tmpTSTargetList.Last().TsTargetId} at the matchline!");
+            //if (!TMLIAutoPlannerSettings.AllBeamsVMAT && StructureTuningHelper.DoesStructureExistInSS("matchline", true))
+            //{
+            //    ProvideUIUpdate($"Cutting {tmpTSTargetList.Last().TsTargetId} at the matchline!");
 
-                //find the image plane where the matchline is location. Record this value and break the loop. Also find the first slice where the ptv_body contour starts and record this value
-                Structure matchline = StructureTuningHelper.GetStructureFromId("matchline");
-                ProvideUIUpdate($"Retrieved matchline structure: {matchline.Id}");
+            //    //find the image plane where the matchline is location. Record this value and break the loop. Also find the first slice where the ptv_body contour starts and record this value
+            //    Structure matchline = StructureTuningHelper.GetStructureFromId("matchline");
+            //    ProvideUIUpdate($"Retrieved matchline structure: {matchline.Id}");
 
-                if (ContourTSLegs("TS_PTV_Legs", matchline, StructureTuningHelper.GetStructureFromId(tmpTSTargetList.Last().TsTargetId))) return true;
-                if (CutTSPTVAtMatchline(StructureTuningHelper.GetStructureFromId(tmpTSTargetList.Last().TsTargetId), matchline)) return true;
-            }
+            //    if (ContourTSLegs("TS_PTV_Legs", matchline, StructureTuningHelper.GetStructureFromId(tmpTSTargetList.Last().TsTargetId))) return true;
+            //    if (CutTSPTVAtMatchline(StructureTuningHelper.GetStructureFromId(tmpTSTargetList.Last().TsTargetId), matchline)) return true;
+            //}
 
             ////prescriptions are inherently sorted by increasing cumulative Rx to targets
             //foreach (PrescriptionModel itr in prescriptions)
@@ -233,53 +210,25 @@ namespace TMLIAutoPlanner.Core
             //    }
             //}
             //only one plan is allowed for the prescriptions --> last item is the highest Rx target for this plan and needs to be set as the normalization volume
-            NormalizationVolumes.Add(prescriptions.Last().PlanId, tmpTSTargetList.OrderByDescending(x => x.TargetRxDose).First().TsTargetId);
-            PlanTargets.Add(new PlanTargetsModel(prescriptions.Last().PlanId, new List<TargetModel>(tmpTSTargetList)));
+            NormalizationVolumes.Add(_prescriptions.Last().PlanId, tmpTSTargetList.OrderByDescending(x => x.TargetRxDose).First().TsTargetId);
+            PlanTargets.Add(new PlanTargetsModel(_prescriptions.Last().PlanId, new List<TargetModel>(tmpTSTargetList)));
 
             ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
 
-        private bool ContourTSLegs(string TSLegsId, Structure matchline, Structure target)
+        protected override bool PerformPlanSpecificStructureDerivations()
         {
-            UpdateUILabel($"Contour {TSLegsId}:");
-            int percentComplete = 0;
-            int calcItems = 3;
-
-            //do the structure manipulation
-            (bool failTSLegs, Structure TS_legs) = RemoveAndGenerateStructure(TSLegsId);
-            if (failTSLegs) return true;
-            ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Created structure: {TS_legs.Id}");
-
-            (bool failCopyTarget, StringBuilder copyErrorMessage) = ContourHelper.CopyStructureOntoStructure(target, TS_legs);
-            if (failCopyTarget)
+            if (_requestedRings.Any())
             {
-                ProvideUIUpdate(copyErrorMessage.ToString(), true);
-                return true;
-            }
-            ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Copied structure {target.Id} onto {TS_legs.Id}");
-
-            int matchlineSliceLoc = CalculationHelper.ComputeSlice(matchline.CenterPoint.z, EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes);
-
-            for (int i = matchlineSliceLoc; i < EclipseContext.GetInstance().StructureSet.Image.ZSize; i++)
-            {
-                TS_legs.ClearAllContoursOnImagePlane(i);
-            }
-            ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Contoured TS Legs");
-            return false;
-        }
-
-        private bool CutTSPTVAtMatchline(Structure addedTSTarget, Structure matchline)
-        {
-            int matchlineSliceLoc = CalculationHelper.ComputeSlice(matchline.CenterPoint.z, EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes);
-
-            for(int i = 0; i < matchlineSliceLoc; i++)
-            {
-                addedTSTarget.ClearAllContoursOnImagePlane(i);
+                AddedRings = new List<TSRingStructureModel>(GenerateRings(_requestedRings));
+                if (!AddedRings.Any()) return true;
             }
             return false;
         }
+        #endregion
 
+        #region Isocenter calculation
         protected override bool CalculateNumIsos()
         {
             UpdateUILabel("Calculate number of isos:");
@@ -331,7 +280,7 @@ namespace TMLIAutoPlanner.Core
                 List<IsocenterModel> isos = IsoNameHelper.GetTBIVMATIsoNames(4, 4);
                 isos.Add(new IsocenterModel("upper legs", 2, BeamType.VMAT));
                 isos.Add(new IsocenterModel("lower legs", 2, BeamType.VMAT));
-                planIsos.Add(new PlanIsocenterModel(prescriptions.First().PlanId, isos));
+                planIsos.Add(new PlanIsocenterModel(_prescriptions.First().PlanId, isos));
             }
             else
             {
@@ -348,7 +297,7 @@ namespace TMLIAutoPlanner.Core
                 {
                     isos.Add(new IsocenterModel("legs", 2, BeamType.VMAT));
                 }
-                planIsos.Add(new PlanIsocenterModel(prescriptions.First().PlanId, isos));
+                planIsos.Add(new PlanIsocenterModel(_prescriptions.First().PlanId, isos));
             }
             
             return planIsos;
@@ -419,7 +368,7 @@ namespace TMLIAutoPlanner.Core
             ProvideUIUpdate($"Calculated total number of Isos: {NumberofIsocenters}");
 
             //set isocenter names based on numIsos and numVMATIsos (determined these names from prior cases)
-            planIsos.Add(new PlanIsocenterModel(prescriptions.First().PlanId, IsoNameHelper.GetTBIVMATIsoNames(NumberofVMATIsocenters, NumberofIsocenters)));
+            planIsos.Add(new PlanIsocenterModel(_prescriptions.First().PlanId, IsoNameHelper.GetTBIVMATIsoNames(NumberofVMATIsocenters, NumberofIsocenters)));
             if (NumberofIsocenters > NumberofVMATIsocenters)
             {
                 if (NumberofIsocenters == NumberofVMATIsocenters + 2)
@@ -435,5 +384,6 @@ namespace TMLIAutoPlanner.Core
             
             return planIsos;
         }
+        #endregion
     }
 }

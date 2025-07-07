@@ -35,16 +35,21 @@ namespace AutoPlannerHelpers.Messengers
     #region structure generation and manipulation
     public class RequestUpdateOptimizationStructureDerivations : RequestUpdateStructureDerivations
     {
-        public RequestUpdateOptimizationStructureDerivations(List<StructureOperationModel> structureOperations)
+        public bool SkipStructureIdCheck { get; private set; }
+        public RequestUpdateOptimizationStructureDerivations(List<StructureOperationModel> structureOperations, bool skipStructureIdCheck = true)
         {
             this.StructureOperations = structureOperations;
+            SkipStructureIdCheck = skipStructureIdCheck;
         }
     }
     public class RequestUpdateTargetDerivationOperations : RequestUpdateStructureDerivations
     {
-        public RequestUpdateTargetDerivationOperations(List<StructureOperationModel> structureOperations)
+        public bool SkipStructureIdCheck { get; private set; }
+
+        public RequestUpdateTargetDerivationOperations(List<StructureOperationModel> structureOperations, bool skipStructureIdCheck = true)
         {
             this.StructureOperations = structureOperations;
+            SkipStructureIdCheck = skipStructureIdCheck;
         }
     }
 
@@ -175,8 +180,13 @@ namespace AutoPlannerHelpers.Messengers
     #region multiple
     public class RequestAutoPlanTemplateChangedMessage
     {
+        public bool SkipStructureIdCheck { get; private set; }
         public AutoPlanTemplateBase AutoPlanTemplate { get; private set; }
-        public RequestAutoPlanTemplateChangedMessage(AutoPlanTemplateBase autoPlanTemplate) { this.AutoPlanTemplate = autoPlanTemplate; }
+        public RequestAutoPlanTemplateChangedMessage(AutoPlanTemplateBase autoPlanTemplate, bool skipStructureCheck = false) 
+        { 
+            this.AutoPlanTemplate = autoPlanTemplate;
+            this.SkipStructureIdCheck = skipStructureCheck;
+        }
     }
 
     public class RequestUpdateStructureIds

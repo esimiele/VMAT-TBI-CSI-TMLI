@@ -13,7 +13,6 @@ namespace AutoPlannerHelpers.ViewModels
             get { return _scriptConfig; }
             set { _scriptConfig = value; }
         }
-
         #endregion
 
         public ScriptConfigurationViewModel(StringBuilder config) 

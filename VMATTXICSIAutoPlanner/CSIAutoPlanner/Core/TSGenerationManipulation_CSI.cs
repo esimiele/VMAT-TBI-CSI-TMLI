@@ -6,7 +6,6 @@ using CSIAutoPlanner.Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Windows.Media.Media3D;
 using VMS.TPS.Common.Model.API;
@@ -25,7 +24,6 @@ namespace CSIAutoPlanner.Core
 
         
         //plan id, structure id, num fx, dose per fx, cumulative dose
-        private List<PrescriptionModel> prescriptions;
         private List<TSRingStructureModel> _requestedRings;
         //plan id, normalization volume
         //structure id of oars requested for crop/overlap eval with targets
@@ -48,53 +46,10 @@ namespace CSIAutoPlanner.Core
             _specialOptimizationStructures = specialOptStructs;
             _requestedRings = new List<TSRingStructureModel>(tgtRings);
             _structureOperations = new List<StructureOperationModel>(ops);
-            prescriptions = new List<PrescriptionModel>(presc);
+            _prescriptions = new List<PrescriptionModel>(presc);
             cropAndOverlapStructures = new List<string>(cropStructs);
             SetCloseOnFinish(CSIAutoPlannerSettings.CloseProgressWindowOnFinish, 3000);
         }
-
-        #region Run Control
-        /// <summary>
-        /// Run control
-        /// </summary>
-        /// <returns></returns>
-        //to handle system access exception violation
-        [HandleProcessCorruptedStateExceptions]
-        protected override bool Run()
-        {
-            try
-            {
-                PlanIsocentersList.Clear();
-                if (PreliminaryChecks()) return true;
-                if (StructureTuningHelper.UnionLRStructures(PUUD)) return true;
-                if (_structureOperations.Any()) if (CheckHighResolution()) return true;
-                if (RemoveOldTSStructures(_structureOperations)) return true;
-                if (CreateSpecialOptimizationStructures()) return true;
-                if (PerformStructureDerivations()) return true;
-                if (cropAndOverlapStructures.Any())
-                {
-                    if (CropAndContourOverlapWithTargets()) return true;
-                }
-                if (_requestedRings.Any())
-                {
-                    AddedRings = new List<TSRingStructureModel>(GenerateRings(_requestedRings));
-                    if(!AddedRings.Any()) return true;
-                }
-                if (RegeneratePTVBrainSpine()) return true;
-                if (CalculateNumIsos()) return true;
-                UpdateUILabel("Finished!");
-                ProvideUIUpdate(100, "Finished Structure Tuning!");
-                ProvideUIUpdate($"Run time: {ElapsedRunTime} (mm:ss)");
-                return false;
-            }
-            catch (Exception e)
-            {
-                ProvideUIUpdate($"{e.Message}", true);
-                StrackTraceError = e.StackTrace;
-                return true;
-            }
-        }
-        #endregion
 
         #region Preliminary Checks
         /// <summary>
@@ -208,7 +163,7 @@ namespace CSIAutoPlanner.Core
 
             //grab the highest Rx target for the initial CSI plan (should be PTV_CSI)
             //6/11/23 THIS CODE WILL NEED TO BE MODIFIED FOR SIB PLANS
-            string initTargetId = TargetsHelper.GetHighestRxTargetIdForPlan(prescriptions, prescriptions.First().PlanId);
+            string initTargetId = TargetsHelper.GetHighestRxTargetIdForPlan(_prescriptions, _prescriptions.First().PlanId);
 
             if (!StructureTuningHelper.DoesStructureExistInSS(initTargetId, true))
             {
@@ -357,7 +312,7 @@ namespace CSIAutoPlanner.Core
             Structure body = StructureTuningHelper.GetStructureFromId("body");
 
             //get longest target for initial plan (first item in gettargetlistforeachplan should be the plan,list of targets for initial plan)
-            (bool fail, Structure initPlanTarget, double length, StringBuilder errorMessage) = TargetsHelper.GetLongestTargetInPlan(TargetsHelper.GetTargetListForEachPlan(prescriptions).First(), EclipseContext.GetInstance().StructureSet);
+            (bool fail, Structure initPlanTarget, double length, StringBuilder errorMessage) = TargetsHelper.GetLongestTargetInPlan(TargetsHelper.GetTargetListForEachPlan(_prescriptions).First(), EclipseContext.GetInstance().StructureSet);
             if (fail)
             {
                 ProvideUIUpdate(errorMessage.ToString(), true);
@@ -430,21 +385,11 @@ namespace CSIAutoPlanner.Core
 
             ProvideUIUpdate(100 * ++counter / calcItems, "Unioning left and right arms avoid structures together!");
             //now contour the arms avoid structure as the union of the left and right dummy boxes
-            (bool failUnion, StringBuilder unionErrorMessage) = ContourHelper.ContourUnion(new List<Structure> { dummyBoxL, dummyBoxR }, armsAvoid);
-            if (failUnion)
-            {
-                ProvideUIUpdate(unionErrorMessage.ToString());
-                return true;
-            }
+            if (ContourHelper.ContourUnion(new List<string> { "DummyBoxL", "DummyBoxR" }, armsAvoid.Id, UIUD)) return true;
 
             ProvideUIUpdate(100 * ++counter / calcItems, "Contouring overlap between arms avoid and body with 5mm outer margin!");
             //contour the arms as the overlap between the current armsAvoid structure and the body with a 5mm outer margin
-            (bool failCrop, StringBuilder cropErrorMessage) = ContourHelper.CropStructureFromBody(armsAvoid, 0.5);
-            if (failCrop)
-            {
-                ProvideUIUpdate(cropErrorMessage.ToString());
-                return true;
-            }
+            if (ContourHelper.CropStructureFromBody(armsAvoid.Id, 0.5, UIUD)) return true;
 
             ProvideUIUpdate(100 * ++counter / calcItems, "Cleaning up!");
             EclipseContext.GetInstance().StructureSet.RemoveStructure(dummyBoxR);
@@ -460,11 +405,11 @@ namespace CSIAutoPlanner.Core
         protected override bool PerformStructureDerivations()
         {
             UpdateUILabel("Contouring opt structures now:");
-            string tmpPlanId = prescriptions.First().PlanId;
+            string tmpPlanId = _prescriptions.First().PlanId;
             List<TargetModel> tmpTSTargetList = new List<TargetModel> { };
             string prevTargetId = "";
             //prescriptions are inherently sorted by increasing cumulative Rx to targets
-            foreach (PrescriptionModel itr in prescriptions)
+            foreach (PrescriptionModel itr in _prescriptions)
             {
                 if (!string.Equals(itr.PlanId, tmpPlanId))
                 {
@@ -482,12 +427,7 @@ namespace CSIAutoPlanner.Core
 
                 //ensure the target is cropped 3mm from body
                 ProvideUIUpdate($"Cropping TS target from body with {3.0} mm inner margin");
-                (bool fail, StringBuilder errorMessage) = ContourHelper.CropStructureFromBody(addedTSTarget,-0.3);
-                if (fail)
-                {
-                    ProvideUIUpdate(errorMessage.ToString());
-                    return true;
-                }
+                if (ContourHelper.CropStructureFromBody(addedTSTarget.Id, -0.3, UIUD)) return true;
             }
             //iterated through entire prescription list, need to add final values to normVolumes and tsTargets
             NormalizationVolumes.Add(tmpPlanId, prevTargetId);
@@ -582,7 +522,7 @@ namespace CSIAutoPlanner.Core
         private bool CheckAllRequestedTargetCropAndOverlapManipulations()
         {
             List<string> structuresToRemove = new List<string> { };
-            Dictionary<string, string> tgts = TargetsHelper.GetHighestRxPlanTargetList(prescriptions);
+            Dictionary<string, string> tgts = TargetsHelper.GetHighestRxPlanTargetList(_prescriptions);
             int percentCompletion = 0;
             int calcItems = ((1 + 2 * tgts.Count) * cropAndOverlapStructures.Count) + 1;
             ProvideUIUpdate(100 * ++percentCompletion / calcItems, "Retrieved plan-target list");
@@ -754,10 +694,10 @@ namespace CSIAutoPlanner.Core
             if (CheckAllRequestedTargetCropAndOverlapManipulations()) return true;
 
             int percentComplete = 0;
-            int calcItems = 1 + (3 + 3 * cropAndOverlapStructures.Count) * prescriptions.Count();
+            int calcItems = 1 + (3 + 3 * cropAndOverlapStructures.Count) * _prescriptions.Count();
 
             //sort by cumulative Rx to the targets (item 5)
-            List<PrescriptionModel> sortedPrescriptions = prescriptions.OrderBy(x => x.CumulativeDoseToTarget).ToList();
+            List<PrescriptionModel> sortedPrescriptions = _prescriptions.OrderBy(x => x.CumulativeDoseToTarget).ToList();
             ProvideUIUpdate(100 * ++percentComplete / calcItems, "Sorted prescriptions by cumulative dose");
 
             if (cropAndOverlapStructures.Any())
@@ -814,6 +754,21 @@ namespace CSIAutoPlanner.Core
         }
         #endregion
 
+        protected override bool PerformPlanSpecificStructureDerivations()
+        {
+            if (cropAndOverlapStructures.Any())
+            {
+                if (CropAndContourOverlapWithTargets()) return true;
+            }
+            if (_requestedRings.Any())
+            {
+                AddedRings = new List<TSRingStructureModel>(GenerateRings(_requestedRings));
+                if (!AddedRings.Any()) return true;
+            }
+            if (RegeneratePTVBrainSpine()) return true;
+            return false;
+        }
+
         #region Recontour the brain spine targets
         /// <summary>
         /// Helper method to take the approved PTV_CSI target (or the highest Rx target for the initial plan) and use its contour points
@@ -855,7 +810,7 @@ namespace CSIAutoPlanner.Core
             cutSlice = CalculationHelper.ComputeSlice(cutPos, EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes);
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Z cut slice: {cutSlice}");
 
-            Structure csiInitTarget = StructureTuningHelper.GetStructureFromId(TargetsHelper.GetHighestRxTargetIdForPlan(prescriptions, prescriptions.First().PlanId));
+            Structure csiInitTarget = StructureTuningHelper.GetStructureFromId(TargetsHelper.GetHighestRxTargetIdForPlan(_prescriptions, _prescriptions.First().PlanId));
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved structure: {csiInitTarget.Id}");
 
             //stop slice for ptv spine is the cut plane
@@ -891,7 +846,8 @@ namespace CSIAutoPlanner.Core
             }
             else cutPos = cutStructure.MeshGeometry.Positions.Min(p => p.Z);
             ProvideUIUpdate($"Retrieved structure used to determine cut plan: {cutStructure.Id}");
-            ProvideUIUpdate($"Dicom origin ({EclipseContext.GetInstance().StructureSet.Image.Origin.x:0.0}, {EclipseContext.GetInstance().StructureSet.Image.Origin.y:0.0}, {EclipseContext.GetInstance().StructureSet.Image.Origin.z:0.0}) mm");
+            VVector origin = EclipseContext.GetInstance().StructureSet.Image.Origin;
+            ProvideUIUpdate($"Dicom origin ({origin.x:0.0}, {origin.y:0.0}, {origin.z:0.0}) mm");
             ProvideUIUpdate($"Image z resolution: {EclipseContext.GetInstance().StructureSet.Image.ZRes:0.0} mm");
             ProvideUIUpdate($"Number of z slices: {EclipseContext.GetInstance().StructureSet.Image.ZSize}");
             ProvideUIUpdate($"Z cut position: {cutPos:0.0} mm");
@@ -971,7 +927,7 @@ namespace CSIAutoPlanner.Core
             //revised to get the number of unique plans list, for each unique plan, find the target with the greatest z-extent and determine the number of isocenters based off that target. 
             //plan Id, list of targets assigned to that plan
 
-            List<PlanTargetsModel> planIdTargets = new List<PlanTargetsModel>(TargetsHelper.GetTargetListForEachPlan(prescriptions));
+            List<PlanTargetsModel> planIdTargets = new List<PlanTargetsModel>(TargetsHelper.GetTargetListForEachPlan(_prescriptions));
             ProvideUIUpdate(100 * ++counter / calcItems, "Generated list of plans each containing list of targets");
 
             foreach (PlanTargetsModel itr in planIdTargets)
@@ -998,7 +954,7 @@ namespace CSIAutoPlanner.Core
 
                 //If the target ID is PTV_CSI, calculate the number of isocenters based on PTV_spine and add one iso for the brain
                 //planId, target list
-                if (string.Equals(longestTargetInPlan.Id, TargetsHelper.GetHighestRxTargetIdForPlan(prescriptions, prescriptions.First().PlanId)))
+                if (string.Equals(longestTargetInPlan.Id, TargetsHelper.GetHighestRxTargetIdForPlan(_prescriptions, _prescriptions.First().PlanId)))
                 {
                     calcItems += 1;
                     //special rules for initial plan,

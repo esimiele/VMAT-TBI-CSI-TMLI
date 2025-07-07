@@ -11,6 +11,7 @@ using VMS.TPS.Common.Model.Types;
 using AutoPlannerHelpers.Context;
 using AutoPlannerHelpers.ViewModels;
 using AutoPlannerHelpers.Delegates;
+using System.Runtime.ExceptionServices;
 
 namespace AutoPlannerHelpers.BaseCore
 {
@@ -21,11 +22,11 @@ namespace AutoPlannerHelpers.BaseCore
         public List<string> AddedStructureIds { get; protected set; } = new List<string> { };
         public List<PlanTargetsModel> PlanTargets { get; protected set; } = new List<PlanTargetsModel> { };
         //flag to indicate to the main UI that the structure manipulation list needs to be updated
-        public bool DoesTSManipulationListRequireUpdating { get; protected set; } = false;
         public string StrackTraceError { get; protected set; } = string.Empty;
         #endregion
 
         #region fields
+        protected List<PrescriptionModel> _prescriptions { get; set; } = new List<PrescriptionModel>();
         protected List<StructureOperationModel> _structureOperations { get; set; } = new List<StructureOperationModel> { };
         protected List<SpecialOptimizationStructureModel> _specialOptimizationStructures { get; set; } = new List<SpecialOptimizationStructureModel> { };
         protected ProvideUIUpdateDelegate PUUD;
@@ -38,7 +39,40 @@ namespace AutoPlannerHelpers.BaseCore
             UIUD = ProvideUIUpdate;
         }
 
-        #region virtual methods
+        /// <summary>
+        /// Run control
+        /// </summary>
+        /// <returns></returns>
+        //to handle system access exception violation
+        [HandleProcessCorruptedStateExceptions]
+        protected override bool Run()
+        {
+            try
+            {
+                PlanIsocentersList.Clear();
+                if (PreliminaryChecks()) return true;
+                if (StructureTuningHelper.UnionLRStructures(PUUD)) return true;
+                if (_structureOperations.Any()) if (CheckHighResolution()) return true;
+                if (RemoveOldTSStructures(_structureOperations)) return true;
+                if (CreateSpecialOptimizationStructures()) return true;
+                if (PerformStructureDerivations()) return true;
+                if (PerformPlanSpecificStructureDerivations()) return true;
+                if (CalculateNumIsos()) return true;
+                ContourHelper.CleanTemporaryStructures(_structureOperations);
+                UpdateUILabel("Finished!");
+                ProvideUIUpdate(100, "Finished Structure Tuning!");
+                ProvideUIUpdate($"Run time: {ElapsedRunTime} (mm:ss)");
+                return false;
+            }
+            catch (Exception e)
+            {
+                ProvideUIUpdate($"{e.Message}", true);
+                StrackTraceError = e.StackTrace;
+                return true;
+            }
+        }
+
+        #region virtual and abstract methods
         protected abstract bool PreliminaryChecks();
         protected virtual bool CreateSpecialOptimizationStructures()
         {
@@ -46,6 +80,7 @@ namespace AutoPlannerHelpers.BaseCore
         }
         protected abstract bool PerformStructureDerivations();
         protected abstract bool CalculateNumIsos();
+        protected abstract bool PerformPlanSpecificStructureDerivations();
         #endregion
 
         #region helper functions related to TS generation and manipulation
@@ -63,7 +98,7 @@ namespace AutoPlannerHelpers.BaseCore
             if (newName.Length > 16) newName = newName.Substring(0, 16);
             ProvideUIUpdate($"Retrieving TS target: {newName}");
             Structure addedTSTarget = StructureTuningHelper.GetStructureFromId(newName);
-            if (addedTSTarget == null)
+            if (ReferenceEquals(addedTSTarget, null))
             {
                 //left here because of special logic to generate the structure if it doesn't exist
                 ProvideUIUpdate($"TS target {newName} does not exist. Creating it now!");
@@ -83,81 +118,6 @@ namespace AutoPlannerHelpers.BaseCore
         }
 
         /// <summary>
-        /// Helper method to direct the manipulation of the target tuning structures
-        /// </summary>
-        /// <param name="manipulationItem"></param>
-        /// <param name="target"></param>
-        /// <returns></returns>
-        protected bool ManipulateTargetTuningStructures(RequestedTSManipulationModel manipulationItem, Structure target)
-        {
-            //Structure theStructure = StructureTuningHelper.GetStructureFromId(manipulationItem.StructureId, EclipseContext.GetInstance().StructureSet);
-            //if (manipulationItem.Operation == TSManipulationType.CropTargetFromStructure)
-            //{
-            //    ProvideUIUpdate($"Cropping target {target.Id} from {manipulationItem.StructureId} with margin {manipulationItem.MarginInCM} cm");
-            //    //crop target from structure
-            //    (bool failCrop, StringBuilder errorCropMessage) = ContourHelper.CropStructureFromStructure(target, theStructure, manipulationItem.MarginInCM);
-            //    if (failCrop)
-            //    {
-            //        ProvideUIUpdate(errorCropMessage.ToString());
-            //        return true;
-            //    }
-            //}
-            //else if (manipulationItem.Operation == TSManipulationType.ContourOverlapWithTarget)
-            //{
-            //    if (CreateOverlapStructure(target, theStructure, manipulationItem.MarginInCM)) return true;
-            //}
-            //else if (manipulationItem.Operation == TSManipulationType.UnionWithTarget)
-            //{
-            //    ProvideUIUpdate($"Unioning target {target.Id} with structure {manipulationItem.StructureId} with margin {manipulationItem.MarginInCM} cm");
-            //    //crop target from structure
-            //    (bool failUnion, StringBuilder errorUnionMessage) = ContourHelper.ContourUnion(theStructure, target, manipulationItem.MarginInCM);
-            //    if (failUnion)
-            //    {
-            //        ProvideUIUpdate(errorUnionMessage.ToString());
-            //        return true;
-            //    }
-            //}
-            //else
-            //{
-            //    ProvideUIUpdate($"Error! Manipulation type {manipulationItem.Operation} is not compatible with Manipulate Target Tuning Structures Method! Exiting", true);
-            //    return true;
-            //}
-            return false;
-        }
-
-        /// <summary>
-        /// Helper method to direct the manipulation of the OAR tuning structures
-        /// </summary>
-        /// <param name="manipulationItem"></param>
-        /// <param name="target"></param>
-        /// <returns></returns>
-        protected bool ManipulateOARTuningStructures(RequestedTSManipulationModel manipulationItem)
-        {
-            //Structure theStructure = StructureTuningHelper.GetStructureFromId(manipulationItem.StructureId, EclipseContext.GetInstance().StructureSet);
-            //if (manipulationItem.Operation == TSManipulationType.CropFromBody)
-            //{
-            //    ProvideUIUpdate($"Cropping {manipulationItem.StructureId} from Body with margin {manipulationItem.MarginInCM} cm");
-            //    //crop from body
-            //    (bool failOp, StringBuilder errorOpMessage) = ContourHelper.CropStructureFromBody(theStructure, EclipseContext.GetInstance().StructureSet, manipulationItem.MarginInCM);
-            //    if (failOp)
-            //    {
-            //        ProvideUIUpdate(errorOpMessage.ToString());
-            //        return true;
-            //    }
-            //}
-            //else if (manipulationItem.Operation == TSManipulationType.ContourSubStructure || manipulationItem.Operation == TSManipulationType.ContourOuterStructure)
-            //{
-            //    if (ContourInnerOuterStructure(theStructure, manipulationItem.MarginInCM)) return true;
-            //}
-            //else
-            //{
-            //    ProvideUIUpdate($"Error! Manipulation type {manipulationItem.Operation} is not compatible with Manipulate OAR Tuning Structures Method! Exiting", true);
-            //    return true;
-            //}
-            return false;
-        }
-
-        /// <summary>
         /// Helper method to create and contour the requested ring structure (with user-supplied margin, thickness, and dose level)
         /// </summary>
         /// <returns></returns>
@@ -170,35 +130,12 @@ namespace AutoPlannerHelpers.BaseCore
             int calcItems = 3 * requestedRings.Count();
             foreach (TSRingStructureModel itr in requestedRings)
             {
-                Structure target = StructureTuningHelper.GetStructureFromId(itr.TargetId);
-                if (target != null)
+                if (StructureTuningHelper.DoesStructureExistInSS(itr.TargetId, true))
                 {
-                    ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Retrieved target: {target.Id}");
-                    string ringName = $"TS_ring{itr.DoseLevel}";
-                    if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => string.Equals(x.Id, ringName)))
-                    {
-                        ProvideUIUpdate($"Warning! Structure Id is taken: {ringName}! Attempting to update Id!");
-                        ringName += "_1";
-                        if (EclipseContext.GetInstance().StructureSet.Structures.Any(x => string.Equals(x.Id, ringName)))
-                        {
-                            ProvideUIUpdate($"Error! Unable to update ring structure Id to: {ringName}! Exiting", true);
-                            return new List<TSRingStructureModel> { };
-                        }
-                    }
-
-                    Structure ring = AddTSStructures(new SpecialOptimizationStructureModel("CONTROL", ringName));
-                    if (ReferenceEquals(ring, null)) return new List<TSRingStructureModel> { };
-                    ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Created empty ring: {ring.Id}");
-
-                    ProvideUIUpdate($"Contouring ring: {ring.Id}");
-                    (bool fail, StringBuilder errorMessage) = ContourHelper.CreateRing(target, ring, itr.MarginFromTargetInCM, itr.RingThicknessInCM);
-                    if (fail)
-                    {
-                        ProvideUIUpdate(errorMessage.ToString(), true);
-                        return new List<TSRingStructureModel> { };
-                    }
+                    ProvideUIUpdate($"Contouring ring: TS_ring{itr.DoseLevel}");
+                    if (ContourHelper.CreateRing(itr.TargetId, $"TS_ring{itr.DoseLevel}", itr.MarginFromTargetInCM, itr.RingThicknessInCM, UIUD)) return new List<TSRingStructureModel> { };
                     TSRingStructureModel ringModel = new TSRingStructureModel(itr);
-                    ringModel.RingId = ring.Id;
+                    ringModel.RingId = $"TS_ring{itr.DoseLevel}";
                     addedRings.Add(ringModel);
                     ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Finished contouring ring: {itr}");
                 }
@@ -392,8 +329,6 @@ namespace AutoPlannerHelpers.BaseCore
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, String.Format("Removing existing high-res structure from manipulation list and replacing with low-res"));
                 UpdateManipulationList(itr, lowRes.Id);
             }
-            //inform the main UI class that the UI needs to be updated
-            DoesTSManipulationListRequireUpdating = true;
             return false;
         }
 
@@ -467,19 +402,18 @@ namespace AutoPlannerHelpers.BaseCore
             {
                 if(StructureTuningHelper.DoesStructureExistInSS(itr))
                 {
-
-                }
-                Structure s = StructureTuningHelper.GetStructureFromId(itr);
-                if (EclipseContext.GetInstance().StructureSet.CanRemoveStructure(s))
-                {
-                    ProvideUIUpdate(100 * ++counter / calcItems, $"Removing: {itr}");
-                    EclipseContext.GetInstance().StructureSet.RemoveStructure(s);
-                }
-                else
-                {
-                    ProvideUIUpdate($"Error! Could not remove structure: {itr}!", true);
-                    if (string.IsNullOrEmpty(s.DicomType)) ProvideUIUpdate($"{itr} DICOM type: None");
-                    return true;
+                    Structure s = StructureTuningHelper.GetStructureFromId(itr);
+                    if (EclipseContext.GetInstance().StructureSet.CanRemoveStructure(s))
+                    {
+                        ProvideUIUpdate(100 * ++counter / calcItems, $"Removing: {itr}");
+                        EclipseContext.GetInstance().StructureSet.RemoveStructure(s);
+                    }
+                    else
+                    {
+                        ProvideUIUpdate($"Error! Could not remove structure: {itr}!", true);
+                        if (string.IsNullOrEmpty(s.DicomType)) ProvideUIUpdate($"{itr} DICOM type: None");
+                        return true;
+                    }
                 }
             }
             return false;
@@ -534,29 +468,31 @@ namespace AutoPlannerHelpers.BaseCore
             int counter = 0;
             foreach (string itr in structuresToRemove)
             {
-                Structure tmp = StructureTuningHelper.GetStructureFromId(itr);
-                //structure is present in selected structure set
-                if (tmp != null)
+                if(StructureTuningHelper.DoesStructureExistInSS(itr))
                 {
-                    //check to see if the dicom type is "none"
-                    if (!string.IsNullOrEmpty(tmp.DicomType))
+                    Structure tmp = StructureTuningHelper.GetStructureFromId(itr);
+                    //structure is present in selected structure set
+                    if (tmp != null)
                     {
-                        if (EclipseContext.GetInstance().StructureSet.CanRemoveStructure(tmp))
+                        //check to see if the dicom type is "none"
+                        if (!string.IsNullOrEmpty(tmp.DicomType))
                         {
-                            ProvideUIUpdate(100 * ++counter / calcItems, $"Adding: {itr} to the structure removal list");
-                            removeList.Add(itr);
+                            if (EclipseContext.GetInstance().StructureSet.CanRemoveStructure(tmp))
+                            {
+                                ProvideUIUpdate(100 * ++counter / calcItems, $"Adding: {itr} to the structure removal list");
+                                removeList.Add(itr);
+                            }
+                            else
+                            {
+                                ProvideUIUpdate(0, $"Error! {itr} can't be removed from the structure set!", true);
+                                fail = true;
+                            }
                         }
                         else
                         {
-                            ProvideUIUpdate(0, $"Error! {itr} can't be removed from the structure set!", true);
+                            ProvideUIUpdate(0, $"{itr} is of DICOM type 'None'! ESAPI can't operate on DICOM type 'None'", true);
                             fail = true;
-
                         }
-                    }
-                    else
-                    {
-                        ProvideUIUpdate(0, $"{itr} is of DICOM type 'None'! ESAPI can't operate on DICOM type 'None'", true);
-                        fail = true;
                     }
                 }
             }

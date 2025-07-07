@@ -194,7 +194,6 @@
     <Compile Include="ViewModels\ScriptConfigurationViewModel.cs" />
     <Compile Include="ViewModels\SetTargetsViewModel.cs" />
     <Compile Include="ViewModels\SimpleProgressWindowViewModel.cs" />
-    <Compile Include="ViewModels\SSImportViewModel.cs" />
     <Compile Include="ViewModels\StructureCropOverlapViewModel.cs" />
     <Compile Include="ViewModels\StructureDerivationsViewModel.cs" />
     <Compile Include="ViewModels\SpecialOptimizationStructuresViewModel.cs" />
@@ -233,9 +232,6 @@
     </Compile>
     <Compile Include="Views\SimpleProgressWindowView.xaml.cs">
       <DependentUpon>SimpleProgressWindowView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\SSImportView.xaml.cs">
-      <DependentUpon>SSImportView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\StructureCropOverlapView.xaml.cs">
       <DependentUpon>StructureCropOverlapView.xaml</DependentUpon>
@@ -312,10 +308,6 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\SimpleProgressWindowView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Views\SSImportView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

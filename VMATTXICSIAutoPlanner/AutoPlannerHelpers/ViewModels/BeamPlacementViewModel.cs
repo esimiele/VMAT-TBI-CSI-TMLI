@@ -204,16 +204,6 @@ namespace AutoPlannerHelpers.ViewModels
 
         public void CreatePlansAndPlaceBeams()
         {
-            //StringBuilder sb = new StringBuilder();
-            //foreach(PlanIsocenterModel itr in PlanIsocenterList)
-            //{
-            //    sb.AppendLine($"Plan Id: {itr.PlanId}");
-            //    foreach(IsocenterModel iso in itr.Isocenters)
-            //    {
-            //        sb.AppendLine($"Isocenter {iso.IsocenterId}: {iso.NumberOfBeams}");
-            //    }
-            //}
-            //MessageBox.Show( sb.ToString() );
             WeakReferenceMessenger.Default.Send(new RequestGenerateAndPlaceBeams(_selectedLinac, _selectedEnergy, _contourFieldOverlapChecked, _fieldOverlapMargin, PlanIsocenterList));
         }
     }

@@ -58,7 +58,7 @@ namespace AutoPlannerHelpers.ViewModels
         {
             WeakReferenceMessenger.Default.Register<RequestAutoPlanTemplateChangedMessage>(this, (r, m) =>
             {
-                AutoPlanTemplateSelectionChanged(m.AutoPlanTemplate);
+                AutoPlanTemplateSelectionChanged(m.AutoPlanTemplate, m.SkipStructureIdCheck);
             });
             WeakReferenceMessenger.Default.Register<RequestRingStructures>(this, (r, m) =>
             {
@@ -66,7 +66,7 @@ namespace AutoPlannerHelpers.ViewModels
             });
         }
 
-        public void AutoPlanTemplateSelectionChanged(AutoPlanTemplateBase template, bool skipStructureCheck = true)
+        public void AutoPlanTemplateSelectionChanged(AutoPlanTemplateBase template, bool skipStructureCheck)
         {
             if (ReferenceEquals(template, null)) return;
             _selectedTemplate = template;

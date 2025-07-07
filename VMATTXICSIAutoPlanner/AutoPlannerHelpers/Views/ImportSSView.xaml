@@ -6,15 +6,22 @@
              xmlns:local="clr-namespace:AutoPlannerHelpers.Views"
              mc:Ignorable="d">
     <Grid>
-        <Border Margin="0" BorderThickness="1,0,0,0" BorderBrush="Black">
-            <StackPanel>
-                <Grid Margin="0,0,0,370">
-                    <Label Content="Import Auto-Contoured Structure Set" FontSize="20" FontStyle="Normal" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,0,0,0"/>
-                    <Button Content="?" HorizontalAlignment="Right" Width="24" Height="20" Margin="0,0,10,0" Command="{Binding ShowImportSSInfoCommand}"></Button>
-                </Grid>
+        <Border Margin="0" Height="370" BorderThickness="1,0,0,0" BorderBrush="Black">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Label Content="Import Auto-Contoured Structure Set" Grid.Row="0" Grid.Column="0" FontSize="20" FontStyle="Normal" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="5"/>
+                <Button Content="?" Grid.Row="0" Grid.Column="1" Width="24" Height="20" VerticalAlignment="top" HorizontalAlignment="Center" Margin="0,15,0,0" Command="{Binding ShowImportSSInfoCommand}"></Button>
+                <Button Content="Import Structure Set" FontWeight="Bold" Grid.Row="1" Grid.ColumnSpan="2" Width="170" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="5" Command="{Binding ImportSSCommand}"></Button>
 
-                <Button Content="Import Structure Set" FontWeight="Bold" Width="170" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,9,0,0" Command="{Binding ImportSSCommand}"></Button>
-            </StackPanel>
+            </Grid>
+
         </Border>
     </Grid>
 </UserControl>

@@ -6,11 +6,7 @@ using System.Linq;
 using VMS.TPS.Common.Model.API;
 using TMLIAutoPlanner.Settings;
 using AutoPlannerHelpers.BaseCore;
-using AutoPlannerHelpers.Enums;
-using System.Text;
 using VMS.TPS.Common.Model.Types;
-using System;
-using AutoPlannerHelpers.Delegates;
 
 namespace TMLIAutoPlanner.Core
 {
@@ -167,45 +163,6 @@ namespace TMLIAutoPlanner.Core
             
             return false;
         }
-
-        //private bool ManipulatePTVTMLI(Structure target)
-        //{
-            //foreach(RequestedTSManipulationModel manipulationItem in _manipulations)
-            //{
-            //    Structure theStructure = StructureTuningHelper.GetStructureFromId(manipulationItem.StructureId);
-            //    if(!ReferenceEquals(theStructure, null) && !theStructure.IsEmpty)
-            //    {
-            //        if (manipulationItem.ManipulationType == TSManipulationType.CropTargetFromStructure)
-            //        {
-            //            ProvideUIUpdate($"Cropping target {target.Id} from {manipulationItem.StructureId} with margin {manipulationItem.MarginInCM} cm");
-            //            //crop target from structure
-            //            (bool failCrop, StringBuilder errorCropMessage) = ContourHelper.CropStructureFromStructure(target, theStructure, manipulationItem.MarginInCM);
-            //            if (failCrop)
-            //            {
-            //                ProvideUIUpdate(errorCropMessage.ToString());
-            //                return true;
-            //            }
-            //        }
-            //        else if (manipulationItem.ManipulationType == TSManipulationType.UnionWithTarget)
-            //        {
-            //            ProvideUIUpdate($"Unioning target {target.Id} with structure {manipulationItem.StructureId} with margin {manipulationItem.MarginInCM} cm");
-            //            //crop target from structure
-            //            //(bool failUnion, StringBuilder errorUnionMessage) = ContourHelper.ContourUnion(theStructure, target, manipulationItem.MarginInCM);
-            //            //if (failUnion)
-            //            //{
-            //            //    ProvideUIUpdate(errorUnionMessage.ToString());
-            //            //    return true;
-            //            //}
-            //        }
-            //    }
-            //    else
-            //    {
-            //        ProvideUIUpdate($"Normal structure {manipulationItem.StructureId} is null or empty! Skipping manipulation");
-            //    }
-            //}
-        //    ContourHelper.CropStructureFromBody(target, -0.3);
-        //    return false;
-        //}
 
         //private bool GeneratePTV1200(Structure ptv)
         //{

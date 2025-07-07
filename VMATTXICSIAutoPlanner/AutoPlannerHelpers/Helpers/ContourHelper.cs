@@ -22,35 +22,18 @@ namespace AutoPlannerHelpers.Helpers
         /// <param name="EclipseContext.GetInstance().StructureSet"></param>
         /// <param name="marginInCm"></param>
         /// <returns></returns>
-        public static (bool, StringBuilder) CropStructureFromBody(Structure theStructure, double marginInCm, string bodyId = "Body")
+        public static bool CropStructureFromBody(string theStructure, double marginInCm, UIUpdateMessageOnlyDelegate ProvideUIUpdate)
         {
-            StringBuilder sb = new StringBuilder();
-            bool fail = false;
-            //margin is in cm
-            if (!string.IsNullOrEmpty(bodyId))
+            StructureOperationModel model = new StructureOperationModel
             {
-                Structure body = StructureTuningHelper.GetStructureFromId(bodyId);
-                if (!ReferenceEquals(body, null))
-                {
-                    if (marginInCm >= -5.0 && marginInCm <= 5.0) theStructure.SegmentVolume = theStructure.SegmentVolume.And(body.SegmentVolume.Margin(marginInCm * 10));
-                    else
-                    {
-                        sb.AppendLine("Cropping margin from body MUST be within +/- 5.0 cm!");
-                        fail = true;
-                    }
-                }
-                else
-                {
-                    sb.AppendLine("Could not find body structure! Can't crop target from body!");
-                    fail = true;
-                }
-            }
-            else
-            {
-                sb.AppendLine("Requested body structure id is null or empty! Exiting!");
-                fail = true;
-            }
-            return (fail, sb);
+                StructureA = theStructure,
+                MarginA = new StructureMarginModel(0),
+                Operation = StructureDerivationOperation.Intersection,
+                StructureB = "body",
+                MarginB = new StructureMarginModel(marginInCm),
+                OutputStructure = theStructure
+            };
+            return (PerformStructureOperation(model, ProvideUIUpdate));
         }
 
         public static bool PerformStructureOperation(StructureOperationModel structureOperation, UIUpdateMessageOnlyDelegate ProvideUIUpdate)
@@ -59,7 +42,7 @@ namespace AutoPlannerHelpers.Helpers
             {
                 throw new Exception("Error! Eclipse context not initialized! Unable to perform structure derivations!");
             }
-            if (!StructureTuningHelper.DoesStructureExistInSS(structureOperation.StructureA, true) && !StructureTuningHelper.DoesStructureExistInSS(structureOperation.StructureB, true))
+            if (StructureTuningHelper.DoesStructureExistInSS(structureOperation.StructureA, true) && StructureTuningHelper.DoesStructureExistInSS(structureOperation.StructureB, true) && structureOperation.MarginA.IsValidMargin && structureOperation.MarginB.IsValidMargin)
             {
                 Structure StructureA = StructureTuningHelper.GetStructureFromId(structureOperation.StructureA);
                 Structure StructureB = StructureTuningHelper.GetStructureFromId(structureOperation.StructureB);
@@ -98,8 +81,8 @@ namespace AutoPlannerHelpers.Helpers
             }
             else
             {
-                ProvideUIUpdate($"Error! Missing required structures for derivation! Exiting!", true);
-                ProvideUIUpdate($"{structureOperation.StructureA} {structureOperation.Operation} {structureOperation.StructureB}");
+                ProvideUIUpdate($"Error! Missing required structures for derivation or margins are not valid! Exiting!", true);
+                ProvideUIUpdate($"{structureOperation.FriendlyName}");
                 return true;
             }
             return false;
@@ -153,34 +136,23 @@ namespace AutoPlannerHelpers.Helpers
             return a.SegmentVolume;
         }
 
-        /// <summary>
-        /// Contour overlap between two structures ONTO the normal structure
-        /// </summary>
-        /// <param name="target"></param>
-        /// <param name="normal"></param>
-        /// <param name="marginInCm"></param>
-        /// <returns></returns>
-        //public static (bool, StringBuilder) ContourOverlap(Structure target, Structure normal, double marginInCm)
-        //{
-        //    StringBuilder sb = new StringBuilder();
-        //    bool fail = false;
-        //    //margin is in cm
-        //    if (!ReferenceEquals(target, null) && !ReferenceEquals(normal, null))
-        //    {
-        //        if (marginInCm >= -5.0 && marginInCm <= 5.0) normal.SegmentVolume = target.SegmentVolume.And(normal.SegmentVolume.Margin(marginInCm * 10));
-        //        else
-        //        {
-        //            sb.AppendLine("Added margin MUST be within +/- 5.0 cm!");
-        //            fail = true;
-        //        }
-        //    }
-        //    else
-        //    {
-        //        sb.AppendLine("Error either target or normal structures are missing! Can't contour overlap between target and normal structure!");
-        //        fail = true;
-        //    }
-        //    return (fail, sb);
-        //}
+        public static void CleanTemporaryStructures(IEnumerable<StructureOperationModel> operations)
+        {
+            if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
+            {
+                throw new Exception("Error! Eclipse context not initialized! Unable to clean structure derivations!");
+            }
+            foreach (StructureOperationModel itr in operations.Where(x => x.IsTemporary))
+            {
+                if(StructureTuningHelper.DoesStructureExistInSS(itr.OutputStructure))
+                {
+                    if(EclipseContext.GetInstance().StructureSet.CanRemoveStructure(StructureTuningHelper.GetStructureFromId(itr.OutputStructure)))
+                    {
+                        EclipseContext.GetInstance().StructureSet.RemoveStructure(StructureTuningHelper.GetStructureFromId(itr.OutputStructure));
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Helper method to combine/union a list of structures onto structureToUnion
@@ -188,23 +160,24 @@ namespace AutoPlannerHelpers.Helpers
         /// <param name="structuresToCombine"></param>
         /// <param name="structureToUnion"></param>
         /// <returns></returns>
-        public static (bool, StringBuilder) ContourUnion(List<Structure> structuresToCombine, Structure structureToUnion, double marginInCm = 0.0)
+        public static bool ContourUnion(List<string> structures, string outputStructure, UIUpdateMessageOnlyDelegate ProvideUIUpdate)
         {
-            StringBuilder sb = new StringBuilder();
-            bool fail = false;
-            foreach (Structure itr in structuresToCombine)
+            List<StructureOperationModel> operations = new List<StructureOperationModel>();
+            foreach(string itr in structures)
             {
-                if (!ReferenceEquals(itr, null) && !ReferenceEquals(structureToUnion, null))
-                {
-                    structureToUnion.SegmentVolume = itr.SegmentVolume.Or(structureToUnion.SegmentVolume.Margin(marginInCm * 10));
-                }
-                else
-                {
-                    sb.AppendLine("Error either target or normal structures are missing! Can't union target and normal structure!");
-                    fail = true;
-                }
+                operations.Add(new StructureOperationModel(itr, StructureDerivationOperation.Union, outputStructure, outputStructure));
             }
-            return (fail, sb);
+
+            foreach (StructureOperationModel itr in operations)
+            {
+                if (itr.IsValidOperation)
+                {
+                    ProvideUIUpdate($"Performing: {itr.FriendlyName}");
+                    if (PerformStructureOperation(itr, ProvideUIUpdate)) return true;
+                }
+                else ProvideUIUpdate($"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");
+            }
+            return false;
         }
 
         /// <summary>
@@ -216,23 +189,25 @@ namespace AutoPlannerHelpers.Helpers
         /// <param name="marginInCm"></param>
         /// <param name="thickness"></param>
         /// <returns></returns>
-        public static (bool, StringBuilder) CreateRing(Structure target, Structure ring, double marginInCm, double thickness)
+        public static bool CreateRing(string target, string ring, double marginInCm, double thickness, UIUpdateMessageOnlyDelegate ProvideUIUpdate)
         {
-            StringBuilder sb = new StringBuilder();
-            bool fail = false;
-            //margin is in cm
-            if ((marginInCm >= -5.0 && marginInCm <= 5.0) && (thickness + marginInCm >= -5.0 && thickness + marginInCm <= 5.0))
+            List<StructureOperationModel> operations = new List<StructureOperationModel>
             {
-                ring.SegmentVolume = target.Margin((thickness + marginInCm) * 10);
-                ring.SegmentVolume = ring.Sub(target.Margin(marginInCm * 10));
-                CropStructureFromBody(ring, 0.0);
-            }
-            else
+                new StructureOperationModel(ring, StructureDerivationOperation.Union, target, ring, new StructureMarginModel(0), new StructureMarginModel(thickness + marginInCm)),
+                new StructureOperationModel(ring, StructureDerivationOperation.Crop, target, ring, new StructureMarginModel(0), new StructureMarginModel(marginInCm)),
+                new StructureOperationModel(ring, StructureDerivationOperation.Intersection, "body", ring, new StructureMarginModel(0), new StructureMarginModel(0))
+            };
+
+            foreach (StructureOperationModel itr in operations)
             {
-                sb.AppendLine("Added margin or ring thickness + margin MUST be within +/- 5.0 cm! Exiting!");
-                fail = true;
+                if (itr.IsValidOperation)
+                {
+                    ProvideUIUpdate($"Performing: {itr.FriendlyName}");
+                    if (PerformStructureOperation(itr, ProvideUIUpdate)) return true;
+                }
+                else ProvideUIUpdate($"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");
             }
-            return (fail, sb);
+            return false;
         }
 
         /// <summary>
@@ -451,39 +426,6 @@ namespace AutoPlannerHelpers.Helpers
                     {
                         ProvideUIUpdate(0, $"{tmp.Id} is already defualt resolution");
                     }
-                }
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Overloaded method to account for the fact the Eclipse may or may not append numbers to the structure names (because it thinks the names are taken)
-        /// </summary>
-        /// <param name="structures"></param>
-        /// <param name="EclipseContext.GetInstance().StructureSet"></param>
-        /// <param name="ProvideUIUpdate"></param>
-        /// <returns></returns>
-        public static bool CheckHighResolutionAndConvert(List<Structure> structures, ProvideUIUpdateDelegate ProvideUIUpdate)
-        {
-            ProvideUIUpdate(0, "Checking for high res structures:");
-            foreach (Structure itr in structures)
-            {
-                ProvideUIUpdate(0, $"Checking if {itr.Id} is high resolution");
-                if (itr.IsHighResolution)
-                {
-                    string id = itr.Id;
-                    ProvideUIUpdate(0, $"{id} is high resolution. Converting to default resolution now");
-
-                    if (OverWriteHighResStructureWithLowResStructure(itr, ProvideUIUpdate))
-                    {
-                        ProvideUIUpdate(0, $"Error! Unable to overwrite existing high res structure {itr.Id} with default resolution structure! Exiting!", true);
-                        return true;
-                    }
-                    ProvideUIUpdate(0, $"{id} has been converted to low resolution");
-                }
-                else
-                {
-                    ProvideUIUpdate(0, $"{itr.Id} is already defualt resolution");
                 }
             }
             return false;

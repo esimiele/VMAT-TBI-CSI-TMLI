@@ -217,21 +217,16 @@ namespace TBIAutoPlanner.Core
                 Structure body = StructureTuningHelper.GetStructureFromId("body");
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved body structure: {body.Id}");
 
-                Structure bodyCopy = StructureTuningHelper.GetStructureFromId("human_body");
-                ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved human_body structure: {bodyCopy.Id}");
+                Structure humanBody = StructureTuningHelper.GetStructureFromId("human_body");
+                ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved human_body structure: {humanBody.Id}");
 
-                (bool fail, StringBuilder message) = ContourHelper.CopyStructureOntoStructure(bodyCopy, body);
-                if (fail)
-                {
-                    ProvideUIUpdate(message.ToString(), true);
-                    return true;
-                }
-                ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Copied {bodyCopy.Id} onto {body.Id}");
+                body.SegmentVolume = ContourHelper.ContourIntersection(body, humanBody, new StructureMarginModel(0), new StructureMarginModel(0));
+                ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Copied {humanBody.Id} onto {body.Id}");
 
-                if (EclipseContext.GetInstance().StructureSet.CanRemoveStructure(bodyCopy))
+                if (EclipseContext.GetInstance().StructureSet.CanRemoveStructure(humanBody))
                 {
-                    ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Removing {bodyCopy.Id} structure from structure set");
-                    EclipseContext.GetInstance().StructureSet.RemoveStructure(bodyCopy);
+                    ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Removing {humanBody.Id} structure from structure set");
+                    EclipseContext.GetInstance().StructureSet.RemoveStructure(humanBody);
                 }
                 else
                 {
