@@ -241,28 +241,6 @@ namespace AutoPlannerHelpers.Helpers
         }
 
         /// <summary>
-        /// Helper method to copy the supplied base structure ONTO the structureToContour
-        /// </summary>
-        /// <param name="baseStructure"></param>
-        /// <param name="structureToContour"></param>
-        /// <returns></returns>
-        public static (bool, StringBuilder) CopyStructureOntoStructure(Structure baseStructure, Structure structureToContour, double marginInCM = 0.0)
-        {
-            StringBuilder sb = new StringBuilder();
-            bool fail = false;
-            try
-            {
-                structureToContour.SegmentVolume = baseStructure.SegmentVolume.Margin(marginInCM * 10);
-            }
-            catch (Exception e)
-            {
-                sb.AppendLine($"Error! Could not copy {baseStructure.Id} onto {structureToContour.Id} because:");
-                sb.AppendLine(e.Message);
-            }
-            return (fail, sb);
-        }
-
-        /// <summary>
         /// Helper method to contour the overlap between two structures and union it with the unionStructure ONTO the unionStructure
         /// </summary>
         /// <param name="target"></param>

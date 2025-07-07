@@ -7,8 +7,6 @@ using AutoPlannerHelpers.Prompts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.ExceptionServices;
-using System.Text;
 using System.Windows.Media.Media3D;
 using TMLIAutoPlanner.Settings;
 using VMS.TPS.Common.Model.API;
@@ -18,16 +16,11 @@ namespace TMLIAutoPlanner.Core
     internal class TSGenerationManipulation_TMLI : TSGenerationManipulationBase
     {
         #region properties
-        public int NumberofIsocenters { get; private set; } = -1;
-        public int NumberofVMATIsocenters { get; private set; } = -1;
-        //plan id, normalization volume
-        public Dictionary<string, string> NormalizationVolumes { get; private set; } = new Dictionary<string, string> { };
         public List<TSRingStructureModel> AddedRings { get; private set; } = new List<TSRingStructureModel> { };
         #endregion
 
         #region fields
         private List<TSRingStructureModel> _requestedRings;
-        
         #endregion
 
         internal TSGenerationManipulation_TMLI(List<SpecialOptimizationStructureModel> specialOptStructs,

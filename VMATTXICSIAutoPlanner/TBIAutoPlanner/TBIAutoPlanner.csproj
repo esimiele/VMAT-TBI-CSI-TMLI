@@ -91,6 +91,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Core\GeneratePreliminaryTargets_TBI.cs" />
     <Compile Include="Settings\TBIAutoPlannerSettings.cs" />
     <Compile Include="ViewModels\TBIMainViewModel.cs" />
     <Compile Include="Views\TBIMainView.xaml.cs">

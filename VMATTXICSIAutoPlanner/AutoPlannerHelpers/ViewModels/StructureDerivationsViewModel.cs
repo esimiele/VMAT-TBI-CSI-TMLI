@@ -73,6 +73,10 @@ namespace AutoPlannerHelpers.ViewModels
                 {
                     AutoPlanTemplateSelectionChanged(m.StructureOperations, m.SkipStructureIdCheck);
                 });
+                WeakReferenceMessenger.Default.Register<RequestTargetStructureDerivations>(this, (r, m) =>
+                {
+                    m.Reply(RequestedStructureOperations.ToList());
+                });
             }
             else
             {

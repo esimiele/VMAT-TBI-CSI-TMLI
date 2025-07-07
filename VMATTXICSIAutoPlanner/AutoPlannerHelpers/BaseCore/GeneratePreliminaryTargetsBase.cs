@@ -11,7 +11,7 @@ using VMS.TPS.Common.Model.API;
 
 namespace AutoPlannerHelpers.BaseCore
 {
-    public abstract class GeneratePreliminaryTargetsBase : SimpleProgressWindowViewModel
+    public class GeneratePreliminaryTargetsBase : SimpleProgressWindowViewModel
     {
         // Get methods
         public List<string> AddedTargetstructures { get => _targetsToDerive.Select(x => x.OutputStructure).Distinct().ToList(); }
@@ -48,6 +48,7 @@ namespace AutoPlannerHelpers.BaseCore
                 PUUD = ProvideUIUpdate;
                 UIUD = ProvideUIUpdate;
                 if (PreliminaryChecks()) return true;
+                if (StructureTuningHelper.UnionLRStructures(PUUD)) return true;
                 if (CheckForTargetStructures()) return true;
                 if (_targetsToDerive.Any())
                 {
@@ -75,7 +76,27 @@ namespace AutoPlannerHelpers.BaseCore
         /// Preliminary checks prior to generating prelim targets
         /// </summary>
         /// <returns></returns>
-        protected abstract bool PreliminaryChecks();
+        protected virtual bool PreliminaryChecks()
+        {
+            UpdateUILabel("Performing Preliminary Checks:");
+            int calcItems = 3;
+            int counter = 0;
+
+            //verify body structure is present and contour
+            if (!StructureTuningHelper.DoesStructureExistInSS("body", true))
+            {
+                ProvideUIUpdate("Missing body structure! Generating it now!");
+                if (GenerateBodyStructure()) return true;
+            }
+            ProvideUIUpdate(100 * ++counter / calcItems);
+
+            if (ContourHelper.CheckHighResolutionAndConvert(_createPrelimTargetList.SelectMany(x => x.StructureIdList).Distinct().ToList(), PUUD)) return true;
+            ProvideUIUpdate(100 * ++counter / calcItems, "Check and converted any high res base targets");
+
+            ProvideUIUpdate(100, "Preliminary checks complete!");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
+            return false;
+        }
 
         /// <summary>
         /// Generate the body structure if it is not present in the structure set. Set the structure id to 'body'
@@ -130,7 +151,25 @@ namespace AutoPlannerHelpers.BaseCore
         /// <summary>
         /// Contour the preliminary targets according to the standard practice rules for the targets of interest
         /// <returns></returns>
-        protected abstract bool DeriveTargetStructures();
+        protected virtual bool DeriveTargetStructures()
+        {
+            UpdateUILabel("Contouring targets now:");
+            int counter = 0;
+            int calcItems = _targetsToDerive.Count + 2;
+            foreach (StructureOperationModel itr in _targetsToDerive)
+            {
+                if (itr.IsValidOperation)
+                {
+                    ProvideUIUpdate(100 * ++counter / calcItems, $"Contouring target: {itr}");
+                    if (ContourHelper.PerformStructureOperation(itr, UIUD)) return true;
+                }
+                else ProvideUIUpdate($"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");
+            }
+
+            ProvideUIUpdate(100, "Targets added and contoured!");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
+            return false;
+        }
 
         protected virtual bool TargetPostProcessing()
         {

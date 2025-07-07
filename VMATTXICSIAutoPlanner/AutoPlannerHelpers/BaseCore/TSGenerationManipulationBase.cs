@@ -18,10 +18,12 @@ namespace AutoPlannerHelpers.BaseCore
     public abstract class TSGenerationManipulationBase : SimpleProgressWindowViewModel
     {
         #region properties
+        public Dictionary<string, string> NormalizationVolumes { get; protected set; } = new Dictionary<string, string> { };
         public List<PlanIsocenterModel> PlanIsocentersList { get; protected set; } = new List<PlanIsocenterModel> { };
         public List<string> AddedStructureIds { get; protected set; } = new List<string> { };
         public List<PlanTargetsModel> PlanTargets { get; protected set; } = new List<PlanTargetsModel> { };
-        //flag to indicate to the main UI that the structure manipulation list needs to be updated
+        public int NumberofIsocenters { get; protected set; } = -1;
+        public int NumberofVMATIsocenters { get; protected set; } = -1;
         public string StrackTraceError { get; protected set; } = string.Empty;
         #endregion
 
@@ -109,8 +111,7 @@ namespace AutoPlannerHelpers.BaseCore
                 if (StructureTuningHelper.DoesStructureExistInSS(targetId, true))
                 {
                     ProvideUIUpdate($"Copying target {targetId} contours onto {newName}");
-                    (bool fail, StringBuilder errorMessage) = ContourHelper.CopyStructureOntoStructure(StructureTuningHelper.GetStructureFromId(targetId), addedTSTarget);
-                    if (fail) ProvideUIUpdate($"Error! Could not copy {targetId} onto {addedTSTarget.Id} because: {errorMessage}", true);
+                    addedTSTarget.SegmentVolume = ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId(targetId), addedTSTarget, new StructureMarginModel(0), new StructureMarginModel(0));
                 }
                 else ProvideUIUpdate($"Error! Could not retrieve {targetId} structure!", true);
             }
@@ -167,12 +168,7 @@ namespace AutoPlannerHelpers.BaseCore
                 Structure overlapStructure = AddTSStructures(new SpecialOptimizationStructureModel("CONTROL", overlapName));
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Created empty structure {overlapName}");
 
-                (bool copyFail, StringBuilder errorMessage) = ContourHelper.CopyStructureOntoStructure(OAR, overlapStructure);
-                if (copyFail)
-                {
-                    ProvideUIUpdate(errorMessage.ToString(), true);
-                    return true;
-                }
+                overlapStructure.SegmentVolume = ContourHelper.ContourUnion(OAR, overlapStructure, new StructureMarginModel(0), new StructureMarginModel(0));
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Copied {OAR.Id} onto {overlapName}");
 
                 overlapStructure.SegmentVolume = ContourHelper.ContourIntersection(target, overlapStructure, new StructureMarginModel(0.0), new StructureMarginModel(margin));

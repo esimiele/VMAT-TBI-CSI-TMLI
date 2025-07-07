@@ -19,13 +19,6 @@ namespace TBIAutoPlanner.Core
 {
     internal class TSGenerationManipulation_TBI : TSGenerationManipulationBase
     {
-        #region properties
-        public int NumberofIsocenters { get; private set; } = -1;
-        public int NumberofVMATIsocenters { get; private set; } = -1;
-        //plan id, normalization volume
-        public Dictionary<string, string> NormalizationVolumes { get; private set; } = new Dictionary<string, string> { };
-        #endregion
-
         #region fields
         private bool _useFlash;
         private double _flashMargin;

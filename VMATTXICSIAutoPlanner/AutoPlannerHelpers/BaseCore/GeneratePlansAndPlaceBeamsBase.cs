@@ -12,7 +12,7 @@ using AutoPlannerHelpers.Context;
 
 namespace AutoPlannerHelpers.BaseCore
 {
-    public class BeamPlacementBase : SimpleMTbase
+    public class GeneratePlansAndPlaceBeamsBase : SimpleMTbase
     {
         //get methods
         public List<ExternalPlanSetup> VMATPlans { get; protected set; } = new List<ExternalPlanSetup>();
@@ -289,7 +289,8 @@ namespace AutoPlannerHelpers.BaseCore
                 ProvideUIUpdate($"Error! No matching prescrition found for iso plan name {isoLocations.PlanId}", true);
                 return true;
             }
-            string targetId = prescriptions.First(x => string.Equals(x.PlanId, isoLocations.PlanId)).TargetId;
+            //grab the last prescription that has a matching plan id --> highest cumulative dose target for this plan
+            string targetId = prescriptions.Last(x => string.Equals(x.PlanId, isoLocations.PlanId)).TargetId;
 
             if (!StructureTuningHelper.DoesStructureExistInSS(targetId, true))
             {

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using PlanType = AutoPlannerHelpers.Enums.PlanType;
 using AutoPlannerHelpers.Models;
 using AutoPlannerHelpers.PlanTemplateModels;
+using AutoPlannerHelpers.BaseCore;
 
 namespace AutoPlannerHelpersTests.BaseViewModel
 {
@@ -30,22 +31,7 @@ namespace AutoPlannerHelpersTests.BaseViewModel
             throw new NotImplementedException();
         }
 
-        protected override void GeneratePlansAndPlaceBeams(string linac, string energy, bool contourOverlap, double overlapMargin, List<PlanIsocenterModel> PlanIsocenters)
-        {
-            throw new NotImplementedException();
-        }
-
         protected override void LoadScriptConfigurationSettings(string file)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override void UpdateUIWithSelectedPlanTemplate()
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override bool VerifyTargetsIntegrity(List<PlanTargetsModel> parsedTargets)
         {
             throw new NotImplementedException();
         }
@@ -65,7 +51,27 @@ namespace AutoPlannerHelpersTests.BaseViewModel
             throw new NotImplementedException();
         }
 
-        protected override void PerformOptimizationStructureDerivations(List<StructureOperationModel> operations)
+        protected override void LaunchQuickStartGuide()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void LaunchHelpGuide()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override GeneratePreliminaryTargetsBase GetTargetDerivationClassInstanceForPlanType(List<StructureOperationModel> preliminaryTargets)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override TSGenerationManipulationBase GetOptStructureDerivationClassInstanceForPlanType(List<StructureOperationModel> operations, List<SpecialOptimizationStructureModel> specialOps)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override GeneratePlansAndPlaceBeamsBase GetBeamPlacementClassInstanceForPlanType(string linac, string energy, bool contourOverlap, double overlapMargin, List<PlanIsocenterModel> PlanIsocenters)
         {
             throw new NotImplementedException();
         }

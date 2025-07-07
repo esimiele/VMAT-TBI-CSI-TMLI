@@ -13,7 +13,7 @@ using AutoPlannerHelpers.Context;
 
 namespace TBIAutoPlanner.Core
 {
-    internal class GeneratePlansAndPlaceBeams_TBI : BeamPlacementBase
+    internal class GeneratePlansAndPlaceBeams_TBI : GeneratePlansAndPlaceBeamsBase
     {
         //get methods
         public bool GetCheckIsoPlacementStatus() { return checkIsoPlacement; }

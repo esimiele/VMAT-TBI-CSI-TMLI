@@ -1,5 +1,4 @@
-﻿using AutoPlannerHelpers.Context;
-using AutoPlannerHelpers.Enums;
+﻿using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.Helpers;
 using AutoPlannerHelpers.Messengers;
 using AutoPlannerHelpers.Models;
@@ -17,16 +16,8 @@ namespace AutoPlannerHelpers.ViewModels
     public class OptimizationSetupViewModel : ObservableObject
     {
         public ObservableCollectionPropertyNotify<PlanOptimizationSetupModel> PlanOptimizationConstraints { get; set; }
+        public ObservableCollectionPropertyNotify<string> StructureIds { get; set; }
 
-        #region properties
-        private List<string> _structureIds;
-
-        public List<string> StructureIds
-        {
-            get { return _structureIds; }
-            set { SetProperty(ref _structureIds, value); }
-        }
-        #endregion
 
         #region fields
         private List<PlanOptimizationSetupModel> _defaultPlanOptSetup = new List<PlanOptimizationSetupModel>();
@@ -48,8 +39,8 @@ namespace AutoPlannerHelpers.ViewModels
             ClearOptimizationConstraintListCommand = new RelayCommand(ClearOptimizationConstraints);
             ClearRowCommand = new RelayCommand<OptimizationConstraintModel>(ClearRow);
             AssignOptimizationConstraintsCommand = new RelayCommand(AssignOptimizationConstraints);
-            if(sIds.Any()) StructureIds = new List<string>(sIds);
-            else StructureIds = new List<string> { "1", "2", "3"};
+            StructureIds = new ObservableCollectionPropertyNotify<string> { };
+            StructureIds.AddRange(sIds);
             PlanOptimizationConstraints = new ObservableCollectionPropertyNotify<PlanOptimizationSetupModel> { };
             _planType = planType;
             InitializeMessengers();
@@ -57,21 +48,17 @@ namespace AutoPlannerHelpers.ViewModels
 
         private void InitializeMessengers()
         {
-            WeakReferenceMessenger.Default.Register<RequestUpdateStructureIds>(this, (r, m) =>
-            {
-                UpdateStructureIdList(m.StructureIds);
-            });
-
             WeakReferenceMessenger.Default.Register<RequestUpdateOptimizationConstraintsMessage>(this, (r, m) =>
             {
                 UpdateUIWithPlanOptimizationSetupList(m.PlanOptimizationSetup);
             });
-        }
-
-        public void UpdateStructureIdList(IEnumerable<string> newIds)
-        {
-            StructureIds.Clear();
-            StructureIds.AddRange(newIds);
+            WeakReferenceMessenger.Default.Register<RequestUpdateStructureIds>(this, (r, m) =>
+            {
+                StructureIds.Clear();
+                StructureIds.AddRange(m.StructureIds);
+                StructureIds.Refresh();
+                AddDefaultOptimizationConstraints();
+            });
         }
 
         public void UpdateUIWithPlanOptimizationSetupList(List<PlanOptimizationSetupModel> planOptSetup)
@@ -107,26 +94,24 @@ namespace AutoPlannerHelpers.ViewModels
 
         private OptimizationConstraintModel GenerateNewEmptyOptimizationConstraint()
         {
-            return new OptimizationConstraintModel(_structureIds.First(), OptimizationObjectiveType.None, 0.0, Units.None, 0.0, 0);
+            return new OptimizationConstraintModel(StructureIds.First(), OptimizationObjectiveType.None, 0.0, Units.None, 0.0, 0);
         }
 
         private void AddDefaultOptimizationConstraints()
         {
             if (!_defaultPlanOptSetup.Any()) return;
-
             PlanOptimizationConstraints.Clear();
             foreach (PlanOptimizationSetupModel itr in _defaultPlanOptSetup)
             {
                 List<OptimizationConstraintModel> constraints = new List<OptimizationConstraintModel>();
                 foreach(OptimizationConstraintModel optModel in itr.OptimizationConstraints)
                 {
-                    if (_structureIds.Any(x => string.Equals(x, optModel.StructureId, StringComparison.OrdinalIgnoreCase)))
+                    if (StructureIds.Any(x => string.Equals(x, optModel.StructureId, StringComparison.OrdinalIgnoreCase)))
                     {
-                        optModel.StructureId = _structureIds.First(x => string.Equals(x, optModel.StructureId, StringComparison.OrdinalIgnoreCase));
+                        optModel.StructureId = StructureIds.First(x => string.Equals(x, optModel.StructureId, StringComparison.OrdinalIgnoreCase));
                         constraints.Add(new OptimizationConstraintModel(optModel));
                     }
                 }
-
                 PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel(itr.PlanId, constraints));
             }
         }

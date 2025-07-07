@@ -135,13 +135,13 @@
                     </TabItem>
                     <TabItem Header="Specify Targets" Background="{Binding SpecifyTargetsTabBackground, FallbackValue=LightGray}" BorderThickness="0,1,1,0">
                         <TabControl TabStripPlacement="Top" Background="DarkGray">
-                            <TabItem Content="{Binding PrepForTargets}" Background="{Binding PrepForTargetsBackground, FallbackValue=LightGray}" Header="Prep for Targets" Width="294" BorderThickness="1,1,1,1">
+                            <TabItem Content="{Binding TargetStructureDerivations}" Background="{Binding TargetStructureDerivationsBackground, FallbackValue=LightGray}" Header="Derive Targets" Width="294" BorderThickness="1,1,1,1">
                             </TabItem>
                             <TabItem Header="Set Targets" Width="294" BorderThickness="0,1,1,1" Content="{Binding SpecifyTargets}" Background="{Binding SetTargetsTabBackground, FallbackValue=LightGray}">
                             </TabItem>
                         </TabControl>
                     </TabItem>
-                    <TabItem Header="Opt Structure Tuning" Background="{Binding StructureTuningTabBackground, FallbackValue=LightGray}" BorderThickness="0,1,1,0" x:Name="structureTuningTabItem" Margin="0,0,1,1">
+                    <TabItem Header="Structure Tuning" Background="{Binding StructureTuningTabBackground, FallbackValue=LightGray}" BorderThickness="0,1,1,0" x:Name="structureTuningTabItem" Margin="0,0,1,1">
                         <TabControl Background="DarkGray">
                             <TabItem Header="Special Opt Structures" Content="{Binding SpecialOptimizationStructures}" BorderThickness="1,1,1,1" Width="Auto">
                             </TabItem>

@@ -53,10 +53,10 @@ namespace AutoPlannerHelpers.ViewModels
             {
                 AutoPlanTemplateSelectionChanged(m.AutoPlanTemplate);
             });
-            WeakReferenceMessenger.Default.Register<RequestUpdateTSManipulationList>(this, (r, m) =>
-            {
-                UpdateTSManipulationList(m.StructureIds, m.RequestedTSManipulations);
-            });
+            //WeakReferenceMessenger.Default.Register<RequestUpdateTSManipulationList>(this, (r, m) =>
+            //{
+            //    UpdateTSManipulationList(m.StructureIds, m.RequestedTSManipulations);
+            //});
         }
 
         public void UpdateTSManipulationList(IEnumerable<string> newStructureIds, List<RequestedTSManipulationModel> tsManipulations)
@@ -112,7 +112,7 @@ namespace AutoPlannerHelpers.ViewModels
 
         public void PerformTSGenerationManipulation()
         {
-            WeakReferenceMessenger.Default.Send(new RequestGenerateManipulateTuningStructuresMessage(RequestedTSManipulations));
+            //WeakReferenceMessenger.Default.Send(new RequestGenerateManipulateTuningStructuresMessage(RequestedTSManipulations));
         }
     }
 }

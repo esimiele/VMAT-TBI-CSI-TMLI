@@ -26,6 +26,8 @@ using AutoPlannerHelpers.Prompts;
 using AutoPlannerHelpers.Messengers;
 using CommunityToolkit.Mvvm.Messaging;
 using ExternalPlanSetup = VMS.TPS.Common.Model.API.ExternalPlanSetup;
+using AutoPlannerHelpers.Enums;
+using AutoPlannerHelpers.BaseCore;
 
 namespace TBIAutoPlanner.ViewModels
 {
@@ -37,7 +39,7 @@ namespace TBIAutoPlanner.ViewModels
         private double _flashMargin;
         private double _ptvMarginFromBody;
         private Visibility _stitchCTTabVisible;
-        private System.Windows.Media.SolidColorBrush _stitchCTTabBackground;
+        private SolidColorBrush _stitchCTTabBackground;
         private int _initialTabSelected;
 
         public bool UseFlash
@@ -64,7 +66,7 @@ namespace TBIAutoPlanner.ViewModels
             set { SetProperty(ref _ptvMarginFromBody, value); }
         }
 
-        public System.Windows.Media.SolidColorBrush StitchCTTabBackground
+        public SolidColorBrush StitchCTTabBackground
         {
             get { return _stitchCTTabBackground; }
             set { SetProperty(ref _stitchCTTabBackground, value); }
@@ -95,8 +97,6 @@ namespace TBIAutoPlanner.ViewModels
         #endregion
 
         #region commands
-        public ICommand QuickStartGuideCommand { get; set; }
-        public ICommand HelpGuideCommand { get; set; }
         public ICommand PTVMarginInfoCommand { get; set; }
         #endregion
 
@@ -126,8 +126,6 @@ namespace TBIAutoPlanner.ViewModels
             if (!TBIAutoPlannerSettings.UseFlash) FlashMarginVisible = Visibility.Hidden;
             FlashMargin = TBIAutoPlannerSettings.FlashMarginInCM;
 
-            QuickStartGuideCommand = new RelayCommand(LaunchQuickStartGuide);
-            HelpGuideCommand = new RelayCommand(LaunchHelpGuide);
             PTVMarginInfoCommand = new RelayCommand(ShowPTVMarginInfo);
 
             if (TBIAutoPlannerSettings.AllBeamsVMAT) WeakReferenceMessenger.Default.Send(new RequestHideNumberOfVMATIsocenters());
@@ -137,21 +135,15 @@ namespace TBIAutoPlanner.ViewModels
                                                                                               TBIAutoPlannerSettings.ContourFieldOverlapMarginInCM,
                                                                                               TBIAutoPlannerSettings.BeamsPerIsocenter));
 
-            QuickStartGuideCommand = new RelayCommand(LaunchQuickStartGuide);
-            HelpGuideCommand = new RelayCommand(LaunchHelpGuide);
             PTVMarginInfoCommand = new RelayCommand(ShowPTVMarginInfo);
 
             //needs to be initialized after the plan templates are loaded
             ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
-            SpecifyTargetsTabBackground = Brushes.PaleVioletRed;
-            if (EclipseContext.GetInstance().IsInitialized && !ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
-            {
-                PatientMRN = EclipseContext.GetInstance().Patient.Id;
-                StructureSetId = EclipseContext.GetInstance().StructureSet.Id;
-            }
+            if(!EclipseContext.GetInstance().IsInitialized) WeakReferenceMessenger.Default.Send(new RequestUpdateStructureIds(PlanTemplates.SelectMany(x => x.GenerateStructureIdList()).Distinct()));
             InitializeTBIMessengers();
         }
 
+        #region messengers
         private void InitializeTBIMessengers()
         {
             WeakReferenceMessenger.Default.Register<RequestAreSeparatedPlansAutomaticallyRecalculated>(this, (r, m) =>
@@ -159,14 +151,15 @@ namespace TBIAutoPlanner.ViewModels
                 m.Reply(TBIAutoPlannerSettings.AutoDoseRecalculationDuringPlanPrep);
             });
         }
+        #endregion
 
         #region information and help guides
-        private void LaunchQuickStartGuide()
+        protected override void LaunchQuickStartGuide()
         {
             MessageBox.Show("test");
         }
 
-        private void LaunchHelpGuide()
+        protected override void LaunchHelpGuide()
         {
             MessageBox.Show("test");
         }
@@ -178,95 +171,34 @@ namespace TBIAutoPlanner.ViewModels
         #endregion
 
         #region specify targets
-        protected override bool VerifyTargetsIntegrity(List<PlanTargetsModel> parsedTargets)
+        protected override GeneratePreliminaryTargetsBase GetTargetDerivationClassInstanceForPlanType(List<StructureOperationModel> preliminaryTargets)
         {
-            //for tbi, we only want to make there is one plan (not configured for sequential boosts)
-            if (!parsedTargets.Any()) return true;
-            if (parsedTargets.Select(x => x.PlanId).Distinct().Count() > 1)
-            {
-                Logger.GetInstance().LogError($"Error! Multiple plan Ids entered! This script is only configured to auto-plan one TBI plan!");
-                return true;
-            }
-            return false;
+            return new GeneratePreliminaryTargets_TBI(preliminaryTargets);
         }
         #endregion
 
         #region TS generation and manipulation
-        protected override void PerformOptimizationStructureDerivations(List<StructureOperationModel> operations)
+        protected override TSGenerationManipulationBase GetOptStructureDerivationClassInstanceForPlanType(List<StructureOperationModel> operations, List<SpecialOptimizationStructureModel> specialOps)
         {
-            if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
-            {
-                Logger.GetInstance().LogError("Error! Script is not connected to aria or no structure set loaded! Cannot perform TS generation/manipulation!");
-                return;
-            }
-            List<SpecialOptimizationStructureModel> specialOptStructures = WeakReferenceMessenger.Default.Send(new RequestSpecialOptimizationStructures());
-
-            TSGenerationManipulation_TBI generateTS = new TSGenerationManipulation_TBI(specialOptStructures,
-                                                                                       operations,
-                                                                                       _prescriptions,
-                                                                                       UseFlash,
-                                                                                       FlashMargin,
-                                                                                       PTVMarginFromBody);
-
-            EclipseContext.GetInstance().Patient.BeginModifications();
-            bool failed = generateTS.Execute();
-            Logger.GetInstance().AppendLogOutput("TS Generation and manipulation output:", generateTS.LogOutput);
-            if (failed) return;
-
-            _planIsocenters = generateTS.PlanIsocentersList;
-
-            WeakReferenceMessenger.Default.Send(new RequestUpdatePlanIsocenterList(_planIsocenters));
-            WeakReferenceMessenger.Default.Send(new RequestUpdateStructureIds(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id)));
-            _planOptimizationSetup = UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
-
-            StructureTuningTabBackground = Brushes.ForestGreen;
-            OptimizationStructureDerivationBackground = Brushes.ForestGreen;
-            BeamPlacementTabBackground = Brushes.PaleVioletRed;
-
-            Logger.GetInstance().AddedStructures = generateTS.AddedStructureIds;
-            Logger.GetInstance().OptimizationStructureDerivations = operations;
-            Logger.GetInstance().TSTargets = generateTS.PlanTargets.SelectMany(x => x.Targets).ToDictionary(x => x.TargetId, x => x.TsTargetId);
-            Logger.GetInstance().NormalizationVolumes = generateTS.NormalizationVolumes;
-            Logger.GetInstance().PlanIsocenters = generateTS.PlanIsocentersList;
-
-            //_planIsocenters.Add(new PlanIsocenterModel("test", new List<IsocenterModel> { new IsocenterModel("1", 2, BeamType.VMAT), new IsocenterModel("2", 3, BeamType.VMAT), new IsocenterModel("3", 4, BeamType.VMAT) }));
-            //_planIsocenters.Add(new PlanIsocenterModel("doubleTest", new List<IsocenterModel> { new IsocenterModel("4", 2, BeamType.APPA) }));
+            return new TSGenerationManipulation_TBI(specialOps,
+                                                    operations,
+                                                    _prescriptions,
+                                                    _useFlash,
+                                                    _flashMargin,
+                                                    _ptvMarginFromBody);
         }
         #endregion
 
         #region beam placement
-        protected override void GeneratePlansAndPlaceBeams(string linac, string energy, bool contourOverlap, double overlapMargin, List<PlanIsocenterModel> PlanIsocenters)
+        protected override GeneratePlansAndPlaceBeamsBase GetBeamPlacementClassInstanceForPlanType(string linac, string energy, bool contourOverlap, double overlapMargin, List<PlanIsocenterModel> PlanIsocenters)
         {
-            if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
-            {
-                Logger.GetInstance().LogError("Error! Script is not connected to aria or no structure set loaded! Cannot perform beam placement!");
-                return;
-            }
-            _planIsocenters = PlanIsocenters;
-            GeneratePlansAndPlaceBeams_TBI placeBeams = new GeneratePlansAndPlaceBeams_TBI(_planIsocenters,
-                                                                                           _prescriptions,
-                                                                                           linac,
-                                                                                           energy,
-                                                                                           PTVMarginFromBody,
-                                                                                           contourOverlap,
-                                                                                           overlapMargin);
-            bool failed = placeBeams.Execute();
-            Logger.GetInstance().AppendLogOutput("Generate plans and place beams output:", placeBeams.GetLogOutput());
-            if (failed) return;
-            if (placeBeams.VMATPlans.Any())
-            {
-                EclipseContext.GetInstance().VMATPlans = placeBeams.VMATPlans;
-                Logger.GetInstance().PlanUIDs = placeBeams.VMATPlans.Select(x => x.UID).ToList();
-            }
-            if (placeBeams.FieldJunctions.Any())
-            {
-                _planOptimizationSetup = UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions, _planOptimizationSetup);
-                WeakReferenceMessenger.Default.Send(new RequestUpdateStructureIds(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id)));
-            }
-            WeakReferenceMessenger.Default.Send(new RequestUpdateOptimizationConstraintsMessage(_planOptimizationSetup));
-
-            BeamPlacementTabBackground = Brushes.ForestGreen;
-            OptimizationSetupTabBackground = Brushes.PaleVioletRed;
+            return new GeneratePlansAndPlaceBeams_TBI(_planIsocenters,
+                                                      _prescriptions,
+                                                      linac,
+                                                      energy,
+                                                      PTVMarginFromBody,
+                                                      contourOverlap,
+                                                      overlapMargin);
         }
         #endregion
 
@@ -325,16 +257,6 @@ namespace TBIAutoPlanner.ViewModels
             return false;
         }
         #endregion
-
-        protected override void UpdateUIWithSelectedPlanTemplate()
-        {
-            if (ReferenceEquals(_selectedTemplate, null)) return;
-
-            InitialDosePerFraction = _selectedTemplate.InitialRxDosePerFx;
-            InitialNumberOfFractions = _selectedTemplate.InitialRxNumberOfFractions;
-            WeakReferenceMessenger.Default.Send(new RequestAutoPlanTemplateChangedMessage(_selectedTemplate));
-            Logger.GetInstance().Template = _selectedTemplate.TemplateName;
-        }
 
         private void UpdateUseFlash()
         {

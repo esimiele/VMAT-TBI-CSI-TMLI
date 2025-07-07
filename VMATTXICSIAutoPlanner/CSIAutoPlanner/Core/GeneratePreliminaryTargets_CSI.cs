@@ -3,9 +3,6 @@ using AutoPlannerHelpers.Helpers;
 using AutoPlannerHelpers.Models;
 using CSIAutoPlanner.Settings;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using VMS.TPS.Common.Model.API;
 using AutoPlannerHelpers.BaseCore;
 
 namespace CSIAutoPlanner.Core
@@ -20,42 +17,13 @@ namespace CSIAutoPlanner.Core
             base(tgts, CSIAutoPlannerSettings.CloseProgressWindowOnFinish)
         { }
 
-        #region preliminary checks and pre-processing
-        /// <summary>
-        /// Preliminary checks prior to generating prelim targets. Verify body, brain, and spinal cord structures exist and are contoured. Also
-        /// convert brain, spinal cord structures to default resolution if they are high resolution
-        /// </summary>
-        /// <returns></returns>
-        protected override bool PreliminaryChecks()
-        {
-            UpdateUILabel("Performing Preliminary Checks: ");
-            int calcItems = 3;
-            int counter = 0;
-
-            //verify body structure is present and contour
-            if (!StructureTuningHelper.DoesStructureExistInSS("body", true))
-            {
-                ProvideUIUpdate("Missing body structure! Generating it now!");
-                if (GenerateBodyStructure()) return true;
-            }
-            ProvideUIUpdate(100 * ++counter / calcItems);
-
-            if (ContourHelper.CheckHighResolutionAndConvert(_createPrelimTargetList.SelectMany(x => x.StructureIdList).Distinct().ToList(), PUUD)) return true;
-            ProvideUIUpdate(100 * ++counter / calcItems, "Check and converted any high res base targets");
-
-            ProvideUIUpdate(100, "Preliminary checks complete!");
-            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
-            return false;
-        }
-        #endregion
-
         #region Target Creation
         /// <summary>
         /// Contour the preliminary targets according to the standard practice rules for ctv_brain, ptv_brain, ctv_spine, ptv_spine, and ptv_csi
         /// </summary>
         /// <returns></returns>
-        protected override bool DeriveTargetStructures()
-        {
+        //protected override bool DeriveTargetStructures()
+        //{
             //Structure tmp = null;
             //int counter = 0;
             //int calcItems = _addedTargetIds.Count + 2;
@@ -132,21 +100,21 @@ namespace CSIAutoPlanner.Core
             //    ProvideUIUpdate(100 * ++counter / calcItems, "PTV_CSI already exists in the structure set! Skipping!");
             //}
 
-            int counter = 0;
-            int calcItems = _targetsToDerive.Count + 2;
-            foreach (StructureOperationModel itr in _targetsToDerive)
-            {
-                if (itr.IsValidOperation)
-                {
-                    ProvideUIUpdate(100 * ++counter / calcItems, $"Contouring target: {itr}");
-                    if (ContourHelper.PerformStructureOperation(itr, UIUD)) return true;
-                }
-                else ProvideUIUpdate($"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");
-            }
-            ProvideUIUpdate(100, "Targets added and contoured!");
-            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
-            return false;
-        }
+        //    int counter = 0;
+        //    int calcItems = _targetsToDerive.Count + 2;
+        //    foreach (StructureOperationModel itr in _targetsToDerive)
+        //    {
+        //        if (itr.IsValidOperation)
+        //        {
+        //            ProvideUIUpdate(100 * ++counter / calcItems, $"Contouring target: {itr}");
+        //            if (ContourHelper.PerformStructureOperation(itr, UIUD)) return true;
+        //        }
+        //        else ProvideUIUpdate($"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");
+        //    }
+        //    ProvideUIUpdate(100, "Targets added and contoured!");
+        //    ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
+        //    return false;
+        //}
 
         /// <summary>
         /// Helper method to contour PTV_CSI by combining ptv_brain and ptv_spine, then cropping the resulting structure 3 mm from body

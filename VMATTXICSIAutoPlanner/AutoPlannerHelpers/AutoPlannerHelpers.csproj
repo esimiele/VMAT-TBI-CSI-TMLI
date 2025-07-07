@@ -99,7 +99,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BaseCore\BeamPlacementBase.cs" />
+    <Compile Include="BaseCore\GeneratePlansAndPlaceBeamsBase.cs" />
     <Compile Include="BaseCore\GeneratePreliminaryTargetsBase.cs" />
     <Compile Include="BaseCore\PlanPreparationBase.cs" />
     <Compile Include="BaseCore\TSGenerationManipulationBase.cs" />

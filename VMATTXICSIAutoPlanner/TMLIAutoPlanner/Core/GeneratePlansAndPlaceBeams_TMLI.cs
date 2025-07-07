@@ -15,7 +15,7 @@ using VMS.TPS.Common.Model.Types;
 
 namespace TMLIAutoPlanner.Core
 {
-    internal class GeneratePlansAndPlaceBeams_TMLI : BeamPlacementBase
+    internal class GeneratePlansAndPlaceBeams_TMLI : GeneratePlansAndPlaceBeamsBase
     {
         //get methods
         public bool GetCheckIsoPlacementStatus() { return checkIsoPlacement; }

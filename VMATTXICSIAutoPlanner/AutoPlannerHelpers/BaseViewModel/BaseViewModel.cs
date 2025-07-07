@@ -20,6 +20,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using AutoPlannerHelpers.Messengers;
 using VMS.TPS.Common.Model.API;
 using StructureApprovalStatus = VMS.TPS.Common.Model.Types.StructureApprovalStatus;
+using System.Windows.Media;
 
 namespace AutoPlannerHelpers.BaseViewModel
 {
@@ -35,11 +36,13 @@ namespace AutoPlannerHelpers.BaseViewModel
         protected double _initialDosePerFraction;
         protected int _initialNumberOfFractions;
         protected double _initialPlanTotalDose;
-        private System.Windows.Media.SolidColorBrush _specifyTargetsTabBackground;
-        private System.Windows.Media.SolidColorBrush _structureTuningTabBackground;
-        private System.Windows.Media.SolidColorBrush _optimizationStructureDerivationBackground;
-        private System.Windows.Media.SolidColorBrush _beamPlacementTabBackground;
-        private System.Windows.Media.SolidColorBrush _optimizationSetupTabBackground;
+        private SolidColorBrush _specifyTargetsTabBackground;
+        private SolidColorBrush _structureTuningTabBackground;
+        private SolidColorBrush _optimizationStructureDerivationBackground;
+        private SolidColorBrush _beamPlacementTabBackground;
+        private SolidColorBrush _optimizationSetupTabBackground;
+        private SolidColorBrush _TargetStructureDerivationsBackground;
+        private SolidColorBrush _setTargetsTabBackground;
 
         public string PatientMRN
         {
@@ -77,38 +80,51 @@ namespace AutoPlannerHelpers.BaseViewModel
             set { SetProperty(ref _initialPlanTotalDose, value); }
         }
 
-        public System.Windows.Media.SolidColorBrush SpecifyTargetsTabBackground
+        public SolidColorBrush SpecifyTargetsTabBackground
         {
             get { return _specifyTargetsTabBackground; }
             set { SetProperty(ref _specifyTargetsTabBackground, value); }
         }
 
-        public System.Windows.Media.SolidColorBrush StructureTuningTabBackground
+        public SolidColorBrush StructureTuningTabBackground
         {
             get { return _structureTuningTabBackground; }
             set { SetProperty(ref _structureTuningTabBackground, value); }
         }
 
-        public System.Windows.Media.SolidColorBrush OptimizationStructureDerivationBackground
+        public SolidColorBrush OptimizationStructureDerivationBackground
         {
             get { return _optimizationStructureDerivationBackground; }
             set { SetProperty(ref _optimizationStructureDerivationBackground, value); }
         }
 
-        public System.Windows.Media.SolidColorBrush BeamPlacementTabBackground
+        public SolidColorBrush BeamPlacementTabBackground
         {
             get { return _beamPlacementTabBackground; }
             set { SetProperty(ref _beamPlacementTabBackground, value); }
         }
 
-        public System.Windows.Media.SolidColorBrush OptimizationSetupTabBackground
+        public SolidColorBrush OptimizationSetupTabBackground
         {
             get { return _optimizationSetupTabBackground; }
             set { SetProperty(ref _optimizationSetupTabBackground, value); }
         }
+
+        public SolidColorBrush TargetStructureDerivationsBackground
+        {
+            get { return _TargetStructureDerivationsBackground; }
+            set { SetProperty(ref _TargetStructureDerivationsBackground, value); }
+        }
+
+        public SolidColorBrush SetTargetsTabBackground
+        {
+            get { return _setTargetsTabBackground; }
+            set { SetProperty(ref _setTargetsTabBackground, value); }
+        }
         #endregion
 
         #region view objects
+        private object _targetStructureDerivations;
         private object _specifyTargets;
         private object _optimizationSetup;
         private object _specialOptimizationStructures;
@@ -116,6 +132,12 @@ namespace AutoPlannerHelpers.BaseViewModel
         private object _beamPlacement;
         private object _planPreparation;
         private object _scriptConfiguration;
+
+        public object TargetStructureDerivations
+        {
+            get { return _targetStructureDerivations; }
+            set { SetProperty(ref _targetStructureDerivations, value); }
+        }
 
         public object SpecifyTargets
         {
@@ -161,6 +183,8 @@ namespace AutoPlannerHelpers.BaseViewModel
         #endregion
 
         #region commands
+        public ICommand QuickStartGuideCommand { get; set; }
+        public ICommand HelpGuideCommand { get; set; }
         public ICommand WindowClosingCommand { get; set; }
         #endregion
 
@@ -172,6 +196,7 @@ namespace AutoPlannerHelpers.BaseViewModel
         protected string _generalConfigurationFile = string.Empty;
         protected PlanPreparationBase _planPrep = null;
         private PlanType _planType;
+        private bool _targetStructuresApprovalRequired = true;
         #endregion
 
         public BaseViewModel(PlanType type, string[] args)
@@ -188,6 +213,7 @@ namespace AutoPlannerHelpers.BaseViewModel
                 _structureIdsPostUnion = new List<string> { "lung_l", "lung_r", "kidney_l", "kidney_r", "PTV^Body", "OpticChiasm", "Brainstem" };
             }
 
+            TargetStructureDerivations = new StructureDerivationsView { DataContext = new StructureDerivationsViewModel(_structureIdsPostUnion, true) };
             SpecifyTargets = new SpecifyTargetsView { DataContext = new SetTargetsViewModel() };
             SpecialOptimizationStructures = new SpecialOptimizationStructuresView { DataContext = new SpecialOptimizationStructuresViewModel() };
             OptimizationStructureDerivations = new StructureDerivationsView { DataContext = new StructureDerivationsViewModel(_structureIdsPostUnion, false) };
@@ -196,12 +222,51 @@ namespace AutoPlannerHelpers.BaseViewModel
             PlanPreparation = new PlanPreparationView { DataContext = new PlanPreparationViewModel() };
 
             PlanTemplates = new ObservableCollection<AutoPlanTemplateBase>() { };
+            QuickStartGuideCommand = new RelayCommand(LaunchQuickStartGuide);
+            HelpGuideCommand = new RelayCommand(LaunchHelpGuide);
             WindowClosingCommand = new RelayCommand(WindowClosing);
 
-            StructureTuningTabBackground = System.Windows.Media.Brushes.LightGray;
-            OptimizationStructureDerivationBackground = System.Windows.Media.Brushes.LightGray;
-            BeamPlacementTabBackground = System.Windows.Media.Brushes.LightGray;
-            OptimizationSetupTabBackground = System.Windows.Media.Brushes.LightGray;
+            SpecifyTargetsTabBackground = Brushes.PaleVioletRed;
+            StructureTuningTabBackground = Brushes.LightGray;
+            OptimizationStructureDerivationBackground = Brushes.LightGray;
+            BeamPlacementTabBackground = Brushes.LightGray;
+            OptimizationSetupTabBackground = Brushes.LightGray;
+
+            if (EclipseContext.GetInstance().IsInitialized)
+            {
+                if (!ReferenceEquals(EclipseContext.GetInstance().Patient, null)) PatientMRN = EclipseContext.GetInstance().Patient.Id;
+                if (EclipseContext.GetInstance().CTImages.Any())
+                {
+                    WeakReferenceMessenger.Default.Send(new RequestUpdateCTList(EclipseContext.GetInstance().CTImages.ToList().ConvertAll(x => new ExportCTModel(x.Series.Id, x.Id, x.ZSize, x.HistoryDateTime.ToString()))));
+                }
+                if (!ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
+                {
+                    StructureSetId = EclipseContext.GetInstance().StructureSet.Id;
+                    if (!_targetStructuresApprovalRequired || EclipseContext.GetInstance().StructureSet.Structures.Any(x => x.ApprovalHistory.First().ApprovalStatus == StructureApprovalStatus.Approved && x.Id.ToLower().Contains("ptv")))
+                    {
+                        SetTargetsTabBackground = Brushes.PaleVioletRed;
+                        TargetStructureDerivationsBackground = Brushes.LightGray;
+                    }
+                    else
+                    {
+                        TargetStructureDerivationsBackground = Brushes.PaleVioletRed;
+                        SetTargetsTabBackground = Brushes.LightGray;
+                    }
+                }
+            }
+            else
+            {
+                TargetStructureDerivationsBackground = Brushes.LightGray;
+                SetTargetsTabBackground = Brushes.LightGray;
+                List<ExportCTModel> models = new List<ExportCTModel>
+                {
+                    new ExportCTModel("1", "CT 1", 100, DateTime.Now.ToString("yyyy-mm-dd")),
+                    new ExportCTModel("2", "CT 2", 200, "2019-01-01"),
+                    new ExportCTModel("3", "CT 3", 300, "2020-10-10"),
+                };
+                WeakReferenceMessenger.Default.Send(new RequestUpdateCTList(models));
+            }
+
             InitializeMessengers();
         }
 
@@ -241,16 +306,81 @@ namespace AutoPlannerHelpers.BaseViewModel
             });
         }
 
-        protected virtual void SetTargets(List<PlanTargetsModel> targets)
+        #region information and help
+        protected abstract void LaunchQuickStartGuide();
+        protected abstract void LaunchHelpGuide();
+        #endregion
+
+        #region specify targets
+        protected virtual void PerformTargetStructureDerivations(List<StructureOperationModel> preliminaryTargets, bool showCompletionMessage = true)
         {
-            if (VerifyTargetsIntegrity(targets)) return;
-            _prescriptions = TargetsHelper.BuildPrescriptionList(targets, _initialDosePerFraction, _initialNumberOfFractions, _initialPlanTotalDose);
+            if (!EclipseContext.GetInstance().IsInitialized || !preliminaryTargets.Any()) return;
+            GeneratePreliminaryTargetsBase generateTargets = GetTargetDerivationClassInstanceForPlanType(preliminaryTargets);
+            EclipseContext.GetInstance().Patient.BeginModifications();
+            bool result = generateTargets.Execute();
+            //grab the log output regardless if it passes or fails
+            Logger.GetInstance().AppendLogOutput("Preliminary target generation output:", generateTargets.LogOutput);
+            Logger.GetInstance().OpType = ScriptOperationType.GeneratePrelimTargets;
+            if (result) return;
+            Logger.GetInstance().AddedPrelimTargetsStructures = generateTargets.AddedTargetstructures;
+            TargetStructureDerivationsBackground = Brushes.ForestGreen;
+            if (showCompletionMessage) MessageBox.Show("Structure set is prepared and ready for physician to review targets!");
+        }
+
+        protected abstract GeneratePreliminaryTargetsBase GetTargetDerivationClassInstanceForPlanType(List<StructureOperationModel> preliminaryTargets);
+
+        protected virtual void SetTargets(List<PlanTargetsModel> planTargets)
+        {
+            if (!planTargets.Any()) return;
+            if (VerifyPlansIntegrity(planTargets)) return;
+            if (VerifyTargetsIntegrity(planTargets.SelectMany(x => x.Targets))) return;
+
+            _prescriptions = TargetsHelper.BuildPrescriptionList(planTargets, _initialDosePerFraction, _initialNumberOfFractions, _initialPlanTotalDose);
             if (!_prescriptions.Any()) return;
             Logger.GetInstance().Prescriptions = _prescriptions;
             _planOptimizationSetup = BuildPlanOptimizationSetupList();
-            SpecifyTargetsTabBackground = System.Windows.Media.Brushes.ForestGreen;
-            StructureTuningTabBackground = System.Windows.Media.Brushes.PaleVioletRed;
-            OptimizationStructureDerivationBackground = System.Windows.Media.Brushes.PaleVioletRed;
+            SpecifyTargetsTabBackground = Brushes.ForestGreen;
+            StructureTuningTabBackground = Brushes.PaleVioletRed;
+            OptimizationStructureDerivationBackground = Brushes.PaleVioletRed;
+        }
+
+        protected bool VerifyTargetsIntegrity(IEnumerable<TargetModel> targets)
+        {
+            if (EclipseContext.GetInstance().IsInitialized && !ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
+            {
+                if (_targetStructuresApprovalRequired)
+                {
+                    if (!AreRequestedPrescriptionTargetsApproved(targets)) return true;
+                }
+                else if (targets.Select(x => x.TargetId).Any(x => !StructureTuningHelper.DoesStructureExistInSS(x, true)))
+                {
+                    IEnumerable<string> missingTargets = targets.Select(x => x.TargetId).Where(x => !StructureTuningHelper.DoesStructureExistInSS(x, true));
+                    List<StructureOperationModel> targetDerivations = WeakReferenceMessenger.Default.Send(new RequestTargetStructureDerivations());
+                    if (missingTargets.All(x => targetDerivations.Any(y => string.Equals(y.OutputStructure, x, StringComparison.OrdinalIgnoreCase))))
+                    {
+                        //missing targets from structure set are contained in target derivation list --> derive the targets
+                        PerformTargetStructureDerivations(targetDerivations, false);
+                        if (missingTargets.Any(x => !StructureTuningHelper.DoesStructureExistInSS(x, true)))
+                        {
+                            Logger.GetInstance().LogError("Requested targets are still missing from the structure set following target derivation! Exiting!");
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        protected bool VerifyPlansIntegrity(List<PlanTargetsModel> parsedTargets)
+        {
+            //verify selected targets are APPROVED
+            int numAllowedPlans = _planType == PlanType.VMAT_CSI ? 2 : 1;
+            if (parsedTargets.Select(x => x.PlanId).Distinct().Count() > numAllowedPlans)
+            {
+                Logger.GetInstance().LogError($"Error! Number of requested plans ({parsedTargets.Select(x => x.PlanId).Distinct().Count()}) is greater than the number of allowed plans for plan type {_planType}!");
+                return true;
+            }
+            return false;
         }
 
         protected bool AreRequestedPrescriptionTargetsApproved(IEnumerable<TargetModel> targets)
@@ -275,7 +405,80 @@ namespace AutoPlannerHelpers.BaseViewModel
             }
             return true;
         }
+        #endregion
 
+        #region optimization structure generation
+        protected void PerformOptimizationStructureDerivations(List<StructureOperationModel> operations)
+        {
+            if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
+            {
+                Logger.GetInstance().LogError("Error! Script is not connected to aria or no structure set loaded! Cannot perform TS generation/manipulation!");
+                return;
+            }
+            List<SpecialOptimizationStructureModel> specialOptStructures = WeakReferenceMessenger.Default.Send(new RequestSpecialOptimizationStructures());
+            TSGenerationManipulationBase generateTS = GetOptStructureDerivationClassInstanceForPlanType(operations, specialOptStructures);
+
+            EclipseContext.GetInstance().Patient.BeginModifications();
+            bool failed = generateTS.Execute();
+            Logger.GetInstance().AppendLogOutput("TS Generation and manipulation output:", generateTS.LogOutput);
+            if (failed) return;
+
+            _planIsocenters = generateTS.PlanIsocentersList;
+
+            WeakReferenceMessenger.Default.Send(new RequestUpdatePlanIsocenterList(_planIsocenters));
+            WeakReferenceMessenger.Default.Send(new RequestUpdateStructureIds(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id)));
+            UpdateOptimizationSetup(generateTS);
+
+            StructureTuningTabBackground = Brushes.ForestGreen;
+            OptimizationStructureDerivationBackground = Brushes.ForestGreen;
+            BeamPlacementTabBackground = Brushes.PaleVioletRed;
+
+            Logger.GetInstance().AddedStructures = generateTS.AddedStructureIds;
+            Logger.GetInstance().OptimizationStructureDerivations = operations;
+            Logger.GetInstance().TSTargets = generateTS.PlanTargets.SelectMany(x => x.Targets).ToDictionary(x => x.TargetId, x => x.TsTargetId);
+            Logger.GetInstance().NormalizationVolumes = generateTS.NormalizationVolumes;
+            Logger.GetInstance().PlanIsocenters = generateTS.PlanIsocentersList;
+
+            //_planIsocenters.Add(new PlanIsocenterModel("test", new List<IsocenterModel> { new IsocenterModel("1", 2, BeamType.VMAT), new IsocenterModel("2", 3, BeamType.VMAT), new IsocenterModel("3", 4, BeamType.VMAT) }));
+            //_planIsocenters.Add(new PlanIsocenterModel("doubleTest", new List<IsocenterModel> { new IsocenterModel("4", 2, BeamType.APPA) }));
+        }
+
+        protected abstract TSGenerationManipulationBase GetOptStructureDerivationClassInstanceForPlanType(List<StructureOperationModel> operations, List<SpecialOptimizationStructureModel> specialOps);
+        #endregion
+
+        #region plan and beam placement
+        protected void GeneratePlansAndPlaceBeams(string linac, string energy, bool contourOverlap, double overlapMargin, List<PlanIsocenterModel> PlanIsocenters)
+        {
+            if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
+            {
+                Logger.GetInstance().LogError("Error! Script is not connected to aria or no structure set loaded! Cannot perform beam placement!");
+                return;
+            }
+            _planIsocenters = PlanIsocenters;
+            GeneratePlansAndPlaceBeamsBase placeBeams = GetBeamPlacementClassInstanceForPlanType(linac, energy, contourOverlap, overlapMargin, PlanIsocenters);
+            bool failed = placeBeams.Execute();
+            Logger.GetInstance().AppendLogOutput("Generate plans and place beams output:", placeBeams.GetLogOutput());
+            if (failed) return;
+            if (placeBeams.VMATPlans.Any())
+            {
+                EclipseContext.GetInstance().VMATPlans = placeBeams.VMATPlans;
+                Logger.GetInstance().PlanUIDs = placeBeams.VMATPlans.Select(x => x.UID).ToList();
+            }
+            if (placeBeams.FieldJunctions.Any())
+            {
+                _planOptimizationSetup = UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions, _planOptimizationSetup);
+                WeakReferenceMessenger.Default.Send(new RequestUpdateStructureIds(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id)));
+            }
+            WeakReferenceMessenger.Default.Send(new RequestUpdateOptimizationConstraintsMessage(_planOptimizationSetup));
+
+            BeamPlacementTabBackground = Brushes.ForestGreen;
+            OptimizationSetupTabBackground = Brushes.PaleVioletRed;
+        }
+
+        protected abstract GeneratePlansAndPlaceBeamsBase GetBeamPlacementClassInstanceForPlanType(string linac, string energy, bool contourOverlap, double overlapMargin, List<PlanIsocenterModel> PlanIsocenters);
+        #endregion
+
+        #region optimization setup
         public List<PlanOptimizationSetupModel> BuildPlanOptimizationSetupList()
         {
             if (!ReferenceEquals(_selectedTemplate, null))
@@ -298,19 +501,12 @@ namespace AutoPlannerHelpers.BaseViewModel
                 return result;
             }
         }
-
-        protected abstract bool VerifyTargetsIntegrity(List<PlanTargetsModel> parsedTargets);
-
-        protected abstract void PerformOptimizationStructureDerivations(List<StructureOperationModel> operations);
-
-        protected abstract void GeneratePlansAndPlaceBeams(string linac, string energy, bool contourOverlap, double overlapMargin, List<PlanIsocenterModel> PlanIsocenters);
-
         public List<PlanOptimizationSetupModel> UpdateOptimizationConstraintsWithTSTargets(List<PlanTargetsModel> planTargets, List<PlanOptimizationSetupModel> planConstraints)
         {
             //update optimization constraint list to replace target constraints with ts targets
             foreach (PlanTargetsModel itr in planTargets)
             {
-                if(planConstraints.Any(x => string.Equals(x.PlanId, itr.PlanId)))
+                if (planConstraints.Any(x => string.Equals(x.PlanId, itr.PlanId)))
                 {
                     List<OptimizationConstraintModel> constraints = planConstraints.First(x => string.Equals(x.PlanId, itr.PlanId)).OptimizationConstraints;
                     foreach (TargetModel target in itr.Targets)
@@ -326,6 +522,11 @@ namespace AutoPlannerHelpers.BaseViewModel
                 }
             }
             return planConstraints;
+        }
+
+        protected virtual void UpdateOptimizationSetup(TSGenerationManipulationBase generateTS)
+        {
+            _planOptimizationSetup = UpdateOptimizationConstraintsWithTSTargets(generateTS.PlanTargets, _planOptimizationSetup);
         }
 
         public List<PlanOptimizationSetupModel> UpdateOptimizationConstraintsWithRings(List<TSRingStructureModel> rings, List<PlanOptimizationSetupModel> planConstraints, int ringPrioity = 80)
@@ -407,20 +608,22 @@ namespace AutoPlannerHelpers.BaseViewModel
             }
             else Logger.GetInstance().LogError("Error! No optimization constraints assigned!");
         }
+        #endregion
 
-        protected abstract void LoadScriptConfigurationSettings(string file);
-        protected abstract StringBuilder BuildScriptConfigurationInfo();
+
+        #region prep plan for treatment
         protected abstract bool GenerateShiftNote();
         protected abstract bool SeparatePlans();
         protected abstract bool RecalculateDoseForSeparatePlans();
-        protected abstract void UpdateUIWithSelectedPlanTemplate();
+        #endregion
 
+        #region update UI
         public void ResetInitialRxDose()
         {
             if (InitialNumberOfFractions > 0 && InitialDosePerFraction > 0)
             {
                 //double priorTotalDose = PlanTotalDose;
-                InitialPlanTotalDose = Math.Round(InitialDosePerFraction * InitialNumberOfFractions, 1);
+                InitialPlanTotalDose = Math.Round(_initialDosePerFraction * _initialNumberOfFractions, 1);
                 //if (PlanTotalDose != priorTotalDose)
                 //{
                 //    foreach (PlanObjectiveModel itr in PlanObjectives)
@@ -442,6 +645,29 @@ namespace AutoPlannerHelpers.BaseViewModel
                 //}
             }
         }
+
+        protected void UpdateUIWithSelectedPlanTemplate()
+        {
+            if (ReferenceEquals(_selectedTemplate, null)) return;
+            InitialDosePerFraction = _selectedTemplate.InitialRxDosePerFx;
+            InitialNumberOfFractions = _selectedTemplate.InitialRxNumberOfFractions;
+            UpdatePlanTypeSpecificUIWithPlanTemplate();
+            WeakReferenceMessenger.Default.Send(new RequestAutoPlanTemplateChangedMessage(_selectedTemplate, EclipseContext.GetInstance().IsInitialized ? false : true));
+            WeakReferenceMessenger.Default.Send(new RequestUpdateTargetDerivationOperations(_selectedTemplate.TargetDerivationOperations));
+            WeakReferenceMessenger.Default.Send(new RequestUpdateOptimizationStructureDerivations(_selectedTemplate.OptimizationStructureDerivations));
+            Logger.GetInstance().Template = _selectedTemplate.TemplateName;
+        }
+
+        protected virtual void UpdatePlanTypeSpecificUIWithPlanTemplate()
+        {
+            return;
+        }
+        #endregion
+
+        #region script configuration
+        protected abstract void LoadScriptConfigurationSettings(string file);
+        protected abstract StringBuilder BuildScriptConfigurationInfo();
+        #endregion
 
         public void WindowClosing()
         {

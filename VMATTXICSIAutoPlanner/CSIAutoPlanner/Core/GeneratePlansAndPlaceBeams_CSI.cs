@@ -14,7 +14,7 @@ using VMS.TPS.Common.Model.Types;
 
 namespace CSIAutoPlanner.Core
 {
-    internal class GeneratePlansAndPlaceBeams_CSI : BeamPlacementBase
+    internal class GeneratePlansAndPlaceBeams_CSI : GeneratePlansAndPlaceBeamsBase
     {
         //plan, list<iso name, number of beams>
         private List<PlanIsocenterModel> planIsocenters;
@@ -161,12 +161,7 @@ namespace CSIAutoPlanner.Core
             Structure body = StructureTuningHelper.GetStructureFromId("body");
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved body structure: {body.Id}");
 
-            (bool failCopyTarget, StringBuilder copyErrorMessage) = ContourHelper.CopyStructureOntoStructure(bodyCopy, body);
-            if (failCopyTarget)
-            {
-                ProvideUIUpdate(copyErrorMessage.ToString(), true);
-                return true;
-            }
+            body.SegmentVolume = ContourHelper.ContourIntersection(bodyCopy, body, new StructureMarginModel(0), new StructureMarginModel(0));
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Copied structure {bodyCopy.Id} onto {body.Id}");
 
             if (EclipseContext.GetInstance().StructureSet.CanRemoveStructure(bodyCopy))

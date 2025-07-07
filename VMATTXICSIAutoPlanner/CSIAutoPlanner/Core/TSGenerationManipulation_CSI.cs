@@ -15,19 +15,19 @@ namespace CSIAutoPlanner.Core
 {
     internal class TSGenerationManipulation_CSI : TSGenerationManipulationBase
     {
-        public int NumberofIsocenters { get; private set; } = -1;
-        public int NumberofVMATIsocenters { get; private set; } = -1;
+        #region properties
         public List<TSTargetCropOverlapModel> TargetCropOverlapManipulations { get; private set; } = new List<TSTargetCropOverlapModel> { };
         //plan id, normalization volume
-        public Dictionary<string, string> NormalizationVolumes { get; private set; } = new Dictionary<string, string> { };
         public List<TSRingStructureModel> AddedRings { get; private set; } = new List<TSRingStructureModel> { };
+        #endregion
 
-        
+        #region fields
         //plan id, structure id, num fx, dose per fx, cumulative dose
         private List<TSRingStructureModel> _requestedRings;
         //plan id, normalization volume
         //structure id of oars requested for crop/overlap eval with targets
-        private List<string> cropAndOverlapStructures = new List<string> { };
+        private List<string> _cropAndOverlapStructures = new List<string> { };
+        #endregion
 
         /// <summary>
         /// Constructor
@@ -47,7 +47,7 @@ namespace CSIAutoPlanner.Core
             _requestedRings = new List<TSRingStructureModel>(tgtRings);
             _structureOperations = new List<StructureOperationModel>(ops);
             _prescriptions = new List<PrescriptionModel>(presc);
-            cropAndOverlapStructures = new List<string>(cropStructs);
+            _cropAndOverlapStructures = new List<string>(cropStructs);
             SetCloseOnFinish(CSIAutoPlannerSettings.CloseProgressWindowOnFinish, 3000);
         }
 
@@ -524,10 +524,10 @@ namespace CSIAutoPlanner.Core
             List<string> structuresToRemove = new List<string> { };
             Dictionary<string, string> tgts = TargetsHelper.GetHighestRxPlanTargetList(_prescriptions);
             int percentCompletion = 0;
-            int calcItems = ((1 + 2 * tgts.Count) * cropAndOverlapStructures.Count) + 1;
+            int calcItems = ((1 + 2 * tgts.Count) * _cropAndOverlapStructures.Count) + 1;
             ProvideUIUpdate(100 * ++percentCompletion / calcItems, "Retrieved plan-target list");
             Dictionary<string, string> highResCropOverlapStructures = new Dictionary<string, string> { };
-            foreach (string itr in cropAndOverlapStructures)
+            foreach (string itr in _cropAndOverlapStructures)
             {
                 Structure normal = StructureTuningHelper.GetStructureFromId(itr);
                 if (normal != null)
@@ -572,9 +572,9 @@ namespace CSIAutoPlanner.Core
             if (structuresToRemove.Any()) RemoveStructuresFromCropOverlapList(structuresToRemove);
             foreach (KeyValuePair<string, string> itr in highResCropOverlapStructures)
             {
-                int index = cropAndOverlapStructures.IndexOf(itr.Key);
-                cropAndOverlapStructures.RemoveAt(index);
-                cropAndOverlapStructures.Insert(index, itr.Value);
+                int index = _cropAndOverlapStructures.IndexOf(itr.Key);
+                _cropAndOverlapStructures.RemoveAt(index);
+                _cropAndOverlapStructures.Insert(index, itr.Value);
             }
             ProvideUIUpdate(100, "Removed missing structures or normals that do not overlap with all targets from crop/overlap list");
             return false;
@@ -618,7 +618,7 @@ namespace CSIAutoPlanner.Core
             foreach (string itr in structuresToRemove)
             {
                 ProvideUIUpdate($"Removing {itr} from crop/overlap list");
-                cropAndOverlapStructures.RemoveAt(cropAndOverlapStructures.IndexOf(itr));
+                _cropAndOverlapStructures.RemoveAt(_cropAndOverlapStructures.IndexOf(itr));
             }
         }
 
@@ -694,13 +694,13 @@ namespace CSIAutoPlanner.Core
             if (CheckAllRequestedTargetCropAndOverlapManipulations()) return true;
 
             int percentComplete = 0;
-            int calcItems = 1 + (3 + 3 * cropAndOverlapStructures.Count) * _prescriptions.Count();
+            int calcItems = 1 + (3 + 3 * _cropAndOverlapStructures.Count) * _prescriptions.Count();
 
             //sort by cumulative Rx to the targets (item 5)
             List<PrescriptionModel> sortedPrescriptions = _prescriptions.OrderBy(x => x.CumulativeDoseToTarget).ToList();
             ProvideUIUpdate(100 * ++percentComplete / calcItems, "Sorted prescriptions by cumulative dose");
 
-            if (cropAndOverlapStructures.Any())
+            if (_cropAndOverlapStructures.Any())
             {
                 //clear the normalization volumes list as this will be updated with the crop/overlap targets
                 NormalizationVolumes.Clear();
@@ -720,7 +720,7 @@ namespace CSIAutoPlanner.Core
                         if (overlapRresult.fail) return true;
                         ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Added overlap structure ({overlapRresult.Item2.Id}) to stack");
 
-                        foreach (string itr in cropAndOverlapStructures)
+                        foreach (string itr in _cropAndOverlapStructures)
                         {
                             if (!StructureTuningHelper.DoesStructureExistInSS(itr, true))
                             {
@@ -756,7 +756,7 @@ namespace CSIAutoPlanner.Core
 
         protected override bool PerformPlanSpecificStructureDerivations()
         {
-            if (cropAndOverlapStructures.Any())
+            if (_cropAndOverlapStructures.Any())
             {
                 if (CropAndContourOverlapWithTargets()) return true;
             }

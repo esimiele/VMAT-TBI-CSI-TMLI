@@ -22,6 +22,7 @@ namespace AutoPlannerHelpers.Messengers
     #endregion
 
     #region set targets
+    public class RequestTargetStructureDerivations : RequestMessage<List<StructureOperationModel>> { }
     public class RequestSetTargetsMessage
     {
         public List<PlanTargetsModel> PlanTargets { get; private set; }
@@ -70,23 +71,6 @@ namespace AutoPlannerHelpers.Messengers
         public RequestPerformOptimizationStructureDerivations(IEnumerable<StructureOperationModel> structureOperations)
         {
             this.StructureOperations = structureOperations.ToList();
-        }
-    }
-
-    public class RequestGenerateManipulateTuningStructuresMessage
-    {
-        public List<RequestedTSManipulationModel> RequestedTSManipulations { get; private set; }
-        public RequestGenerateManipulateTuningStructuresMessage(IEnumerable<RequestedTSManipulationModel> manipulations) { this.RequestedTSManipulations = manipulations.ToList(); }
-    }
-
-    public class RequestUpdateTSManipulationList
-    {
-        public IEnumerable<string> StructureIds { get; private set; }
-        public List<RequestedTSManipulationModel> RequestedTSManipulations { get; private set; }
-        public RequestUpdateTSManipulationList(IEnumerable<string> structureIds, List<RequestedTSManipulationModel> requestedTSManipulations)
-        {
-            this.StructureIds = structureIds;
-            this.RequestedTSManipulations = requestedTSManipulations;
         }
     }
 
