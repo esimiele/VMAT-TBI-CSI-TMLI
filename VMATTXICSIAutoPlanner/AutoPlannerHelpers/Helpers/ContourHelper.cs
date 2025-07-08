@@ -15,27 +15,6 @@ namespace AutoPlannerHelpers.Helpers
 {
     public static class ContourHelper
     {
-        /// <summary>
-        /// Helper method to crop the given structure from the body structure
-        /// </summary>
-        /// <param name="theStructure"></param>
-        /// <param name="EclipseContext.GetInstance().StructureSet"></param>
-        /// <param name="marginInCm"></param>
-        /// <returns></returns>
-        public static bool CropStructureFromBody(string theStructure, double marginInCm, UIUpdateMessageOnlyDelegate ProvideUIUpdate)
-        {
-            StructureOperationModel model = new StructureOperationModel
-            {
-                StructureA = theStructure,
-                MarginA = new StructureMarginModel(0),
-                Operation = StructureDerivationOperation.Intersection,
-                StructureB = "body",
-                MarginB = new StructureMarginModel(marginInCm),
-                OutputStructure = theStructure
-            };
-            return (PerformStructureOperation(model, ProvideUIUpdate));
-        }
-
         public static bool PerformStructureOperation(StructureOperationModel structureOperation, UIUpdateMessageOnlyDelegate ProvideUIUpdate)
         {
             if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
@@ -51,33 +30,27 @@ namespace AutoPlannerHelpers.Helpers
                 {
                     case StructureDerivationOperation.Intersection:
                         OutputStructure.SegmentVolume = ContourIntersection(StructureA, StructureB, structureOperation.MarginA, structureOperation.MarginB);
-                        if (OutputStructure.IsEmpty) ProvideUIUpdate($"Warning! Output structure ({OutputStructure.Id}) is empty following {structureOperation.Operation} operation!");
                         break;
                     case StructureDerivationOperation.Union:
                         OutputStructure.SegmentVolume = ContourUnion(StructureA, StructureB, structureOperation.MarginA, structureOperation.MarginB);
-                        if (OutputStructure.IsEmpty) ProvideUIUpdate($"Warning! Output structure ({OutputStructure.Id}) is empty following {structureOperation.Operation} operation!");
-
                         break;
                     case StructureDerivationOperation.Crop:
                         OutputStructure.SegmentVolume = CropStructureFromStructure(StructureA, StructureB, structureOperation.MarginA, structureOperation.MarginB);
-                        if (OutputStructure.IsEmpty) ProvideUIUpdate($"Warning! Output structure ({OutputStructure.Id}) is empty following {structureOperation.Operation} operation!");
-
                         break;
                     case StructureDerivationOperation.XOR:
                         OutputStructure.SegmentVolume = ContourXOR(StructureA, StructureB, structureOperation.MarginA, structureOperation.MarginB);
-                        if (OutputStructure.IsEmpty) ProvideUIUpdate($"Warning! Output structure ({OutputStructure.Id}) is empty following {structureOperation.Operation} operation!");
-
                         break;
                     case StructureDerivationOperation.CutInferiorTo:
                         OutputStructure.SegmentVolume = CutStructureInfToStructure(StructureA, StructureB);
-                        if (OutputStructure.IsEmpty) ProvideUIUpdate($"Warning! Output structure ({OutputStructure.Id}) is empty following {structureOperation.Operation} operation!");
-
                         break;
                     case StructureDerivationOperation.CutSuperiorTo:
                         OutputStructure.SegmentVolume = CutStructureSupToStructure(StructureA, StructureB);
-                        if (OutputStructure.IsEmpty) ProvideUIUpdate($"Warning! Output structure ({OutputStructure.Id}) is empty following {structureOperation.Operation} operation!");
+                        break;
+                    case StructureDerivationOperation.CopyContractExpand:
+                        OutputStructure.SegmentVolume = CopyStructure(StructureA, structureOperation.MarginA);
                         break;
                 }
+                if (OutputStructure.IsEmpty) ProvideUIUpdate($"Warning! Output structure ({OutputStructure.Id}) is empty following {structureOperation.Operation} operation!");
             }
             else
             {
@@ -126,6 +99,12 @@ namespace AutoPlannerHelpers.Helpers
             return a.SegmentVolume;
         }
 
+        public static SegmentVolume CopyStructure(Structure a, StructureMarginModel marginA)
+        {
+            if (!ReferenceEquals(a, null)) return a.AsymmetricMargin(marginA.AxisAlignedMargins);
+            return null;
+        }
+
         public static SegmentVolume CutStructureSupToStructure(Structure a, Structure b)
         {
             int slice = CalculationHelper.ComputeSlice(b.MeshGeometry.Positions.Max(p => p.Z), EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes);
@@ -134,6 +113,27 @@ namespace AutoPlannerHelpers.Helpers
                 a.ClearAllContoursOnImagePlane(i);
             }
             return a.SegmentVolume;
+        }
+
+        /// <summary>
+        /// Helper method to crop the given structure from the body structure
+        /// </summary>
+        /// <param name="theStructure"></param>
+        /// <param name="EclipseContext.GetInstance().StructureSet"></param>
+        /// <param name="marginInCm"></param>
+        /// <returns></returns>
+        public static bool CropStructureFromBody(string theStructure, double marginInCm, UIUpdateMessageOnlyDelegate ProvideUIUpdate)
+        {
+            StructureOperationModel model = new StructureOperationModel
+            {
+                StructureA = theStructure,
+                MarginA = new StructureMarginModel(0),
+                Operation = StructureDerivationOperation.Intersection,
+                StructureB = "body",
+                MarginB = new StructureMarginModel(marginInCm),
+                OutputStructure = theStructure
+            };
+            return (PerformStructureOperation(model, ProvideUIUpdate));
         }
 
         public static void CleanTemporaryStructures(IEnumerable<StructureOperationModel> operations)

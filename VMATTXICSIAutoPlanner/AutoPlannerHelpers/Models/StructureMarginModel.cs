@@ -1,7 +1,6 @@
 ﻿using AutoPlannerHelpers.Enums;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
-using System.Drawing.Printing;
 using VMS.TPS.Common.Model.Types;
 
 namespace AutoPlannerHelpers.Models

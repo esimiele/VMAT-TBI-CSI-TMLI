@@ -7,15 +7,15 @@ namespace AutoPlannerHelpers.Models
     public class StructureOperationModel : ObservableObject
     {
         public bool IsValidOperation { get => !string.IsNullOrEmpty(StructureA) &&
-                                              !string.IsNullOrEmpty(StructureB) &&
-                                              !string.IsNullOrEmpty(OutputStructure) &&
                                               Operation != StructureDerivationOperation.None &&
+                                              !string.IsNullOrEmpty(OutputStructure) &&
                                               MarginA.IsValidMargin &&
-                                              MarginB.IsValidMargin; }
+                                              (Operation == StructureDerivationOperation.CopyContractExpand || 
+                                              (!string.IsNullOrEmpty(StructureB) &&
+                                              MarginB.IsValidMargin)); }
 
         public List<string> StructureIdList { get => new List<string> { StructureA, StructureB, OutputStructure }; }
         public string FriendlyName { get => IsValidOperation ? $"{StructureA} {Operation} {StructureB} -> {OutputStructure} (Is temp = {IsTemporary})" : "none"; }
-
         #region properties
 
         private string _structureA = string.Empty;
@@ -88,6 +88,15 @@ namespace AutoPlannerHelpers.Models
             Operation = op;
             StructureB = b;
             MarginB = new StructureMarginModel(0.0);
+            OutputStructure = outStructure;
+            IsTemporary = isTemp;
+        }
+
+        public StructureOperationModel(string a, StructureDerivationOperation op, string outStructure, StructureMarginModel marginA, bool isTemp)
+        {
+            StructureA = a;
+            MarginA = marginA;
+            Operation = op;
             OutputStructure = outStructure;
             IsTemporary = isTemp;
         }

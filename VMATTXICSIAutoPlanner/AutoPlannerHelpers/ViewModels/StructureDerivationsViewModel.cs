@@ -28,6 +28,14 @@ namespace AutoPlannerHelpers.ViewModels
             get { return _viewHeaderLabel; }
             set { SetProperty(ref _viewHeaderLabel, value); }
         }
+
+        private Visibility _structureBVisibility;
+
+        public Visibility StructureBVisibility
+        {
+            get { return _structureBVisibility; }
+            set { SetProperty(ref _structureBVisibility, value); }
+        }
         #endregion
 
         #region fields
@@ -43,6 +51,7 @@ namespace AutoPlannerHelpers.ViewModels
         public RelayCommand<(string,StructureMarginModel)> ModifyMarginCommand { get; set; }
         public ICommand PerformTSGenerationManipulationCommand { get; set; }
         public RelayCommand<StructureOperationModel> StructureSelectionChangedCommand { get; set; }
+        public RelayCommand<StructureOperationModel> StructureOperationChangedCommand { get; set; }
         public RelayCommand<StructureOperationModel> ClearRowCommand { get; set; }
         #endregion
 
@@ -54,6 +63,7 @@ namespace AutoPlannerHelpers.ViewModels
             RemoveAllStructureOperationsCommand = new RelayCommand(RemoveAllTSManipulations);
             ModifyMarginCommand = new RelayCommand<(string, StructureMarginModel)>(ModifyMargin, CanModifyMargin);
             StructureSelectionChangedCommand = new RelayCommand<StructureOperationModel>(StructureSelectionChanged);
+            StructureOperationChangedCommand = new RelayCommand<StructureOperationModel>(StructureOperationChanged);
             ClearRowCommand = new RelayCommand<StructureOperationModel>(ClearRow);
             StructureIds = new ObservableCollectionPropertyNotify<string> { "--Add New--" };
             StructureIds.AddRange(structureIds);
@@ -171,6 +181,12 @@ namespace AutoPlannerHelpers.ViewModels
                     RequestedStructureOperations.Refresh();
                 }
             }
+        }
+
+        private void StructureOperationChanged(StructureOperationModel item)
+        {
+            if (item.Operation == Enums.StructureDerivationOperation.CopyContractExpand) StructureBVisibility = Visibility.Hidden;
+            else StructureBVisibility = Visibility.Visible;
         }
 
         private void ModifyMargin((string structureid, StructureMarginModel model) parameters)

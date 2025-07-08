@@ -22,6 +22,7 @@
         XOR,
         CutInferiorTo,
         CutSuperiorTo,
+        CopyContractExpand,
         None
     }
 

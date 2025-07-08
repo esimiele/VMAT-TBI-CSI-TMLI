@@ -175,9 +175,36 @@
                                             </MultiBinding>
                                         </Button.CommandParameter>
                                     </Button>
-                                    <ComboBox Grid.Column="2" HorizontalContentAlignment="Center" SelectedItem="{Binding Operation}" ItemsSource="{Binding Source={local:EnumBindingSource {x:Type enum:StructureDerivationOperation}}}" Margin="1"/>
-                                    <ComboBox Grid.Column="3" HorizontalContentAlignment="Center" ItemsSource="{Binding Path=DataContext.StructureIds, ElementName=StructureDerivationSP}" SelectedItem="{Binding StructureB}" Margin="1"/>
+                                    <ComboBox Grid.Column="2" HorizontalContentAlignment="Center" SelectedItem="{Binding Operation}" ItemsSource="{Binding Source={local:EnumBindingSource {x:Type enum:StructureDerivationOperation}}}" Margin="1">
+                                        <Behaviors:Interaction.Triggers>
+                                            <Behaviors:EventTrigger EventName="SelectionChanged">
+                                                <Behaviors:InvokeCommandAction Command="{Binding Path=DataContext.StructureOperationChangedCommand, ElementName=StructureDerivationSP}" CommandParameter="{Binding}"/>
+                                            </Behaviors:EventTrigger>
+                                        </Behaviors:Interaction.Triggers>
+                                    </ComboBox>
+                                    <ComboBox Grid.Column="3" HorizontalContentAlignment="Center" ItemsSource="{Binding Path=DataContext.StructureIds, ElementName=StructureDerivationSP}" SelectedItem="{Binding StructureB}" Margin="1">
+                                        <ComboBox.Style>
+                                            <Style TargetType="ComboBox">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Operation}" Value="{x:Static enum:StructureDerivationOperation.CopyContractExpand}">
+                                                        <Setter Property="Visibility" Value="Hidden" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </ComboBox.Style>
+                                    </ComboBox>
                                     <Button Grid.Column="4" Content="Margin B" HorizontalContentAlignment="Center" Command="{Binding DataContext.ModifyMarginCommand, ElementName=StructureDerivationSP, Mode=TwoWay}" ToolTip="{Binding MarginB.AxisAlignedMargins}" Margin="1">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Operation}" Value="{x:Static enum:StructureDerivationOperation.CopyContractExpand}">
+                                                        <Setter Property="Visibility" Value="Hidden" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
                                         <Button.CommandParameter>
                                             <MultiBinding Converter="{StaticResource TupleConverter}">
                                                 <Binding Path="StructureB" />
