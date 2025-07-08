@@ -272,6 +272,10 @@ namespace AutoPlannerHelpers.BaseViewModel
 
         private void InitializeMessengers()
         {
+            WeakReferenceMessenger.Default.Register<RequestPerformTargetDerivations>(this, (r, m) =>
+            {
+                PerformTargetStructureDerivations(m.StructureOperations);
+            });
             WeakReferenceMessenger.Default.Register<RequestSetTargetsMessage>(this, (r, m) =>
             {
                 SetTargets(m.PlanTargets);
@@ -609,7 +613,6 @@ namespace AutoPlannerHelpers.BaseViewModel
             else Logger.GetInstance().LogError("Error! No optimization constraints assigned!");
         }
         #endregion
-
 
         #region prep plan for treatment
         protected abstract bool GenerateShiftNote();

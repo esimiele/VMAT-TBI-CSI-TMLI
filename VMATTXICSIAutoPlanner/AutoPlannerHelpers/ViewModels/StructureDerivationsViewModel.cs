@@ -41,7 +41,6 @@ namespace AutoPlannerHelpers.ViewModels
         #region fields
         private List<StructureOperationModel> _defaultOperationsFromTemplate = new List<StructureOperationModel>();
         private bool _isUsedForTargetDerivations = false;
-        private bool _skipStructureIdCheck = true;
         #endregion
 
         #region commands
@@ -81,7 +80,7 @@ namespace AutoPlannerHelpers.ViewModels
             {
                 WeakReferenceMessenger.Default.Register<RequestUpdateTargetDerivationOperations>(this, (r, m) =>
                 {
-                    AutoPlanTemplateSelectionChanged(m.StructureOperations, m.SkipStructureIdCheck);
+                    AutoPlanTemplateSelectionChanged(m.StructureOperations);
                 });
                 WeakReferenceMessenger.Default.Register<RequestTargetStructureDerivations>(this, (r, m) =>
                 {
@@ -92,7 +91,7 @@ namespace AutoPlannerHelpers.ViewModels
             {
                 WeakReferenceMessenger.Default.Register<RequestUpdateOptimizationStructureDerivations>(this, (r, m) =>
                 {
-                    AutoPlanTemplateSelectionChanged(m.StructureOperations, m.SkipStructureIdCheck);
+                    AutoPlanTemplateSelectionChanged(m.StructureOperations);
                 });
             }
             WeakReferenceMessenger.Default.Register<RequestUpdateStructureIds>(this, (r, m) =>
@@ -103,10 +102,9 @@ namespace AutoPlannerHelpers.ViewModels
             });
         }
 
-        public void AutoPlanTemplateSelectionChanged(List<StructureOperationModel> operations, bool skipStructureIdCheck)
+        public void AutoPlanTemplateSelectionChanged(List<StructureOperationModel> operations)
         {
             _defaultOperationsFromTemplate = operations;
-            _skipStructureIdCheck = skipStructureIdCheck;
             UpdateViewWithAutoPlanTemplateStructureDerivations();
         }
 
@@ -115,8 +113,7 @@ namespace AutoPlannerHelpers.ViewModels
             RequestedStructureOperations.Clear();
             foreach (StructureOperationModel itr in _defaultOperationsFromTemplate)
             {
-                if (_skipStructureIdCheck) RequestedStructureOperations.Add(itr);
-                else if (StructureIds.Any(x => string.Equals(x, itr.StructureA, StringComparison.OrdinalIgnoreCase)) && StructureIds.Any(x => string.Equals(x, itr.StructureB, StringComparison.OrdinalIgnoreCase)))
+                if (StructureIds.Any(x => string.Equals(x, itr.StructureA, StringComparison.OrdinalIgnoreCase)) && StructureIds.Any(x => string.Equals(x, itr.StructureB, StringComparison.OrdinalIgnoreCase)))
                 {
                     //only add it they base structure exists in the structure set
                     string structureAId = StructureIds.First(x => string.Equals(x, itr.StructureA, StringComparison.OrdinalIgnoreCase));

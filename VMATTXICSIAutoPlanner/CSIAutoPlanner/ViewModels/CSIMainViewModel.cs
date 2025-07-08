@@ -123,10 +123,6 @@ namespace CSIAutoPlanner.ViewModels
             {
                 ExportCTImage(m.SelectedCTImage);
             }); 
-            WeakReferenceMessenger.Default.Register<RequestPerformTargetDerivations>(this, (r, m) =>
-            {
-                PerformTargetStructureDerivations(m.StructureOperations);
-            });
             WeakReferenceMessenger.Default.Register<RequestAreSeparatedPlansAutomaticallyRecalculated>(this, (r, m) =>
             {
                 m.Reply(CSIAutoPlannerSettings.AutoDoseRecalculationDuringPlanPrep);

@@ -41,10 +41,12 @@ namespace AutoPlannerHelpers.Helpers
                         OutputStructure.SegmentVolume = ContourXOR(StructureA, StructureB, structureOperation.MarginA, structureOperation.MarginB);
                         break;
                     case StructureDerivationOperation.CutInferiorTo:
-                        OutputStructure.SegmentVolume = CutStructureInfToStructure(StructureA, StructureB);
+                        OutputStructure.SegmentVolume = CopyStructure(StructureA, new StructureMarginModel(0));
+                        OutputStructure.SegmentVolume = CutStructureInfToStructure(OutputStructure, StructureB);
                         break;
                     case StructureDerivationOperation.CutSuperiorTo:
-                        OutputStructure.SegmentVolume = CutStructureSupToStructure(StructureA, StructureB);
+                        OutputStructure.SegmentVolume = CopyStructure(StructureA, new StructureMarginModel(0));
+                        OutputStructure.SegmentVolume = CutStructureSupToStructure(OutputStructure, StructureB);
                         break;
                     case StructureDerivationOperation.CopyContractExpand:
                         OutputStructure.SegmentVolume = CopyStructure(StructureA, structureOperation.MarginA);
@@ -91,7 +93,7 @@ namespace AutoPlannerHelpers.Helpers
 
         public static SegmentVolume CutStructureInfToStructure(Structure a, Structure b)
         {
-            int slice = CalculationHelper.ComputeSlice(b.MeshGeometry.Positions.Min(p => p.Z), EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes);
+            int slice = CalculationHelper.ComputeSlice(b.MeshGeometry.Positions.Min(p => p.Z), EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes) - 1;
             for (int i = 0; i < slice; i++)
             {
                 a.ClearAllContoursOnImagePlane(i);
@@ -107,8 +109,8 @@ namespace AutoPlannerHelpers.Helpers
 
         public static SegmentVolume CutStructureSupToStructure(Structure a, Structure b)
         {
-            int slice = CalculationHelper.ComputeSlice(b.MeshGeometry.Positions.Max(p => p.Z), EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes);
-            for (int i = 0; i < slice; i++)
+            int slice = CalculationHelper.ComputeSlice(b.MeshGeometry.Positions.Max(p => p.Z), EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes) + 1;
+            for (int i = slice; i < EclipseContext.GetInstance().StructureSet.Image.ZSize; i++)
             {
                 a.ClearAllContoursOnImagePlane(i);
             }

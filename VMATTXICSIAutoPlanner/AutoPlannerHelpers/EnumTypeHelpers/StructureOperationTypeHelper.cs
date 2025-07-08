@@ -18,6 +18,10 @@ namespace AutoPlannerHelpers.EnumTypeHelpers
             else if (string.Equals(operation, "xor", StringComparison.OrdinalIgnoreCase)) return StructureDerivationOperation.XOR;
             else if (string.Equals(operation, "cutinferiorto", StringComparison.OrdinalIgnoreCase)) return StructureDerivationOperation.CutInferiorTo;
             else if (string.Equals(operation, "cutsuperiorto", StringComparison.OrdinalIgnoreCase)) return StructureDerivationOperation.CutSuperiorTo;
+            else if (string.Equals(operation, "copy", StringComparison.OrdinalIgnoreCase)) return StructureDerivationOperation.CopyContractExpand;
+            else if (string.Equals(operation, "contract", StringComparison.OrdinalIgnoreCase)) return StructureDerivationOperation.CopyContractExpand;
+            else if (string.Equals(operation, "expand", StringComparison.OrdinalIgnoreCase)) return StructureDerivationOperation.CopyContractExpand;
+            else if (string.Equals(operation, "copycontractexpand", StringComparison.OrdinalIgnoreCase)) return StructureDerivationOperation.CopyContractExpand;
             else return StructureDerivationOperation.None;
         }
     }

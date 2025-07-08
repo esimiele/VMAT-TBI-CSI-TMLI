@@ -36,21 +36,17 @@ namespace AutoPlannerHelpers.Messengers
     #region structure generation and manipulation
     public class RequestUpdateOptimizationStructureDerivations : RequestUpdateStructureDerivations
     {
-        public bool SkipStructureIdCheck { get; private set; }
-        public RequestUpdateOptimizationStructureDerivations(List<StructureOperationModel> structureOperations, bool skipStructureIdCheck = true)
+        public RequestUpdateOptimizationStructureDerivations(List<StructureOperationModel> structureOperations)
         {
             this.StructureOperations = structureOperations;
-            SkipStructureIdCheck = skipStructureIdCheck;
         }
     }
     public class RequestUpdateTargetDerivationOperations : RequestUpdateStructureDerivations
     {
-        public bool SkipStructureIdCheck { get; private set; }
 
-        public RequestUpdateTargetDerivationOperations(List<StructureOperationModel> structureOperations, bool skipStructureIdCheck = true)
+        public RequestUpdateTargetDerivationOperations(List<StructureOperationModel> structureOperations)
         {
             this.StructureOperations = structureOperations;
-            SkipStructureIdCheck = skipStructureIdCheck;
         }
     }
 
