@@ -5,10 +5,12 @@ using AutoPlannerHelpers.Models;
 using AutoPlannerHelpers.PlanTemplateModels;
 using System;
 using System.Collections.Generic;
+using System.Drawing.Printing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
+using VMS.TPS.Common.Model.API;
 using VMS.TPS.Common.Model.Types;
 
 namespace AutoPlannerHelpers.Helpers
@@ -332,6 +334,7 @@ namespace AutoPlannerHelpers.Helpers
             double margin;
             double thickness;
             double dose;
+            
             line = CropLine(line, "{");
             structure = line.Substring(0, line.IndexOf(","));
             line = CropLine(line, ",");
@@ -339,8 +342,33 @@ namespace AutoPlannerHelpers.Helpers
             line = CropLine(line, ",");
             thickness = double.Parse(line.Substring(0, line.IndexOf(",")));
             line = CropLine(line, ",");
-            dose = double.Parse(line.Substring(0, line.IndexOf("}")));
-            return new TSRingStructureModel(structure, margin, thickness, dose);
+            if (line.Contains(","))
+            {
+                dose = double.Parse(line.Substring(0, line.IndexOf(",")));
+                line = CropLine(line, ",");
+                StructureMarginModel marginA = ParseStructureOperationMargin(line.Substring(1, line.IndexOf("]") - 1));
+                line = CropLine(line, "],");
+                StructureDerivationOperation operation = StructureOperationTypeHelper.GetStructureDerivationType(line.Substring(0, line.IndexOf(",")));
+                line = CropLine(line, ",");
+                if (operation != StructureDerivationOperation.CopyContractExpand)
+                {
+                    string structureB = line.Substring(0, line.IndexOf(","));
+                    line = CropLine(line, ",");
+                    StructureMarginModel marginB = ParseStructureOperationMargin(line.Substring(1, line.IndexOf("]") - 1));
+                    TSRingStructureModel ring = new TSRingStructureModel(structure, margin, thickness, dose);
+                    ring.AdditionalStructureOperation = new StructureOperationModel(ring.RingId, operation, structureB, ring.RingId, marginA, marginB);
+                    return ring;
+                }
+                else
+                {
+                    throw new Exception($"Error! The Operation type {operation} is not valid with ring structure additional operations! Exiting!");
+                }
+            }
+            else
+            {
+                dose = double.Parse(line.Substring(0, line.IndexOf("}")));
+                return new TSRingStructureModel(structure, margin, thickness, dose);
+            }
         }
 
         /// <summary>
@@ -367,30 +395,30 @@ namespace AutoPlannerHelpers.Helpers
         /// </summary>
         /// <param name="line"></param>
         /// <returns></returns>
-        public static RequestedTSManipulationModel ParseOARTSManipulation(string line)
-        {
-            //known array format --> can take shortcuts in parsing the data
-            //structure id, sparing type, added margin in cm (ignored if sparing type is Dmax ~ Rx Dose)
-            string structure;
-            string spareType;
-            double val;
-            line = CropLine(line, "{");
-            structure = line.Substring(0, line.IndexOf(","));
-            line = CropLine(line, ",");
-            spareType = line.Substring(0, line.IndexOf(","));
-            line = CropLine(line, ",");
-            val = double.Parse(line.Substring(0, line.IndexOf("}")));
-            return new RequestedTSManipulationModel(structure, TSManipulationTypeHelper.GetTSManipulationType(spareType), val);
-        }
+        //public static RequestedTSManipulationModel ParseOARTSManipulation(string line)
+        //{
+        //    //known array format --> can take shortcuts in parsing the data
+        //    //structure id, sparing type, added margin in cm (ignored if sparing type is Dmax ~ Rx Dose)
+        //    string structure;
+        //    string spareType;
+        //    double val;
+        //    line = CropLine(line, "{");
+        //    structure = line.Substring(0, line.IndexOf(","));
+        //    line = CropLine(line, ",");
+        //    spareType = line.Substring(0, line.IndexOf(","));
+        //    line = CropLine(line, ",");
+        //    val = double.Parse(line.Substring(0, line.IndexOf("}")));
+        //    return new RequestedTSManipulationModel(structure, TSManipulationTypeHelper.GetTSManipulationType(spareType), val);
+        //}
 
         public static StructureOperationModel ParseStructureDerivation(string line)
         {
             //structure a id, margin a (cm), operation type, structure b id, margin b (cm), output structure id, is temporary
             string structureA;
             StructureMarginModel marginA;
-            string operation;
-            string structureB;
-            StructureMarginModel marginB;
+            StructureDerivationOperation operation;
+            string structureB = string.Empty;
+            StructureMarginModel marginB = new StructureMarginModel(0);
             string outputStructure;
             bool isTemp;
             line = CropLine(line, "{");
@@ -398,16 +426,19 @@ namespace AutoPlannerHelpers.Helpers
             line = CropLine(line, ",");
             marginA = ParseStructureOperationMargin(line.Substring(1, line.IndexOf("]") - 1));
             line = CropLine(line, "],");
-            operation = line.Substring(0, line.IndexOf(","));
+            operation = StructureOperationTypeHelper.GetStructureDerivationType(line.Substring(0, line.IndexOf(",")));
             line = CropLine(line, ",");
-            structureB = line.Substring(0, line.IndexOf(","));
-            line = CropLine(line, ",");
-            marginB = ParseStructureOperationMargin(line.Substring(1, line.IndexOf("]") - 1));
-            line = CropLine(line, "],");
+            if (operation != StructureDerivationOperation.CopyContractExpand)
+            {
+                structureB = line.Substring(0, line.IndexOf(","));
+                line = CropLine(line, ",");
+                marginB = ParseStructureOperationMargin(line.Substring(1, line.IndexOf("]") - 1));
+                line = CropLine(line, "],");
+            }
             outputStructure = line.Substring(0, line.IndexOf(","));
             line = CropLine(line, ",");
             isTemp = bool.Parse(line.Substring(0, line.IndexOf("}")));
-            return new StructureOperationModel(structureA, StructureOperationTypeHelper.GetStructureDerivationType(operation), structureB, outputStructure, marginA, marginB, isTemp);
+            return new StructureOperationModel(structureA, operation, structureB, outputStructure, marginA, marginB, isTemp);
         }
 
         public static StructureMarginModel ParseStructureOperationMargin(string line)
@@ -439,24 +470,24 @@ namespace AutoPlannerHelpers.Helpers
         /// </summary>
         /// <param name="line"></param>
         /// <returns></returns>
-        public static RequestedTSManipulationModel ParseTargetTSManipulation(string line)
-        {
-            //known array format --> can take shortcuts in parsing the data
-            //structure id, sparing type, added margin in cm (ignored if sparing type is Dmax ~ Rx Dose)
-            string target;
-            string structure;
-            string spareType;
-            double val;
-            line = CropLine(line, "{");
-            target = line.Substring(0, line.IndexOf(","));
-            line = CropLine(line, ",");
-            structure = line.Substring(0, line.IndexOf(","));
-            line = CropLine(line, ",");
-            spareType = line.Substring(0, line.IndexOf(","));
-            line = CropLine(line, ",");
-            val = double.Parse(line.Substring(0, line.IndexOf("}")));
-            return new RequestedTSManipulationModel(target, structure, TSManipulationTypeHelper.GetTSManipulationType(spareType), val);
-        }
+        //public static RequestedTSManipulationModel ParseTargetTSManipulation(string line)
+        //{
+        //    //known array format --> can take shortcuts in parsing the data
+        //    //structure id, sparing type, added margin in cm (ignored if sparing type is Dmax ~ Rx Dose)
+        //    string target;
+        //    string structure;
+        //    string spareType;
+        //    double val;
+        //    line = CropLine(line, "{");
+        //    target = line.Substring(0, line.IndexOf(","));
+        //    line = CropLine(line, ",");
+        //    structure = line.Substring(0, line.IndexOf(","));
+        //    line = CropLine(line, ",");
+        //    spareType = line.Substring(0, line.IndexOf(","));
+        //    line = CropLine(line, ",");
+        //    val = double.Parse(line.Substring(0, line.IndexOf("}")));
+        //    return new RequestedTSManipulationModel(target, structure, TSManipulationTypeHelper.GetTSManipulationType(spareType), val);
+        //}
 
         /// <summary>
         /// Helper method to parse a 'crop and contour overlap with target structure' from a template plan file

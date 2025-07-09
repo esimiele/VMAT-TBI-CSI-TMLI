@@ -116,8 +116,8 @@ namespace AutoPlannerHelpers.BaseViewModel.Tests
             };
             List<TSRingStructureModel> rings = new List<TSRingStructureModel>
             {
-                new TSRingStructureModel("PTV_CSI", 1.5, 2.0, 1800, "TS_ring1800"),
-                new TSRingStructureModel("PTV_Boost", 1.5, 2.0, 900, "TS_ring900"),
+                new TSRingStructureModel("PTV_CSI", 1.5, 2.0, 1800),
+                new TSRingStructureModel("PTV_Boost", 1.5, 2.0, 900),
             };
 
             List<PrescriptionModel> prescriptions = new List<PrescriptionModel>

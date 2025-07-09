@@ -17,16 +17,9 @@ namespace AutoPlannerHelpers.ViewModels
     public class RingGenerationViewModel : ObservableObject
     {
         public ObservableCollectionPropertyNotify<TSRingStructureModel> RequestedRingStructures { get; set; }
+        public ObservableCollectionPropertyNotify<string> StructureIdsPostUnion { get; set; }
 
         #region properties
-        private List<string> _originalStructureIdList;
-        private List<string> _structureIdsPostUnion;
-
-        public List<string> StructureIdsPostUnion
-        {
-            get { return _structureIdsPostUnion; }
-            set { SetProperty(ref _structureIdsPostUnion, value); }
-        }
         #endregion
 
         #region commands
@@ -43,8 +36,8 @@ namespace AutoPlannerHelpers.ViewModels
 
         public RingGenerationViewModel(List<string> ids) 
         {
-            _originalStructureIdList = new List<string>(ids);
-            StructureIdsPostUnion = new List<string>(ids);
+            StructureIdsPostUnion = new ObservableCollectionPropertyNotify<string> { };
+            StructureIdsPostUnion.AddRange(ids);
             RequestedRingStructures = new ObservableCollectionPropertyNotify<TSRingStructureModel> { };
             AddRingCommand = new RelayCommand(AddRing);
             SpecifyAdditionalOperationCommand = new RelayCommand<TSRingStructureModel>(SpecifyAdditionalOperation);
@@ -58,7 +51,13 @@ namespace AutoPlannerHelpers.ViewModels
         {
             WeakReferenceMessenger.Default.Register<RequestAutoPlanTemplateChangedMessage>(this, (r, m) =>
             {
-                AutoPlanTemplateSelectionChanged(m.AutoPlanTemplate, m.SkipStructureIdCheck);
+                AutoPlanTemplateSelectionChanged(m.AutoPlanTemplate);
+            });
+            WeakReferenceMessenger.Default.Register<RequestUpdateStructureIds>(this, (r, m) =>
+            {
+                StructureIdsPostUnion.Clear();
+                StructureIdsPostUnion.AddRange(m.StructureIds);
+                StructureIdsPostUnion.Refresh();
             });
             WeakReferenceMessenger.Default.Register<RequestRingStructures>(this, (r, m) =>
             {
@@ -66,11 +65,10 @@ namespace AutoPlannerHelpers.ViewModels
             });
         }
 
-        public void AutoPlanTemplateSelectionChanged(AutoPlanTemplateBase template, bool skipStructureCheck)
+        public void AutoPlanTemplateSelectionChanged(AutoPlanTemplateBase template, bool skipStructureCheck = true)
         {
             if (ReferenceEquals(template, null)) return;
             _selectedTemplate = template;
-            StructureIdsPostUnion.RemoveAll(x => !_originalStructureIdList.Contains(x));
             UpdateViewWithAutoPlanTemplateRings(skipStructureCheck);
         }
 
@@ -98,7 +96,7 @@ namespace AutoPlannerHelpers.ViewModels
 
         public void AddRing()
         {
-            RequestedRingStructures.Add(new TSRingStructureModel(_structureIdsPostUnion.First(), 0.0, 0.0, 0.0));
+            RequestedRingStructures.Add(new TSRingStructureModel(StructureIdsPostUnion.First(), 0.0, 0.0, 0.0));
         }
 
         public void AddDefaultRings()
@@ -121,16 +119,16 @@ namespace AutoPlannerHelpers.ViewModels
         {
             //open new view with current additional operation
             string ringName = $"TS_ring{model.DoseLevel}";
-            if (_structureIdsPostUnion.Any(x => string.Equals(x, ringName)))
+            if (StructureIdsPostUnion.Any(x => string.Equals(x, ringName)))
             {
                 ringName += "_1";
-                if (_structureIdsPostUnion.Any(x => string.Equals(x, ringName)))
+                if (StructureIdsPostUnion.Any(x => string.Equals(x, ringName)))
                 {
                     Logger.GetInstance().LogError($"Error! Unable to update ring structure Id to: {ringName}! Exiting");
                     return;
                 }
             }
-            AdditionalRingOperationView view = new AdditionalRingOperationView { DataContext = new AdditionalRingOperationViewModel(ringName, model.AdditionalStructureOperation, _structureIdsPostUnion) };
+            AdditionalRingOperationView view = new AdditionalRingOperationView { DataContext = new AdditionalRingOperationViewModel(ringName, model.AdditionalStructureOperation, StructureIdsPostUnion.ToList()) };
             view.ShowDialog();
         }
     }

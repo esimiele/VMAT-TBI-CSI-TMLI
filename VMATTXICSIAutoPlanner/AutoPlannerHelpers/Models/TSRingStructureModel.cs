@@ -9,13 +9,23 @@
         public double DoseLevel { get; set; } = double.NaN;
         public StructureOperationModel AdditionalStructureOperation { get; set; } = new StructureOperationModel();
 
-        public TSRingStructureModel(string id, double margin, double thickness, double dose, string ringId = "")
+        public TSRingStructureModel(string id, double margin, double thickness, double dose)
         {
             TargetId = id;
-            RingId = ringId;
+            RingId = $"TS_ring{dose}";
             MarginFromTargetInCM = margin;
             RingThicknessInCM = thickness;
             DoseLevel = dose;
+        }
+
+        public TSRingStructureModel(string id, double margin, double thickness, double dose, StructureOperationModel op)
+        {
+            TargetId = id;
+            RingId = $"TS_ring{dose}";
+            MarginFromTargetInCM = margin;
+            RingThicknessInCM = thickness;
+            DoseLevel = dose;
+            AdditionalStructureOperation = op;
         }
 
         public TSRingStructureModel(TSRingStructureModel r)

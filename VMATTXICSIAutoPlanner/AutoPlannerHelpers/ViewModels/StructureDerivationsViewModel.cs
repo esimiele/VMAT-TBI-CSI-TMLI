@@ -115,7 +115,7 @@ namespace AutoPlannerHelpers.ViewModels
             {
                 if (StructureIds.Any(x => string.Equals(x, itr.StructureA, StringComparison.OrdinalIgnoreCase)) && StructureIds.Any(x => string.Equals(x, itr.StructureB, StringComparison.OrdinalIgnoreCase)))
                 {
-                    //only add it they base structure exists in the structure set
+                    //only add it the base structures exists in the structure set
                     string structureAId = StructureIds.First(x => string.Equals(x, itr.StructureA, StringComparison.OrdinalIgnoreCase));
                     string structureBId = StructureIds.First(x => string.Equals(x, itr.StructureB, StringComparison.OrdinalIgnoreCase));
                     if (!StructureIds.Any(x => string.Equals(x, itr.OutputStructure, StringComparison.OrdinalIgnoreCase))) StructureIds.Add(itr.OutputStructure);

@@ -197,7 +197,7 @@ namespace AutoPlannerHelpers.Helpers
             {
                 new StructureOperationModel(ring, StructureDerivationOperation.Union, target, ring, new StructureMarginModel(0), new StructureMarginModel(thickness + marginInCm)),
                 new StructureOperationModel(ring, StructureDerivationOperation.Crop, target, ring, new StructureMarginModel(0), new StructureMarginModel(marginInCm)),
-                new StructureOperationModel(ring, StructureDerivationOperation.Intersection, "body", ring, new StructureMarginModel(0), new StructureMarginModel(0))
+                new StructureOperationModel(ring, StructureDerivationOperation.Intersection, "body", ring)
             };
 
             foreach (StructureOperationModel itr in operations)
