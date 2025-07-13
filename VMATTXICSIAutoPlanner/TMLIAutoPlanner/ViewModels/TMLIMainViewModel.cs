@@ -99,10 +99,9 @@ namespace TMLIAutoPlanner.ViewModels
         public TMLIMainViewModel(string[] args) :
             base(PlanType.VMAT_TMLI, args)
         {
-            Initialize();
         }
 
-        public void Initialize()
+        protected override void PerformPlanTypeSpecificInitialization()
         {
             _generalConfigurationFile = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\configuration\\VMAT_TMLI_config.ini";
             LoadScriptConfigurationSettings(_generalConfigurationFile);
@@ -118,7 +117,7 @@ namespace TMLIAutoPlanner.ViewModels
 
             ExportCT = new CTExportView { DataContext = new CTExportViewModel() };
             ImportSS = new ImportSSView { DataContext = new ImportSSViewModel(TMLIAutoPlannerSettings.ImportExportData, PlanType.VMAT_CSI, (!ReferenceEquals(EclipseContext.GetInstance().Patient, null) ? EclipseContext.GetInstance().Patient.Id : "")) };
-            RingGeneration = new RingGenerationView { DataContext = new RingGenerationViewModel(_structureIdsPostUnion) };
+            RingGeneration = new RingGenerationView { DataContext = new RingGenerationViewModel() };
 
             if (TMLIAutoPlannerSettings.AllBeamsVMAT) WeakReferenceMessenger.Default.Send(new RequestHideNumberOfVMATIsocenters());
             WeakReferenceMessenger.Default.Send(new RequestUpdateBeamPlacementDefaultSettings(TMLIAutoPlannerSettings.AvailableLinacs,
@@ -128,14 +127,10 @@ namespace TMLIAutoPlanner.ViewModels
                                                                                               TMLIAutoPlannerSettings.BeamsPerIsocenter));
 
             PTVMarginInfoCommand = new RelayCommand(ShowPTVMarginInfo);
-            //needs to be initialized after the plan templates are loaded
-            ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
-            if(!EclipseContext.GetInstance().IsInitialized) WeakReferenceMessenger.Default.Send(new RequestUpdateStructureIds(PlanTemplates.SelectMany(x => x.GenerateStructureIdList()).Distinct()));
-            InitializeTMLIMessengers();
         }
 
         #region messengers
-        private void InitializeTMLIMessengers()
+        protected override void InitializePlanTypeSpecificMessengers()
         {
             WeakReferenceMessenger.Default.Register<RequestExportCT>(this, (r, m) =>
             {

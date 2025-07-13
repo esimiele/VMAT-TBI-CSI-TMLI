@@ -13,15 +13,10 @@ namespace AutoPlannerHelpers.ViewModels
     public class StructureCropOverlapViewModel : ObservableObject
     {
         public ObservableCollectionPropertyNotify<string> CropOverlapStructures { get; set; }
+        public ObservableCollectionPropertyNotify<string> StructureIdsPostUnion { get; set; }
+        
         #region properties
         private AutoPlanTemplateBase _selectedTemplate;
-        private List<string> _structureIdsPostUnion;
-
-        public List<string> StructureIdsPostUnion
-        {
-            get { return _structureIdsPostUnion; }
-            set { SetProperty(ref _structureIdsPostUnion, value); }
-        }
 
         #endregion
 
@@ -36,9 +31,9 @@ namespace AutoPlannerHelpers.ViewModels
         public RelayCommand<string> RemoveCropOverlapStructureCommand { get; set; }
         #endregion
 
-        public StructureCropOverlapViewModel(List<string> structures)
+        public StructureCropOverlapViewModel()
         {
-            StructureIdsPostUnion = new List<string>(structures);
+            StructureIdsPostUnion = new ObservableCollectionPropertyNotify<string> { };
             CropOverlapStructures = new ObservableCollectionPropertyNotify<string> { };
             AddCropOverlapStructureCommand = new RelayCommand(AddCropOverlapStructure);
             AddDefaultCropOverlapStructuresCommand = new RelayCommand(AddDefaultCropOverlapStructures);
@@ -57,11 +52,16 @@ namespace AutoPlannerHelpers.ViewModels
             {
                 m.Reply(this.CropOverlapStructures.ToList());
             });
+            WeakReferenceMessenger.Default.Register<RequestUpdateStructureIds>(this, (r, m) =>
+            {
+                StructureIdsPostUnion.Clear();
+                StructureIdsPostUnion.AddRange(m.StructureIds);
+            });
         }
 
         public void AddCropOverlapStructure()
         {
-            CropOverlapStructures.Add(_structureIdsPostUnion.FirstOrDefault());
+            CropOverlapStructures.Add(StructureIdsPostUnion.FirstOrDefault());
         }
 
         public void AutoPlanTemplateSelectionChanged(AutoPlanTemplateBase template, bool skipStructureCheck)

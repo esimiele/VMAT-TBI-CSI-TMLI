@@ -88,10 +88,9 @@ namespace CSIAutoPlanner.ViewModels
         public CSIMainViewModel(string[] args) :
             base(PlanType.VMAT_CSI, args)
         {
-            Initialize();
         }
 
-        public void Initialize()
+        protected override void PerformPlanTypeSpecificInitialization()
         {
             _generalConfigurationFile = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\configuration\\VMAT_CSI_config.ini";
             LoadScriptConfigurationSettings(_generalConfigurationFile);
@@ -101,23 +100,18 @@ namespace CSIAutoPlanner.ViewModels
             ImportSS = new ImportSSView { DataContext = new ImportSSViewModel(CSIAutoPlannerSettings.ImportExportData, PlanType.VMAT_CSI, (!ReferenceEquals(EclipseContext.GetInstance().Patient, null) ? EclipseContext.GetInstance().Patient.Id : "")) };
             WeakReferenceMessenger.Default.Send(new RequestUpdateTargetStructures(CSIAutoPlannerSettings.RequestedPreliminaryTargets));
 
-            RingGeneration = new RingGenerationView { DataContext = new RingGenerationViewModel(_structureIdsPostUnion) };
-            StructureCropOverlap = new StructureCropOverlapView { DataContext = new StructureCropOverlapViewModel(_structureIdsPostUnion) };
+            RingGeneration = new RingGenerationView { DataContext = new RingGenerationViewModel() };
+            StructureCropOverlap = new StructureCropOverlapView { DataContext = new StructureCropOverlapViewModel() };
 
             WeakReferenceMessenger.Default.Send(new RequestUpdateBeamPlacementDefaultSettings(CSIAutoPlannerSettings.AvailableLinacs, 
                                                                                               CSIAutoPlannerSettings.AvailableEnergies, 
                                                                                               CSIAutoPlannerSettings.ContourFieldOverlap, 
                                                                                               CSIAutoPlannerSettings.ContourFieldOverlapMarginInCM, 
                                                                                               CSIAutoPlannerSettings.BeamsPerIsocenter));
-
-            //needs to be initialized after the plan templates are loaded
-            ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
-            if(!EclipseContext.GetInstance().IsInitialized) WeakReferenceMessenger.Default.Send(new RequestUpdateStructureIds(PlanTemplates.SelectMany(x => x.GenerateStructureIdList()).Distinct()));
-            InitializeCSIMessengers();
         }
 
         #region messengers
-        private void InitializeCSIMessengers()
+        protected override void InitializePlanTypeSpecificMessengers()
         {
             WeakReferenceMessenger.Default.Register<RequestExportCT>(this, (r, m) =>
             {

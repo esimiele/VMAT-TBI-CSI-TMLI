@@ -75,5 +75,15 @@ namespace AutoPlannerHelpersTests.BaseViewModel
         {
             throw new NotImplementedException();
         }
+
+        protected override void PerformPlanTypeSpecificInitialization()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void InitializePlanTypeSpecificMessengers()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

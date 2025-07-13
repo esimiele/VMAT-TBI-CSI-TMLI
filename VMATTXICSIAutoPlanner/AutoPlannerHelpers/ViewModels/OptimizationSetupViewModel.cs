@@ -32,7 +32,7 @@ namespace AutoPlannerHelpers.ViewModels
         public ICommand AssignOptimizationConstraintsCommand { get; set; }
         #endregion
 
-        public OptimizationSetupViewModel(List<string> sIds, PlanType planType)
+        public OptimizationSetupViewModel(PlanType planType)
         {
             AddOptimizationConstraintCommand = new RelayCommand(AddOptimizationObjective);
             AddDefaultOptimizationConstraintsCommand = new RelayCommand(AddDefaultOptimizationConstraints);
@@ -40,7 +40,6 @@ namespace AutoPlannerHelpers.ViewModels
             ClearRowCommand = new RelayCommand<OptimizationConstraintModel>(ClearRow);
             AssignOptimizationConstraintsCommand = new RelayCommand(AssignOptimizationConstraints);
             StructureIds = new ObservableCollectionPropertyNotify<string> { };
-            StructureIds.AddRange(sIds);
             PlanOptimizationConstraints = new ObservableCollectionPropertyNotify<PlanOptimizationSetupModel> { };
             _planType = planType;
             InitializeMessengers();
@@ -56,14 +55,12 @@ namespace AutoPlannerHelpers.ViewModels
             {
                 StructureIds.Clear();
                 StructureIds.AddRange(m.StructureIds);
-                StructureIds.Refresh();
                 AddDefaultOptimizationConstraints();
             });
         }
 
         public void UpdateUIWithPlanOptimizationSetupList(List<PlanOptimizationSetupModel> planOptSetup)
         {
-            if (!planOptSetup.Any()) return;
             _defaultPlanOptSetup = planOptSetup;
             AddDefaultOptimizationConstraints();
         }

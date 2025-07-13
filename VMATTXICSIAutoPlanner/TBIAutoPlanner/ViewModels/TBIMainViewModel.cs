@@ -103,10 +103,9 @@ namespace TBIAutoPlanner.ViewModels
         public TBIMainViewModel(string[] args) :
             base(PlanType.VMAT_TBI, args)
         {
-            Initialize();
         }
 
-        public void Initialize()
+        protected override void PerformPlanTypeSpecificInitialization()
         {
             _generalConfigurationFile = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\configuration\\VMAT_TBI_config.ini";
             LoadScriptConfigurationSettings(_generalConfigurationFile);
@@ -136,15 +135,10 @@ namespace TBIAutoPlanner.ViewModels
                                                                                               TBIAutoPlannerSettings.BeamsPerIsocenter));
 
             PTVMarginInfoCommand = new RelayCommand(ShowPTVMarginInfo);
-
-            //needs to be initialized after the plan templates are loaded
-            ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
-            if(!EclipseContext.GetInstance().IsInitialized) WeakReferenceMessenger.Default.Send(new RequestUpdateStructureIds(PlanTemplates.SelectMany(x => x.GenerateStructureIdList()).Distinct()));
-            InitializeTBIMessengers();
         }
 
         #region messengers
-        private void InitializeTBIMessengers()
+        protected override void InitializePlanTypeSpecificMessengers()
         {
             WeakReferenceMessenger.Default.Register<RequestAreSeparatedPlansAutomaticallyRecalculated>(this, (r, m) =>
             {

@@ -54,7 +54,7 @@ namespace AutoPlannerHelpers.ViewModels
         public RelayCommand<StructureOperationModel> ClearRowCommand { get; set; }
         #endregion
 
-        public StructureDerivationsViewModel(List<string> structureIds, bool isUsedForTargetDerivations = false) 
+        public StructureDerivationsViewModel(bool isUsedForTargetDerivations = false) 
         {
             AddStructureOperationCommand = new RelayCommand(AddTSManipulation);
             AddDefaultStructureOperationsCommand = new RelayCommand(AddDefaultTSManipulations);
@@ -64,8 +64,7 @@ namespace AutoPlannerHelpers.ViewModels
             StructureSelectionChangedCommand = new RelayCommand<StructureOperationModel>(StructureSelectionChanged);
             StructureOperationChangedCommand = new RelayCommand<StructureOperationModel>(StructureOperationChanged);
             ClearRowCommand = new RelayCommand<StructureOperationModel>(ClearRow);
-            StructureIds = new ObservableCollectionPropertyNotify<string> { "--Add New--" };
-            StructureIds.AddRange(structureIds);
+            StructureIds = new ObservableCollectionPropertyNotify<string> {};
             RequestedStructureOperations = new ObservableCollectionPropertyNotify<StructureOperationModel> { };
             _isUsedForTargetDerivations = isUsedForTargetDerivations;
             if (isUsedForTargetDerivations) ViewHeaderLabel = "Target Derivation Operations";
@@ -98,7 +97,6 @@ namespace AutoPlannerHelpers.ViewModels
             {
                 StructureIds.Clear();
                 StructureIds.AddRange(m.StructureIds);
-                StructureIds.Refresh();
             });
         }
 
@@ -110,6 +108,7 @@ namespace AutoPlannerHelpers.ViewModels
 
         private void UpdateViewWithAutoPlanTemplateStructureDerivations()
         {
+            if (!_defaultOperationsFromTemplate.Any()) return;
             RequestedStructureOperations.Clear();
             foreach (StructureOperationModel itr in _defaultOperationsFromTemplate)
             {

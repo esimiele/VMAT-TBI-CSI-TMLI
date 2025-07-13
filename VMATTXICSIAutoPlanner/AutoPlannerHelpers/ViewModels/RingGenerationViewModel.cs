@@ -34,10 +34,9 @@ namespace AutoPlannerHelpers.ViewModels
         private AutoPlanTemplateBase _selectedTemplate;
         #endregion
 
-        public RingGenerationViewModel(List<string> ids) 
+        public RingGenerationViewModel() 
         {
             StructureIdsPostUnion = new ObservableCollectionPropertyNotify<string> { };
-            StructureIdsPostUnion.AddRange(ids);
             RequestedRingStructures = new ObservableCollectionPropertyNotify<TSRingStructureModel> { };
             AddRingCommand = new RelayCommand(AddRing);
             SpecifyAdditionalOperationCommand = new RelayCommand<TSRingStructureModel>(SpecifyAdditionalOperation);
@@ -57,7 +56,6 @@ namespace AutoPlannerHelpers.ViewModels
             {
                 StructureIdsPostUnion.Clear();
                 StructureIdsPostUnion.AddRange(m.StructureIds);
-                StructureIdsPostUnion.Refresh();
             });
             WeakReferenceMessenger.Default.Register<RequestRingStructures>(this, (r, m) =>
             {

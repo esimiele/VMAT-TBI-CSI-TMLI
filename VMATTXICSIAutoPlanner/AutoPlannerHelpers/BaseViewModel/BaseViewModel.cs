@@ -192,7 +192,17 @@ namespace AutoPlannerHelpers.BaseViewModel
         protected List<PrescriptionModel> _prescriptions = new List<PrescriptionModel> { };
         protected List<PlanOptimizationSetupModel> _planOptimizationSetup = new List<PlanOptimizationSetupModel> { };
         protected List<PlanIsocenterModel> _planIsocenters = new List<PlanIsocenterModel> { };
-        protected List<string> _structureIdsPostUnion;
+        private List<string> _structureIdsPostUnion = new List<string> { };
+        protected List<string> StructureIdsPostUnion
+        {
+            get => _structureIdsPostUnion;
+            set
+            {
+                _structureIdsPostUnion = value;
+                WeakReferenceMessenger.Default.Send(new RequestUpdateStructureIds(_structureIdsPostUnion));
+
+            }
+        }
         protected string _generalConfigurationFile = string.Empty;
         protected PlanPreparationBase _planPrep = null;
         private PlanType _planType;
@@ -204,21 +214,13 @@ namespace AutoPlannerHelpers.BaseViewModel
             _planType = type;
             Logger.GetInstance().PlanType = _planType;
             if (args.Any()) EclipseContextHelper.GenerateEclipseContext(args.ToList());
-            if (EclipseContext.GetInstance().IsInitialized && !ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
-            {
-                _structureIdsPostUnion = StructureTuningHelper.GenerateStructureIdListPostUnion(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id).ToList());
-            }
-            else
-            {
-                _structureIdsPostUnion = new List<string> { "lung_l", "lung_r", "kidney_l", "kidney_r", "PTV^Body", "OpticChiasm", "Brainstem" };
-            }
 
-            TargetStructureDerivations = new StructureDerivationsView { DataContext = new StructureDerivationsViewModel(_structureIdsPostUnion, true) };
+            TargetStructureDerivations = new StructureDerivationsView { DataContext = new StructureDerivationsViewModel(true) };
             SpecifyTargets = new SpecifyTargetsView { DataContext = new SetTargetsViewModel() };
             SpecialOptimizationStructures = new SpecialOptimizationStructuresView { DataContext = new SpecialOptimizationStructuresViewModel() };
-            OptimizationStructureDerivations = new StructureDerivationsView { DataContext = new StructureDerivationsViewModel(_structureIdsPostUnion, false) };
+            OptimizationStructureDerivations = new StructureDerivationsView { DataContext = new StructureDerivationsViewModel(false) };
             BeamPlacement = new BeamPlacementView { DataContext = new BeamPlacementViewModel(type) };
-            OptimizationSetup = new OptimizationSetupView { DataContext = new OptimizationSetupViewModel(_structureIdsPostUnion, type) };
+            OptimizationSetup = new OptimizationSetupView { DataContext = new OptimizationSetupViewModel(type) };
             PlanPreparation = new PlanPreparationView { DataContext = new PlanPreparationViewModel() };
 
             PlanTemplates = new ObservableCollection<AutoPlanTemplateBase>() { };
@@ -232,6 +234,11 @@ namespace AutoPlannerHelpers.BaseViewModel
             BeamPlacementTabBackground = Brushes.LightGray;
             OptimizationSetupTabBackground = Brushes.LightGray;
 
+            InitializeGeneralMessengers();
+            PerformPlanTypeSpecificInitialization();
+            InitializePlanTypeSpecificMessengers();
+            ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
+
             if (EclipseContext.GetInstance().IsInitialized)
             {
                 if (!ReferenceEquals(EclipseContext.GetInstance().Patient, null)) PatientMRN = EclipseContext.GetInstance().Patient.Id;
@@ -242,6 +249,8 @@ namespace AutoPlannerHelpers.BaseViewModel
                 if (!ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
                 {
                     StructureSetId = EclipseContext.GetInstance().StructureSet.Id;
+                    StructureIdsPostUnion = StructureTuningHelper.GenerateStructureIdListPostUnion(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id).ToList());
+
                     if (!_targetStructuresApprovalRequired || EclipseContext.GetInstance().StructureSet.Structures.Any(x => x.ApprovalHistory.First().ApprovalStatus == StructureApprovalStatus.Approved && x.Id.ToLower().Contains("ptv")))
                     {
                         SetTargetsTabBackground = Brushes.PaleVioletRed;
@@ -265,12 +274,12 @@ namespace AutoPlannerHelpers.BaseViewModel
                     new ExportCTModel("3", "CT 3", 300, "2020-10-10"),
                 };
                 WeakReferenceMessenger.Default.Send(new RequestUpdateCTList(models));
+                StructureIdsPostUnion = PlanTemplates.SelectMany(x => x.GenerateStructureIdList()).Distinct().ToList();
             }
-
-            InitializeMessengers();
         }
 
-        private void InitializeMessengers()
+        #region messengers
+        private void InitializeGeneralMessengers()
         {
             WeakReferenceMessenger.Default.Register<RequestPerformTargetDerivations>(this, (r, m) =>
             {
@@ -309,6 +318,13 @@ namespace AutoPlannerHelpers.BaseViewModel
                 m.Reply(RecalculateDoseForSeparatePlans());
             });
         }
+        #endregion
+
+        #region plan type specific initialization
+        protected abstract void PerformPlanTypeSpecificInitialization();
+
+        protected abstract void InitializePlanTypeSpecificMessengers();
+        #endregion
 
         #region information and help
         protected abstract void LaunchQuickStartGuide();
@@ -430,7 +446,7 @@ namespace AutoPlannerHelpers.BaseViewModel
             _planIsocenters = generateTS.PlanIsocentersList;
 
             WeakReferenceMessenger.Default.Send(new RequestUpdatePlanIsocenterList(_planIsocenters));
-            WeakReferenceMessenger.Default.Send(new RequestUpdateStructureIds(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id)));
+            StructureIdsPostUnion = EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id).ToList();
             UpdateOptimizationSetup(generateTS);
 
             StructureTuningTabBackground = Brushes.ForestGreen;
@@ -471,7 +487,7 @@ namespace AutoPlannerHelpers.BaseViewModel
             if (placeBeams.FieldJunctions.Any())
             {
                 _planOptimizationSetup = UpdateOptimizationConstraintsWithTSJunctions(placeBeams.FieldJunctions, _planOptimizationSetup);
-                WeakReferenceMessenger.Default.Send(new RequestUpdateStructureIds(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id)));
+                StructureIdsPostUnion = EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id).ToList();
             }
             WeakReferenceMessenger.Default.Send(new RequestUpdateOptimizationConstraintsMessage(_planOptimizationSetup));
 
