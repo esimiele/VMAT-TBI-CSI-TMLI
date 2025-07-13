@@ -132,12 +132,12 @@ namespace AutoPlannerHelpers.ViewModels
 
         public void RequestedReEvaluationOfCanExecute()
         {
-            Application.Current.Dispatcher.BeginInvoke(() => { ModifyMarginCommand.NotifyCanExecuteChanged(); }, DispatcherPriority.Render);
+            Application.Current.Dispatcher.BeginInvoke(() => { ModifyMarginCommand.NotifyCanExecuteChanged(); }, DispatcherPriority.Background);
         }
 
         private void RequestedStructureOperation_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName is nameof(StructureOperationModel.StructureA) or nameof(StructureOperationModel.MarginA))
+            if (e.PropertyName is nameof(StructureOperationModel.StructureA) or nameof(StructureOperationModel.MarginA) or nameof(StructureOperationModel.StructureB) or nameof(StructureOperationModel.MarginB))
             {
                 RequestedReEvaluationOfCanExecute();
             }
