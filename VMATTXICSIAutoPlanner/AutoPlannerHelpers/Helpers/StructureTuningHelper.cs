@@ -11,29 +11,6 @@ namespace AutoPlannerHelpers.Helpers
 {
     public static class StructureTuningHelper
     {
-        /// <summary>
-        /// Helper method to easily add tuning structure manipulations to the final list that will be used in the GenerateTS classes
-        /// </summary>
-        /// <param name="caseSpareStruct"></param>
-        /// <param name="template"></param>
-        /// <param name="sex"></param>
-        /// <returns></returns>
-        public static List<RequestedTSManipulationModel> AddTemplateSpecificStructureManipulations(List<RequestedTSManipulationModel> templateManipulationList, List<RequestedTSManipulationModel> manipulationListToUpdate, string sex)
-        {
-            foreach (RequestedTSManipulationModel s in templateManipulationList)
-            {
-                if (string.Equals(s.StructureId.ToLower(), "ovaries") || string.Equals(s.StructureId.ToLower(), "testes"))
-                {
-                    if ((sex == "Female" && s.StructureId.ToLower() == "ovaries") || (sex == "Male" && s.StructureId.ToLower() == "testes"))
-                    {
-                        manipulationListToUpdate.Add(s);
-                    }
-                }
-                else manipulationListToUpdate.Add(s);
-            }
-            return manipulationListToUpdate;
-        }
-
         public static List<string> GenerateStructureIdListPostUnion(List<string> ids)
         {
             //check if structures need to be unioned before adding defaults

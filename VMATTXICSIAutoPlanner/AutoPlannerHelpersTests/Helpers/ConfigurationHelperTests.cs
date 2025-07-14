@@ -102,35 +102,6 @@ namespace AutoPlannerHelpers.Helpers.Tests
         }
 
         [TestMethod()]
-        public void ParseTSManipulationTest()
-        {
-            List<string> dummyTSManipulations = new List<string>
-            {
-                "add TS manipulation{Lenses,Crop from body,0.0}",
-                "add TS manipulation{Lungs,Contour substructure,-1.0}",
-                "add TS manipulation{Brainstem,Crop target from structure,0.0}",
-                "add TS manipulation{Eyes,Contour overlap with target,0.0}",
-                "add TS manipulation{skin,Crop target from structure,3.0}"
-            };
-            List<RequestedTSManipulationModel> expected = new List<RequestedTSManipulationModel>
-            {
-                new RequestedTSManipulationModel("Lenses", Enums.TSManipulationType.CropFromBody,0),
-                new RequestedTSManipulationModel("Lungs", Enums.TSManipulationType.ContourSubStructure, -1),
-                new RequestedTSManipulationModel("Brainstem", Enums.TSManipulationType.CropTargetFromStructure,0),
-                new RequestedTSManipulationModel("Eyes", Enums.TSManipulationType.ContourOverlapWithTarget, 0),
-                new RequestedTSManipulationModel("skin", Enums.TSManipulationType.CropTargetFromStructure, 3)
-            };
-
-            TSManipulationComparer comparer = new TSManipulationComparer();
-            for (int i = 0; i < expected.Count; i++)
-            {
-                //RequestedTSManipulationModel resultTMP = ConfigurationHelper.ParseTSManipulation(dummyTSManipulations.ElementAt(i));
-                //Console.WriteLine($"{comparer.Print(expected.ElementAt(i))} | {comparer.Print(resultTMP)}");
-                //Assert.IsTrue(comparer.Equals(expected.ElementAt(i), resultTMP));
-            }
-        }
-
-        [TestMethod()]
         public void ParseOptimizationConstraintTest()
         {
             List<string> dummyConstraints = new List<string>

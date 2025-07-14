@@ -108,7 +108,6 @@
     <Compile Include="EqualityComparers\RequestedOptTSStructureComparer.cs" />
     <Compile Include="EqualityComparers\RequestedPlanMetricComparer.cs" />
     <Compile Include="EqualityComparers\RingModelComparer.cs" />
-    <Compile Include="EqualityComparers\TSManipulationComparer.cs" />
     <Compile Include="Helpers\CalculationHelperTests.cs" />
     <Compile Include="Helpers\ConfigurationHelperTests.cs" />
     <Compile Include="Helpers\ContourHelperTests.cs" />

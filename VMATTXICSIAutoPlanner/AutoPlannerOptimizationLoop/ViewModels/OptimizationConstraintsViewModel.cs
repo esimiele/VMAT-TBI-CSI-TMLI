@@ -72,10 +72,10 @@ namespace AutoPlannerOptimizationLoop.ViewModels
 
         private void InitializeMessengers()
         {
-            //WeakReferenceMessenger.Default.Register<RequestPlanSelectionChanged>(this, (r, m) =>
-            //{
-            //    UpdateViewWithSelectedPlanTemplate(m.AutoPlanTemplate);
-            //});
+            WeakReferenceMessenger.Default.Register<RequestAutoPlanTemplateChangedMessage>(this, (r, m) =>
+            {
+                UpdateViewWithSelectedPlanTemplate(m.AutoPlanTemplate);
+            });
             WeakReferenceMessenger.Default.Register<RequestPlanSelectionChanged>(this, (r, m) =>
             {
                 ClearOptimizationConstraints();
@@ -83,34 +83,34 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                 _planIds = new List<string>(m.UpdatedPlanIds);
                 GetOptimizationConstraintsFromPlan();
             });
-            WeakReferenceMessenger.Default.Register<RequestStructureSetChanged>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<RequestUpdateStructureIds>(this, (r, m) =>
             {
                 ClearOptimizationConstraints();
-                StructureIds = new List<string>(m.UpdatedStructureIds);
+                StructureIds = new List<string>(m.StructureIds);
                 GetOptimizationConstraintsFromPlan();
             });
         }
 
-        //public void UpdateViewWithSelectedPlanTemplate(AutoPlanTemplateBase template)
-        //{
-        //    _selectedTemplate = template;
-        //    if (!OptimizationLoopSettings.PlanPreparationOptimizationSetup.Any())
-        //    {
-        //        //only add constraints if none were found in the plan prep log file
-        //        if (ReferenceEquals(template, null)) return;
-        //        PlanOptimizationConstraints.Clear();
-        //        if (_planType == PlanType.VMAT_TBI) PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel(_planIds.First(), (_selectedTemplate as TBIAutoPlanTemplate).InitialOptimizationConstraints.Where(x => _structureIds.Any(y => y.Contains(x.StructureId, StringComparison.OrdinalIgnoreCase)))));
-        //        else if (_planType == PlanType.VMAT_CSI)
-        //        {
-        //            PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel(_planIds.First(), (_selectedTemplate as CSIAutoPlanTemplate).InitialOptimizationConstraints.Where(x => _structureIds.Any(y => y.Contains(x.StructureId, StringComparison.OrdinalIgnoreCase)))));
-        //            if ((_selectedTemplate as CSIAutoPlanTemplate).BoostRxDosePerFx != 0.1)
-        //            {
-        //                PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel(_planIds.Last(), (_selectedTemplate as CSIAutoPlanTemplate).BoostOptimizationConstraints.Where(x => _structureIds.Any(y => y.Contains(x.StructureId, StringComparison.OrdinalIgnoreCase)))));
-        //            }
-        //        }
-        //        else PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel(_planIds.First(), (_selectedTemplate as TMLIAutoPlanTemplate).InitialOptimizationConstraints.Where(x => _structureIds.Any(y => y.Contains(x.StructureId, StringComparison.OrdinalIgnoreCase)))));
-        //    }
-        //}
+        public void UpdateViewWithSelectedPlanTemplate(AutoPlanTemplateBase template)
+        {
+            //_selectedTemplate = template;
+            //if (!OptimizationLoopSettings.PlanPreparationOptimizationSetup.Any())
+            //{
+            //    //only add constraints if none were found in the plan prep log file
+            //    if (ReferenceEquals(template, null)) return;
+            //    PlanOptimizationConstraints.Clear();
+            //    if (_planType == PlanType.VMAT_TBI) PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel(_planIds.First(), (_selectedTemplate as TBIAutoPlanTemplate).InitialOptimizationConstraints.Where(x => _structureIds.Any(y => y.Contains(x.StructureId, StringComparison.OrdinalIgnoreCase)))));
+            //    else if (_planType == PlanType.VMAT_CSI)
+            //    {
+            //        PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel(_planIds.First(), (_selectedTemplate as CSIAutoPlanTemplate).InitialOptimizationConstraints.Where(x => _structureIds.Any(y => y.Contains(x.StructureId, StringComparison.OrdinalIgnoreCase)))));
+            //        if ((_selectedTemplate as CSIAutoPlanTemplate).BoostRxDosePerFx != 0.1)
+            //        {
+            //            PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel(_planIds.Last(), (_selectedTemplate as CSIAutoPlanTemplate).BoostOptimizationConstraints.Where(x => _structureIds.Any(y => y.Contains(x.StructureId, StringComparison.OrdinalIgnoreCase)))));
+            //        }
+            //    }
+            //    else PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel(_planIds.First(), (_selectedTemplate as TMLIAutoPlanTemplate).InitialOptimizationConstraints.Where(x => _structureIds.Any(y => y.Contains(x.StructureId, StringComparison.OrdinalIgnoreCase)))));
+            //}
+        }
 
         public void AddOptimizationObjective()
         {

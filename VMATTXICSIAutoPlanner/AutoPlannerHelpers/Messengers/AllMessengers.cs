@@ -186,14 +186,6 @@ namespace AutoPlannerHelpers.Messengers
         }
     }
 
-    public class RequestStructureSetChanged
-    {
-        public List<string> UpdatedStructureIds { get; set; }
-        public RequestStructureSetChanged(IEnumerable<string> structureIds)
-        {
-            this.UpdatedStructureIds = structureIds.ToList();
-        }
-    }
     public class RequestPlanObjectives : RequestMessage<List<PlanObjectiveModel>> { }
     public class RequestSelectPatient
     {

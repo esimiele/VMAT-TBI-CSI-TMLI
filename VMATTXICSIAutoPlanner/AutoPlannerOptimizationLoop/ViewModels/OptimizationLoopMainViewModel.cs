@@ -86,7 +86,11 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         public List<string> StructureIds
         {
             get { return _structureIds; }
-            set { SetProperty(ref _structureIds, value); }
+            set 
+            { 
+                SetProperty(ref _structureIds, value);
+                WeakReferenceMessenger.Default.Send(new RequestUpdateStructureIds(_structureIds));
+            }
         }
 
         public List<string> PlanIds
@@ -545,7 +549,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                 if (!string.Equals(EclipseContext.GetInstance().StructureSet.UID, EclipseContext.GetInstance().VMATPlans.First().StructureSet.UID))
                 {
                     EclipseContext.GetInstance().StructureSet = EclipseContext.GetInstance().VMATPlans.First().StructureSet;
-                    WeakReferenceMessenger.Default.Send(new RequestStructureSetChanged(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id)));
+                    StructureIds = EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id).ToList();
                     ESAPIThreadContext.ESAPIDispatcher.Invoke(() => UpdateNormalizationVolumes(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id), AvailableBasePlansForOptimization.Any()));
                 }
                 ESAPIThreadContext.ESAPIDispatcher.Invoke(() => UpdateUIWithPlanPrescriptionInfo());

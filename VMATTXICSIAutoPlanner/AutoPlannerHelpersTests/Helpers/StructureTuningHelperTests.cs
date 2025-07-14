@@ -15,46 +15,46 @@ namespace AutoPlannerHelpers.Helpers.Tests
     [TestClass()]
     public class StructureTuningHelperTests
     {
-        [TestMethod()]
-        public void AddTemplateSpecificStructureManipulationsTest()
-        {
-            List<RequestedTSManipulationModel> templateManipulationList = new List<RequestedTSManipulationModel>
-            {
-                new RequestedTSManipulationModel("Ovaries", TSManipulationType.CropTargetFromStructure, 0.1),
-                new RequestedTSManipulationModel("Testes", TSManipulationType.CropTargetFromStructure, 0.1),
-                new RequestedTSManipulationModel("Liver", TSManipulationType.CropTargetFromStructure, 0.0),
-                new RequestedTSManipulationModel("Lungs", TSManipulationType.ContourSubStructure, -1.0),
-                new RequestedTSManipulationModel("Lungs", TSManipulationType.ContourSubStructure, -1.5),
-                new RequestedTSManipulationModel("Liver", TSManipulationType.ContourSubStructure, -1.0),
-                new RequestedTSManipulationModel("Liver", TSManipulationType.ContourSubStructure, -2.0),
-            };
-            List<RequestedTSManipulationModel> defaultManipulationList = new List<RequestedTSManipulationModel> { };
+        //[TestMethod()]
+        //public void AddTemplateSpecificStructureManipulationsTest()
+        //{
+        //    List<RequestedTSManipulationModel> templateManipulationList = new List<RequestedTSManipulationModel>
+        //    {
+        //        new RequestedTSManipulationModel("Ovaries", TSManipulationType.CropTargetFromStructure, 0.1),
+        //        new RequestedTSManipulationModel("Testes", TSManipulationType.CropTargetFromStructure, 0.1),
+        //        new RequestedTSManipulationModel("Liver", TSManipulationType.CropTargetFromStructure, 0.0),
+        //        new RequestedTSManipulationModel("Lungs", TSManipulationType.ContourSubStructure, -1.0),
+        //        new RequestedTSManipulationModel("Lungs", TSManipulationType.ContourSubStructure, -1.5),
+        //        new RequestedTSManipulationModel("Liver", TSManipulationType.ContourSubStructure, -1.0),
+        //        new RequestedTSManipulationModel("Liver", TSManipulationType.ContourSubStructure, -2.0),
+        //    };
+        //    List<RequestedTSManipulationModel> defaultManipulationList = new List<RequestedTSManipulationModel> { };
 
-            string sex = "Female";
-            List<RequestedTSManipulationModel> expected = new List<RequestedTSManipulationModel>
-            {
-                new RequestedTSManipulationModel("Ovaries", TSManipulationType.CropTargetFromStructure, 0.1),
-                new RequestedTSManipulationModel("Liver", TSManipulationType.CropTargetFromStructure, 0.0),
-                new RequestedTSManipulationModel("Lungs", TSManipulationType.ContourSubStructure, -1.0),
-                new RequestedTSManipulationModel("Lungs", TSManipulationType.ContourSubStructure, -1.5),
-                new RequestedTSManipulationModel("Liver", TSManipulationType.ContourSubStructure, -1.0),
-                new RequestedTSManipulationModel("Liver", TSManipulationType.ContourSubStructure, -2.0),
-            };
+        //    string sex = "Female";
+        //    List<RequestedTSManipulationModel> expected = new List<RequestedTSManipulationModel>
+        //    {
+        //        new RequestedTSManipulationModel("Ovaries", TSManipulationType.CropTargetFromStructure, 0.1),
+        //        new RequestedTSManipulationModel("Liver", TSManipulationType.CropTargetFromStructure, 0.0),
+        //        new RequestedTSManipulationModel("Lungs", TSManipulationType.ContourSubStructure, -1.0),
+        //        new RequestedTSManipulationModel("Lungs", TSManipulationType.ContourSubStructure, -1.5),
+        //        new RequestedTSManipulationModel("Liver", TSManipulationType.ContourSubStructure, -1.0),
+        //        new RequestedTSManipulationModel("Liver", TSManipulationType.ContourSubStructure, -2.0),
+        //    };
 
-            List<RequestedTSManipulationModel> result = StructureTuningHelper.AddTemplateSpecificStructureManipulations(templateManipulationList,
-                                                                                                                  defaultManipulationList,
-                                                                                                                  sex);
+        //    List<RequestedTSManipulationModel> result = StructureTuningHelper.AddTemplateSpecificStructureManipulations(templateManipulationList,
+        //                                                                                                          defaultManipulationList,
+        //                                                                                                          sex);
 
-            Assert.AreEqual(expected.Count(), result.Count());
-            int count = 0;
-            foreach (RequestedTSManipulationModel itr in result)
-            {
-                Assert.AreEqual(itr.StructureId, expected.ElementAt(count).StructureId);
-                Assert.AreEqual(itr.ManipulationType, expected.ElementAt(count).ManipulationType);
-                Assert.AreEqual(itr.MarginInCM, expected.ElementAt(count).MarginInCM);
-                count++;
-            }
-        }
+        //    Assert.AreEqual(expected.Count(), result.Count());
+        //    int count = 0;
+        //    foreach (RequestedTSManipulationModel itr in result)
+        //    {
+        //        Assert.AreEqual(itr.StructureId, expected.ElementAt(count).StructureId);
+        //        Assert.AreEqual(itr.ManipulationType, expected.ElementAt(count).ManipulationType);
+        //        Assert.AreEqual(itr.MarginInCM, expected.ElementAt(count).MarginInCM);
+        //        count++;
+        //    }
+        //}
 
         [TestMethod()]
         public void CheckStructuresToUnionTest()

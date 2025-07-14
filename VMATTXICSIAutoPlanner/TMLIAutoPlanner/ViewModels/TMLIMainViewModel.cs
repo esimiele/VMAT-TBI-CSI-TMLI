@@ -267,7 +267,6 @@ namespace TMLIAutoPlanner.ViewModels
                     List<string> linac_temp = new List<string> { };
                     List<string> energy_temp = new List<string> { };
                     List<VRect<double>> jawPos_temp = new List<VRect<double>> { };
-                    List<RequestedTSManipulationModel> defaultTSManipulations_temp = new List<RequestedTSManipulationModel> { };
                     List<SpecialOptimizationStructureModel> defaultTSstructures_temp = new List<SpecialOptimizationStructureModel> { };
 
                     while ((line = reader.ReadLine()) != null)
