@@ -99,19 +99,13 @@ namespace AutoPlannerHelpers.BaseCore
             else newName = requestedTSTargetId;
             if (newName.Length > 16) newName = newName.Substring(0, 16);
             ProvideUIUpdate($"Retrieving TS target: {newName}");
-            Structure addedTSTarget = StructureTuningHelper.GetStructureFromId(newName);
-            if (ReferenceEquals(addedTSTarget, null))
-            {
-                //left here because of special logic to generate the structure if it doesn't exist
-                ProvideUIUpdate($"TS target {newName} does not exist. Creating it now!");
-                addedTSTarget = AddTSStructures(new SpecialOptimizationStructureModel("CONTROL", newName));
-            }
+            Structure addedTSTarget = StructureTuningHelper.GetStructureFromId(newName, true, "CONTROL");
             if (addedTSTarget.IsEmpty)
             {
                 if (StructureTuningHelper.DoesStructureExistInSS(targetId, true))
                 {
                     ProvideUIUpdate($"Copying target {targetId} contours onto {newName}");
-                    addedTSTarget.SegmentVolume = ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId(targetId), addedTSTarget, new StructureMarginModel(0), new StructureMarginModel(0));
+                    addedTSTarget.SegmentVolume = ContourHelper.CopyStructure(StructureTuningHelper.GetStructureFromId(targetId),new StructureMarginModel(0));
                 }
                 else ProvideUIUpdate($"Error! Could not retrieve {targetId} structure!", true);
             }

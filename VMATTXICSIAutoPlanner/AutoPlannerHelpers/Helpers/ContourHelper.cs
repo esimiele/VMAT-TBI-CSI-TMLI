@@ -21,7 +21,7 @@ namespace AutoPlannerHelpers.Helpers
             {
                 throw new Exception("Error! Eclipse context not initialized! Unable to perform structure derivations!");
             }
-            if (StructureTuningHelper.DoesStructureExistInSS(structureOperation.StructureA, true) && StructureTuningHelper.DoesStructureExistInSS(structureOperation.StructureB, true) && structureOperation.MarginA.IsValidMargin && structureOperation.MarginB.IsValidMargin)
+            if (StructureTuningHelper.DoesStructureExistInSS(structureOperation.StructureA, true) && structureOperation.MarginA.IsValidMargin && (structureOperation.Operation == StructureDerivationOperation.CopyContractExpand || (StructureTuningHelper.DoesStructureExistInSS(structureOperation.StructureB, true)  && structureOperation.MarginB.IsValidMargin)))
             {
                 Structure StructureA = StructureTuningHelper.GetStructureFromId(structureOperation.StructureA);
                 Structure StructureB = StructureTuningHelper.GetStructureFromId(structureOperation.StructureB);

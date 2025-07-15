@@ -206,7 +206,6 @@ namespace AutoPlannerHelpers.BaseViewModel
         protected string _generalConfigurationFile = string.Empty;
         protected PlanPreparationBase _planPrep = null;
         private PlanType _planType;
-        private bool _targetStructuresApprovalRequired = true;
         #endregion
 
         public BaseViewModel(PlanType type, string[] args)
@@ -251,7 +250,7 @@ namespace AutoPlannerHelpers.BaseViewModel
                     StructureSetId = EclipseContext.GetInstance().StructureSet.Id;
                     StructureIdsPostUnion = StructureTuningHelper.GenerateStructureIdListPostUnion(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id).ToList());
 
-                    if (!_targetStructuresApprovalRequired || EclipseContext.GetInstance().StructureSet.Structures.Any(x => x.ApprovalHistory.First().ApprovalStatus == StructureApprovalStatus.Approved && x.Id.ToLower().Contains("ptv")))
+                    if (!PhysicianTargetApprovalRequired() || EclipseContext.GetInstance().StructureSet.Structures.Any(x => x.ApprovalHistory.First().ApprovalStatus == StructureApprovalStatus.Approved && x.Id.ToLower().Contains("ptv")))
                     {
                         SetTargetsTabBackground = Brushes.PaleVioletRed;
                         TargetStructureDerivationsBackground = Brushes.LightGray;
@@ -344,6 +343,7 @@ namespace AutoPlannerHelpers.BaseViewModel
             if (result) return;
             Logger.GetInstance().AddedPrelimTargetsStructures = generateTargets.AddedTargetstructures;
             TargetStructureDerivationsBackground = Brushes.ForestGreen;
+            StructureIdsPostUnion = EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id).ToList();
             if (showCompletionMessage) MessageBox.Show("Structure set is prepared and ready for physician to review targets!");
         }
 
@@ -368,7 +368,7 @@ namespace AutoPlannerHelpers.BaseViewModel
         {
             if (EclipseContext.GetInstance().IsInitialized && !ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
             {
-                if (_targetStructuresApprovalRequired)
+                if (PhysicianTargetApprovalRequired())
                 {
                     if (!AreRequestedPrescriptionTargetsApproved(targets)) return true;
                 }
@@ -390,6 +390,8 @@ namespace AutoPlannerHelpers.BaseViewModel
             }
             return false;
         }
+
+        protected abstract bool PhysicianTargetApprovalRequired();
 
         protected bool VerifyPlansIntegrity(List<PlanTargetsModel> parsedTargets)
         {

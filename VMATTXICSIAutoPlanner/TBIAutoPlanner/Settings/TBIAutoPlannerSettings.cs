@@ -34,5 +34,6 @@ namespace TBIAutoPlanner.Settings
         internal static double MinFieldOverlap = 20.0; //in mm
         internal static bool AllBeamsVMAT = false;
         internal static bool AutoDoseRecalculationDuringPlanPrep { get; set; } = true;
+        internal static bool PhysicianTargetApprovalRequired { get; set; } = false;
     }
 }

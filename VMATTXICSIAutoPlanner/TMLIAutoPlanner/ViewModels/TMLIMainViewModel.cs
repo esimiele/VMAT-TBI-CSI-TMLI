@@ -182,6 +182,11 @@ namespace TMLIAutoPlanner.ViewModels
         {
             return new GeneratePreliminaryTargets_TMLI(preliminaryTargets);
         }
+
+        protected override bool PhysicianTargetApprovalRequired()
+        {
+            return TMLIAutoPlannerSettings.PhysicianTargetApprovalRequired;
+        }
         #endregion
 
         #region TS generation and manipulation

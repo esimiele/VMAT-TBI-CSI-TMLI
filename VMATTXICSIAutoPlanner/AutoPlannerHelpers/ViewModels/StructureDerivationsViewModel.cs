@@ -97,6 +97,7 @@ namespace AutoPlannerHelpers.ViewModels
             {
                 StructureIds.Clear();
                 StructureIds.AddRange(m.StructureIds);
+                UpdateViewWithAutoPlanTemplateStructureDerivations();
             });
         }
 
@@ -112,11 +113,11 @@ namespace AutoPlannerHelpers.ViewModels
             RequestedStructureOperations.Clear();
             foreach (StructureOperationModel itr in _defaultOperationsFromTemplate)
             {
-                if (StructureIds.Any(x => string.Equals(x, itr.StructureA, StringComparison.OrdinalIgnoreCase)) && StructureIds.Any(x => string.Equals(x, itr.StructureB, StringComparison.OrdinalIgnoreCase)))
+                if (StructureIds.Any(x => string.Equals(x, itr.StructureA, StringComparison.OrdinalIgnoreCase)) && (itr.Operation == Enums.StructureDerivationOperation.CopyContractExpand || StructureIds.Any(x => string.Equals(x, itr.StructureB, StringComparison.OrdinalIgnoreCase))))
                 {
                     //only add it the base structures exists in the structure set
                     string structureAId = StructureIds.First(x => string.Equals(x, itr.StructureA, StringComparison.OrdinalIgnoreCase));
-                    string structureBId = StructureIds.First(x => string.Equals(x, itr.StructureB, StringComparison.OrdinalIgnoreCase));
+                    string structureBId = StructureIds.FirstOrDefault(x => string.Equals(x, itr.StructureB, StringComparison.OrdinalIgnoreCase));
                     if (!StructureIds.Any(x => string.Equals(x, itr.OutputStructure, StringComparison.OrdinalIgnoreCase))) StructureIds.Add(itr.OutputStructure);
                     StructureOperationModel newItem = new StructureOperationModel(structureAId, itr.Operation, structureBId, itr.OutputStructure, itr.MarginA, itr.MarginB, itr.IsTemporary);
                     newItem.PropertyChanged += RequestedStructureOperation_PropertyChanged;

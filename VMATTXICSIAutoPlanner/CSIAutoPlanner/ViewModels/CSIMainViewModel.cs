@@ -159,6 +159,11 @@ namespace CSIAutoPlanner.ViewModels
             return new GeneratePreliminaryTargets_CSI(preliminaryTargets);
         }
 
+        protected override bool PhysicianTargetApprovalRequired()
+        {
+            return CSIAutoPlannerSettings.PhysicianTargetApprovalRequired;
+        }
+
         protected override void SetTargets(List<PlanTargetsModel> planTargets)
         {
             if (!planTargets.Any()) return;

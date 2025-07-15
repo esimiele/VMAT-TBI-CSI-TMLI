@@ -60,6 +60,9 @@ namespace TBIAutoPlanner.Core
             }
             ProvideUIUpdate(100 * ++counter / calcItems, "Body structure exists and is not empty");
 
+            if (CheckIfScriptRunPreviously()) return true;
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
+
             //check if user origin was set
             if (IsUserOriginInsideBody()) return true;
             ProvideUIUpdate(100 * ++counter / calcItems, "User origin is inside body");
@@ -67,8 +70,6 @@ namespace TBIAutoPlanner.Core
             if (CheckBodyExtentAndMatchline()) return true;
             ProvideUIUpdate(100 * ++counter / calcItems, "Body structure exists and matchline appropriate");
 
-            if (CheckIfScriptRunPreviously()) return true;
-            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
 
@@ -86,7 +87,7 @@ namespace TBIAutoPlanner.Core
                     //copy human_body back onto body if flash was used in previous run of the script
                     Structure body = StructureTuningHelper.GetStructureFromId("body");
                     Structure humanBody = StructureTuningHelper.GetStructureFromId("human_body");
-                    body.SegmentVolume = ContourHelper.ContourIntersection(body, humanBody, new StructureMarginModel(0), new StructureMarginModel(0));
+                    body.SegmentVolume = ContourHelper.CopyStructure(humanBody, new StructureMarginModel(0));
                     ProvideUIUpdate($"Copied {humanBody.Id} structure onto {body.Id}!");
                 }
             }
@@ -215,7 +216,7 @@ namespace TBIAutoPlanner.Core
             foreach (PrescriptionModel itr in _prescriptions)
             {
                 //Generate a new TSTarget
-                Structure addedTSTarget = GetTSTarget(itr.TargetId);
+                Structure addedTSTarget = GetTSTarget(itr.TargetId, string.Equals(itr.TargetId, "PTV_Body", StringComparison.OrdinalIgnoreCase) ? "TS_PTV_VMAT" : "");
                 tmpTSTargetList.Add(new TargetModel(itr.TargetId, itr.CumulativeDoseToTarget, addedTSTarget.Id));
                 if (ReferenceEquals(addedTSTarget, null) || addedTSTarget.IsEmpty)
                 {
@@ -225,10 +226,9 @@ namespace TBIAutoPlanner.Core
             }
             if(StructureTuningHelper.DoesStructureExistInSS("matchline", true))
             {
-                Structure TSPTVLegs = AddTSStructures(new SpecialOptimizationStructureModel("CONTROL", "TS_PTV_Legs"));
-                _structureOperations.Add(new StructureOperationModel("ts_ptv_vmat", StructureDerivationOperation.CopyContractExpand, "", "ts_ptv_legs",new StructureMarginModel(0), new StructureMarginModel(0)));
-                _structureOperations.Add(new StructureOperationModel("ts_ptv_vmat", StructureDerivationOperation.CutInferiorTo,"matchline", "ts_ptv_vmat",new StructureMarginModel(0), new StructureMarginModel(0)));
-                _structureOperations.Add(new StructureOperationModel("ts_ptv_legs", StructureDerivationOperation.CutSuperiorTo,"matchline", "ts_ptv_legs",new StructureMarginModel(0), new StructureMarginModel(0)));
+                _structureOperations.Add(new StructureOperationModel("ts_ptv_vmat", StructureDerivationOperation.CopyContractExpand, "", "TS_PTV_legs",new StructureMarginModel(0), new StructureMarginModel(0)));
+                _structureOperations.Add(new StructureOperationModel("ts_ptv_vmat", StructureDerivationOperation.CutInferiorTo, "matchline", "ts_ptv_vmat", new StructureMarginModel(0), new StructureMarginModel(0)));
+                _structureOperations.Add(new StructureOperationModel("ts_ptv_legs", StructureDerivationOperation.CutSuperiorTo, "matchline", "TS_PTV_legs", new StructureMarginModel(0), new StructureMarginModel(0)));
             }
 
             foreach (StructureOperationModel itr in _structureOperations)
@@ -265,19 +265,33 @@ namespace TBIAutoPlanner.Core
             (bool failBolus, Structure bolusFlash) = RemoveAndGenerateStructure("BOLUS_FLASH");
             if (failBolus) return true;
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Created structure: {bolusFlash.Id}");
+            //now create the ptv_flash structure
+            (bool failPTVFlash, Structure ptvBodyFlash) = RemoveAndGenerateStructure("PTV_BODY_FLASH");
+            if (failPTVFlash) return true;
+            (bool failFlashTarget, Structure TSPTVFlash) = RemoveAndGenerateStructure("TS_PTV_FLASH");
+            if (failFlashTarget) return true;
+            ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Created structure: {ptvBodyFlash.Id}");
 
-            List<StructureOperationModel> bolusOperations = new List<StructureOperationModel>
+            List<StructureOperationModel> operations = new List<StructureOperationModel>
             {
+                //create bolus
                 new StructureOperationModel("body", StructureDerivationOperation.CopyContractExpand, "", "Human_Body"),
                 new StructureOperationModel("body", StructureDerivationOperation.CopyContractExpand, "", "BOLUS_FLASH", new StructureMarginModel(_flashMargin), new StructureMarginModel(0)),
                 new StructureOperationModel("BOLUS_FLASH", StructureDerivationOperation.Crop, "body", "BOLUS_FLASH"),
+                new StructureOperationModel("body", StructureDerivationOperation.Union, "BOLUS_FLASH", "body"),
+                //create flash ptvs
+                new StructureOperationModel("human_body", StructureDerivationOperation.CopyContractExpand, "", "_tmpBody", new StructureMarginModel(-_ptvMarginFromBody - 0.1), new StructureMarginModel(0), true),
+                new StructureOperationModel("_tmpBody", StructureDerivationOperation.CopyContractExpand, "", "_tmpBolus", new StructureMarginModel(_flashMargin + 0.1), new StructureMarginModel(0.0), true),
+                new StructureOperationModel("_tmpBolus", StructureDerivationOperation.Crop, "_tmpBody", "_tmpBolus", true),
+                new StructureOperationModel("_tmpBolus", StructureDerivationOperation.Union,"PTV_Body", ptvBodyFlash.Id),
+                new StructureOperationModel(ptvBodyFlash.Id, StructureDerivationOperation.CopyContractExpand, "",TSPTVFlash.Id),
             };
             if (StructureTuningHelper.DoesStructureExistInSS("matchline", true))
             {
-                bolusOperations.Add(new StructureOperationModel("BOLUS_FLASH", StructureDerivationOperation.CutInferiorTo, "matchline", "BOLUS_FLASH"));
+                operations.Add(new StructureOperationModel("BOLUS_FLASH", StructureDerivationOperation.CutInferiorTo, "matchline", "BOLUS_FLASH"));
+                operations.Add(new StructureOperationModel(TSPTVFlash.Id, StructureDerivationOperation.CutInferiorTo, "matchline", TSPTVFlash.Id));
             }
-            bolusOperations.Add(new StructureOperationModel("body", StructureDerivationOperation.Union, "BOLUS_FLASH", "body"));
-            foreach (StructureOperationModel itr in bolusOperations)
+            foreach (StructureOperationModel itr in operations)
             {
                 if (itr.IsValidOperation)
                 {
@@ -290,36 +304,6 @@ namespace TBIAutoPlanner.Core
             //assign the water to the bolus volume (HU = 0.0)
             bolusFlash.SetAssignedHU(0.0);
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Assigned {bolusFlash.Id} HU to 0.0");
-
-            //now create the ptv_flash structure
-            (bool failPTVFlash, Structure ptvBodyFlash) = RemoveAndGenerateStructure("PTV_BODY_FLASH");
-            if (failPTVFlash) return true;
-            (bool failFlashTarget, Structure TSPTVFlash) = RemoveAndGenerateStructure("TS_PTV_FLASH");
-            if (failFlashTarget) return true;
-            ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Created structure: {ptvBodyFlash.Id}");
-
-            Structure tmpBolus = AddTSStructures(new SpecialOptimizationStructureModel("CONTROL", "_tmpBolus"));
-            Structure tmpBody = AddTSStructures(new SpecialOptimizationStructureModel("CONTROL", "_tmpBody"));
-            List<StructureOperationModel> operations = new List<StructureOperationModel>
-            {
-                new StructureOperationModel("body", StructureDerivationOperation.Intersection, "body", tmpBody.Id, new StructureMarginModel(0), new StructureMarginModel(-_ptvMarginFromBody - 0.1), true),
-                new StructureOperationModel(tmpBody.Id, StructureDerivationOperation.Crop, tmpBody.Id, tmpBolus.Id, new StructureMarginModel(_flashMargin + 0.1), new StructureMarginModel(0.0), true),
-                new StructureOperationModel(tmpBody.Id, StructureDerivationOperation.Union, ptvBodyFlash.Id, ptvBodyFlash.Id),
-                new StructureOperationModel(ptvBodyFlash.Id, StructureDerivationOperation.Union, TSPTVFlash.Id, TSPTVFlash.Id),
-            };
-            if (StructureTuningHelper.DoesStructureExistInSS("matchline", true))
-            {
-                operations.Add(new StructureOperationModel(TSPTVFlash.Id, StructureDerivationOperation.CutInferiorTo, "matchline", TSPTVFlash.Id));
-            }
-            foreach (StructureOperationModel itr in operations)
-            {
-                if (itr.IsValidOperation)
-                {
-                    ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Performing: {itr.FriendlyName}");
-                    if (ContourHelper.PerformStructureOperation(itr, UIUD)) return true;
-                }
-                else ProvideUIUpdate($"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");
-            }
 
             ContourHelper.CleanTemporaryStructures(operations);
 

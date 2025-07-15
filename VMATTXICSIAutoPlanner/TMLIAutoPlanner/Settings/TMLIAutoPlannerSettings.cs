@@ -34,5 +34,6 @@ namespace TMLIAutoPlanner.Settings
         internal static int DefaultRingPriority = 60;
         internal static ImportExportDataModel ImportExportData { get; set; } = new ImportExportDataModel();
         internal static bool AutoDoseRecalculationDuringPlanPrep { get; set; } = true;
+        internal static bool PhysicianTargetApprovalRequired { get; set; } = true;
     }
 }

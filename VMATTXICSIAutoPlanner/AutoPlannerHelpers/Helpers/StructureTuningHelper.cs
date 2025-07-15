@@ -132,7 +132,10 @@ namespace AutoPlannerHelpers.Helpers
             foreach (string itr in ids)
             {
                 Structure s = GetStructureFromId(itr);
-                if (returnNonNullStructuresOnly && !ReferenceEquals(s, null)) theStructures.Add(s);
+                if(returnNonNullStructuresOnly)
+                {
+                    if(!ReferenceEquals(s, null)) theStructures.Add(s);
+                }
                 else theStructures.Add(s);
             }
             return theStructures;
@@ -151,6 +154,7 @@ namespace AutoPlannerHelpers.Helpers
             {
                 throw new Exception("Error! Eclipse context not initialized! Unable to determine if structure exists in structure set!");
             }
+            if (string.IsNullOrEmpty(id)) return false;
             if (!checkIsEmpty) return EclipseContext.GetInstance().StructureSet.Structures.Any(x => string.Equals(id.ToLower(), x.Id.ToLower()));
             else return EclipseContext.GetInstance().StructureSet.Structures.Any(x => string.Equals(id.ToLower(), x.Id.ToLower()) && !x.IsEmpty);
         }

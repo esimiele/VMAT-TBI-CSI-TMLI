@@ -31,5 +31,6 @@ namespace CSIAutoPlanner.Settings
         internal static ImportExportDataModel ImportExportData { get; set; } = new ImportExportDataModel();
         internal static List<SpecialOptimizationStructureModel> RequestedPreliminaryTargets { get; set; } = new List<SpecialOptimizationStructureModel> { };
         internal static bool AutoDoseRecalculationDuringPlanPrep { get; set; } = true;
+        internal static bool PhysicianTargetApprovalRequired { get; set; } = true;
     }
 }

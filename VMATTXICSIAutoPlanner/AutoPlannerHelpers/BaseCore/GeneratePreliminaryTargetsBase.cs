@@ -48,7 +48,6 @@ namespace AutoPlannerHelpers.BaseCore
                 PUUD = ProvideUIUpdate;
                 UIUD = ProvideUIUpdate;
                 if (PreliminaryChecks()) return true;
-                if (StructureTuningHelper.UnionLRStructures(PUUD)) return true;
                 if (CheckForTargetStructures()) return true;
                 if (_targetsToDerive.Any())
                 {
@@ -89,6 +88,8 @@ namespace AutoPlannerHelpers.BaseCore
                 if (GenerateBodyStructure()) return true;
             }
             ProvideUIUpdate(100 * ++counter / calcItems);
+
+            if (StructureTuningHelper.UnionLRStructures(PUUD)) return true;
 
             if (ContourHelper.CheckHighResolutionAndConvert(_createPrelimTargetList.SelectMany(x => x.StructureIdList).Distinct().ToList(), PUUD)) return true;
             ProvideUIUpdate(100 * ++counter / calcItems, "Check and converted any high res base targets");
@@ -160,7 +161,7 @@ namespace AutoPlannerHelpers.BaseCore
             {
                 if (itr.IsValidOperation)
                 {
-                    ProvideUIUpdate(100 * ++counter / calcItems, $"Contouring target: {itr}");
+                    ProvideUIUpdate(100 * ++counter / calcItems, $"Contouring target: {itr.FriendlyName}");
                     if (ContourHelper.PerformStructureOperation(itr, UIUD)) return true;
                 }
                 else ProvideUIUpdate($"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");

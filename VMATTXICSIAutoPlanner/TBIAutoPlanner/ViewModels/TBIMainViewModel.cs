@@ -169,6 +169,11 @@ namespace TBIAutoPlanner.ViewModels
         {
             return new GeneratePreliminaryTargets_TBI(preliminaryTargets);
         }
+
+        protected override bool PhysicianTargetApprovalRequired()
+        {
+            return TBIAutoPlannerSettings.PhysicianTargetApprovalRequired;
+        }
         #endregion
 
         #region TS generation and manipulation
