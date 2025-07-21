@@ -278,19 +278,18 @@ namespace TBIAutoPlanner.Core
                 new StructureOperationModel("body", StructureDerivationOperation.CopyContractExpand, "", "Human_Body"),
                 new StructureOperationModel("body", StructureDerivationOperation.CopyContractExpand, "", "BOLUS_FLASH", new StructureMarginModel(_flashMargin), new StructureMarginModel(0)),
                 new StructureOperationModel("BOLUS_FLASH", StructureDerivationOperation.Crop, "body", "BOLUS_FLASH"),
+                StructureTuningHelper.DoesStructureExistInSS("matchline", true) ? new StructureOperationModel("BOLUS_FLASH", StructureDerivationOperation.CutInferiorTo, "matchline", "BOLUS_FLASH") : new StructureOperationModel(),
                 new StructureOperationModel("body", StructureDerivationOperation.Union, "BOLUS_FLASH", "body"),
+
                 //create flash ptvs
                 new StructureOperationModel("human_body", StructureDerivationOperation.CopyContractExpand, "", "_tmpBody", new StructureMarginModel(-_ptvMarginFromBody - 0.1), new StructureMarginModel(0), true),
                 new StructureOperationModel("_tmpBody", StructureDerivationOperation.CopyContractExpand, "", "_tmpBolus", new StructureMarginModel(_flashMargin + 0.1), new StructureMarginModel(0.0), true),
                 new StructureOperationModel("_tmpBolus", StructureDerivationOperation.Crop, "_tmpBody", "_tmpBolus", true),
+                StructureTuningHelper.DoesStructureExistInSS("matchline", true) ? new StructureOperationModel("_tmpBolus", StructureDerivationOperation.CutInferiorTo, "matchline", "_tmpBolus") : new StructureOperationModel(),
                 new StructureOperationModel("_tmpBolus", StructureDerivationOperation.Union,"PTV_Body", ptvBodyFlash.Id),
                 new StructureOperationModel(ptvBodyFlash.Id, StructureDerivationOperation.CopyContractExpand, "",TSPTVFlash.Id),
+                StructureTuningHelper.DoesStructureExistInSS("matchline", true) ? new StructureOperationModel(TSPTVFlash.Id, StructureDerivationOperation.CutInferiorTo, "matchline", TSPTVFlash.Id) : new StructureOperationModel(),
             };
-            if (StructureTuningHelper.DoesStructureExistInSS("matchline", true))
-            {
-                operations.Add(new StructureOperationModel("BOLUS_FLASH", StructureDerivationOperation.CutInferiorTo, "matchline", "BOLUS_FLASH"));
-                operations.Add(new StructureOperationModel(TSPTVFlash.Id, StructureDerivationOperation.CutInferiorTo, "matchline", TSPTVFlash.Id));
-            }
             foreach (StructureOperationModel itr in operations)
             {
                 if (itr.IsValidOperation)

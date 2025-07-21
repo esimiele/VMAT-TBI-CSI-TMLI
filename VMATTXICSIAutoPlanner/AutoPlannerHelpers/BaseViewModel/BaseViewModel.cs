@@ -200,7 +200,6 @@ namespace AutoPlannerHelpers.BaseViewModel
             {
                 _structureIdsPostUnion = value;
                 WeakReferenceMessenger.Default.Send(new RequestUpdateStructureIds(_structureIdsPostUnion));
-
             }
         }
         protected string _generalConfigurationFile = string.Empty;
@@ -612,10 +611,6 @@ namespace AutoPlannerHelpers.BaseViewModel
                 if (EclipseContext.GetInstance().VMATPlans.Any(x => string.Equals(x.Id, itr.PlanId)))
                 {
                     ExternalPlanSetup plan = EclipseContext.GetInstance().VMATPlans.First(x => string.Equals(x.Id, itr.PlanId));
-                    if (plan.OptimizationSetup.Objectives.Any())
-                    {
-                        foreach (OptimizationObjective o in plan.OptimizationSetup.Objectives) plan.OptimizationSetup.RemoveObjective(o);
-                    }
                     OptimizationSetupHelper.AssignOptConstraints(itr.OptimizationConstraints, plan, false, 0.0);
                     constraintsAssigned = true;
                 }
@@ -626,7 +621,7 @@ namespace AutoPlannerHelpers.BaseViewModel
                 string message = "Optimization objectives have been successfully set!" + Environment.NewLine + Environment.NewLine + "Please review the generated structures, placed isocenters, placed beams, and optimization parameters!";
                 MessageBox.Show(message);
                 Logger.GetInstance().OptimizationConstraints = PlanOptimizationConstraints.ToList();
-                OptimizationSetupTabBackground = System.Windows.Media.Brushes.ForestGreen;
+                OptimizationSetupTabBackground = Brushes.ForestGreen;
             }
             else Logger.GetInstance().LogError("Error! No optimization constraints assigned!");
         }

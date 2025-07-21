@@ -67,7 +67,11 @@ namespace AutoPlannerHelpers.ViewModels
 
         private void AddOptimizationObjective()
         {
-            if (PlanOptimizationConstraints.Count() == 1)
+            if (!PlanOptimizationConstraints.Any())
+            {
+                PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel("1", GenerateNewEmptyOptimizationConstraint()));
+            }
+            else if (PlanOptimizationConstraints.Count() > 1)
             {
                 //logic for multiple plans
                 SelectItemPrompt SIP = new SelectItemPrompt("Please selct a plan to add a constraint!", new List<string>(PlanOptimizationConstraints.Select(x => x.PlanId)));
@@ -77,10 +81,6 @@ namespace AutoPlannerHelpers.ViewModels
                 List<OptimizationConstraintModel> constraints = planOptSetupModel.OptimizationConstraints;
                 constraints.Add(GenerateNewEmptyOptimizationConstraint());
                 PlanOptimizationConstraints.Refresh();
-            }
-            else if (!PlanOptimizationConstraints.Any())
-            {
-                PlanOptimizationConstraints.Add(new PlanOptimizationSetupModel("1", GenerateNewEmptyOptimizationConstraint()));
             }
             else
             {

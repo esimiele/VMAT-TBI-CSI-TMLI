@@ -7,10 +7,9 @@ namespace AutoPlannerHelpers.Models
 {
     public class StructureMarginModel : ObservableObject
     {
-        public bool IsValidMargin { get => !double.IsNaN(x1) && x1 >= -5.0 && x1 <= 5.0 &&
+        public bool IsValidMargin { get => !double.IsNaN(x1) && x1 >= 0.0 && x1 <= 5.0 &&
                                            (MarginType == StructureMarginType.Uniform ||
                                            (MarginType == StructureMarginType.Asymmetric &&
-                                           x1 > 0.0 && 
                                            !double.IsNaN(x2) && x2 >= 0.0 && x2 <= 5.0 &&
                                            !double.IsNaN(y1) && y1 >= 0.0 && y1 <= 5.0 &&
                                            !double.IsNaN(y2) && y2 >= 0.0 && y2 <= 5.0 &&
@@ -114,21 +113,13 @@ namespace AutoPlannerHelpers.Models
         public void UpdateMargin(StructureMarginModel model)
         {
             MarginType = model.MarginType;
-            if (_marginType == StructureMarginType.Uniform)
-            {
-                GeometryType = model.x1 > 0 ? MarginGeometryType.Outer : MarginGeometryType.Inner;
-                x1 = x2 = y1 = y2 = z1 = z2 = Math.Abs(model.x1);
-            }
-            else
-            {
-                GeometryType = model.GeometryType;
-                x1 = model.x1;
-                x2 = model.x2;
-                y1 = model.y1;
-                y2 = model.y2;
-                z1 = model.z1;
-                z2 = model.z2;
-            }
+            GeometryType = model.GeometryType;
+            x1 = model.x1;
+            x2 = model.x2;
+            y1 = model.y1;
+            y2 = model.y2;
+            z1 = model.z1;
+            z2 = model.z2;
         }
     }
 }

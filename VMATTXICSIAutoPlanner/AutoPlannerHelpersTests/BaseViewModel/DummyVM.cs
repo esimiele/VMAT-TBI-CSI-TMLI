@@ -85,5 +85,10 @@ namespace AutoPlannerHelpersTests.BaseViewModel
         {
             throw new NotImplementedException();
         }
+
+        protected override bool PhysicianTargetApprovalRequired()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

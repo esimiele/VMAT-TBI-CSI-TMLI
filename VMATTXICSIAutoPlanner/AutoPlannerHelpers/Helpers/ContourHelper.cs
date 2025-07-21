@@ -93,7 +93,7 @@ namespace AutoPlannerHelpers.Helpers
 
         public static SegmentVolume CutStructureInfToStructure(Structure a, Structure b)
         {
-            int slice = CalculationHelper.ComputeSlice(b.MeshGeometry.Positions.Min(p => p.Z), EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes) - 1;
+            int slice = CalculationHelper.ComputeSlice(b.MeshGeometry.Positions.Min(p => p.Z), EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes);
             for (int i = 0; i < slice; i++)
             {
                 a.ClearAllContoursOnImagePlane(i);
@@ -109,8 +109,8 @@ namespace AutoPlannerHelpers.Helpers
 
         public static SegmentVolume CutStructureSupToStructure(Structure a, Structure b)
         {
-            int slice = CalculationHelper.ComputeSlice(b.MeshGeometry.Positions.Max(p => p.Z), EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes) + 1;
-            for (int i = slice; i < EclipseContext.GetInstance().StructureSet.Image.ZSize; i++)
+            int slice = CalculationHelper.ComputeSlice(b.MeshGeometry.Positions.Max(p => p.Z), EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes);
+            for (int i = EclipseContext.GetInstance().StructureSet.Image.ZSize - 1; i > slice; i--)
             {
                 a.ClearAllContoursOnImagePlane(i);
             }

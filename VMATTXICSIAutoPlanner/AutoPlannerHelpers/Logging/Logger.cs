@@ -233,7 +233,7 @@ namespace AutoPlannerHelpers.Logging
             sb.AppendLine("");
 
             sb.AppendLine("Structure manipulations:");
-            foreach (StructureOperationModel itr in OptimizationStructureDerivations) sb.AppendLine($"    {{{itr.StructureA} [{itr.MarginA.AxisAlignedMargins}] {itr.Operation} {itr.StructureB} [{itr.MarginB.AxisAlignedMargins}] -> {itr.OutputStructure}}}");
+            foreach (StructureOperationModel itr in OptimizationStructureDerivations) sb.AppendLine($"    {itr.FriendlyName}");
             sb.AppendLine("");
 
             sb.AppendLine("Isocenter names:");

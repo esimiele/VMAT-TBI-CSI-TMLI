@@ -192,7 +192,7 @@
                             </Behaviors:EventTrigger>
                         </Behaviors:Interaction.Triggers>
                     </ComboBox>
-                    <ComboBox Grid.Column="1" HorizontalContentAlignment="Center" SelectedItem="{Binding GeometryType}" ItemsSource="{Binding Source={local:EnumBindingSource {x:Type enum:MarginGeometryType}}}" Margin="1" Visibility="{Binding DataContext.AsymItemsVisible, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                    <ComboBox Grid.Column="1" HorizontalContentAlignment="Center" SelectedItem="{Binding GeometryType}" ItemsSource="{Binding Source={local:EnumBindingSource {x:Type enum:MarginGeometryType}}}" Margin="1"/>
                     <TextBox Grid.Column="2" HorizontalContentAlignment="Center" Text="{Binding x1}" Margin="1"/>
                     <TextBox Grid.Column="3" HorizontalContentAlignment="Center" Text="{Binding y1}" Margin="1" Visibility="{Binding DataContext.AsymItemsVisible, RelativeSource={RelativeSource AncestorType=Window}}"/>
                     <TextBox Grid.Column="4" HorizontalContentAlignment="Center" Text="{Binding z1}" Margin="1" Visibility="{Binding DataContext.AsymItemsVisible, RelativeSource={RelativeSource AncestorType=Window}}"/>
