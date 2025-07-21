@@ -63,7 +63,7 @@ namespace TBIAutoPlanner.ViewModels
         public double PTVMarginFromBody
         {
             get { return _ptvMarginFromBody; }
-            set { SetProperty(ref _ptvMarginFromBody, value); }
+            set { UpdatePTVMarginFromBodyInTargetDerivations(_ptvMarginFromBody, value); SetProperty(ref _ptvMarginFromBody, value);   }
         }
 
         public SolidColorBrush StitchCTTabBackground
@@ -173,6 +173,28 @@ namespace TBIAutoPlanner.ViewModels
         protected override bool PhysicianTargetApprovalRequired()
         {
             return TBIAutoPlannerSettings.PhysicianTargetApprovalRequired;
+        }
+
+        private void UpdatePTVMarginFromBodyInTargetDerivations(double oldMargin, double newMargin)
+        {
+            List<StructureOperationModel> targetDerivations = WeakReferenceMessenger.Default.Send(new RequestTargetStructureDerivations());
+            if (!targetDerivations.Any() || CalculationHelper.AreEqual(oldMargin, newMargin)) return;
+            if(targetDerivations.Any(x => x.Operation == StructureDerivationOperation.CopyContractExpand && 
+                                          string.Equals(x.StructureA, "body", StringComparison.OrdinalIgnoreCase) && 
+                                          string.Equals(x.OutputStructure, "ptv_body", StringComparison.OrdinalIgnoreCase) && 
+                                          x.MarginA.MarginType == StructureMarginType.Uniform && 
+                                          x.MarginA.GeometryType == MarginGeometryType.Inner &&
+                                          CalculationHelper.AreEqual(x.MarginA.x1, oldMargin)))
+            {
+                StructureOperationModel ptvDerivation = targetDerivations.First(x => x.Operation == StructureDerivationOperation.CopyContractExpand &&
+                                                                                      string.Equals(x.StructureA, "body", StringComparison.OrdinalIgnoreCase) &&
+                                                                                      string.Equals(x.OutputStructure, "ptv_body", StringComparison.OrdinalIgnoreCase) &&
+                                                                                      x.MarginA.MarginType == StructureMarginType.Uniform &&
+                                                                                      x.MarginA.GeometryType == MarginGeometryType.Inner &&
+                                                                                      CalculationHelper.AreEqual(x.MarginA.x1, oldMargin));
+                ptvDerivation.MarginA.UpdateMargin(new StructureMarginModel(-newMargin));
+                WeakReferenceMessenger.Default.Send(new RequestUpdateTargetDerivationOperations(targetDerivations));
+            }
         }
         #endregion
 

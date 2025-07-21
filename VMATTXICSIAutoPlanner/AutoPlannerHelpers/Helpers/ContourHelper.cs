@@ -52,7 +52,11 @@ namespace AutoPlannerHelpers.Helpers
                         OutputStructure.SegmentVolume = CopyStructure(StructureA, structureOperation.MarginA);
                         break;
                 }
-                if (OutputStructure.IsEmpty) ProvideUIUpdate($"Warning! Output structure ({OutputStructure.Id}) is empty following {structureOperation.Operation} operation!");
+                if (OutputStructure.IsEmpty)
+                {
+                    ProvideUIUpdate($"Warning! Output structure ({OutputStructure.Id}) is empty following {structureOperation.Operation} operation! Removing!");
+                    EclipseContext.GetInstance().StructureSet.RemoveStructure(OutputStructure);
+                }
             }
             else
             {

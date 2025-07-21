@@ -396,17 +396,24 @@ namespace AutoPlannerHelpers.Helpers
             ClearPlanOptimizationConstraints(VMATplan);
             foreach (OptimizationConstraintModel opt in parameters)
             {
-                double dose = opt.QueryDose;
-                if (opt.QueryDoseUnits == Units.Percent) dose *= VMATplan.TotalDose.Dose / 100.0;
-                Structure s = StructureTuningHelper.GetStructureFromId(opt.StructureId);
-                if (opt.ConstraintType != OptimizationObjectiveType.Mean) VMATplan.OptimizationSetup.AddPointObjective(s,
-                                                                                                                       OptimizationTypeHelper.GetObjectiveOperator(opt.ConstraintType),
-                                                                                                                       new DoseValue(dose, DoseValue.DoseUnit.cGy),
-                                                                                                                       opt.QueryVolume,
-                                                                                                                       (double)opt.Priority);
-                else VMATplan.OptimizationSetup.AddMeanDoseObjective(s,
-                                                                     new DoseValue(dose, DoseValue.DoseUnit.cGy),
-                                                                     (double)opt.Priority);
+                if(StructureTuningHelper.DoesStructureExistInSS(opt.StructureId,true))
+                {
+                    Structure s = StructureTuningHelper.GetStructureFromId(opt.StructureId);
+                    double dose = opt.QueryDose;
+                    if (opt.QueryDoseUnits == Units.Percent) dose *= VMATplan.TotalDose.Dose / 100.0;
+                    if (opt.ConstraintType != OptimizationObjectiveType.Mean) VMATplan.OptimizationSetup.AddPointObjective(s,
+                                                                                                                           OptimizationTypeHelper.GetObjectiveOperator(opt.ConstraintType),
+                                                                                                                           new DoseValue(dose, DoseValue.DoseUnit.cGy),
+                                                                                                                           opt.QueryVolume,
+                                                                                                                           (double)opt.Priority);
+                    else VMATplan.OptimizationSetup.AddMeanDoseObjective(s,
+                                                                         new DoseValue(dose, DoseValue.DoseUnit.cGy),
+                                                                         (double)opt.Priority);
+                }
+                else
+                {
+                    Logger.GetInstance().LogError($"Warning! Tried to added optimization constraint for structure {opt.StructureId}, but it's empty! Skipping!", true);
+                }
             }
             //turn on/turn off jaw tracking
             try { VMATplan.OptimizationSetup.UseJawTracking = useJawTracking; }

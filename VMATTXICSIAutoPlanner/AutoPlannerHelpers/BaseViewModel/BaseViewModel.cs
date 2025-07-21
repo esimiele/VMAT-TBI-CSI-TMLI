@@ -621,6 +621,7 @@ namespace AutoPlannerHelpers.BaseViewModel
                 string message = "Optimization objectives have been successfully set!" + Environment.NewLine + Environment.NewLine + "Please review the generated structures, placed isocenters, placed beams, and optimization parameters!";
                 MessageBox.Show(message);
                 Logger.GetInstance().OptimizationConstraints = PlanOptimizationConstraints.ToList();
+                Logger.GetInstance().OpType = ScriptOperationType.FullPreparationForOptimization;
                 OptimizationSetupTabBackground = Brushes.ForestGreen;
             }
             else Logger.GetInstance().LogError("Error! No optimization constraints assigned!");
@@ -640,25 +641,6 @@ namespace AutoPlannerHelpers.BaseViewModel
             {
                 //double priorTotalDose = PlanTotalDose;
                 InitialPlanTotalDose = Math.Round(_initialDosePerFraction * _initialNumberOfFractions, 1);
-                //if (PlanTotalDose != priorTotalDose)
-                //{
-                //    foreach (PlanObjectiveModel itr in PlanObjectives)
-                //    {
-                //        if (itr.QueryDoseUnits == Units.cGy)
-                //        {
-                //            itr.QueryDose = Math.Round(itr.QueryDose * PlanTotalDose / priorTotalDose, 1);
-                //        }
-                //    }
-                //    PlanObjectives.Refresh();
-                //    foreach (OptimizationConstraintModel itr in OptimizationConstraints)
-                //    {
-                //        if (itr.QueryDoseUnits == Units.cGy)
-                //        {
-                //            itr.QueryDose = Math.Round(itr.QueryDose * PlanTotalDose / priorTotalDose, 1);
-                //        }
-                //    }
-                //    OptimizationConstraints.Refresh();
-                //}
             }
         }
 

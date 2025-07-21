@@ -84,13 +84,14 @@
     /// </summary>
     public enum ScriptOperationType
     {
-        General,
+        FullPreparationForOptimization,
         ExportCT,
         ImportSS,
         StitchCT,
         GeneratePrelimTargets,
         PlanPrep,
-        AutoConvertHighToDefaultRes
+        AutoConvertHighToDefaultRes,
+        None
     };
 
     public enum Units

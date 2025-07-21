@@ -76,7 +76,7 @@ namespace AutoPlannerHelpers.Logging
         private Dictionary<string, string> normVolumes = new Dictionary<string, string>();
         private List<PlanIsocenterModel> planIsocenters = new List<PlanIsocenterModel>();
         private List<string> planUIDs = new List<string>();
-        private ScriptOperationType opType = ScriptOperationType.General;
+        private ScriptOperationType opType = ScriptOperationType.None;
 
         /// <summary>
         /// Constructor
@@ -174,7 +174,7 @@ namespace AutoPlannerHelpers.Logging
                 _logPath += "unsaved" + "\\";
                 fileName = _logPath + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".txt";
             }
-            else if (opType != ScriptOperationType.General)
+            else if (opType != ScriptOperationType.FullPreparationForOptimization)
             {
                 _logPath += "MISC" + "\\";
                 fileName = _logPath + opType.ToString() + ".txt";
@@ -191,7 +191,7 @@ namespace AutoPlannerHelpers.Logging
             sb.AppendLine($"Patient={mrn}");
             sb.AppendLine($"Plan type={planType}");
             //consider the operation that was performed when constructing the log file
-            if (opType == ScriptOperationType.General) sb.Append(BuildGeneralOpLog());
+            if (opType == ScriptOperationType.FullPreparationForOptimization) sb.Append(BuildFullPrepOpLog());
             else if (opType == ScriptOperationType.GeneratePrelimTargets) sb.Append(BuildPrelimTargetOpLog());
             else sb.AppendLine("");
 
@@ -214,11 +214,11 @@ namespace AutoPlannerHelpers.Logging
         }
 
         /// <summary>
-        /// Method to build the log file for a normal, general run of the preparation script where the focus was to prepare the structure
+        /// Method to build the log file for a normal, full preparation for optimization run of the preparation script where the focus was to prepare the structure
         /// set for optimization
         /// </summary>
         /// <returns></returns>
-        private StringBuilder BuildGeneralOpLog()
+        private StringBuilder BuildFullPrepOpLog()
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine($"Structure set={selectedSS}");
