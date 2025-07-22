@@ -202,6 +202,11 @@ namespace TBIAutoPlanner.Core
         #endregion
 
         #region structure derivation
+        protected override bool CreateSpecialOptimizationStructures()
+        {
+            return false;
+        }
+
         /// <summary>
         /// Directory method for controlling the flow of TS structure manipulations
         /// </summary>

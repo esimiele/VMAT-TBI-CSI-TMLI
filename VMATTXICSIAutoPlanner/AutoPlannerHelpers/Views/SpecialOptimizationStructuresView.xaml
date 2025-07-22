@@ -152,11 +152,11 @@
                         <ColumnDefinition Width="1.5*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <Button Grid.Column="0" Content="Add Defaults" Width="120" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding AddDefaultTSStructuresCommand}"/>
-                    <Button Grid.Column="2" Content="Clear List" Width="100" HorizontalAlignment="Center" VerticalAlignment="Top" Command="{Binding RemoveAllTSStructuresCommand}"/>
+                    <Button Grid.Column="0" Content="Add Defaults" Width="120" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding AddDefaultSpecialOptStructuresCommand}"/>
+                    <Button Grid.Column="2" Content="Clear List" Width="100" HorizontalAlignment="Center" VerticalAlignment="Top" Command="{Binding RemoveAllSpecialOptStructuresCommand}"/>
                 </Grid>
                 <ScrollViewer Height="320" Width="400" Margin="5,5,0,0" HorizontalAlignment="Center" VerticalAlignment="Bottom" Style="{StaticResource ScrollViewerStyle}">
-                    <ItemsControl x:Name="TSStructureSP" ItemsSource="{Binding RequestedTuningStructures}">
+                    <ItemsControl x:Name="TSStructureSP" ItemsSource="{Binding RequestedSpecialOptimizationStructures}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Grid>

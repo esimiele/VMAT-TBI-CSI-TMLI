@@ -90,6 +90,11 @@ namespace TMLIAutoPlanner.Core
         #endregion
 
         #region structure derivation
+        protected override bool CreateSpecialOptimizationStructures()
+        {
+            return false;
+        }
+
         protected override bool PerformStructureDerivations()
         {
             UpdateUILabel("Perform TS Manipulations: ");

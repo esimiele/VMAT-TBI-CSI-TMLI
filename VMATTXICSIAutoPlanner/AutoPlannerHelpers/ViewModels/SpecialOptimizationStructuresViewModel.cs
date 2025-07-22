@@ -21,8 +21,8 @@ namespace AutoPlannerHelpers.ViewModels
 
         #region commands
         public ICommand DisplayInfoCommand { get; set; }
-        public ICommand AddDefaultTSStructuresCommand { get; set; }
-        public ICommand RemoveAllTSStructuresCommand { get; set; }
+        public ICommand AddDefaultSpecialOptStructuresCommand { get; set; }
+        public ICommand RemoveAllSpecialOptStructuresCommand { get; set; }
         public RelayCommand<SpecialOptimizationStructureModel> ClearRowCommand { get; set; }
         #endregion
 
@@ -30,8 +30,8 @@ namespace AutoPlannerHelpers.ViewModels
         {
             RequestedSpecialOptimizationStructures = new ObservableCollectionPropertyNotify<SpecialOptimizationStructureModel> { };
             DisplayInfoCommand = new RelayCommand(DisplayTSGenerationInfo);
-            AddDefaultTSStructuresCommand = new RelayCommand(AddDefaultTSStructures);
-            RemoveAllTSStructuresCommand = new RelayCommand(RemoveAllTSStructures);
+            AddDefaultSpecialOptStructuresCommand = new RelayCommand(AddDefaultSpecialOptStructures);
+            RemoveAllSpecialOptStructuresCommand = new RelayCommand(RemoveAllSpecialOptStructures);
             ClearRowCommand = new RelayCommand<SpecialOptimizationStructureModel>(ClearRow);
             InitializeMessengers();
         }
@@ -44,7 +44,7 @@ namespace AutoPlannerHelpers.ViewModels
             });
             WeakReferenceMessenger.Default.Register<RequestSpecialOptimizationStructures>(this, (r, m) =>
             {
-                m.Reply(this.RequestedSpecialOptimizationStructures.ToList());
+                m.Reply(RequestedSpecialOptimizationStructures.ToList());
             });
         }
 
@@ -69,7 +69,7 @@ namespace AutoPlannerHelpers.ViewModels
             UpdateViewWithAutoPlanTemplateTSStructures(_defualtSpecialOptStructures);
         }
 
-        public void AddDefaultTSStructures()
+        public void AddDefaultSpecialOptStructures()
         {
             if (!_defualtSpecialOptStructures.Any()) return;
             UpdateViewWithAutoPlanTemplateTSStructures(_defualtSpecialOptStructures);
@@ -86,7 +86,7 @@ namespace AutoPlannerHelpers.ViewModels
             foreach (SpecialOptimizationStructureModel itr in ops) RequestedSpecialOptimizationStructures.Add(itr);
         }
 
-        private void RemoveAllTSStructures()
+        private void RemoveAllSpecialOptStructures()
         {
             RequestedSpecialOptimizationStructures.Clear();
         }
