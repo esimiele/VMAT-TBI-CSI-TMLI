@@ -274,16 +274,6 @@ namespace CSIAutoPlanner.Core
                 {
                     if (CreateArmsAvoid(addedStructure)) return true;
                 }
-                else if (itr.StructureId.ToLower().Contains("_prv"))
-                {
-                    //leave margin as 0.3 cm outer by default
-                    (bool fail, StringBuilder errorMessage) = ContourHelper.ContourPRVVolume(addedStructure.Id.Substring(0, addedStructure.Id.LastIndexOf("_")), addedStructure, 0.3);
-                    if (fail)
-                    {
-                        ProvideUIUpdate(errorMessage.ToString());
-                        return true;
-                    }
-                }
                 else
                 {
                     ProvideUIUpdate($"The requested tuning structure generation operation is not recognized: {itr}. Skipping!");
@@ -385,7 +375,8 @@ namespace CSIAutoPlanner.Core
 
             ProvideUIUpdate(100 * ++counter / calcItems, "Unioning left and right arms avoid structures together!");
             //now contour the arms avoid structure as the union of the left and right dummy boxes
-            if (ContourHelper.ContourUnion(new List<string> { "DummyBoxL", "DummyBoxR" }, armsAvoid.Id, UIUD)) return true;
+            armsAvoid.SegmentVolume = ContourHelper.ContourUnion(dummyBoxL, dummyBoxR, new StructureMarginModel(0), new StructureMarginModel(0));
+            if (ReferenceEquals(armsAvoid, null) || armsAvoid.IsEmpty) return true;
 
             ProvideUIUpdate(100 * ++counter / calcItems, "Contouring overlap between arms avoid and body with 5mm outer margin!");
             //contour the arms as the overlap between the current armsAvoid structure and the body with a 5mm outer margin

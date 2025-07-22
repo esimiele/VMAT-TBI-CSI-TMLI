@@ -258,8 +258,17 @@ namespace CSIAutoPlanner.ViewModels
 
         protected override void UpdatePlanTypeSpecificUIWithPlanTemplate()
         {
-            BoostDosePerFraction = (_selectedTemplate as CSIAutoPlanTemplate).BoostRxDosePerFx;
-            BoostNumberOfFractions = (_selectedTemplate as CSIAutoPlanTemplate).BoostRxNumberOfFractions;
+            if(!CalculationHelper.AreEqual((_selectedTemplate as CSIAutoPlanTemplate).BoostRxDosePerFx, 0.0) && (_selectedTemplate as CSIAutoPlanTemplate).BoostRxNumberOfFractions != 0)
+            {
+                BoostDosePerFraction = (_selectedTemplate as CSIAutoPlanTemplate).BoostRxDosePerFx;
+                BoostNumberOfFractions = (_selectedTemplate as CSIAutoPlanTemplate).BoostRxNumberOfFractions;
+            }
+            else
+            {
+                BoostDosePerFraction = 0.0;
+                BoostNumberOfFractions = 0;
+                BoostPlanTotalDose = 0.0;
+            }
         }
 
         #region script configuration

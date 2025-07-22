@@ -6,8 +6,8 @@ namespace AutoPlannerHelpers.PlanTemplateModels
     public class CSIAutoPlanTemplate : AutoPlanTemplateBase
     {
         #region Properties
-        public double BoostRxDosePerFx { get; set; } = 0.1;
-        public int BoostRxNumberOfFractions { get; set; } = 1;
+        public double BoostRxDosePerFx { get; set; } = 0.0;
+        public int BoostRxNumberOfFractions { get; set; } = 0;
         public List<TSRingStructureModel> Rings { get; set; } = new List<TSRingStructureModel>();
         public List<string> CropAndOverlapStructures { get; set; } = new List<string> { };
         public List<OptimizationConstraintModel> BoostOptimizationConstraints { get; set; } = new List<OptimizationConstraintModel> { };

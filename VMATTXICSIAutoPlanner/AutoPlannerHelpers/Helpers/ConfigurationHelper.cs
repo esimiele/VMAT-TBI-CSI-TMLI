@@ -241,7 +241,7 @@ namespace AutoPlannerHelpers.Helpers
         {
             if (line.Contains("add target derivation")) tempTemplate.TargetDerivationOperations.Add(ParseStructureDerivation(line));
             else if (line.Contains("add opt structure derivation")) tempTemplate.OptimizationStructureDerivations.Add(ParseStructureDerivation(line));
-            else if (line.Contains("add special optimization structure")) tempTemplate.SpecialOptimizationStructures.Add(ParseSpecialOptStructure(line));
+            else if (line.Contains("add special optimization structure")) tempTemplate.SpecialOptimizationStructures.Add(ParseSpecialOptimizationStructure(line));
             else if (line.Contains("add prescription target")) tempTemplate.PlanTargets.Add(ParseTargets(line));
             else if (line.Contains("add optimization TS structure")) tempTemplate.RequestedOptimizationTSStructures.Add(ParseOptimizationTSstructure(line));
             else if (line.Contains("add plan objective")) tempTemplate.PlanObjectives.Add(ParsePlanObjective(line));
@@ -291,7 +291,7 @@ namespace AutoPlannerHelpers.Helpers
         /// </summary>
         /// <param name="line"></param>
         /// <returns></returns>
-        public static SpecialOptimizationStructureModel ParseSpecialOptStructure(string line)
+        public static SpecialOptimizationStructureModel ParseSpecialOptimizationStructure(string line)
         {
             //known array format --> can take shortcuts in parsing the data
             //structure id, sparing type, added margin in cm (ignored if sparing type is Dmax ~ Rx Dose)

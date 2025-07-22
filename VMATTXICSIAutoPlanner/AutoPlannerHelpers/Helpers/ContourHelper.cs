@@ -139,7 +139,7 @@ namespace AutoPlannerHelpers.Helpers
                 MarginB = new StructureMarginModel(marginInCm),
                 OutputStructure = theStructure
             };
-            return (PerformStructureOperation(model, ProvideUIUpdate));
+            return PerformStructureOperation(model, ProvideUIUpdate);
         }
 
         public static void CleanTemporaryStructures(IEnumerable<StructureOperationModel> operations)
@@ -161,45 +161,19 @@ namespace AutoPlannerHelpers.Helpers
         }
 
         /// <summary>
-        /// Helper method to combine/union a list of structures onto structureToUnion
-        /// </summary>
-        /// <param name="structuresToCombine"></param>
-        /// <param name="structureToUnion"></param>
-        /// <returns></returns>
-        public static bool ContourUnion(List<string> structures, string outputStructure, UIUpdateMessageOnlyDelegate ProvideUIUpdate)
-        {
-            List<StructureOperationModel> operations = new List<StructureOperationModel>();
-            foreach(string itr in structures)
-            {
-                operations.Add(new StructureOperationModel(itr, StructureDerivationOperation.Union, outputStructure, outputStructure));
-            }
-
-            foreach (StructureOperationModel itr in operations)
-            {
-                if (itr.IsValidOperation)
-                {
-                    ProvideUIUpdate($"Performing: {itr.FriendlyName}");
-                    if (PerformStructureOperation(itr, ProvideUIUpdate)) return true;
-                }
-                else ProvideUIUpdate($"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");
-            }
-            return false;
-        }
-
-        /// <summary>
         /// Helper mthod to create a ring structure from the supplied target structure using specified margin and thickness values
         /// </summary>
         /// <param name="target"></param>
         /// <param name="ring"></param>
         /// <param name="EclipseContext.GetInstance().StructureSet"></param>
-        /// <param name="marginInCm"></param>
+        /// <param name="marginInCm"></param>s
         /// <param name="thickness"></param>
         /// <returns></returns>
         public static bool CreateRing(string target, string ring, double marginInCm, double thickness, UIUpdateMessageOnlyDelegate ProvideUIUpdate)
         {
             List<StructureOperationModel> operations = new List<StructureOperationModel>
             {
-                new StructureOperationModel(ring, StructureDerivationOperation.Union, target, ring, new StructureMarginModel(0), new StructureMarginModel(thickness + marginInCm)),
+                new StructureOperationModel(target, StructureDerivationOperation.CopyContractExpand, ring, new StructureMarginModel(thickness + marginInCm)),
                 new StructureOperationModel(ring, StructureDerivationOperation.Crop, target, ring, new StructureMarginModel(0), new StructureMarginModel(marginInCm)),
                 new StructureOperationModel(ring, StructureDerivationOperation.Intersection, "body", ring)
             };
@@ -214,36 +188,6 @@ namespace AutoPlannerHelpers.Helpers
                 else ProvideUIUpdate($"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");
             }
             return false;
-        }
-
-        /// <summary>
-        /// Helper method to contour a PRV volume from the supplied base structure id using specified margin
-        /// </summary>
-        /// <param name="baseStructureId"></param>
-        /// <param name="PRVStructure"></param>
-        /// <param name="EclipseContext.GetInstance().StructureSet"></param>
-        /// <param name="marginInCm"></param>
-        /// <returns></returns>
-        public static (bool, StringBuilder) ContourPRVVolume(string baseStructureId, Structure PRVStructure, double marginInCm)
-        {
-            StringBuilder sb = new StringBuilder();
-            bool fail = false;
-            Structure baseStructure = StructureTuningHelper.GetStructureFromId(baseStructureId);
-            if (!ReferenceEquals(baseStructure, null))
-            {
-                if (marginInCm >= -5.0 && marginInCm <= 5.0) PRVStructure.SegmentVolume = baseStructure.SegmentVolume.Margin(marginInCm * 10);
-                else
-                {
-                    sb.AppendLine($"Error! Requested PRV margin ({marginInCm:0.0} cm) is outside +/- 5 cm! Exiting!");
-                    fail = true;
-                }
-            }
-            else
-            {
-                sb.AppendLine($"Error! Cannot find base structure: {baseStructureId}! Exiting!");
-                fail = true;
-            }
-            return (fail, sb);
         }
 
         /// <summary>

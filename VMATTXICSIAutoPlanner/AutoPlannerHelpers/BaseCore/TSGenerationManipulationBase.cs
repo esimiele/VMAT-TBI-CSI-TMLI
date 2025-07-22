@@ -76,7 +76,7 @@ namespace AutoPlannerHelpers.BaseCore
 
         #region virtual and abstract methods
         protected abstract bool PreliminaryChecks();
-        protected abstract bool CreateSpecialOptimizationStructures()
+        protected abstract bool CreateSpecialOptimizationStructures();
         protected abstract bool PerformStructureDerivations();
         protected abstract bool CalculateNumIsos();
         protected abstract bool PerformPlanSpecificStructureDerivations();

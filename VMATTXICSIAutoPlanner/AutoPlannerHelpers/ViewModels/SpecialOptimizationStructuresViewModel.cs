@@ -51,14 +51,9 @@ namespace AutoPlannerHelpers.ViewModels
         private void DisplayTSGenerationInfo()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("What's the difference between TS structure generation vs manipulation?");
-            sb.AppendLine("TS structure generation involves adding structures to the structure set to shape the dose distribution. These include rings, preliminary targets, etc. E.g.,");
-            sb.AppendLine("TS_ring900  -->  ring structure around the targets using a nominal dose level of 900 cGy to determine fall-off");
-            sb.AppendLine("PTV_Spine  -->  preliminary target used to aid physician contouring of the final target that will be approved");
-            sb.AppendLine("TS structure manipulation involves manipulating/modifying the structure itself or target structures. E.g.,");
-            sb.AppendLine("(Ovaries, Crop target from structure, 1.5cm)  -->  modify the target structure such that the ovaries structure is cropped from the target with a 1.5 cm margin");
-            sb.AppendLine("(Brainstem, Contour overlap, 0.0 cm)  -->  Identify the overlapping regions between the brainstem and target structure(s) and contour them as new structures");
-            sb.AppendLine("Kidneys-1cm  -->  substructure for the Kidneys volume where the Kidneys are contracted by 1 cm");
+            sb.AppendLine("What's a Special Optimization Structure?");
+            sb.AppendLine("Special optimization structures are structures that require special, non-standard rules to derive.");
+            sb.AppendLine("E.g., ts_arms (lateral edges of the body expanded by a margin).");
             MessageBox.Show(sb.ToString());
         }
 

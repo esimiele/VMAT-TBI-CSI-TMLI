@@ -92,7 +92,7 @@ namespace AutoPlannerHelpers.Models
             IsTemporary = isTemp;
         }
 
-        public StructureOperationModel(string a, StructureDerivationOperation op, string outStructure, StructureMarginModel marginA, bool isTemp)
+        public StructureOperationModel(string a, StructureDerivationOperation op, string outStructure, StructureMarginModel marginA, bool isTemp = false)
         {
             StructureA = a;
             MarginA = marginA;
