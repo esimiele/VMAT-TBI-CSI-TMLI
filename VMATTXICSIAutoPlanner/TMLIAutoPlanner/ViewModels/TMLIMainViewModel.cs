@@ -187,6 +187,32 @@ namespace TMLIAutoPlanner.ViewModels
         {
             return TMLIAutoPlannerSettings.PhysicianTargetApprovalRequired;
         }
+
+        protected override List<PrescriptionModel> BuildPlanTypeSpecificPrescriptionList(List<PlanTargetsModel> planTargets)
+        {
+            return TargetsHelper.BuildPrescriptionList(planTargets,
+                                                    _initialDosePerFraction,
+                                                    _initialNumberOfFractions,
+                                                    _initialPlanTotalDose);
+        }
+
+        protected override void UpdatePlanTypeSpecificStructureOperationViews()
+        {
+            List<TSRingStructureModel> rings = (_selectedTemplate as TMLIAutoPlanTemplate).Rings;
+            List<TargetModel> templateTargets = (_selectedTemplate as TMLIAutoPlanTemplate).PlanTargets.SelectMany(x => x.Targets).ToList();
+            foreach(TSRingStructureModel itr in rings)
+            {
+                if(templateTargets.Any(x => string.Equals(x.TargetId, itr.TargetId)) && _prescriptions.Any(x => string.Equals(x.TargetId, itr.TargetId)))
+                {
+                    if(!CalculationHelper.AreEqual(templateTargets.First(x => string.Equals(x.TargetId, itr.TargetId)).TargetRxDose, _prescriptions.First(x => string.Equals(x.TargetId, itr.TargetId)).CumulativeDoseToTarget))
+                    {
+                        itr.DoseLevel *= _prescriptions.First(x => string.Equals(x.TargetId, itr.TargetId)).CumulativeDoseToTarget / templateTargets.First(x => string.Equals(x.TargetId, itr.TargetId)).TargetRxDose;
+                        itr.RingId = $"TS_ring{itr.DoseLevel}";
+                    }
+                }
+            }
+            WeakReferenceMessenger.Default.Send(new RequestUpdateRingStructures(rings, !EclipseContext.GetInstance().IsInitialized));
+        }
         #endregion
 
         #region TS generation and manipulation
@@ -259,6 +285,8 @@ namespace TMLIAutoPlanner.ViewModels
             return false;
         }
         #endregion
+
+        protected override void UpdatePlanTypeSpecificUIWithPlanTemplate() { }
 
         #region script configuration
         protected override void LoadScriptConfigurationSettings(string file)

@@ -22,7 +22,7 @@ namespace AutoPlannerHelpers.ViewModels
         #endregion
 
         #region fields
-        private AutoPlanTemplateBase _selectedTemplate = null;
+        private List<PlanTargetsModel> _planTargets = new List<PlanTargetsModel> { };
         #endregion
 
         #region commands
@@ -52,9 +52,9 @@ namespace AutoPlannerHelpers.ViewModels
 
         private void InitializeMessengers()
         {
-            WeakReferenceMessenger.Default.Register<RequestAutoPlanTemplateChangedMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<RequestUpdatePlanTargetsList>(this, (r, m) =>
             {
-                AutoPlanTemplateSelectionChanged(m.AutoPlanTemplate);
+                UpdateDefaultPlanTargetsList(m.PlanTargets);
             });
         }
 
@@ -94,29 +94,22 @@ namespace AutoPlannerHelpers.ViewModels
             }
         }
 
-        public void AutoPlanTemplateSelectionChanged(AutoPlanTemplateBase template)
+        public void UpdateDefaultPlanTargetsList(List<PlanTargetsModel> planTargets)
         {
-            if(ReferenceEquals(template, null)) return;
-            _selectedTemplate = template;
-            UpdateViewWithAutoPlanTemplateTargets();
+            _planTargets = new List<PlanTargetsModel>(planTargets);
+            AddDefaultTargets();
         }
 
         public void AddDefaultTargets()
         {
-            if(ReferenceEquals(_selectedTemplate, null)) return;
-            UpdateViewWithAutoPlanTemplateTargets();
-        }
-
-        public void UpdateViewWithAutoPlanTemplateTargets()
-        {
             TargetIds.Clear();
             PlanIds.Clear();
             TargetIds.Add("--Add New--");
-            foreach(string itr in _selectedTemplate.PlanTargets.SelectMany(x => x.Targets).Select(x => x.TargetId)) TargetIds.Add(itr);
+            foreach (string itr in _planTargets.SelectMany(x => x.Targets).Select(x => x.TargetId)) TargetIds.Add(itr);
             PlanIds.Add("--Add New--");
-            PlanIds.AddRange(_selectedTemplate.PlanTargets.Select(x => x.PlanId));
+            PlanIds.AddRange(_planTargets.Select(x => x.PlanId));
             Targets.Clear();
-            foreach (PlanTargetsModel itr in _selectedTemplate.PlanTargets) Targets.Add(new UnstructuredTargetModel(itr));
+            foreach (PlanTargetsModel itr in _planTargets) Targets.Add(new UnstructuredTargetModel(itr));
         }
 
         public void AddEmptyTarget()

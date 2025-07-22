@@ -49,10 +49,10 @@ namespace AutoPlannerHelpers.ViewModels
 
         private void InitializeMessengers()
         {
-            WeakReferenceMessenger.Default.Register<RequestAutoPlanTemplateChangedMessage>(this, (r, m) =>
-            {
-                AutoPlanTemplateSelectionChanged(m.AutoPlanTemplate);
-            });
+            //WeakReferenceMessenger.Default.Register<RequestAutoPlanTemplateChangedMessage>(this, (r, m) =>
+            //{
+            //    AutoPlanTemplateSelectionChanged(m.AutoPlanTemplate);
+            //});
             //WeakReferenceMessenger.Default.Register<RequestUpdateTSManipulationList>(this, (r, m) =>
             //{
             //    UpdateTSManipulationList(m.StructureIds, m.RequestedTSManipulations);

@@ -31,7 +31,8 @@ namespace AutoPlannerHelpers.ViewModels
         #endregion
 
         #region fields
-        private AutoPlanTemplateBase _selectedTemplate;
+        private List<TSRingStructureModel> _defaultRings = new List<TSRingStructureModel> { };
+        private bool _skipStructureIdCheck = false;
         #endregion
 
         public RingGenerationViewModel() 
@@ -48,9 +49,9 @@ namespace AutoPlannerHelpers.ViewModels
 
         private void InitializeMessengers()
         {
-            WeakReferenceMessenger.Default.Register<RequestAutoPlanTemplateChangedMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<RequestUpdateRingStructures>(this, (r, m) =>
             {
-                AutoPlanTemplateSelectionChanged(m.AutoPlanTemplate);
+                UpdateDefaultRings(m.Rings, m.SkipStructureIdCheck);
             });
             WeakReferenceMessenger.Default.Register<RequestUpdateStructureIds>(this, (r, m) =>
             {
@@ -63,23 +64,25 @@ namespace AutoPlannerHelpers.ViewModels
             });
         }
 
-        public void AutoPlanTemplateSelectionChanged(AutoPlanTemplateBase template, bool skipStructureCheck = true)
+        public void UpdateDefaultRings(List<TSRingStructureModel> rings, bool skipStructureCheck = true)
         {
-            if (ReferenceEquals(template, null)) return;
-            _selectedTemplate = template;
-            UpdateViewWithAutoPlanTemplateRings(skipStructureCheck);
+            if (!rings.Any()) return;
+            _defaultRings = new List<TSRingStructureModel>(rings);
+            _skipStructureIdCheck = skipStructureCheck;
+            AddDefaultRings();
         }
 
-        private void UpdateViewWithAutoPlanTemplateRings(bool skipStructureIdCheck)
+        public void AddRing()
+        {
+            RequestedRingStructures.Add(new TSRingStructureModel(StructureIdsPostUnion.First(), 0.0, 0.0, 0.0));
+        }
+
+        public void AddDefaultRings()
         {
             RequestedRingStructures.Clear();
-            List<TSRingStructureModel> templateRings;
-            if (_selectedTemplate.GetType() == typeof(CSIAutoPlanTemplate)) templateRings = (_selectedTemplate as CSIAutoPlanTemplate).Rings;
-            else if (_selectedTemplate.GetType() == typeof(TMLIAutoPlanTemplate)) templateRings = (_selectedTemplate as TMLIAutoPlanTemplate).Rings;
-            else return;
-            foreach (TSRingStructureModel itr in templateRings)
+            foreach (TSRingStructureModel itr in _defaultRings)
             {
-                if (skipStructureIdCheck)
+                if (_skipStructureIdCheck)
                 {
                     if (!StructureIdsPostUnion.Any(x => string.Equals(x, itr.TargetId, StringComparison.OrdinalIgnoreCase))) StructureIdsPostUnion.Add(itr.TargetId);
                     RequestedRingStructures.Add(itr);
@@ -90,17 +93,6 @@ namespace AutoPlannerHelpers.ViewModels
                     RequestedRingStructures.Add(itr);
                 }
             }
-        }
-
-        public void AddRing()
-        {
-            RequestedRingStructures.Add(new TSRingStructureModel(StructureIdsPostUnion.First(), 0.0, 0.0, 0.0));
-        }
-
-        public void AddDefaultRings()
-        {
-            if (ReferenceEquals(_selectedTemplate, null)) return;
-            UpdateViewWithAutoPlanTemplateRings(false);
         }
 
         public void ClearRingList()

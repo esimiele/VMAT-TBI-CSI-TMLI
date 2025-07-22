@@ -348,20 +348,28 @@ namespace AutoPlannerHelpers.BaseViewModel
 
         protected abstract GeneratePreliminaryTargetsBase GetTargetDerivationClassInstanceForPlanType(List<StructureOperationModel> preliminaryTargets);
 
-        protected virtual void SetTargets(List<PlanTargetsModel> planTargets)
+        protected void SetTargets(List<PlanTargetsModel> planTargets)
         {
             if (!planTargets.Any()) return;
             if (VerifyPlansIntegrity(planTargets)) return;
             if (VerifyTargetsIntegrity(planTargets.SelectMany(x => x.Targets))) return;
 
-            _prescriptions = TargetsHelper.BuildPrescriptionList(planTargets, _initialDosePerFraction, _initialNumberOfFractions, _initialPlanTotalDose);
+            _prescriptions = BuildPlanTypeSpecificPrescriptionList(planTargets);
             if (!_prescriptions.Any()) return;
             Logger.GetInstance().Prescriptions = _prescriptions;
             _planOptimizationSetup = BuildPlanOptimizationSetupList();
+
+            WeakReferenceMessenger.Default.Send(new RequestUpdateOptimizationStructureDerivations(_selectedTemplate.OptimizationStructureDerivations));
+            WeakReferenceMessenger.Default.Send(new RequestUpdateSpecialOptimizationStructures(_selectedTemplate.SpecialOptimizationStructures));
+
             SpecifyTargetsTabBackground = Brushes.ForestGreen;
             StructureTuningTabBackground = Brushes.PaleVioletRed;
             OptimizationStructureDerivationBackground = Brushes.PaleVioletRed;
         }
+
+        protected abstract List<PrescriptionModel> BuildPlanTypeSpecificPrescriptionList(List<PlanTargetsModel> planTargets);
+
+        protected abstract void UpdatePlanTypeSpecificStructureOperationViews();
 
         protected bool VerifyTargetsIntegrity(IEnumerable<TargetModel> targets)
         {
@@ -567,18 +575,6 @@ namespace AutoPlannerHelpers.BaseViewModel
             return planConstraints;
         }
 
-        public List<PlanOptimizationSetupModel> UpdateOptimizationConstraintsWithCropOverlapStructures(List<TSTargetCropOverlapModel> manipulations, List<PlanOptimizationSetupModel> planConstraints)
-        {
-            foreach (TSTargetCropOverlapModel itr in manipulations)
-            {
-                List<OptimizationConstraintModel> constraints = planConstraints.First(x => string.Equals(x.PlanId, itr.PlanId)).OptimizationConstraints;
-                foreach (OptimizationConstraintModel model in constraints.Where(x => string.Equals(x.StructureId, itr.TargetId)))
-                {
-                    model.StructureId = itr.ManipulationTargetId;
-                }
-            }
-            return planConstraints;
-        }
 
         public List<PlanOptimizationSetupModel> UpdateOptimizationConstraintsWithTSJunctions(List<PlanFieldJunctionModel> junctions, List<PlanOptimizationSetupModel> planConstraints)
         {
@@ -650,16 +646,12 @@ namespace AutoPlannerHelpers.BaseViewModel
             InitialDosePerFraction = _selectedTemplate.InitialRxDosePerFx;
             InitialNumberOfFractions = _selectedTemplate.InitialRxNumberOfFractions;
             UpdatePlanTypeSpecificUIWithPlanTemplate();
-            WeakReferenceMessenger.Default.Send(new RequestAutoPlanTemplateChangedMessage(_selectedTemplate, EclipseContext.GetInstance().IsInitialized ? false : true));
+            WeakReferenceMessenger.Default.Send(new RequestUpdatePlanTargetsList(_selectedTemplate.PlanTargets));
             WeakReferenceMessenger.Default.Send(new RequestUpdateTargetDerivationOperations(_selectedTemplate.TargetDerivationOperations));
-            WeakReferenceMessenger.Default.Send(new RequestUpdateOptimizationStructureDerivations(_selectedTemplate.OptimizationStructureDerivations));
             Logger.GetInstance().Template = _selectedTemplate.TemplateName;
         }
 
-        protected virtual void UpdatePlanTypeSpecificUIWithPlanTemplate()
-        {
-            return;
-        }
+        protected abstract void UpdatePlanTypeSpecificUIWithPlanTemplate();
         #endregion
 
         #region script configuration

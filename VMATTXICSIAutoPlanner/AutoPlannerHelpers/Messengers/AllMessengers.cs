@@ -23,13 +23,18 @@ namespace AutoPlannerHelpers.Messengers
 
     #region set targets
     public class RequestTargetStructureDerivations : RequestMessage<List<StructureOperationModel>> { }
-    public class RequestSetTargetsMessage
+    public class RequestSetTargetsMessage : PlanTargetListMessage
     {
-        public List<PlanTargetsModel> PlanTargets { get; private set; }
-        public RequestSetTargetsMessage(List<PlanTargetsModel> planTargets)
-        {
-            this.PlanTargets = planTargets;
-        }
+        public RequestSetTargetsMessage(IEnumerable<PlanTargetsModel> planTargets) { this.PlanTargets = new List<PlanTargetsModel>(planTargets); }
+    }
+    public class RequestUpdatePlanTargetsList : PlanTargetListMessage
+    {
+        public RequestUpdatePlanTargetsList(IEnumerable<PlanTargetsModel> planTargets) { this.PlanTargets = new List<PlanTargetsModel>(planTargets); }
+    }
+
+    public class PlanTargetListMessage
+    {
+        public List<PlanTargetsModel> PlanTargets { get; protected set; }
     }
     #endregion
 
@@ -70,9 +75,28 @@ namespace AutoPlannerHelpers.Messengers
         }
     }
 
+    public class RequestUpdateSpecialOptimizationStructures
+    {
+        public List<SpecialOptimizationStructureModel> SpecialOptimizationStructures { get; private set; }
+        public RequestUpdateSpecialOptimizationStructures(IEnumerable<SpecialOptimizationStructureModel> specialOptStructures) { this.SpecialOptimizationStructures = new List<SpecialOptimizationStructureModel>(specialOptStructures); }
+    }
+
     public class RequestCropOverlapStructures : RequestMessage<List<string>> { }
     public class RequestRingStructures : RequestMessage<List<TSRingStructureModel>> { }
     public class RequestSpecialOptimizationStructures : RequestMessage<List<SpecialOptimizationStructureModel>> { }
+    public class RequestUpdateRingStructures
+    {
+        public bool SkipStructureIdCheck { get; private set; }
+        public List<TSRingStructureModel> Rings { get; private set; }
+        public RequestUpdateRingStructures(IEnumerable<TSRingStructureModel> rings, bool skipStructureIdCheck) { this.Rings = new List<TSRingStructureModel>(rings); this.SkipStructureIdCheck = skipStructureIdCheck; }
+    }
+
+    public class RequestUpdateCropOverlapStructures
+    {
+        public bool SkipStructureIdCheck { get; private set; }
+        public List<string> CropOverlapStructures { get; private set; }
+        public RequestUpdateCropOverlapStructures(IEnumerable<string> cropOverlapStructures, bool skipStructureIdCheck) { this.CropOverlapStructures = new List<string>(cropOverlapStructures); this.SkipStructureIdCheck = skipStructureIdCheck; }
+    }
     #endregion
 
     #region beam placement
@@ -158,17 +182,6 @@ namespace AutoPlannerHelpers.Messengers
     #endregion
 
     #region multiple
-    public class RequestAutoPlanTemplateChangedMessage
-    {
-        public bool SkipStructureIdCheck { get; private set; }
-        public AutoPlanTemplateBase AutoPlanTemplate { get; private set; }
-        public RequestAutoPlanTemplateChangedMessage(AutoPlanTemplateBase autoPlanTemplate, bool skipStructureCheck = false) 
-        { 
-            this.AutoPlanTemplate = autoPlanTemplate;
-            this.SkipStructureIdCheck = skipStructureCheck;
-        }
-    }
-
     public class RequestUpdateStructureIds
     {
         public List<string> StructureIds { get; private set; }
@@ -198,6 +211,12 @@ namespace AutoPlannerHelpers.Messengers
             PlanType = type;
             FullPreparationLogPath = logPath;
         }
+    }
+
+    public class RequestUpdatePlanObjectives
+    {
+        public List<PlanObjectiveModel> PlanObjectives { get; private set; }
+        public RequestUpdatePlanObjectives(IEnumerable<PlanObjectiveModel> planObjectives) { this.PlanObjectives = new List<PlanObjectiveModel>(planObjectives); }
     }
     #endregion
 }

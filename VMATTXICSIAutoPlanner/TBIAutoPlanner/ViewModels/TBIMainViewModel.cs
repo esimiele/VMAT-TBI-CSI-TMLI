@@ -175,6 +175,16 @@ namespace TBIAutoPlanner.ViewModels
             return TBIAutoPlannerSettings.PhysicianTargetApprovalRequired;
         }
 
+        protected override List<PrescriptionModel> BuildPlanTypeSpecificPrescriptionList(List<PlanTargetsModel> planTargets)
+        {
+            return TargetsHelper.BuildPrescriptionList(planTargets,
+                                                    _initialDosePerFraction,
+                                                    _initialNumberOfFractions,
+                                                    _initialPlanTotalDose);
+        }
+
+        protected override void UpdatePlanTypeSpecificStructureOperationViews() { }
+
         private void UpdatePTVMarginFromBodyInTargetDerivations(double oldMargin, double newMargin)
         {
             List<StructureOperationModel> targetDerivations = WeakReferenceMessenger.Default.Send(new RequestTargetStructureDerivations());
@@ -278,6 +288,8 @@ namespace TBIAutoPlanner.ViewModels
             return false;
         }
         #endregion
+
+        protected override void UpdatePlanTypeSpecificUIWithPlanTemplate() { }
 
         private void UpdateUseFlash()
         {

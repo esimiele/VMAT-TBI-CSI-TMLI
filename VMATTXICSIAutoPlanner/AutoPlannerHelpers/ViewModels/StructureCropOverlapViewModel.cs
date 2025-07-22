@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Input;
 using AutoPlannerHelpers.Messengers;
-using AutoPlannerHelpers.PlanTemplateModels;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -15,13 +14,9 @@ namespace AutoPlannerHelpers.ViewModels
         public ObservableCollectionPropertyNotify<string> CropOverlapStructures { get; set; }
         public ObservableCollectionPropertyNotify<string> StructureIdsPostUnion { get; set; }
         
-        #region properties
-        private AutoPlanTemplateBase _selectedTemplate;
-
-        #endregion
-
         #region fields
         private bool _skipStructureIdCheck = false;
+        private List<string> _defaultCropOverlapStructures = new List<string> { };
         #endregion
 
         #region commands
@@ -44,9 +39,9 @@ namespace AutoPlannerHelpers.ViewModels
 
         private void InitializeMessengers()
         {
-            WeakReferenceMessenger.Default.Register<RequestAutoPlanTemplateChangedMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<RequestUpdateCropOverlapStructures>(this, (r, m) =>
             {
-                AutoPlanTemplateSelectionChanged(m.AutoPlanTemplate, m.SkipStructureIdCheck);
+                UpdateDefaultCropOverlapStructures(m.CropOverlapStructures, m.SkipStructureIdCheck);
             });
             WeakReferenceMessenger.Default.Register<RequestCropOverlapStructures>(this, (r, m) =>
             {
@@ -64,28 +59,21 @@ namespace AutoPlannerHelpers.ViewModels
             CropOverlapStructures.Add(StructureIdsPostUnion.FirstOrDefault());
         }
 
-        public void AutoPlanTemplateSelectionChanged(AutoPlanTemplateBase template, bool skipStructureCheck)
+        public void UpdateDefaultCropOverlapStructures(List<string> cropOverlapStructures, bool skipStructureCheck)
         {
-            if (ReferenceEquals(template, null)) return;
-            _selectedTemplate = template;
+            _defaultCropOverlapStructures = new List<string>(cropOverlapStructures);
             _skipStructureIdCheck = skipStructureCheck;
-            UpdateViewWithAutoPlanTemplateCropOverlapStructures();
+            AddDefaultCropOverlapStructures();
         }
 
-        public void UpdateViewWithAutoPlanTemplateCropOverlapStructures()
+        public void AddDefaultCropOverlapStructures()
         {
             CropOverlapStructures.Clear();
-            List<string> cropOverlap;
-            if (_selectedTemplate.GetType() == typeof(CSIAutoPlanTemplate))
-            {
-                cropOverlap = (_selectedTemplate as CSIAutoPlanTemplate).CropAndOverlapStructures;
-            }
-            else return;
-            foreach (string itr in cropOverlap)
+            foreach (string itr in _defaultCropOverlapStructures)
             {
                 if (_skipStructureIdCheck)
                 {
-                    if(!StructureIdsPostUnion.Any(x => string.Equals(x, itr, StringComparison.OrdinalIgnoreCase))) StructureIdsPostUnion.Add(itr);
+                    if (!StructureIdsPostUnion.Any(x => string.Equals(x, itr, StringComparison.OrdinalIgnoreCase))) StructureIdsPostUnion.Add(itr);
                     CropOverlapStructures.Add(itr);
                 }
                 else if (StructureIdsPostUnion.Any(x => string.Equals(x, itr, StringComparison.OrdinalIgnoreCase)))
@@ -93,12 +81,6 @@ namespace AutoPlannerHelpers.ViewModels
                     CropOverlapStructures.Add(itr);
                 }
             }
-        }
-
-        public void AddDefaultCropOverlapStructures()
-        {
-            if (ReferenceEquals(_selectedTemplate, null)) return;
-            UpdateViewWithAutoPlanTemplateCropOverlapStructures();
         }
 
         public void ClearCropOverlapStructureList()

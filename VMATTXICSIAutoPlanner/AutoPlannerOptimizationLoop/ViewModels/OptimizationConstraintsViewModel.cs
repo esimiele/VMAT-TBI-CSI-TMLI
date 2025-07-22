@@ -72,10 +72,10 @@ namespace AutoPlannerOptimizationLoop.ViewModels
 
         private void InitializeMessengers()
         {
-            WeakReferenceMessenger.Default.Register<RequestAutoPlanTemplateChangedMessage>(this, (r, m) =>
-            {
-                UpdateViewWithSelectedPlanTemplate(m.AutoPlanTemplate);
-            });
+            //WeakReferenceMessenger.Default.Register<RequestAutoPlanTemplateChangedMessage>(this, (r, m) =>
+            //{
+            //    UpdateViewWithSelectedPlanTemplate(m.AutoPlanTemplate);
+            //});
             WeakReferenceMessenger.Default.Register<RequestPlanSelectionChanged>(this, (r, m) =>
             {
                 ClearOptimizationConstraints();

@@ -163,24 +163,34 @@ namespace CSIAutoPlanner.ViewModels
             return CSIAutoPlannerSettings.PhysicianTargetApprovalRequired;
         }
 
-        protected override void SetTargets(List<PlanTargetsModel> planTargets)
+        protected override List<PrescriptionModel> BuildPlanTypeSpecificPrescriptionList(List<PlanTargetsModel> planTargets)
         {
-            if (!planTargets.Any()) return;
-            if (VerifyPlansIntegrity(planTargets)) return;
-            if (VerifyTargetsIntegrity(planTargets.SelectMany(x => x.Targets))) return;
-            _prescriptions = TargetsHelper.BuildPrescriptionList(planTargets, 
-                                                                 _initialDosePerFraction, 
-                                                                 _initialNumberOfFractions, 
-                                                                 _initialPlanTotalDose,
-                                                                 _boostDosePerFraction,
-                                                                 _boostNumberOfFractions,
-                                                                 _boostPlanTotalDose);
-            if (!_prescriptions.Any()) return;
-            Logger.GetInstance().Prescriptions = _prescriptions;
-            _planOptimizationSetup = BuildPlanOptimizationSetupList();
-            SpecifyTargetsTabBackground = Brushes.ForestGreen;
-            StructureTuningTabBackground = Brushes.PaleVioletRed;
-            OptimizationStructureDerivationBackground = Brushes.PaleVioletRed;
+            return TargetsHelper.BuildPrescriptionList(planTargets,
+                                                    _initialDosePerFraction,
+                                                    _initialNumberOfFractions,
+                                                    _initialPlanTotalDose,
+                                                    _boostDosePerFraction,
+                                                    _boostNumberOfFractions,
+                                                    _boostPlanTotalDose);
+        }
+
+        protected override void UpdatePlanTypeSpecificStructureOperationViews()
+        {
+            List<TSRingStructureModel> rings = (_selectedTemplate as CSIAutoPlanTemplate).Rings;
+            List<TargetModel> templateTargets = (_selectedTemplate as CSIAutoPlanTemplate).PlanTargets.SelectMany(x => x.Targets).ToList();
+            foreach (TSRingStructureModel itr in rings)
+            {
+                if (templateTargets.Any(x => string.Equals(x.TargetId, itr.TargetId)) && _prescriptions.Any(x => string.Equals(x.TargetId, itr.TargetId)))
+                {
+                    if (!CalculationHelper.AreEqual(templateTargets.First(x => string.Equals(x.TargetId, itr.TargetId)).TargetRxDose, _prescriptions.First(x => string.Equals(x.TargetId, itr.TargetId)).CumulativeDoseToTarget))
+                    {
+                        itr.DoseLevel *= _prescriptions.First(x => string.Equals(x.TargetId, itr.TargetId)).CumulativeDoseToTarget / templateTargets.First(x => string.Equals(x.TargetId, itr.TargetId)).TargetRxDose;
+                        itr.RingId = $"TS_ring{itr.DoseLevel}";
+                    }
+                }
+            }
+            WeakReferenceMessenger.Default.Send(new RequestUpdateRingStructures(rings, !EclipseContext.GetInstance().IsInitialized));
+            WeakReferenceMessenger.Default.Send(new RequestUpdateCropOverlapStructures((_selectedTemplate as CSIAutoPlanTemplate).CropAndOverlapStructures, !EclipseContext.GetInstance().IsInitialized));
         }
         #endregion
 
@@ -201,6 +211,20 @@ namespace CSIAutoPlanner.ViewModels
             base.UpdateOptimizationSetup(generateTS);
             _planOptimizationSetup = UpdateOptimizationConstraintsWithRings((generateTS as TSGenerationManipulation_CSI).AddedRings, _planOptimizationSetup);
             _planOptimizationSetup = UpdateOptimizationConstraintsWithCropOverlapStructures((generateTS as TSGenerationManipulation_CSI).TargetCropOverlapManipulations, _planOptimizationSetup);
+        }
+
+
+        private List<PlanOptimizationSetupModel> UpdateOptimizationConstraintsWithCropOverlapStructures(List<TSTargetCropOverlapModel> manipulations, List<PlanOptimizationSetupModel> planConstraints)
+        {
+            foreach (TSTargetCropOverlapModel itr in manipulations)
+            {
+                List<OptimizationConstraintModel> constraints = planConstraints.First(x => string.Equals(x.PlanId, itr.PlanId)).OptimizationConstraints;
+                foreach (OptimizationConstraintModel model in constraints.Where(x => string.Equals(x.StructureId, itr.TargetId)))
+                {
+                    model.StructureId = itr.ManipulationTargetId;
+                }
+            }
+            return planConstraints;
         }
         #endregion
 

@@ -38,9 +38,9 @@ namespace AutoPlannerHelpers.ViewModels
 
         private void InitializeMessengers()
         {
-            WeakReferenceMessenger.Default.Register<RequestAutoPlanTemplateChangedMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<RequestUpdateSpecialOptimizationStructures>(this, (r, m) =>
             {
-                AutoPlanTemplateSelectionChanged(m.AutoPlanTemplate.SpecialOptimizationStructures);
+                UpdateDefaultSpecialOptimizationStructures(m.SpecialOptimizationStructures);
             });
             WeakReferenceMessenger.Default.Register<RequestSpecialOptimizationStructures>(this, (r, m) =>
             {
@@ -57,28 +57,22 @@ namespace AutoPlannerHelpers.ViewModels
             MessageBox.Show(sb.ToString());
         }
 
-        public void AutoPlanTemplateSelectionChanged(IEnumerable<SpecialOptimizationStructureModel> templateSpecialOpStructures)
+        public void UpdateDefaultSpecialOptimizationStructures(IEnumerable<SpecialOptimizationStructureModel> templateSpecialOpStructures)
         {
             if (!templateSpecialOpStructures.Any()) return;
             _defualtSpecialOptStructures = new List<SpecialOptimizationStructureModel>(templateSpecialOpStructures);
-            UpdateViewWithAutoPlanTemplateTSStructures(_defualtSpecialOptStructures);
+            AddDefaultSpecialOptStructures(); ;
         }
 
         public void AddDefaultSpecialOptStructures()
         {
-            if (!_defualtSpecialOptStructures.Any()) return;
-            UpdateViewWithAutoPlanTemplateTSStructures(_defualtSpecialOptStructures);
+            RequestedSpecialOptimizationStructures.Clear();
+            foreach (SpecialOptimizationStructureModel itr in _defualtSpecialOptStructures) RequestedSpecialOptimizationStructures.Add(itr);
         }
 
         public void ClearRow(SpecialOptimizationStructureModel o)
         {
             RequestedSpecialOptimizationStructures.Remove(o);
-        }
-
-        public void UpdateViewWithAutoPlanTemplateTSStructures(List<SpecialOptimizationStructureModel> ops)
-        {
-            RequestedSpecialOptimizationStructures.Clear();
-            foreach (SpecialOptimizationStructureModel itr in ops) RequestedSpecialOptimizationStructures.Add(itr);
         }
 
         private void RemoveAllSpecialOptStructures()

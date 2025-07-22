@@ -90,5 +90,20 @@ namespace AutoPlannerHelpersTests.BaseViewModel
         {
             throw new NotImplementedException();
         }
+
+        protected override List<PrescriptionModel> BuildPlanTypeSpecificPrescriptionList(List<PlanTargetsModel> planTargets)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void UpdatePlanTypeSpecificStructureOperationViews()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void UpdatePlanTypeSpecificUIWithPlanTemplate()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

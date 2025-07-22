@@ -44,9 +44,9 @@ namespace AutoPlannerOptimizationLoop.ViewModels
 
         private void InitializeMessengers()
         {
-            WeakReferenceMessenger.Default.Register<RequestAutoPlanTemplateChangedMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<RequestUpdatePlanObjectives>(this, (r, m) =>
             {
-                UpdateViewWithSelectedPlanTemplate(m.AutoPlanTemplate.PlanObjectives);
+                UpdateViewWithPlanObjectivesFromTemplate(m.PlanObjectives);
             });
             WeakReferenceMessenger.Default.Register<RequestPlanObjectives>(this, (r, m) =>
             {
@@ -54,7 +54,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             });
         }
 
-        public void UpdateViewWithSelectedPlanTemplate(List<PlanObjectiveModel> obj)
+        public void UpdateViewWithPlanObjectivesFromTemplate(List<PlanObjectiveModel> obj)
         {
             PlanObjectives.Clear();
             foreach (PlanObjectiveModel itr in obj)

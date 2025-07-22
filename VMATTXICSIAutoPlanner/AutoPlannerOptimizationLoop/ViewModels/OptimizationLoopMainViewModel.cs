@@ -356,7 +356,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             if (PlanTemplates.Any(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed)))
             {
                 SelectedTemplate = PlanTemplates.First(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed));
-                WeakReferenceMessenger.Default.Send(new RequestAutoPlanTemplateChangedMessage(_selectedTemplate));
+                //WeakReferenceMessenger.Default.Send(new RequestAutoPlanTemplateChangedMessage(_selectedTemplate));
             }
         }
         #endregion
