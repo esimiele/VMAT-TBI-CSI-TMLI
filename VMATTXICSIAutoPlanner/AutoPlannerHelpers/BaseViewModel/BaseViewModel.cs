@@ -357,8 +357,10 @@ namespace AutoPlannerHelpers.BaseViewModel
             _prescriptions = BuildPlanTypeSpecificPrescriptionList(planTargets);
             if (!_prescriptions.Any()) return;
             Logger.GetInstance().Prescriptions = _prescriptions;
+
             _planOptimizationSetup = BuildPlanOptimizationSetupList();
 
+            UpdatePlanTypeSpecificStructureOperationViews();
             WeakReferenceMessenger.Default.Send(new RequestUpdateOptimizationStructureDerivations(_selectedTemplate.OptimizationStructureDerivations));
             WeakReferenceMessenger.Default.Send(new RequestUpdateSpecialOptimizationStructures(_selectedTemplate.SpecialOptimizationStructures));
 

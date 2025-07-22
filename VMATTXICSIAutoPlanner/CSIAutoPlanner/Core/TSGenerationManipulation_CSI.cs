@@ -763,21 +763,21 @@ namespace CSIAutoPlanner.Core
         #region Recontour the brain spine targets
         /// <summary>
         /// Helper method to take the approved PTV_CSI target (or the highest Rx target for the initial plan) and use its contour points
-        /// to re-contour ptv_brain and ptv_spine
+        /// to re-contour _Brain and _Spine
         /// </summary>
         /// <returns></returns>
         private bool RegeneratePTVBrainSpine()
         {
-            UpdateUILabel("Regenerating PTV Spine/PTV Brain:");
-            ProvideUIUpdate("Regenerating PTV Spine/PTV Brain:");
+            UpdateUILabel("Generating _Spine/_Brain:");
+            ProvideUIUpdate("Generating _Spine/_Brain:");
             int percentComplete = 0;
             int calcItems = 9;
 
-            Structure ptvBrain = StructureTuningHelper.GetStructureFromId("PTV_Brain", true);
-            Structure ptvSpine = StructureTuningHelper.GetStructureFromId("PTV_Spine", true);
+            Structure ptvBrain = StructureTuningHelper.GetStructureFromId("_Brain", true);
+            Structure ptvSpine = StructureTuningHelper.GetStructureFromId("_Spine", true);
             if (ptvBrain == null || ptvSpine == null)
             {
-                ProvideUIUpdate($"Error! PTV_Brain or PTV_Spine are null! Fix and try again!", true);
+                ProvideUIUpdate($"Error! _Brain or _Spine are null! Fix and try again!", true);
                 return true;
             }
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved structure: {ptvBrain.Id}");
@@ -788,7 +788,7 @@ namespace CSIAutoPlanner.Core
 
             if (ptvBrain.ApprovalHistory.First().ApprovalStatus == StructureApprovalStatus.Approved || ptvSpine.ApprovalHistory.First().ApprovalStatus == StructureApprovalStatus.Approved)
             {
-                ProvideUIUpdate($"Error! PTV_Brain or PTV_Spine are approved and I can't modify them! Fix and try again!", true);
+                ProvideUIUpdate($"Error! _Brain or _Spine are approved and I can't modify them! Fix and try again!", true);
                 return true;
             }
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Verified approval status of {ptvBrain.Id} and {ptvSpine.Id}");
@@ -815,8 +815,8 @@ namespace CSIAutoPlanner.Core
         }
 
         /// <summary>
-        /// Helper method to determine the z position of the cut plane that should be used to split the initial csi target into ptv_brain
-        /// and ptv_spine. Either min z of brain or max z of spinal cord will work
+        /// Helper method to determine the z position of the cut plane that should be used to split the initial csi target into _Brain
+        /// and _Spine. Either min z of brain or max z of spinal cord will work
         /// </summary>
         /// <returns></returns>
         private (bool, double) GetCutSliceZPosition()
@@ -940,17 +940,17 @@ namespace CSIAutoPlanner.Core
                 //Minimum requested field overlap.
                 double minFieldOverlap = 50.0;
                 double maxFieldExtent = 400.0;
-                //subtract 50 mm from the numerator as the brain fields have a 50 mm inferior margin on the ptv_brain 
+                //subtract 50 mm from the numerator as the brain fields have a 50 mm inferior margin on the _Brain 
                 double brainInfMargin = 50.0;
 
-                //If the target ID is PTV_CSI, calculate the number of isocenters based on PTV_spine and add one iso for the brain
+                //If the target ID is PTV_CSI, calculate the number of isocenters based on _Spine and add one iso for the brain
                 //planId, target list
                 if (string.Equals(longestTargetInPlan.Id, TargetsHelper.GetHighestRxTargetIdForPlan(_prescriptions, _prescriptions.First().PlanId)))
                 {
                     calcItems += 1;
                     //special rules for initial plan,
-                    //first, determine the number of isocenters required to treat PTV_Spine
-                    //Grab extent of PTV_Spine and add a 2 cm margin to this distance to give 2 cm buffer on the sup portion of the target to ensure adequate coverage/overlap between upper spine field and brain fields
+                    //first, determine the number of isocenters required to treat _Spine
+                    //Grab extent of _Spine and add a 2 cm margin to this distance to give 2 cm buffer on the sup portion of the target to ensure adequate coverage/overlap between upper spine field and brain fields
                     (bool isFail, double spineTargetExtent) = GetSpineTargetExtent(2.0);
                     if (isFail) return true;
                     ProvideUIUpdate(100 * ++counter / calcItems);
@@ -996,12 +996,12 @@ namespace CSIAutoPlanner.Core
             }
             else NumberofVMATIsocentersAsDouble = Math.Ceiling(NumberofVMATIsocentersAsDouble);
             ProvideUIUpdate($"Adding one additional isocenter for the brain");
-            //one iso reserved for PTV_Brain
+            //one iso reserved for _Brain
             return (int)NumberofVMATIsocentersAsDouble + 1;
         }
 
         /// <summary>
-        /// Helper method to calculate the extent of PTV_Spine with a user-supplied additional margin
+        /// Helper method to calculate the extent of _Spine with a user-supplied additional margin
         /// </summary>
         /// <param name="addedMarginInCm"></param>
         /// <returns></returns>
@@ -1009,17 +1009,17 @@ namespace CSIAutoPlanner.Core
         {
             bool fail = false;
             double spineTargetExtent = 0.0;
-            if (StructureTuningHelper.DoesStructureExistInSS("PTV_Spine", true))
+            if (StructureTuningHelper.DoesStructureExistInSS("_Spine", true))
             {
-                Structure spineTarget = StructureTuningHelper.GetStructureFromId("PTV_Spine");
+                Structure spineTarget = StructureTuningHelper.GetStructureFromId("_Spine");
                 ProvideUIUpdate("Retrieved spinal cord structure");
                 Point3DCollection pts = spineTarget.MeshGeometry.Positions;
                 //ESAPI default distances are in mm
-                spineTargetExtent = (pts.Max(p => p.Z) - pts.Min(p => p.Z)) + addedMarginInCm * 10;
+                spineTargetExtent = pts.Max(p => p.Z) - pts.Min(p => p.Z) + addedMarginInCm * 10;
             }
             else
             {
-                ProvideUIUpdate("Error! No structure named PTV_Spine was found or it was empty!", true);
+                ProvideUIUpdate("Error! No structure named _Spine was found or it was empty!", true);
             }
             return (fail, spineTargetExtent);
         }

@@ -45,7 +45,7 @@ namespace AutoPlannerHelpers.ViewModels
             });
             WeakReferenceMessenger.Default.Register<RequestCropOverlapStructures>(this, (r, m) =>
             {
-                m.Reply(this.CropOverlapStructures.ToList());
+                m.Reply(CropOverlapStructures.ToList());
             });
             WeakReferenceMessenger.Default.Register<RequestUpdateStructureIds>(this, (r, m) =>
             {
@@ -74,11 +74,11 @@ namespace AutoPlannerHelpers.ViewModels
                 if (_skipStructureIdCheck)
                 {
                     if (!StructureIdsPostUnion.Any(x => string.Equals(x, itr, StringComparison.OrdinalIgnoreCase))) StructureIdsPostUnion.Add(itr);
-                    CropOverlapStructures.Add(itr);
+                    CropOverlapStructures.Add(StructureIdsPostUnion.First(x => string.Equals(x, itr, StringComparison.OrdinalIgnoreCase)));
                 }
                 else if (StructureIdsPostUnion.Any(x => string.Equals(x, itr, StringComparison.OrdinalIgnoreCase)))
                 {
-                    CropOverlapStructures.Add(itr);
+                    CropOverlapStructures.Add(StructureIdsPostUnion.First(x => string.Equals(x, itr, StringComparison.OrdinalIgnoreCase)));
                 }
             }
         }

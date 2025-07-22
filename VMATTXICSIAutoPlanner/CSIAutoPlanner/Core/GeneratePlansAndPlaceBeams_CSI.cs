@@ -180,7 +180,7 @@ namespace CSIAutoPlanner.Core
 
         #region Isocenter position calculation
         /// <summary>
-        /// Helper method to Retrieve the center of the brain/PTV_Brain structure
+        /// Helper method to Retrieve the center of the brain/_Brain structure
         /// </summary>
         /// <param name="counter"></param>
         /// <param name="calcItems"></param>
@@ -190,16 +190,16 @@ namespace CSIAutoPlanner.Core
             bool fail = false;
             double brainZCenter = 0.0;
             ProvideUIUpdate(100 * ++counter / calcItems, "Retrieving Brain Structure");
-            //shouldn't matter if its brain or PTV_brain (ideally would be the same, but the center points should be within 5mm of each other)
+            //shouldn't matter if its brain or _Brain (ideally would be the same, but the center points should be within 5mm of each other)
             Structure ptvBrain = StructureTuningHelper.GetStructureFromId("Brain");
             if (ptvBrain == null || ptvBrain.IsEmpty)
             {
                 calcItems += 1;
-                ProvideUIUpdate(100 * ++counter / calcItems, "Failed to find Brain Structure! Retrieving PTV_Brain structure");
-                ptvBrain = StructureTuningHelper.GetStructureFromId("PTV_Brain", true);
+                ProvideUIUpdate(100 * ++counter / calcItems, "Failed to find Brain Structure! Retrieving _Brain structure");
+                ptvBrain = StructureTuningHelper.GetStructureFromId("_Brain", true);
                 if (ptvBrain == null || ptvBrain.IsEmpty)
                 {
-                    ProvideUIUpdate("Failed to retrieve PTV_Brain structure! Cannot calculate isocenter positions! Exiting", true);
+                    ProvideUIUpdate("Failed to retrieve _Brain structure! Cannot calculate isocenter positions! Exiting", true);
                     fail = true;
                     return (fail, brainZCenter);
                 }
@@ -226,25 +226,25 @@ namespace CSIAutoPlanner.Core
             //absolute value accounts for positive or negative y position in DCM coordinates
             if (Math.Abs(spineYMin) < Math.Abs(spineYCenter))
             {
-                ProvideUIUpdate($"{scaleFactor} * PTV_Spine Ymin is more posterior than center of PTV_Spine!: {spineYMin:0.0} mm vs {spineYCenter:0.0} mm");
+                ProvideUIUpdate($"{scaleFactor} * _Spine Ymin is more posterior than center of _Spine!: {spineYMin:0.0} mm vs {spineYCenter:0.0} mm");
                 spineYMin = spineYCenter;
-                ProvideUIUpdate($"Assigning Ant-post iso location to center of PTV_Spine: {spineYMin:0.0} mm");
+                ProvideUIUpdate($"Assigning Ant-post iso location to center of _Spine: {spineYMin:0.0} mm");
             }
             else if (Math.Abs(spineYMin) > Math.Abs(minYBound))
             {
-                ProvideUIUpdate($"{scaleFactor} * PTV_Spine Ymin is more anterior than spinal cord Ymin with 20 mm margin!: {spineYMin:0.0} mm vs {minYBound:0.0} mm");
+                ProvideUIUpdate($"{scaleFactor} * _Spine Ymin is more anterior than spinal cord Ymin with 20 mm margin!: {spineYMin:0.0} mm vs {minYBound:0.0} mm");
                 spineYMin = scaleFactor * minYBound;
                 ProvideUIUpdate($"Assigning Ant-post iso location to {scaleFactor} * {minYBound: 0.0}: {spineYMin:0.0} mm");
             }
             else
             {
-                ProvideUIUpdate($"{scaleFactor} * Anterior extent of PTV_spine: {spineYMin:0.0} mm");
+                ProvideUIUpdate($"{scaleFactor} * Anterior extent of _Spine: {spineYMin:0.0} mm");
             }
             return spineYMin;
         }
 
         /// <summary>
-        /// Helper method to retrieve the min Y, min Z, and max Z positions from PTV_Spine or the spinalcord
+        /// Helper method to retrieve the min Y, min Z, and max Z positions from _Spine or the spinalcord
         /// </summary>
         /// <param name="counter"></param>
         /// <param name="calcItems"></param>
@@ -256,32 +256,24 @@ namespace CSIAutoPlanner.Core
             double spineZMin = 0.0;
             calcItems += 5;
 
-            if (!StructureTuningHelper.DoesStructureExistInSS("PTV_Spine", true) || !StructureTuningHelper.DoesStructureExistInSS("SpinalCord", true))
+            if (!StructureTuningHelper.DoesStructureExistInSS("_Spine", true) || !StructureTuningHelper.DoesStructureExistInSS("SpinalCord", true))
             {
-                ProvideUIUpdate("Error! Either PTV_Spine or SpinalCord structure are missing or empty! Correct and try again!", true);
+                ProvideUIUpdate("Error! Either _Spine or SpinalCord structure are missing or empty! Correct and try again!", true);
                 return (true, spineYMin, spineZMin, spineZMax);
             }
-            ProvideUIUpdate(100 * ++counter / calcItems, "Retrieving PTV_Spine Structure");
-            Structure ptvSpine = StructureTuningHelper.GetStructureFromId("PTV_Spine");
+            ProvideUIUpdate(100 * ++counter / calcItems, "Retrieving _Spine Structure");
+            Structure ptvSpine = StructureTuningHelper.GetStructureFromId("_Spine");
             Structure spine = StructureTuningHelper.GetStructureFromId("SpinalCord");
 
-            ProvideUIUpdate("Calculating anterior extent of PTV_Spine");
+            ProvideUIUpdate("Calculating anterior extent of _Spine");
             spineYMin = ptvSpine.MeshGeometry.Positions.Min(p => p.Y);
-            ProvideUIUpdate("Calculating superior and inferior extent of PTV_Spine");
+            ProvideUIUpdate("Calculating superior and inferior extent of _Spine");
             spineZMax = ptvSpine.MeshGeometry.Positions.Max(p => p.Z);
             spineZMin = ptvSpine.MeshGeometry.Positions.Min(p => p.Z);
-            if (!ptvSpine.Id.ToLower().Contains("ptv"))
-            {
-                ProvideUIUpdate("Adding 5 mm anterior margin to spinal cord structure to mimic anterior extent of PTV_Spine!");
-                spineYMin += 10;
-                ProvideUIUpdate("Adding 10 mm superior margin to spinal cord structure to mimic superior extent of PTV_Spine!");
-                spineZMax += 15.0;
-                ProvideUIUpdate("Adding 15 mm inferior margin to spinal cord structure to mimic inferior extent of PTV_Spine!");
-                spineZMin -= 20.0;
-            }
-            ProvideUIUpdate($"Anterior extent of PTV_Spine: {spineYMin:0.0} mm");
-            ProvideUIUpdate(100 * ++counter / calcItems, $"Superior extent of PTV_Spine: {spineZMax:0.0} mm");
-            ProvideUIUpdate(100 * ++counter / calcItems, $"Inferior extent of PTV_Spine: {spineZMin:0.0} mm");
+            
+            ProvideUIUpdate($"Anterior extent of _Spine: {spineYMin:0.0} mm");
+            ProvideUIUpdate(100 * ++counter / calcItems, $"Superior extent of _Spine: {spineZMax:0.0} mm");
+            ProvideUIUpdate(100 * ++counter / calcItems, $"Inferior extent of _Spine: {spineZMin:0.0} mm");
 
             double minYBound = spine.MeshGeometry.Positions.Min(p => p.Y) - 20.0;
             ProvideUIUpdate($"Minimum Y bound for isocenter placement set to anterior extent of spinal cord + 20 mm margin: {minYBound:0.0} mm");
@@ -391,7 +383,7 @@ namespace CSIAutoPlanner.Core
                 v.x = xUserOrigin;
                 //asign y position to spineYmin
                 v.y = spineYMin;
-                //assign the first isocenter to the center of the ptv_brain
+                //assign the first isocenter to the center of the _Brain
                 if (isoCount == 0) v.z = brainZCenter;
                 else
                 {
@@ -402,7 +394,7 @@ namespace CSIAutoPlanner.Core
                         //overlap between brain iso and lower spine iso
                         //inf field superior edge.ptv spine + 18 cm = iso position + 20 cm Y field extent)
                         double infIsoFieldSupEdge = spineZMin + 180.0 + 200.0;
-                        Structure brainTarget = StructureTuningHelper.GetStructureFromId("PTV_Brain");
+                        Structure brainTarget = StructureTuningHelper.GetStructureFromId("_Brain");
                         //brain field inferior extent (ptv brain inf extent - 5 cm margin)
                         double supFieldInfExtent = brainTarget.MeshGeometry.Positions.Min(p => p.Z) - 50.0;
                         //place the iso at the midpoint between the brain field inf extent and low spine file sup extent
@@ -554,7 +546,7 @@ namespace CSIAutoPlanner.Core
             {
                 ProvideUIUpdate("First isocenter in initial CSI plan!");
                 //first isocenter in brain
-                Structure brain = StructureTuningHelper.GetStructureFromId("PTV_Brain");
+                Structure brain = StructureTuningHelper.GetStructureFromId("_Brain");
                 if (brain == null || brain.IsEmpty)
                 {
                     ProvideUIUpdate("Error! Could not retrieve brain target structure! Exiting", true);
@@ -583,9 +575,9 @@ namespace CSIAutoPlanner.Core
                 if (numIsos == 2)
                 {
                     ProvideUIUpdate("Only two isocenters in plan. Need to verify there will be adequate overlap between brain and spine fields");
-                    //special logic for spine iso in case there are only two isos, and the spine iso field extent does not cover the entire PTV_spine
+                    //special logic for spine iso in case there are only two isos, and the spine iso field extent does not cover the entire _Spine
                     //in this case, we need to verify the inf margin placed on the brain fields to ensure at least 5cm of overlap
-                    Structure spine = StructureTuningHelper.GetStructureFromId("PTV_Spine");
+                    Structure spine = StructureTuningHelper.GetStructureFromId("_Spine");
                     double infSpineIso = spine.MeshGeometry.Positions.Min(p => p.Z) + 180.0;
                     ProvideUIUpdate($"Inferior spine location: {infSpineIso:0.0} mm");
                     if (iso.z - infSpineIso >= 200.0)
@@ -593,7 +585,7 @@ namespace CSIAutoPlanner.Core
                         ProvideUIUpdate($"Separation between brain and spines isos is >= 20cm: {iso.z - infSpineIso:0.0} mm");
                         //spine iso field should have y2 maxed at 20 cm. spatial location of that field extent
                         double infSpineIsoSupFieldExtent = infSpineIso + 200;
-                        //take the max margin of the existing calculated margin and the difference between ptv_brain z min
+                        //take the max margin of the existing calculated margin and the difference between _Brain z min
                         //and inf spine iso field extent + 5 cm overlap
                         InfMargin = Math.Max(InfMargin, brain.MeshGeometry.Positions.Min(p => p.Z) - infSpineIsoSupFieldExtent + 50.0);
                         ProvideUIUpdate($"Max of current inf margin and (brain zmin - spineIsoFieldExtent + 5cm): {InfMargin:0.0} cm");
@@ -611,7 +603,7 @@ namespace CSIAutoPlanner.Core
             else
             {
                 ProvideUIUpdate("Spine isocenter(s) in initial CSI plan!");
-                Structure spine = StructureTuningHelper.GetStructureFromId("PTV_Spine");
+                Structure spine = StructureTuningHelper.GetStructureFromId("_Spine");
                 if (spine == null || spine.IsEmpty) return (true, new VRect<double>());
                 y2 = spine.MeshGeometry.Positions.Max(p => p.Z) - iso.z + margins.Y2;
                 y1 = spine.MeshGeometry.Positions.Min(p => p.Z) - iso.z - margins.Y1;

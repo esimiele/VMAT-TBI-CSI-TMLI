@@ -198,13 +198,13 @@ namespace TMLIAutoPlanner.ViewModels
 
         protected override void UpdatePlanTypeSpecificStructureOperationViews()
         {
-            List<TSRingStructureModel> rings = (_selectedTemplate as TMLIAutoPlanTemplate).Rings;
-            List<TargetModel> templateTargets = (_selectedTemplate as TMLIAutoPlanTemplate).PlanTargets.SelectMany(x => x.Targets).ToList();
-            foreach(TSRingStructureModel itr in rings)
+            List<TSRingStructureModel> rings = (_selectedTemplate as CSIAutoPlanTemplate).Rings;
+            List<TargetModel> templateTargets = (_selectedTemplate as CSIAutoPlanTemplate).PlanTargets.SelectMany(x => x.Targets).ToList();
+            foreach (TSRingStructureModel itr in rings)
             {
-                if(templateTargets.Any(x => string.Equals(x.TargetId, itr.TargetId)) && _prescriptions.Any(x => string.Equals(x.TargetId, itr.TargetId)))
+                if (templateTargets.Any(x => string.Equals(x.TargetId, itr.TargetId)) && _prescriptions.Any(x => string.Equals(x.TargetId, itr.TargetId)))
                 {
-                    if(!CalculationHelper.AreEqual(templateTargets.First(x => string.Equals(x.TargetId, itr.TargetId)).TargetRxDose, _prescriptions.First(x => string.Equals(x.TargetId, itr.TargetId)).CumulativeDoseToTarget))
+                    if (!CalculationHelper.AreEqual(templateTargets.First(x => string.Equals(x.TargetId, itr.TargetId)).TargetRxDose, _prescriptions.First(x => string.Equals(x.TargetId, itr.TargetId)).CumulativeDoseToTarget))
                     {
                         itr.DoseLevel *= _prescriptions.First(x => string.Equals(x.TargetId, itr.TargetId)).CumulativeDoseToTarget / templateTargets.First(x => string.Equals(x.TargetId, itr.TargetId)).TargetRxDose;
                         itr.RingId = $"TS_ring{itr.DoseLevel}";
