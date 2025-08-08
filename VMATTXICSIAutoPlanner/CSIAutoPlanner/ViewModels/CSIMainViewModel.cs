@@ -219,9 +219,28 @@ namespace CSIAutoPlanner.ViewModels
             foreach (TSTargetCropOverlapModel itr in manipulations)
             {
                 List<OptimizationConstraintModel> constraints = planConstraints.First(x => string.Equals(x.PlanId, itr.PlanId)).OptimizationConstraints;
-                foreach (OptimizationConstraintModel model in constraints.Where(x => string.Equals(x.StructureId, itr.TargetId)))
+                IEnumerable<OptimizationConstraintModel> copyConstraints = new List<OptimizationConstraintModel>(constraints.Where(x => string.Equals(x.StructureId, itr.TargetId)));
+                foreach (OptimizationConstraintModel model in copyConstraints)
                 {
-                    model.StructureId = itr.ManipulationTargetId;
+                    if (itr.ManipulationType == TSManipulationType.CropTargetFromStructure)
+                    {
+                        //simple copy of constraints
+                        constraints.Add(new OptimizationConstraintModel(itr.ManipulationTargetId, model.ConstraintType, model.QueryDose, Units.cGy, model.QueryVolume, model.Priority));
+                    }
+                    else
+                    {
+                        //need to reduce upper and lower constraints
+                        constraints.Add(new OptimizationConstraintModel(itr.ManipulationTargetId, model.ConstraintType, model.QueryDose * 0.95, Units.cGy, model.QueryVolume, model.Priority));
+                    }
+                }
+            }
+            foreach (TSTargetCropOverlapModel itr in manipulations)
+            {
+                List<OptimizationConstraintModel> constraints = planConstraints.First(x => string.Equals(x.PlanId, itr.PlanId)).OptimizationConstraints;
+                IEnumerable<OptimizationConstraintModel> copyConstraints = new List<OptimizationConstraintModel>(constraints.Where(x => string.Equals(x.StructureId, itr.TargetId)));
+                foreach (OptimizationConstraintModel model in copyConstraints)
+                {
+                    constraints.Remove(model);
                 }
             }
             return planConstraints;
