@@ -31,6 +31,7 @@ namespace AutoPlannerHelpers.BaseCore
         protected List<PrescriptionModel> _prescriptions { get; set; } = new List<PrescriptionModel>();
         protected List<StructureOperationModel> _structureOperations { get; set; } = new List<StructureOperationModel> { };
         protected List<SpecialOptimizationStructureModel> _specialOptimizationStructures { get; set; } = new List<SpecialOptimizationStructureModel> { };
+        protected Dictionary<string, string> _highResStructureConversions { get; set; } = new Dictionary<string, string> { };
         protected ProvideUIUpdateDelegate PUUD;
         protected UIUpdateMessageOnlyDelegate UIUD;
         #endregion
@@ -315,6 +316,7 @@ namespace AutoPlannerHelpers.BaseCore
 
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, String.Format("Removing existing high-res structure from manipulation list and replacing with low-res"));
                 UpdateManipulationList(itr, lowRes.Id);
+                _highResStructureConversions.Add(itr, lowRes.Id);
             }
             return false;
         }

@@ -198,8 +198,8 @@ namespace TMLIAutoPlanner.ViewModels
 
         protected override void UpdatePlanTypeSpecificStructureOperationViews()
         {
-            List<TSRingStructureModel> rings = (_selectedTemplate as CSIAutoPlanTemplate).Rings;
-            List<TargetModel> templateTargets = (_selectedTemplate as CSIAutoPlanTemplate).PlanTargets.SelectMany(x => x.Targets).ToList();
+            List<TSRingStructureModel> rings = (_selectedTemplate as TMLIAutoPlanTemplate).Rings;
+            List<TargetModel> templateTargets = (_selectedTemplate as TMLIAutoPlanTemplate).PlanTargets.SelectMany(x => x.Targets).ToList();
             foreach (TSRingStructureModel itr in rings)
             {
                 if (templateTargets.Any(x => string.Equals(x.TargetId, itr.TargetId)) && _prescriptions.Any(x => string.Equals(x.TargetId, itr.TargetId)))

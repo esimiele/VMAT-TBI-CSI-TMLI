@@ -264,7 +264,7 @@ namespace CSIAutoPlanner.Core
             //now contour the various structures
             foreach (SpecialOptimizationStructureModel itr in _specialOptimizationStructures)
             {
-                ProvideUIUpdate(0, $"Contouring TS: {itr}");
+                ProvideUIUpdate(0, $"Contouring TS: {itr.StructureId}");
                 Structure addedStructure = StructureTuningHelper.GetStructureFromId(itr.StructureId,true, itr.DICOMType);
                 if (itr.StructureId.ToLower().Contains("ts_eyes") || itr.StructureId.ToLower().Contains("ts_lenses"))
                 {
@@ -430,7 +430,7 @@ namespace CSIAutoPlanner.Core
             {
                 if (itr.IsValidOperation)
                 {
-                    ProvideUIUpdate(100 * ++counter / calcItems, $"Contouring target: {itr}");
+                    ProvideUIUpdate(100 * ++counter / calcItems, $"Performing: {itr.FriendlyName}");
                     if (ContourHelper.PerformStructureOperation(itr, UIUD)) return true;
                 }
                 else ProvideUIUpdate($"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");
@@ -513,11 +513,11 @@ namespace CSIAutoPlanner.Core
         private bool CheckAllRequestedTargetCropAndOverlapManipulations()
         {
             List<string> structuresToRemove = new List<string> { };
+            List<string> highResStructuresToReplace = new List<string> { };
             Dictionary<string, string> tgts = TargetsHelper.GetHighestRxPlanTargetList(_prescriptions);
             int percentCompletion = 0;
             int calcItems = ((1 + 2 * tgts.Count) * _cropAndOverlapStructures.Count) + 1;
             ProvideUIUpdate(100 * ++percentCompletion / calcItems, "Retrieved plan-target list");
-            Dictionary<string, string> highResCropOverlapStructures = new Dictionary<string, string> { };
             foreach (string itr in _cropAndOverlapStructures)
             {
                 Structure normal = StructureTuningHelper.GetStructureFromId(itr);
@@ -536,20 +536,24 @@ namespace CSIAutoPlanner.Core
                         //structure does overlap with all targets. Need to check if structure is high resolution
                         if (normal.IsHighResolution)
                         {
-                            ProvideUIUpdate($"Structure {normal.Id} is high resolution. Converting to low resolution now");
-                            //get the high res structure mesh geometry
-                            MeshGeometry3D mesh = normal.MeshGeometry;
-                            //get the start and stop image planes for this structure
-                            int startSlice = CalculationHelper.ComputeSlice(mesh.Positions.Min(p => p.Z), EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes);
-                            int stopSlice = CalculationHelper.ComputeSlice(mesh.Positions.Max(p => p.Z), EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes);
+                            if(!_highResStructureConversions.Any(x => string.Equals(x.Key, itr)))
+                            {
+                                ProvideUIUpdate($"Structure {normal.Id} is high resolution. Converting to low resolution now");
+                                //get the high res structure mesh geometry
+                                MeshGeometry3D mesh = normal.MeshGeometry;
+                                //get the start and stop image planes for this structure
+                                int startSlice = CalculationHelper.ComputeSlice(mesh.Positions.Min(p => p.Z), EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes);
+                                int stopSlice = CalculationHelper.ComputeSlice(mesh.Positions.Max(p => p.Z), EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes);
 
-                            //create an Id for the low resolution struture that will be created. The name will be '_lowRes' appended to the current structure Id
-                            (bool fail, Structure lowRes) = CreateLowResStructure(normal);
-                            if (fail) return true;
-                            ProvideUIUpdate($"Contouring {lowRes.Id} now");
+                                //create an Id for the low resolution struture that will be created. The name will be '_lowRes' appended to the current structure Id
+                                (bool fail, Structure lowRes) = CreateLowResStructure(normal);
+                                if (fail) return true;
+                                ProvideUIUpdate($"Contouring {lowRes.Id} now");
 
-                            ContourLowResStructure(normal, lowRes, startSlice, stopSlice);
-                            highResCropOverlapStructures.Add(itr, lowRes.Id);
+                                ContourLowResStructure(normal, lowRes, startSlice, stopSlice);
+                                _highResStructureConversions.Add(itr, lowRes.Id);
+                            }
+                            highResStructuresToReplace.Add(itr);
                         }
                     }
                 }
@@ -561,14 +565,20 @@ namespace CSIAutoPlanner.Core
             }
 
             if (structuresToRemove.Any()) RemoveStructuresFromCropOverlapList(structuresToRemove);
-            foreach (KeyValuePair<string, string> itr in highResCropOverlapStructures)
-            {
-                int index = _cropAndOverlapStructures.IndexOf(itr.Key);
-                _cropAndOverlapStructures.RemoveAt(index);
-                _cropAndOverlapStructures.Insert(index, itr.Value);
-            }
+            if (highResStructuresToReplace.Any()) UpdateCropOverlapManipulationList(highResStructuresToReplace);
             ProvideUIUpdate(100, "Removed missing structures or normals that do not overlap with all targets from crop/overlap list");
             return false;
+        }
+
+        private void UpdateCropOverlapManipulationList(IEnumerable<string> highResStructureList)
+        {
+            foreach(string itr in highResStructureList)
+            {
+                ProvideUIUpdate($"Updating crop overlap manipulation list to replace {itr} with {_highResStructureConversions.First(x => string.Equals(x.Key, itr)).Value}");
+                int index = _cropAndOverlapStructures.IndexOf(itr);
+                _cropAndOverlapStructures.RemoveAt(index);
+                _cropAndOverlapStructures.Insert(index, _highResStructureConversions.First(x => string.Equals(x.Key, itr)).Value);
+            }
         }
 
         /// <summary>

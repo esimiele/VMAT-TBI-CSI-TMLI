@@ -225,12 +225,12 @@ namespace CSIAutoPlanner.ViewModels
                     if (itr.ManipulationType == TSManipulationType.CropTargetFromStructure)
                     {
                         //simple copy of constraints
-                        constraints.Add(new OptimizationConstraintModel(itr.ManipulationTargetId, model.ConstraintType, model.QueryDose, Units.cGy, model.QueryVolume, model.Priority));
+                        constraints.Insert(0,new OptimizationConstraintModel(itr.ManipulationTargetId, model.ConstraintType, model.QueryDose, Units.cGy, model.QueryVolume, model.Priority));
                     }
                     else
                     {
                         //need to reduce upper and lower constraints
-                        constraints.Add(new OptimizationConstraintModel(itr.ManipulationTargetId, model.ConstraintType, model.QueryDose * 0.95, Units.cGy, model.QueryVolume, model.Priority));
+                        constraints.Insert(0, new OptimizationConstraintModel(itr.ManipulationTargetId, model.ConstraintType, model.QueryDose * 0.95, Units.cGy, model.QueryVolume, model.Priority));
                     }
                 }
             }

@@ -571,7 +571,7 @@ namespace AutoPlannerHelpers.BaseViewModel
                     //grab the optimization constraints that belong to this plan
                     List<OptimizationConstraintModel> constraints = planConstraints.First(x => string.Equals(planId, x.PlanId)).OptimizationConstraints;
                     //insert the ts ring constraint
-                    constraints.Insert(0, new OptimizationConstraintModel(itr.RingId, OptimizationObjectiveType.Upper, itr.DoseLevel, Units.cGy, 0.0, ringPrioity));
+                    constraints.Add(new OptimizationConstraintModel(itr.RingId, OptimizationObjectiveType.Upper, itr.DoseLevel, Units.cGy, 0.0, ringPrioity));
                 }
             }
             return planConstraints;
@@ -588,8 +588,8 @@ namespace AutoPlannerHelpers.BaseViewModel
                 List<OptimizationConstraintModel> constraints = planConstraints.First(x => string.Equals(x.PlanId, itr.PlanId)).OptimizationConstraints;
                 foreach (FieldJunctionModel jnx in itr.FieldJunctions)
                 {
-                    constraints.Insert(0, new OptimizationConstraintModel(jnx.JunctionStructureId, OptimizationObjectiveType.Lower, dose, Units.cGy, 100.0, 100));
-                    constraints.Insert(1, new OptimizationConstraintModel(jnx.JunctionStructureId, OptimizationObjectiveType.Upper, 1.02 * dose, Units.cGy, 0.0, 100));
+                    constraints.Add(new OptimizationConstraintModel(jnx.JunctionStructureId, OptimizationObjectiveType.Lower, dose, Units.cGy, 100.0, 100));
+                    constraints.Add(new OptimizationConstraintModel(jnx.JunctionStructureId, OptimizationObjectiveType.Upper, 1.02 * dose, Units.cGy, 0.0, 100));
                 }
             }
             return planConstraints;

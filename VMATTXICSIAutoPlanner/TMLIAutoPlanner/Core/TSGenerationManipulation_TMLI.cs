@@ -120,8 +120,7 @@ namespace TMLIAutoPlanner.Core
             {
                 //main target structure won't always have the same id (ptv_tmli vs ptv_tmli_20 vs ptv_tmli_12)
                 string highestDoseTSTarget = tmpTSTargetList.Last().TsTargetId;
-                Structure TSPTVLegs = AddTSStructures(new SpecialOptimizationStructureModel("CONTROL", "TS_PTV_Legs"));
-                _structureOperations.Add(new StructureOperationModel("ts_ptv_legs", StructureDerivationOperation.Union, highestDoseTSTarget, "ts_ptv_legs", new StructureMarginModel(0), new StructureMarginModel(0)));
+                _structureOperations.Add(new StructureOperationModel(highestDoseTSTarget, StructureDerivationOperation.CopyContractExpand, "", "ts_ptv_legs", new StructureMarginModel(0), new StructureMarginModel(0)));
                 _structureOperations.Add(new StructureOperationModel(highestDoseTSTarget, StructureDerivationOperation.CutInferiorTo, "matchline", highestDoseTSTarget, new StructureMarginModel(0), new StructureMarginModel(0)));
                 _structureOperations.Add(new StructureOperationModel("ts_ptv_legs", StructureDerivationOperation.CutSuperiorTo, "matchline", "ts_ptv_legs", new StructureMarginModel(0), new StructureMarginModel(0)));
             }
@@ -130,7 +129,7 @@ namespace TMLIAutoPlanner.Core
             {
                 if (itr.IsValidOperation)
                 {
-                    ProvideUIUpdate(100 * ++counter / calcItems, $"Contouring target: {itr}");
+                    ProvideUIUpdate(100 * ++counter / calcItems, $"Performing: {itr.FriendlyName}");
                     if (ContourHelper.PerformStructureOperation(itr, UIUD)) return true;
                 }
                 else ProvideUIUpdate($"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");
