@@ -63,13 +63,13 @@ namespace AutoPlannerHelpers.Helpers.Tests
         {
             string testCreateTS = "add special optimization structure{CONTROL,TS_Eyes}";
             SpecialOptimizationStructureModel expected = new SpecialOptimizationStructureModel("CONTROL", "TS_Eyes");
-            SpecialOptimizationStructureModel result = ConfigurationHelper.ParseSpecialOptStructure(testCreateTS);
+            SpecialOptimizationStructureModel result = ConfigurationHelper.ParseSpecialOptimizationStructure(testCreateTS);
             Assert.AreEqual(expected.StructureId, result.StructureId);
             Assert.AreEqual(expected.DICOMType, result.DICOMType);
 
             testCreateTS = "add special optimization structure{PTV,TS_Eyes}";
             expected = new SpecialOptimizationStructureModel("CONTROL", "TS_Eyes");
-            result = ConfigurationHelper.ParseSpecialOptStructure(testCreateTS);
+            result = ConfigurationHelper.ParseSpecialOptimizationStructure(testCreateTS);
             Assert.AreEqual(expected.StructureId, result.StructureId);
             Assert.AreNotEqual(expected.DICOMType, result.DICOMType);
         }

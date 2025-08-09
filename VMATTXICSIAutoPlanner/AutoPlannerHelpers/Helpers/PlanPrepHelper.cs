@@ -28,22 +28,25 @@ namespace AutoPlannerHelpers.Helpers
             if (!string.IsNullOrEmpty(fullLogName))
             {
                 string initPlanUID = LogHelper.LoadVMATPlanUIDFromLogFile(fullLogName);
-                if (string.IsNullOrEmpty(initPlanUID)) return null;
-                ExternalPlanSetup tmp = EclipseContext.GetInstance().Patient.Courses.SelectMany(x => x.ExternalPlanSetups).FirstOrDefault(x => string.Equals(x.UID, initPlanUID));
-                if (!ReferenceEquals(tmp, null))
+                if (!string.IsNullOrEmpty(initPlanUID))
                 {
-                    Course theCourse = tmp.Course;
-                    if (theCourse.ExternalPlanSetups.Where(x => !x.Id.ToLower().Contains("legs")).Count() > 1)
+                    ExternalPlanSetup tmp = EclipseContext.GetInstance().Patient.Courses.SelectMany(x => x.ExternalPlanSetups).FirstOrDefault(x => string.Equals(x.UID, initPlanUID));
+                    if (!ReferenceEquals(tmp, null))
                     {
-                        thePlan = PromptUserToSelectPlan(theCourse);
-                        if (ReferenceEquals(thePlan, null))
+                        Course theCourse = tmp.Course;
+                        if (theCourse.ExternalPlanSetups.Where(x => !x.Id.ToLower().Contains("legs")).Count() > 1)
                         {
-                            Logger.GetInstance().LogError("No plan selected. Exiting");
-                            return thePlan;
+                            thePlan = PromptUserToSelectPlan(theCourse);
+                            if (ReferenceEquals(thePlan, null))
+                            {
+                                Logger.GetInstance().LogError("No plan selected. Exiting");
+                                return thePlan;
+                            }
                         }
+                        else thePlan = tmp;
                     }
-                    else thePlan = tmp;
                 }
+                
             }
             if (ReferenceEquals(thePlan, null))
             {

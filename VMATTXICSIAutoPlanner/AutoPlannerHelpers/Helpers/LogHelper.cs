@@ -120,6 +120,10 @@ namespace AutoPlannerHelpers.Helpers
                 Logger.GetInstance().LogError($"Could not retrieve plan UIDs from log file because: {e.Message}");
                 Logger.GetInstance().LogError(e.StackTrace);
             }
+            if(string.IsNullOrEmpty(initPlanUID))
+            {
+                Logger.GetInstance().LogError("Warning! Plan UID from log file is empty! Infering plan from Eclipse context");
+            }
             return initPlanUID;
         }
     }
