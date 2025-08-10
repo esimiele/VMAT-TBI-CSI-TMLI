@@ -178,18 +178,21 @@ namespace CSIAutoPlanner.ViewModels
         {
             List<TSRingStructureModel> rings = (_selectedTemplate as CSIAutoPlanTemplate).Rings;
             List<TargetModel> templateTargets = (_selectedTemplate as CSIAutoPlanTemplate).PlanTargets.SelectMany(x => x.Targets).ToList();
-            foreach (TSRingStructureModel itr in rings)
+            if (rings.Any())
             {
-                if (templateTargets.Any(x => string.Equals(x.TargetId, itr.TargetId)) && _prescriptions.Any(x => string.Equals(x.TargetId, itr.TargetId)))
+                foreach (TSRingStructureModel itr in rings)
                 {
-                    if (!CalculationHelper.AreEqual(templateTargets.First(x => string.Equals(x.TargetId, itr.TargetId)).TargetRxDose, _prescriptions.First(x => string.Equals(x.TargetId, itr.TargetId)).CumulativeDoseToTarget))
+                    if (templateTargets.Any(x => string.Equals(x.TargetId, itr.TargetId)) && _prescriptions.Any(x => string.Equals(x.TargetId, itr.TargetId)))
                     {
-                        itr.DoseLevel *= _prescriptions.First(x => string.Equals(x.TargetId, itr.TargetId)).CumulativeDoseToTarget / templateTargets.First(x => string.Equals(x.TargetId, itr.TargetId)).TargetRxDose;
-                        itr.RingId = $"TS_ring{itr.DoseLevel}";
+                        if (!CalculationHelper.AreEqual(templateTargets.First(x => string.Equals(x.TargetId, itr.TargetId)).TargetRxDose, _prescriptions.First(x => string.Equals(x.TargetId, itr.TargetId)).CumulativeDoseToTarget))
+                        {
+                            itr.DoseLevel *= _prescriptions.First(x => string.Equals(x.TargetId, itr.TargetId)).CumulativeDoseToTarget / templateTargets.First(x => string.Equals(x.TargetId, itr.TargetId)).TargetRxDose;
+                            itr.RingId = $"TS_ring{itr.DoseLevel}";
+                        }
                     }
                 }
+                WeakReferenceMessenger.Default.Send(new RequestUpdateRingStructures(rings, rings.Select(x => x.TargetId).Any(x => x.ToLower().Contains("ts_")) ? true : false));
             }
-            WeakReferenceMessenger.Default.Send(new RequestUpdateRingStructures(rings, !EclipseContext.GetInstance().IsInitialized));
             WeakReferenceMessenger.Default.Send(new RequestUpdateCropOverlapStructures((_selectedTemplate as CSIAutoPlanTemplate).CropAndOverlapStructures, !EclipseContext.GetInstance().IsInitialized));
         }
         #endregion

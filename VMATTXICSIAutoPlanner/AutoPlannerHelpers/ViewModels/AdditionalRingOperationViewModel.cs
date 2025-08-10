@@ -50,7 +50,7 @@ namespace AutoPlannerHelpers.ViewModels
             _originalOperationCopy = op;
             if(op.IsValidOperation)
             {
-                AdditionalRingOperation = new StructureOperationModel(ringId, op.Operation, op.StructureB, ringId, op.MarginA, op.MarginA);
+                AdditionalRingOperation = new StructureOperationModel(ringId, op.Operation, op.StructureB, ringId, op.MarginA, op.MarginB);
             }
             else
             {

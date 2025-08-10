@@ -220,6 +220,24 @@ namespace TMLIAutoPlanner.Core
             {
                 AddedRings = new List<TSRingStructureModel>(GenerateRings(_requestedRings));
                 if (!AddedRings.Any()) return true;
+                if (StructureTuningHelper.DoesStructureExistInSS("matchline", true))
+                {
+                    List<StructureOperationModel> ringOps = new List<StructureOperationModel> { };
+                    //cut all rings inferior to matchline if it exists
+                    foreach(TSRingStructureModel itr in _requestedRings)
+                    {
+                        ringOps.Add(new StructureOperationModel(itr.RingId, StructureDerivationOperation.CutInferiorTo, "matchline", itr.RingId));
+                    }
+                    foreach (StructureOperationModel itr in ringOps)
+                    {
+                        if (itr.IsValidOperation)
+                        {
+                            ProvideUIUpdate($"Performing: {itr.FriendlyName}");
+                            if (ContourHelper.PerformStructureOperation(itr, UIUD)) return true;
+                        }
+                        else ProvideUIUpdate($"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");
+                    }
+                }
             }
             return false;
         }
