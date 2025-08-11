@@ -139,49 +139,6 @@ namespace AutoPlannerHelpers.BaseCore
         }
 
         /// <summary>
-        /// Helper method to create an overlap structure, copy the OAR onto the overlap structure, then contour the overlap between overlap structure 
-        /// and the target. Once contoured a check is performed to ensure that the overlap structure is not empty
-        /// </summary>
-        /// <param name="target"></param>
-        /// <param name="OAR"></param>
-        /// <param name="margin"></param>
-        /// <returns></returns>
-        private bool CreateOverlapStructure(Structure target, Structure OAR, double margin)
-        {
-            int percentComplete = 0;
-            int calcItems = 5;
-            ProvideUIUpdate($"Contouring overlap between {OAR.Id} and {target.Id}");
-            string overlapName = $"ts_{OAR.Id}&&{target.Id}";
-            if (overlapName.Length > 16) overlapName = overlapName.Substring(0, 16);
-            ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Overlap structure Id: {overlapName}");
-            //add a new structure (default resolution by default)
-            if (EclipseContext.GetInstance().StructureSet.CanAddStructure("CONTROL", overlapName))
-            {
-                Structure overlapStructure = AddTSStructures(new SpecialOptimizationStructureModel("CONTROL", overlapName));
-                ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Created empty structure {overlapName}");
-
-                overlapStructure.SegmentVolume = ContourHelper.ContourUnion(OAR, overlapStructure, new StructureMarginModel(0), new StructureMarginModel(0));
-                ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Copied {OAR.Id} onto {overlapName}");
-
-                overlapStructure.SegmentVolume = ContourHelper.ContourIntersection(target, overlapStructure, new StructureMarginModel(0.0), new StructureMarginModel(margin));
-                ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Contoured overlap between {target.Id} and {overlapName}");
-
-                if (overlapStructure.IsEmpty)
-                {
-                    ProvideUIUpdate(100 * ++percentComplete / calcItems, $"{overlapName} was contoured, but it's empty! Removing!");
-                    EclipseContext.GetInstance().StructureSet.RemoveStructure(overlapStructure);
-                }
-                else ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Finished contouring {overlapName}");
-            }
-            else
-            {
-                ProvideUIUpdate($"Error! Cannot add new structure: {overlapName}!\nCorrect this issue and try again!", true);
-                return true;
-            }
-            return false;
-        }
-
-        /// <summary>
         /// Simple method to identify the index of the supplied TS manipulation item in the TS manipulation list, remove it, and update the list with
         /// the same item except the structure id is swapped with the low resolution structure equivalent
         /// </summary>
@@ -195,31 +152,6 @@ namespace AutoPlannerHelpers.BaseCore
             {
                 itr.UpdateStructureIds(lowResId);
             }
-        }
-
-        /// <summary>
-        /// Simple helper method to create an inner/outer structure. Analogous to the margin for structure tool in contouring
-        /// </summary>
-        /// <param name="originalStructure"></param>
-        /// <param name="margin"></param>
-        /// <returns></returns>
-        protected bool ContourInnerOuterStructure(Structure originalStructure, double margin)
-        {
-            int counter = 0;
-            int calcItems = 2;
-            //all other sub structures
-            ProvideUIUpdate(100 * ++counter / calcItems, $"Creating {(margin > 0 ? "outer" : "sub")} structure!");
-            (bool fail, Structure addedStructure) = RemoveAndGenerateStructure($"{originalStructure.Id}{(margin > 0 ? "+" : "-")}{Math.Abs(margin):0.0}cm");
-            if (fail) return true;
-            //convert from cm to mm
-            addedStructure.SegmentVolume = originalStructure.Margin(margin * 10);
-            if (addedStructure.IsEmpty)
-            {
-                ProvideUIUpdate(100 * ++counter / calcItems, $"{addedStructure.Id} was contoured, but is empty! Removing!");
-                EclipseContext.GetInstance().StructureSet.RemoveStructure(addedStructure);
-            }
-            else ProvideUIUpdate(100, $"Finished contouring {addedStructure.Id}");
-            return false;
         }
 
         /// <summary>

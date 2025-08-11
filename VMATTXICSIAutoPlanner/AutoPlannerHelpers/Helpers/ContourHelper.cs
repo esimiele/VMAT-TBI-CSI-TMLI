@@ -9,12 +9,27 @@ using VMS.TPS.Common.Model.Types;
 using AutoPlannerHelpers.Context;
 using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.Models;
-using System.Windows.Media.Converters;
 
 namespace AutoPlannerHelpers.Helpers
 {
     public static class ContourHelper
     {
+        public static bool ExecuteStructureOperations(IEnumerable<StructureOperationModel> operations, ProvideUIUpdateDelegate ProvideUIUpdate, UIUpdateMessageOnlyDelegate UIUD)
+        {
+            int percentCompletion = 0;
+            int calcItems = operations.Count();
+            foreach (StructureOperationModel itr in operations)
+            {
+                if (itr.IsValidOperation)
+                {
+                    ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Performing: {itr.FriendlyName}");
+                    if (PerformStructureOperation(itr, UIUD)) return true;
+                }
+                else ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");
+            }
+            return false;
+        }
+
         public static bool PerformStructureOperation(StructureOperationModel structureOperation, UIUpdateMessageOnlyDelegate ProvideUIUpdate)
         {
             if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))

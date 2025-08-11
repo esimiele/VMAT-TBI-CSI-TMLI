@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using AutoPlannerHelpers.Context;
-using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.Helpers;
 using AutoPlannerHelpers.Logging;
 using AutoPlannerHelpers.Models;
@@ -17,7 +16,6 @@ using AutoPlannerOptimizationLoop.DataContainers;
 using PlanType = AutoPlannerHelpers.Enums.PlanType;
 using AutoPlannerOptimizationLoop.Core;
 using AutoPlannerHelpers.Prompts;
-using AutoPlannerOptimizationLoop.Prompts;
 using VMS.TPS.Common.Model.API;
 using AutoPlannerOptimizationLoop.Settings;
 using AutoPlannerHelpers.Views;
@@ -30,8 +28,6 @@ using AutoPlannerOptimizationLoop.Views;
 using AutoPlannerHelpers.Messengers;
 using CommunityToolkit.Mvvm.Messaging;
 using TBIPlanningAssistantHelpers.Helpers;
-using System.Numerics;
-using VMS.TPS.Common.Model.Types;
 
 namespace AutoPlannerOptimizationLoop.ViewModels
 {

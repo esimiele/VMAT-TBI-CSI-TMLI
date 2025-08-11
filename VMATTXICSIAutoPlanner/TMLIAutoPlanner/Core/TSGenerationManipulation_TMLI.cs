@@ -1,5 +1,4 @@
 ﻿using AutoPlannerHelpers.BaseCore;
-using AutoPlannerHelpers.Context;
 using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.Helpers;
 using AutoPlannerHelpers.Models;
@@ -90,17 +89,11 @@ namespace TMLIAutoPlanner.Core
         #endregion
 
         #region structure derivation
-        protected override bool CreateSpecialOptimizationStructures()
-        {
-            return false;
-        }
+        protected override bool CreateSpecialOptimizationStructures() { return false; }
 
         protected override bool PerformStructureDerivations()
         {
             UpdateUILabel("Perform TS Manipulations: ");
-            int counter = 0;
-            int calcItems = _structureOperations.Count * _prescriptions.Count;
-
             //construct all ts targets 
             //prescriptions are inherently sorted by increasing cumulative Rx to targets
             List<TargetModel> tmpTSTargetList = new List<TargetModel> { };
@@ -125,87 +118,8 @@ namespace TMLIAutoPlanner.Core
                 _structureOperations.Add(new StructureOperationModel("ts_ptv_legs", StructureDerivationOperation.CutSuperiorTo, "matchline", "ts_ptv_legs", new StructureMarginModel(0), new StructureMarginModel(0)));
             }
 
-            foreach (StructureOperationModel itr in _structureOperations)
-            {
-                if (itr.IsValidOperation)
-                {
-                    ProvideUIUpdate(100 * ++counter / calcItems, $"Performing: {itr.FriendlyName}");
-                    if (ContourHelper.PerformStructureOperation(itr, UIUD)) return true;
-                }
-                else ProvideUIUpdate($"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");
-            }
-
-            //if(TSManipulationList.Any(x => !string.IsNullOrEmpty(x.TargetId)))
-            //{
-            //    foreach (RequestedTSManipulationModel itr in TSManipulationList.Where(x => !string.IsNullOrEmpty(x.TargetId)))
-            //    {
-            //        //target operations
-            //        if (tmpTSTargetList.Any(x => string.Equals(x.TargetId, itr.TargetId, StringComparison.OrdinalIgnoreCase)))
-            //        {
-            //            string tsTargetId = tmpTSTargetList.First(x => string.Equals(x.TargetId, itr.TargetId, StringComparison.OrdinalIgnoreCase)).TsTargetId;
-            //            Structure tsTarget = StructureTuningHelper.GetStructureFromId(tsTargetId, EclipseContext.GetInstance().StructureSet);
-            //            if (ManipulateTargetTuningStructures(itr, tsTarget)) return true;
-            //            ProvideUIUpdate(100 * ++counter / calcItems);
-            //        }
-            //    }
-            //}
-            //else ProvideUIUpdate("No target TS manipulations requested!");
-
-            //if (TSManipulationList.Any(x => string.IsNullOrEmpty(x.TargetId)))
-            //{
-            //    foreach (RequestedTSManipulationModel itr in TSManipulationList.Where(x => string.IsNullOrEmpty(x.TargetId)))
-            //    {
-            //        if (ManipulateOARTuningStructures(itr)) return true;
-            //        ProvideUIUpdate(100 * ++counter / calcItems);
-            //    }
-            //}
-            //else ProvideUIUpdate("No OAR TS manipulations requested!");
-
-            //if (!TMLIAutoPlannerSettings.AllBeamsVMAT && StructureTuningHelper.DoesStructureExistInSS("matchline", true))
-            //{
-            //    ProvideUIUpdate($"Cutting {tmpTSTargetList.Last().TsTargetId} at the matchline!");
-
-            //    //find the image plane where the matchline is location. Record this value and break the loop. Also find the first slice where the ptv_body contour starts and record this value
-            //    Structure matchline = StructureTuningHelper.GetStructureFromId("matchline");
-            //    ProvideUIUpdate($"Retrieved matchline structure: {matchline.Id}");
-
-            //    if (ContourTSLegs("TS_PTV_Legs", matchline, StructureTuningHelper.GetStructureFromId(tmpTSTargetList.Last().TsTargetId))) return true;
-            //    if (CutTSPTVAtMatchline(StructureTuningHelper.GetStructureFromId(tmpTSTargetList.Last().TsTargetId), matchline)) return true;
-            //}
-
-            ////prescriptions are inherently sorted by increasing cumulative Rx to targets
-            //foreach (PrescriptionModel itr in prescriptions)
-            //{
-            //    //Generate a new TSTarget
-            //    Structure addedTSTarget = GetTSTarget(itr.TargetId);
-            //    tmpTSTargetList.Add(new TargetModel(itr.TargetId, itr.CumulativeDoseToTarget, addedTSTarget.Id));
-            //    if (ReferenceEquals(addedTSTarget, null) || addedTSTarget.IsEmpty)
-            //    {
-            //        ProvideUIUpdate($"Error! Target structure: {itr.TargetId} is null or empty! Cannot perform tuning structure manipulations! Exiting!", true);
-            //        return true;
-            //    }
-            //    if (TSManipulationList.Any())
-            //    {
-            //        //perform all relevant TS manipulations for the specified target
-            //        foreach (RequestedTSManipulationModel itr1 in TSManipulationList)
-            //        {
-            //            if (ManipulateTuningStructures(itr1, addedTSTarget)) return true;
-            //            ProvideUIUpdate(100 * ++counter / calcItems);
-            //        }
-            //    }
-            //    else ProvideUIUpdate("No TS manipulations requested!");
-            //    if (string.Equals(itr.TargetId.ToLower(), "ptv_tmli") && !TMLIAutoPlannerSettings.AllBeamsVMAT && StructureTuningHelper.DoesStructureExistInSS("matchline", EclipseContext.GetInstance().StructureSet, true))
-            //    {
-            //        ProvideUIUpdate($"Cutting {addedTSTarget} at the matchline!");
-
-            //        //find the image plane where the matchline is location. Record this value and break the loop. Also find the first slice where the ptv_body contour starts and record this value
-            //        Structure matchline = StructureTuningHelper.GetStructureFromId("matchline", EclipseContext.GetInstance().StructureSet);
-            //        ProvideUIUpdate($"Retrieved matchline structure: {matchline.Id}");
-
-            //        if (ContourTSLegs("TS_PTV_Legs", matchline, addedTSTarget)) return true;
-            //        if (CutTSPTVAtMatchline(addedTSTarget, matchline)) return true;
-            //    }
-            //}
+            if (ContourHelper.ExecuteStructureOperations(_structureOperations, PUUD, UIUD)) return true;
+            
             //only one plan is allowed for the prescriptions --> last item is the highest Rx target for this plan and needs to be set as the normalization volume
             NormalizationVolumes.Add(_prescriptions.Last().PlanId, tmpTSTargetList.OrderByDescending(x => x.TargetRxDose).First().TsTargetId);
             PlanTargets.Add(new PlanTargetsModel(_prescriptions.Last().PlanId, new List<TargetModel>(tmpTSTargetList)));
@@ -228,15 +142,7 @@ namespace TMLIAutoPlanner.Core
                     {
                         ringOps.Add(new StructureOperationModel(itr.RingId, StructureDerivationOperation.CutInferiorTo, "matchline", itr.RingId));
                     }
-                    foreach (StructureOperationModel itr in ringOps)
-                    {
-                        if (itr.IsValidOperation)
-                        {
-                            ProvideUIUpdate($"Performing: {itr.FriendlyName}");
-                            if (ContourHelper.PerformStructureOperation(itr, UIUD)) return true;
-                        }
-                        else ProvideUIUpdate($"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");
-                    }
+                    if (ContourHelper.ExecuteStructureOperations(ringOps, PUUD, UIUD)) return true;
                 }
             }
             return false;

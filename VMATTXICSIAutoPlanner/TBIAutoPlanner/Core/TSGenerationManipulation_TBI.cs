@@ -214,8 +214,6 @@ namespace TBIAutoPlanner.Core
         protected override bool PerformStructureDerivations()
         {
             UpdateUILabel("Contouring opt structures now:");
-            int counter = 0;
-            int calcItems = _structureOperations.Count * _prescriptions.Count;
 
             List<TargetModel> tmpTSTargetList = new List<TargetModel> { };
             foreach (PrescriptionModel itr in _prescriptions)
@@ -229,6 +227,7 @@ namespace TBIAutoPlanner.Core
                     return true;
                 }
             }
+
             if(StructureTuningHelper.DoesStructureExistInSS("matchline", true))
             {
                 _structureOperations.Add(new StructureOperationModel("ts_ptv_vmat", StructureDerivationOperation.CopyContractExpand, "", "TS_PTV_legs",new StructureMarginModel(0), new StructureMarginModel(0)));
@@ -236,15 +235,7 @@ namespace TBIAutoPlanner.Core
                 _structureOperations.Add(new StructureOperationModel("ts_ptv_legs", StructureDerivationOperation.CutSuperiorTo, "matchline", "TS_PTV_legs", new StructureMarginModel(0), new StructureMarginModel(0)));
             }
 
-            foreach (StructureOperationModel itr in _structureOperations)
-            {
-                if (itr.IsValidOperation)
-                {
-                    ProvideUIUpdate(100 * ++counter / calcItems, $"Performing: {itr.FriendlyName}");
-                    if (ContourHelper.PerformStructureOperation(itr, UIUD)) return true;
-                }
-                else ProvideUIUpdate($"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");
-            }
+            if (ContourHelper.ExecuteStructureOperations(_structureOperations, PUUD, UIUD)) return true;
 
             //only one plan is allowed for the prescriptions --> last item is the highest Rx target for this plan and needs to be set as the normalization volume
             NormalizationVolumes.Add(_prescriptions.Last().PlanId, tmpTSTargetList.OrderByDescending(x => x.TargetRxDose).First().TsTargetId);
@@ -295,58 +286,15 @@ namespace TBIAutoPlanner.Core
                 new StructureOperationModel(ptvBodyFlash.Id, StructureDerivationOperation.CopyContractExpand, "",TSPTVFlash.Id),
                 StructureTuningHelper.DoesStructureExistInSS("matchline", true) ? new StructureOperationModel(TSPTVFlash.Id, StructureDerivationOperation.CutInferiorTo, "matchline", TSPTVFlash.Id) : new StructureOperationModel(),
             };
-            foreach (StructureOperationModel itr in operations)
-            {
-                if (itr.IsValidOperation)
-                {
-                    ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Performing: {itr.FriendlyName}");
-                    if (ContourHelper.PerformStructureOperation(itr, UIUD)) return true;
-                }
-                else ProvideUIUpdate($"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");
-            }
+
+            if (ContourHelper.ExecuteStructureOperations(operations, PUUD, UIUD)) return true;
 
             //assign the water to the bolus volume (HU = 0.0)
             bolusFlash.SetAssignedHU(0.0);
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Assigned {bolusFlash.Id} HU to 0.0");
 
             ContourHelper.CleanTemporaryStructures(operations);
-
-            ////Now extend the body contour to include the bolus_flash structure. The reason for this is because Eclipse automatically sets the dose calculation grid to the body structure contour (no overriding this)
-            //body.SegmentVolume = ContourHelper.ContourUnion(bolusFlash, body, new StructureMarginModel(0.0), new StructureMarginModel(0.0));
-            //ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Contour union betwen between {bolusFlash.Id} and body onto body");
-
-            ////copy the NEW body structure (i.e., body + bolus_flash)
-            //if (GeneratePTVFromBody(ptvBodyFlash)) return true;
-            //ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Contoured {ptvBodyFlash.Id} structure from body structure");
-
-            //foreach (RequestedTSManipulationModel itr in TSManipulationList.Where(x => !string.IsNullOrEmpty(x.TargetId) && string.Equals(x.TargetId, "ptv_body", StringComparison.OrdinalIgnoreCase)))
-            //{
-            //    //only grab the ts target manipulations intended for ptv_body
-            //    ManipulateTargetTuningStructures(itr, ptvBodyFlash);
-            //    ProvideUIUpdate(100 * ++percentComplete / calcItems);
-            //}
-
-            ////now create the ptv_flash structure (analogous to PTV_Body)
             
-            //ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Created structure: {TSPTVFlash.Id}");
-
-            //(bool failCopyTarget, StringBuilder copyErrorMessage) = ContourHelper.CopyStructureOntoStructure(ptvBodyFlash, TSPTVFlash);
-            //if (failCopyTarget)
-            //{
-            //    ProvideUIUpdate(copyErrorMessage.ToString(), true);
-            //    return true;
-            //}
-            //ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Copied structure {ptvBodyFlash.Id} onto {TSPTVFlash.Id}");
-
-            //if (StructureTuningHelper.DoesStructureExistInSS("matchline", true))
-            //{
-            //    //crop flash at matchline ONLY if global flash is used
-            //    Structure dummyBox = StructureTuningHelper.GetStructureFromId("dummybox");
-            //    ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved dummy box structure: {dummyBox.Id}");
-
-            //    if (CutTSTargetFromMatchline(TSPTVFlash, StructureTuningHelper.GetStructureFromId("matchline"), dummyBox)) return true;
-            //    ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Cut {TSPTVFlash.Id} structure at matchline structure");
-            //}
             NormalizationVolumes = new Dictionary<string, string>(UpdateNormVolumesWithFlash(NormalizationVolumes));
             PlanTargets = new List<PlanTargetsModel>(UpdateTsTargetsWithFlash(PlanTargets));
             return false;

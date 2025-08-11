@@ -155,17 +155,7 @@ namespace AutoPlannerHelpers.BaseCore
         protected virtual bool DeriveTargetStructures()
         {
             UpdateUILabel("Contouring targets now:");
-            int counter = 0;
-            int calcItems = _targetsToDerive.Count + 2;
-            foreach (StructureOperationModel itr in _targetsToDerive)
-            {
-                if (itr.IsValidOperation)
-                {
-                    ProvideUIUpdate(100 * ++counter / calcItems, $"Contouring target: {itr.FriendlyName}");
-                    if (ContourHelper.PerformStructureOperation(itr, UIUD)) return true;
-                }
-                else ProvideUIUpdate($"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");
-            }
+            if (ContourHelper.ExecuteStructureOperations(_targetsToDerive, PUUD, UIUD)) return true;
 
             ProvideUIUpdate(100, "Targets added and contoured!");
             ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
