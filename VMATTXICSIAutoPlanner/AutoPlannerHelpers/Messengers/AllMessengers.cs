@@ -193,11 +193,15 @@ namespace AutoPlannerHelpers.Messengers
     public class RequestPlanSelectionChanged
     {
         public List<string> UpdatedPlanIds { get; private set; }
-        public RequestPlanSelectionChanged(IEnumerable<string> updatedPlanIds)
+        public List<PlanOptimizationSetupModel> PlanOptimizationSetup { get; private set; }
+        public RequestPlanSelectionChanged(IEnumerable<PlanOptimizationSetupModel> planOptSetup)
         {
-            this.UpdatedPlanIds = updatedPlanIds.ToList();
+            this.UpdatedPlanIds = planOptSetup.Select(x => x.PlanId).ToList();
+            this.PlanOptimizationSetup = planOptSetup.ToList();
         }
     }
+
+    public class RequestOptimizationConstraintsFromPlan : RequestMessage<List<PlanOptimizationSetupModel>> { }
 
     public class RequestPlanObjectives : RequestMessage<List<PlanObjectiveModel>> { }
     public class RequestSelectPatient

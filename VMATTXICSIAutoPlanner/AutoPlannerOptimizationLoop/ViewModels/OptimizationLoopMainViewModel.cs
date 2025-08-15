@@ -299,6 +299,10 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                 List<PlanObjectiveModel> planObjectives = WeakReferenceMessenger.Default.Send(new RequestPlanObjectives());
                 StartOptimization(planObjectives, m.PlanOptimizationSetup);
             });
+            WeakReferenceMessenger.Default.Register<RequestOptimizationConstraintsFromPlan>(this, (r, m) =>
+            {
+                m.Reply(GetOptimizationConstraintsFromPlans());
+            });
             WeakReferenceMessenger.Default.Register<RequestSelectPatient>(this, (r, m) =>
             {
                 LoadPatient(m);
@@ -549,8 +553,23 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                     ESAPIThreadContext.ESAPIDispatcher.Invoke(() => UpdateNormalizationVolumes(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id), AvailableBasePlansForOptimization.Any()));
                 }
                 ESAPIThreadContext.ESAPIDispatcher.Invoke(() => UpdateUIWithPlanPrescriptionInfo());
-                WeakReferenceMessenger.Default.Send(new RequestPlanSelectionChanged(EclipseContext.GetInstance().VMATPlans.Select(x => x.Id)));
+                List<PlanOptimizationSetupModel> planOptimizationSetup = new List<PlanOptimizationSetupModel> { };
+                foreach(ExternalPlanSetup itr in EclipseContext.GetInstance().VMATPlans)
+                {
+                    planOptimizationSetup.Add(new PlanOptimizationSetupModel(itr.Id, OptimizationSetupHelper.ReadConstraintsFromPlan(itr)));
+                }
+                WeakReferenceMessenger.Default.Send(new RequestPlanSelectionChanged(planOptimizationSetup));
             });
+        }
+
+        private List<PlanOptimizationSetupModel> GetOptimizationConstraintsFromPlans()
+        {
+            List<PlanOptimizationSetupModel> planOptimizationSetup = new List<PlanOptimizationSetupModel> { };
+            foreach (ExternalPlanSetup itr in EclipseContext.GetInstance().VMATPlans)
+            {
+                planOptimizationSetup.Add(new PlanOptimizationSetupModel(itr.Id, OptimizationSetupHelper.ReadConstraintsFromPlan(itr)));
+            }
+            return planOptimizationSetup;
         }
 
         private void UpdateNormalizationVolumes(IEnumerable<string> structureIds, bool sequentialBoostNeeded = false)
