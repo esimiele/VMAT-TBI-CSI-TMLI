@@ -73,12 +73,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         }
 
 
-        private string _fullLogFileName;
-
-        public string FullLogFileName
-        {
-            get { return _fullLogFileName; }
-        }
+        private string _fullLogFileName = string.Empty;
 
 
         private PlanType _selectedPlanType;
@@ -183,7 +178,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             
             SelectedPlanType = PlanType.VMAT_TBI;
             MRN = selection;
-            _fullLogFileName = _logsTBI.FirstOrDefault(x => x.Contains(selection));
+            _fullLogFileName = _logsTBI.FirstOrDefault(x => x.Contains(selection)) + $"\\{selection}.txt";
             Application.Current.Dispatcher.BeginInvoke(new Action(() => SelectedLogFileCSI = null), System.Windows.Threading.DispatcherPriority.Background);
             Application.Current.Dispatcher.BeginInvoke(new Action(() => SelectedLogFileTMLI = null), System.Windows.Threading.DispatcherPriority.Background);
         }
@@ -198,7 +193,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
 
             SelectedPlanType = PlanType.VMAT_CSI;
             MRN = selection;
-            _fullLogFileName = _logsCSI.FirstOrDefault(x => x.Contains(selection));
+            _fullLogFileName = _logsCSI.FirstOrDefault(x => x.Contains(selection)) + $"\\{selection}.txt";
             Application.Current.Dispatcher.BeginInvoke(new Action(() => SelectedLogFileTBI = null), System.Windows.Threading.DispatcherPriority.Background);
             Application.Current.Dispatcher.BeginInvoke(new Action(() => SelectedLogFileTMLI = null), System.Windows.Threading.DispatcherPriority.Background);
         }
@@ -213,7 +208,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
 
             SelectedPlanType = PlanType.VMAT_TMLI;
             MRN = selection;
-            _fullLogFileName = _logsTMLI.FirstOrDefault(x => x.Contains(selection));
+            _fullLogFileName = _logsTMLI.FirstOrDefault(x => x.Contains(selection)) + $"\\{selection}.txt";
             Application.Current.Dispatcher.BeginInvoke(new Action(() => SelectedLogFileTBI = null), System.Windows.Threading.DispatcherPriority.Background);
             Application.Current.Dispatcher.BeginInvoke(new Action(() => SelectedLogFileCSI = null), System.Windows.Threading.DispatcherPriority.Background);
         }

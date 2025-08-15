@@ -26,7 +26,11 @@ namespace AutoPlannerHelpers.Context
 
         public void ClearContext(bool closePatient = true)
         {
-            if (IsInitialized && closePatient) Application.ClosePatient();
+            if (IsInitialized && closePatient)
+            {
+                Application.ClosePatient();
+                Patient = null;
+            }
             Course = null;
             VMATPlans = new List<ExternalPlanSetup> { };
             StructureSet = null;

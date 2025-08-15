@@ -250,12 +250,16 @@ namespace TMLIAutoPlanner.ViewModels
         #region prepare for treatment
         protected override bool GenerateShiftNote()
         {
-            ExternalPlanSetup plan = PlanPrepHelper.RetrieveVMATPlan(!string.IsNullOrEmpty(TMLIAutoPlannerSettings.CourseId) ? TMLIAutoPlannerSettings.CourseId : "VMAT-TMLI", PlanType.VMAT_TMLI);
-            if (!ReferenceEquals(plan, null)) EclipseContext.GetInstance().VMATPlans = new List<ExternalPlanSetup> { plan };
-            else return true;
-            if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Any(x => x.Id.ToLower().Contains("legs")))
+            if (!EclipseContext.GetInstance().VMATPlans.Any())
             {
-                if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("legs")).Any(x => x.TreatmentOrientation != PatientOrientation.FeetFirstSupine))
+                ExternalPlanSetup plan = PlanPrepHelper.RetrieveVMATPlan(!string.IsNullOrEmpty(TMLIAutoPlannerSettings.CourseId) ? TMLIAutoPlannerSettings.CourseId : "VMAT-TMLI", PlanType.VMAT_TMLI);
+                if (!ReferenceEquals(plan, null)) EclipseContext.GetInstance().VMATPlans = new List<ExternalPlanSetup> { plan };
+                else return true;
+            }
+
+            if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Any(x => x.Id.ToLower().Contains("leg") && x.ApprovalStatus != PlanSetupApprovalStatus.Rejected))
+            {
+                if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("leg") && x.ApprovalStatus != PlanSetupApprovalStatus.Rejected).Any(x => x.TreatmentOrientation != PatientOrientation.FeetFirstSupine))
                 {
                     StringBuilder sb = new StringBuilder();
                     sb.AppendLine($"The AP/PA plan {EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("legs")).ToList().First(x => x.TreatmentOrientation != PatientOrientation.FeetFirstSupine).Id} is NOT in the FFS orientation!");
@@ -265,7 +269,7 @@ namespace TMLIAutoPlanner.ViewModels
                 }
             }
 
-            Clipboard.SetText(PlanPrepHelper.GetTBITMLIShiftNote(EclipseContext.GetInstance().VMATPlans.First(), EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("legs")).ToList()).ToString());
+            Clipboard.SetText(PlanPrepHelper.GetTBITMLIShiftNote(EclipseContext.GetInstance().VMATPlans.First(), EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("leg") && x.ApprovalStatus != PlanSetupApprovalStatus.Rejected).ToList()).ToString());
             return false;
         }
         protected override bool SeparatePlans()

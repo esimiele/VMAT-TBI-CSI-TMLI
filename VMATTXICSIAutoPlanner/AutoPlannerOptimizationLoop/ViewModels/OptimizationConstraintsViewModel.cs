@@ -17,6 +17,7 @@ using System.Linq;
 using System.Windows.Input;
 using TBIPlanningAssistantHelpers.Helpers;
 using VMS.TPS.Common.Model.API;
+using System.Windows;
 
 namespace AutoPlannerOptimizationLoop.ViewModels
 {
@@ -43,8 +44,6 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         #endregion
 
         #region fields
-        private PlanType _planType;
-        private AutoPlanTemplateBase _selectedTemplate;
         private List<string> _planIds;
         private List<PlanOptimizationSetupModel> _tmpPlanOptSetup;
         #endregion
@@ -53,7 +52,6 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         {
             if (sIds.Any()) StructureIds = sIds;
             else StructureIds = new List<string> { "1", "2", "3" };
-            _planType = type;
             AddOptimizationConstraintCommand = new RelayCommand(AddOptimizationObjective);
             GetOptConstraintsFromPlanCommand = new RelayCommand(GetOptimizationConstraintsFromPlan);
             GetOptConstraintsFromLogsCommand = new RelayCommand(GetOptimizationConstraintsFromLogs);
@@ -72,13 +70,8 @@ namespace AutoPlannerOptimizationLoop.ViewModels
 
         private void InitializeMessengers()
         {
-            //WeakReferenceMessenger.Default.Register<RequestAutoPlanTemplateChangedMessage>(this, (r, m) =>
-            //{
-            //    UpdateViewWithSelectedPlanTemplate(m.AutoPlanTemplate);
-            //});
             WeakReferenceMessenger.Default.Register<RequestPlanSelectionChanged>(this, (r, m) =>
             {
-                ClearOptimizationConstraints();
                 _planIds.Clear();
                 _planIds = new List<string>(m.UpdatedPlanIds);
                 GetOptimizationConstraintsFromPlan();
@@ -143,12 +136,13 @@ namespace AutoPlannerOptimizationLoop.ViewModels
 
         public void GetOptimizationConstraintsFromPlan()
         {
+
             ESAPIThreadContext.RunOnESAPIThreadSync(() =>
             {
                 if (!EclipseContext.GetInstance().IsInitialized || !EclipseContext.GetInstance().VMATPlans.Any()) return;
-                _tmpPlanOptSetup.Clear();
                 ESAPIThreadContext.ESAPIDispatcher.Invoke(() =>
                 {
+                    _tmpPlanOptSetup.Clear();
                     foreach (ExternalPlanSetup itr in EclipseContext.GetInstance().VMATPlans)
                     {
                         _tmpPlanOptSetup.Add(new PlanOptimizationSetupModel(itr.Id, OptimizationSetupHelper.ReadConstraintsFromPlan(itr)));
@@ -158,7 +152,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
 
             if (!_tmpPlanOptSetup.Any()) return;
             ClearOptimizationConstraints();
-            foreach (PlanOptimizationSetupModel itr in _tmpPlanOptSetup)
+            foreach (PlanOptimizationSetupModel itr in _tmpPlanOptSetup.ConvertAll(x => new PlanOptimizationSetupModel(x.PlanId, x.OptimizationConstraints)))
             {
                 PlanOptimizationConstraints.Add(itr);
             }
@@ -171,18 +165,28 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                 Logger.GetInstance().LogError("Warning! No optimization constraints found in log file! Skipping!");
                 return;
             }
-            ClearOptimizationConstraints();
             ESAPIThreadContext.RunOnESAPIThreadSync(() =>
             {
                 if (!EclipseContext.GetInstance().IsInitialized || !EclipseContext.GetInstance().VMATPlans.Any()) return;
-                foreach (PlanOptimizationSetupModel itr in OptimizationLoopSettings.PlanPreparationOptimizationSetup)
+                ESAPIThreadContext.ESAPIDispatcher.Invoke(() =>
                 {
-                    if (EclipseContext.GetInstance().VMATPlans.Any(x => string.Equals(x.Id, itr.PlanId, StringComparison.OrdinalIgnoreCase)))
+                    _tmpPlanOptSetup.Clear();
+                    foreach (PlanOptimizationSetupModel itr in OptimizationLoopSettings.PlanPreparationOptimizationSetup)
                     {
-                        ESAPIThreadContext.ESAPIDispatcher.Invoke(() => PlanOptimizationConstraints.Add(itr));
+                        if (EclipseContext.GetInstance().VMATPlans.Any(x => string.Equals(x.Id, itr.PlanId, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            _tmpPlanOptSetup.Add(new PlanOptimizationSetupModel(itr.PlanId, itr.OptimizationConstraints));
+                        }
                     }
-                }
+                });
             });
+
+            if (!_tmpPlanOptSetup.Any()) return;
+            ClearOptimizationConstraints();
+            foreach (PlanOptimizationSetupModel itr in _tmpPlanOptSetup.ConvertAll(x => new PlanOptimizationSetupModel(x.PlanId, x.OptimizationConstraints)))
+            {
+                PlanOptimizationConstraints.Add(itr);
+            }
         }
 
         public void ClearOptimizationConstraints()

@@ -42,30 +42,30 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         private double _lowDoseLimit;
         private bool _isDemo;
         private PlanType _selectedPlanType = PlanType.VMAT_CSI;
-        private List<string> _planIds;
+        private List<string> _planIds = new List<string> { };
         private List<string> _reminders = new List<string> { };
         private string _mrn;
-        private List<string> _availableBasePlansForOptimization;
+        private List<string> _availableBasePlansForOptimization = new List<string> { };
         private string _selectedBasePlanId;
-        private List<string> _availableBoostPlansForOptimization;
+        private List<string> _availableBoostPlansForOptimization = new List<string> { };
         private string _selectedBoostPlanId;
         private AutoPlanTemplateBase _selectedTemplate;
         private double _basePlanDosePerFraction;
         private int _basePlanNumberOfFractions;
         private double _basePlanTotalDose;
-        private List<string> _availableBasePlanNormalizationVolumes;
+        private List<string> _availableBasePlanNormalizationVolumes = new List<string> { };
         private string _basePlanNormalizationVolume;
         private double _boostPlanDosePerFraction;
         private int _boostPlanNumberOfFractions;
         private double _boostPlanTotalDose;
-        private List<string> _availableBoostPlanNormalizationVolumes;
+        private List<string> _availableBoostPlanNormalizationVolumes = new List<string> { };
         private string _boostPlanNormalizationVolume;
         private bool _runCoverageCheck;
         private bool _copyAndSaveEachPlan;
         private int _maxNumberOfIterations;
         private bool _runOneAdditionalOptimization;
         private double _planNormalizationValue;
-        private List<string> _structureIds;
+        private List<string> _structureIds = new List<string> { };
 
         public string MRN
         {
@@ -122,7 +122,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         public AutoPlanTemplateBase SelectedTemplate
         {
             get { return _selectedTemplate; }
-            set { SetProperty(ref _selectedTemplate, value); }
+            set { SetProperty(ref _selectedTemplate, value); WeakReferenceMessenger.Default.Send(new RequestUpdatePlanObjectives(_selectedTemplate.PlanObjectives)); }
         }
 
         public double BasePlanDosePerFraction
@@ -352,7 +352,6 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             if (PlanTemplates.Any(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed)))
             {
                 SelectedTemplate = PlanTemplates.First(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed));
-                //WeakReferenceMessenger.Default.Send(new RequestAutoPlanTemplateChangedMessage(_selectedTemplate));
             }
         }
         #endregion
@@ -391,7 +390,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                         OptimizationLoopSettings.ClearSettings();
                     });
                     EclipseContext.GetInstance().ClearContext();
-                    EclipseContext.GetInstance().Application.OpenPatientById(selection.PatientId);
+                    EclipseContext.GetInstance().Patient = EclipseContext.GetInstance().Application.OpenPatientById(selection.PatientId);
                     if(!ReferenceEquals(EclipseContext.GetInstance().Patient, null))
                     {
                         ESAPIThreadContext.ESAPIDispatcher.Invoke(() =>
@@ -403,6 +402,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
 
                         if(thePlans.Any())
                         {
+                            EclipseContext.GetInstance().VMATPlans.Clear();
                             EclipseContext.GetInstance().VMATPlans.AddRange(thePlans);
                             EclipseContext.GetInstance().StructureSet = thePlans.First().StructureSet;
                             EclipseContext.GetInstance().Course = thePlans.First().Course;
@@ -431,17 +431,17 @@ namespace AutoPlannerOptimizationLoop.ViewModels
 
         public List<ExternalPlanSetup> LoadPlans()
         {
-            if (OptimizationLoopSettings.PlanUIDs.Any()) return ExtractPlansBasedOnUIDsFromLogs(OptimizationLoopSettings.PlanUIDs);
-            else return ExtractPlansBasedOnContext();
+            if (OptimizationLoopSettings.PlanUIDs.Any())
+            {
+                List<ExternalPlanSetup> plans = ExtractPlansBasedOnUIDsFromLogs(OptimizationLoopSettings.PlanUIDs);
+                if (plans.Any()) return plans;
+            }
+            return ExtractPlansBasedOnContext();
         }
 
         private List<ExternalPlanSetup> ExtractPlansBasedOnUIDsFromLogs(List<string> uids)
         {
             List<ExternalPlanSetup> thePlans = new List<ExternalPlanSetup> { };
-            //if plan uids were loaded from the prep script log file, then discard the current list of vmat plan uids, structure set, and course from eclipse initialization
-            //--> uids from log file are already sorted in order in terms of cumulative Rx (lowest to highest) 
-            EclipseContext.GetInstance().ClearContext(false);
-            //re-add the plan uids to vmat plan list
             foreach (string uid in uids)
             {
                 ExternalPlanSetup tmp = EclipseContext.GetInstance().Patient.Courses.SelectMany(x => x.ExternalPlanSetups).FirstOrDefault(x => string.Equals(x.UID, uid));
@@ -909,7 +909,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         /// <returns></returns>
         private bool LoadLogFile(string fullLogName)
         {
-            if (string.IsNullOrEmpty(fullLogName)) return true;
+            if (string.IsNullOrEmpty(fullLogName) || !File.Exists(fullLogName)) return true;
             try
             {
                 using (StreamReader reader = new StreamReader(fullLogName))

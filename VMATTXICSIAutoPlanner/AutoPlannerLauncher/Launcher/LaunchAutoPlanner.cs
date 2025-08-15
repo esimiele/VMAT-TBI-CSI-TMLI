@@ -27,11 +27,7 @@ namespace VMS.TPS
                     if (!string.IsNullOrEmpty(path))
                     {
                         ProcessStartInfo p = new ProcessStartInfo(path);
-                        p.Arguments = string.Format("-m {0}", context.Patient.Id);
-                        if (!ReferenceEquals(context.StructureSet, null)) p.Arguments += string.Format(" -s {0}", context.StructureSet.UID);
-                        if (!ReferenceEquals(context.Image, null)) p.Arguments += string.Format(" -i {0}", context.Image.FOR);
-                        if (!ReferenceEquals(context.ExternalPlanSetup, null)) p.Arguments += string.Format(" -p {0}", context.ExternalPlanSetup.UID);
-                        if (!ReferenceEquals(context.Course, null)) p.Arguments += string.Format(" -c {0}", context.Course.Id);
+                        p.Arguments = SerializeEclipseContext(context);
                         Process.Start(p);
                     }
                     else MessageBox.Show(string.Format("Error! {0} executable NOT found!", exeName));
@@ -72,16 +68,16 @@ namespace VMS.TPS
             return sourceFilePath;
         }
 
-        private string SerializeEclipseContext(ScriptContext context, bool showLaunchOptimizationButton)
+        private string SerializeEclipseContext(ScriptContext context)
         {
-            string serializedContext = string.Format("-l {0}", showLaunchOptimizationButton);
+            string serializedContext = "";
             if (context != null)
             {
-                if (context.Patient != null) serializedContext += string.Format(" -m {0}", context.Patient.Id);
-                if (context.StructureSet != null) serializedContext += string.Format(" -s {0}", context.StructureSet.UID);
-                if (context.Image != null) serializedContext += string.Format(" -i {0}", context.Image.FOR);
-                if (context.ExternalPlanSetup != null) serializedContext += string.Format(" -p {0}", context.ExternalPlanSetup.UID);
-                if (context.Course != null) serializedContext += string.Format(" -c {0}", context.Course.Id);
+                if (!ReferenceEquals(context.Patient, null)) serializedContext += string.Format(" -m {0}", context.Patient.Id);
+                if (!ReferenceEquals(context.StructureSet,null)) serializedContext += string.Format(" -s {0}", context.StructureSet.UID);
+                if (!ReferenceEquals(context.Image,null)) serializedContext += string.Format(" -i {0}", context.Image.FOR);
+                if (!ReferenceEquals(context.ExternalPlanSetup,null)) serializedContext += string.Format(" -p {0}", context.ExternalPlanSetup.UID);
+                if (!ReferenceEquals(context.Course,null)) serializedContext += string.Format(" -c {0}", context.Course.Id);
             }
             return serializedContext;
         }

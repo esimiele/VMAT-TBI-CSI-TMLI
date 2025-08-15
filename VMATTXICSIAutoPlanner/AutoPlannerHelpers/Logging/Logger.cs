@@ -50,7 +50,11 @@ namespace AutoPlannerHelpers.Logging
         //plan Id, list of isocenter names for this plan
         public List<PlanIsocenterModel> PlanIsocenters { set => planIsocenters = new List<PlanIsocenterModel>(value); }
         //plan generation and beam placement
-        public List<string> PlanUIDs { set => planUIDs = new List<string>(value); }
+        public List<string> PlanUIDs 
+        { 
+            get => planUIDs;
+            set => planUIDs = new List<string>(value); 
+        }
         //optimization setup
         public List<PlanOptimizationSetupModel> OptimizationConstraints { get; set; } = new List<PlanOptimizationSetupModel>();
         public ScriptOperationType OpType { set => opType = value; }

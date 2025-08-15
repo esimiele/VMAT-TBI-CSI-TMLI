@@ -619,6 +619,13 @@ namespace AutoPlannerHelpers.BaseViewModel
                 string message = "Optimization objectives have been successfully set!" + Environment.NewLine + Environment.NewLine + "Please review the generated structures, placed isocenters, placed beams, and optimization parameters!";
                 MessageBox.Show(message);
                 Logger.GetInstance().OptimizationConstraints = PlanOptimizationConstraints.ToList();
+                if (!Logger.GetInstance().PlanUIDs.Any())
+                {
+                    foreach (string itr in EclipseContext.GetInstance().VMATPlans.OrderBy(x => x.CreationDateTime).Select(y => y.UID))
+                    {
+                        Logger.GetInstance().PlanUIDs.Add(itr);
+                    }
+                }
                 Logger.GetInstance().OpType = ScriptOperationType.FullPreparationForOptimization;
                 OptimizationSetupTabBackground = Brushes.ForestGreen;
             }

@@ -46,7 +46,6 @@ namespace AutoPlannerHelpers.Helpers
                         else thePlan = tmp;
                     }
                 }
-                
             }
             if (ReferenceEquals(thePlan, null))
             {
