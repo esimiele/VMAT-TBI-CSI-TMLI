@@ -9,6 +9,7 @@ using System.Linq;
 using System.Windows.Input;
 using AutoPlannerHelpers.Messengers;
 using CommunityToolkit.Mvvm.Messaging;
+using AutoPlannerOptimizationLoop.Helpers;
 
 namespace AutoPlannerOptimizationLoop.ViewModels
 {
@@ -51,6 +52,14 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             WeakReferenceMessenger.Default.Register<RequestPlanObjectives>(this, (r, m) =>
             {
                 m.Reply(PlanObjectives.ToList());
+            });
+            WeakReferenceMessenger.Default.Register<RequestUpdateStructureIds>(this, (r, m) =>
+            {
+                ESAPIThreadContext.UIDispatcher.BeginInvoke(() =>
+                {
+                    ClearPlanObjectives();
+                    StructureIds = new List<string>(m.StructureIds);
+                });
             });
         }
 

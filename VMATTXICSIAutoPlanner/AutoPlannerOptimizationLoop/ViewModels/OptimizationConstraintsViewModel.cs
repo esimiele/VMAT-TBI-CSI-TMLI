@@ -15,8 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Input;
-using TBIPlanningAssistantHelpers.Helpers;
-using VMS.TPS.Common.Model.API;
+using AutoPlannerOptimizationLoop.Helpers;
 
 namespace AutoPlannerOptimizationLoop.ViewModels
 {
@@ -71,16 +70,18 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         {
             WeakReferenceMessenger.Default.Register<RequestPlanSelectionChanged>(this, (r, m) =>
             {
-                _planIds.Clear();
-                _planIds = new List<string>(m.UpdatedPlanIds);
-                _tmpPlanOptSetup.Clear();
-                _tmpPlanOptSetup.AddRange(m.PlanOptimizationSetup);
-                AddOptimizationConstraintList(_tmpPlanOptSetup);
+                ESAPIThreadContext.UIDispatcher.BeginInvoke(() =>
+                {
+                    GetOptimizationConstraintsFromPlan();
+                });
             });
             WeakReferenceMessenger.Default.Register<RequestUpdateStructureIds>(this, (r, m) =>
             {
-                StructureIds = new List<string>(m.StructureIds);
-                GetOptimizationConstraintsFromPlan();
+                ESAPIThreadContext.UIDispatcher.BeginInvoke(() =>
+                {
+                    ClearOptimizationConstraints();
+                    StructureIds = new List<string>(m.StructureIds);
+                });
             });
         }
 
@@ -115,28 +116,17 @@ namespace AutoPlannerOptimizationLoop.ViewModels
 
         public void GetOptimizationConstraintsFromPlan()
         {
-
-            //ESAPIThreadContext.RunOnESAPIThreadSync(() =>
-            //{
-            //    if (!EclipseContext.GetInstance().IsInitialized || !EclipseContext.GetInstance().VMATPlans.Any()) return;
-            //    ESAPIThreadContext.ESAPIDispatcher.Invoke(() =>
-            //    {
-            //        _tmpPlanOptSetup.Clear();
-            //        foreach (ExternalPlanSetup itr in EclipseContext.GetInstance().VMATPlans)
-            //        {
-            //            _tmpPlanOptSetup.Add(new PlanOptimizationSetupModel(itr.Id, OptimizationSetupHelper.ReadConstraintsFromPlan(itr)));
-            //        }
-            //    });
-            //});
             _tmpPlanOptSetup = WeakReferenceMessenger.Default.Send(new RequestOptimizationConstraintsFromPlan());
             if (!_tmpPlanOptSetup.Any()) return;
+            _planIds.Clear();
+            _planIds = new List<string>(_tmpPlanOptSetup.Select(x => x.PlanId));
             AddOptimizationConstraintList(_tmpPlanOptSetup);
         }
 
         public void AddOptimizationConstraintList(IEnumerable<PlanOptimizationSetupModel> planOptSetup)
         {
             ClearOptimizationConstraints();
-            foreach (PlanOptimizationSetupModel itr in planOptSetup)
+            foreach (PlanOptimizationSetupModel itr in planOptSetup.ToList())
             {
                 PlanOptimizationConstraints.Add(itr);
             }

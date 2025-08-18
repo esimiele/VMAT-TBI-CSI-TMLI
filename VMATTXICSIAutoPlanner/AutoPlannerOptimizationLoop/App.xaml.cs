@@ -10,7 +10,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using TBIPlanningAssistantHelpers.Helpers;
+using AutoPlannerOptimizationLoop.Helpers;
 
 namespace AutoPlannerOptimizationLoop
 {
@@ -45,6 +45,7 @@ namespace AutoPlannerOptimizationLoop
             Thread t = new Thread(() =>
             {
                 OptimizationLoopMainView mv = new OptimizationLoopMainView { DataContext = new OptimizationLoopMainViewModel(e.Args) };
+                ESAPIThreadContext.UIDispatcher = mv.Dispatcher;
                 mv.ShowDialog();
                 CloseApplication();
             });

@@ -6,11 +6,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 
-namespace TBIPlanningAssistantHelpers.Helpers
+namespace AutoPlannerOptimizationLoop.Helpers
 {
     public static class ESAPIThreadContext
     {
+        private static Dispatcher _UIDispatcher;
         public static Dispatcher ESAPIDispatcher { get; private set; }
+        public static Dispatcher UIDispatcher { get => _UIDispatcher; set => _UIDispatcher = value; }
         public static SynchronizationContext ESAPISyncContext { get; private set; }
 
         public static void Initialize(Dispatcher dispatch)
