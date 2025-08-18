@@ -8,6 +8,7 @@ using System.Configuration;
 using System.Data;
 using System.Linq;
 using System.Threading;
+using System.Windows.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using AutoPlannerOptimizationLoop.Helpers;
@@ -44,10 +45,30 @@ namespace AutoPlannerOptimizationLoop
 
             Thread t = new Thread(() =>
             {
-                OptimizationLoopMainView mv = new OptimizationLoopMainView { DataContext = new OptimizationLoopMainViewModel(e.Args) };
-                ESAPIThreadContext.UIDispatcher = mv.Dispatcher;
-                mv.ShowDialog();
-                CloseApplication();
+                try
+                {
+                    ESAPIThreadContext.UIDispatcher = Dispatcher.CurrentDispatcher;
+                    OptimizationLoopMainView mv = new OptimizationLoopMainView
+                    {
+                        DataContext = new OptimizationLoopMainViewModel()
+                    };
+
+                    // Show the window
+                    mv.Show();
+                    Dispatcher.Run();
+
+                    // Start the dispatcher message loop
+                }
+                catch (Exception ex)
+                {
+                    // Log the exception
+                    Logger.GetInstance().LogError("UI thread exception: " + ex.Message);
+                    Logger.GetInstance().LogError(ex.StackTrace, true);
+                }
+                finally
+                {
+                    CloseApplication();
+                }
             });
             t.SetApartmentState(ApartmentState.STA);
             t.Start();
@@ -55,7 +76,7 @@ namespace AutoPlannerOptimizationLoop
 
         private void CloseApplication()
         {
-            ESAPIThreadContext.RunOnESAPIThread(() => { Current.Shutdown(); });
+            ESAPIThreadContext.RunOnESAPIThreadSync(() => { Current.Shutdown(); });
         }
     }
 }
