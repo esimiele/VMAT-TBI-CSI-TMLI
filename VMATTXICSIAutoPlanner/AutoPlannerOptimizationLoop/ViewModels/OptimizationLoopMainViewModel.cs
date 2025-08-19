@@ -266,7 +266,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             AvailableBoostPlanNormalizationVolumes = new List<string> { };
             StructureIds = new List<string> { };
             PlanObjectives = new PlanObjectivesView { DataContext = new PlanObjectivesViewModel(_structureIds) };
-            OptimizationSetup = new OptimizationConstraintsView { DataContext = new OptimizationConstraintsViewModel(_structureIds, _availableBasePlansForOptimization, _selectedPlanType) };
+            OptimizationSetup = new OptimizationConstraintsView { DataContext = new OptimizationConstraintsViewModel(_structureIds, _availableBasePlansForOptimization) };
             ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
         }
 
@@ -287,24 +287,28 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         #endregion
 
         #region initialize
-        public async Task Initialize()
+        public void Initialize()
         {
             AssignDefaultLogAndDocPaths();
-            await LoadPatientStructureSetAndPlans();
+            RequestSelectPatient selectedPatient = GetSelectionOnESAPIThreadAsync();
+            SelectedPlanType = selectedPatient.PlanType;
+            bool logFileLoaded = LoadLogFile(selectedPatient.FullPreparationLogPath);
+            OptimizationLoopSettings.PlanPreparationLogFileLoaded = logFileLoaded;
+            LoadPatient(selectedPatient);
             LoadConfigurationSettingsForPlanType(_selectedPlanType);
             if (OptimizationLoopSettings.Reminders.Any(x => x.ToLower().Contains("base dose")))
             {
-                await ESAPIThreadContext.RunOnESAPIThreadAsync(async () =>
+                ESAPIThreadContext.RunOnESAPIThreadSync(() =>
                 {
                     if (EclipseContext.GetInstance().VMATPlans.Any() && !EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Any(x => x.Id.ToLower().Contains("legs")))
                     {
-                        await ESAPIThreadContext.RunOnUIThreadAsync(() => { OptimizationLoopSettings.Reminders.Remove(OptimizationLoopSettings.Reminders.First(x => x.ToLower().Contains("base dose"))); });
+                        OptimizationLoopSettings.Reminders.Remove(OptimizationLoopSettings.Reminders.First(x => x.ToLower().Contains("base dose")));
                     }
                 });
             }
-            await LoadTemplatePlanChoices(_selectedPlanType);
+            LoadTemplatePlanChoices(_selectedPlanType);
             InitializeMessengers();
-            await InitializeUI();
+            InitializeUI();
         }
 
         private void InitializeMessengers()
@@ -314,21 +318,19 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                 List<PlanObjectiveModel> planObjectives = WeakReferenceMessenger.Default.Send(new RequestPlanObjectives());
                 StartOptimization(planObjectives, m.PlanOptimizationSetup);
             });
-            WeakReferenceMessenger.Default.Register<RequestOptimizationConstraintsFromPlan>(this, async (r, m) =>
+            WeakReferenceMessenger.Default.Register<RequestOptimizationConstraintsFromPlan>(this, (r, m) =>
             {
-                m.Reply(await GetOptimizationConstraintsFromPlans());
+                List<PlanOptimizationSetupModel> planOpt = GetOptimizationConstraintsFromPlans();
+                m.Tcs.TrySetResult(planOpt);
             });
-            WeakReferenceMessenger.Default.Register<RequestSelectPatient>(this, async (r, m) =>
+            WeakReferenceMessenger.Default.Register<RequestSelectPatient>(this, (r, m) =>
             {
-                await ESAPIThreadContext.RunOnESAPIThreadAsync(async () =>
-                {
-                    await LoadPatient(m); // LoadPatient itself handles ESAPI and UI thread marshalling internally
-                });
-                await LoadTemplatePlanChoices(_selectedPlanType);
-                await ESAPIThreadContext.RunOnUIThreadAsync(() =>
-                {
-                    SelectedTemplate = PlanTemplates.FirstOrDefault(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed));
-                });
+                SelectedPlanType = m.PlanType;
+                bool logFileLoaded = LoadLogFile(m.FullPreparationLogPath); 
+                OptimizationLoopSettings.PlanPreparationLogFileLoaded = logFileLoaded;
+                LoadPatient(m); // LoadPatient itself handles ESAPI and UI thread marshalling internally
+                LoadTemplatePlanChoices(_selectedPlanType);
+                SelectedTemplate = PlanTemplates.FirstOrDefault(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed));
             });
         }
 
@@ -338,26 +340,23 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             _documentationPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\documentation\\";
         }
 
-        public async Task InitializeUI()
+        public void InitializeUI()
         {
             List<string> planIds = new List<string> { "1", "2" };
-            await ESAPIThreadContext.RunOnESAPIThreadAsync(() =>
+            ESAPIThreadContext.RunOnESAPIThreadSync(() =>
             {
                 if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null) || !EclipseContext.GetInstance().VMATPlans.Any())
                 {
                     Logger.GetInstance().LogError("Error! Structure set, Application, or Plan is null! Unable to assign normalization volume!", true);
                     List<string> structures = PlanTemplates.SelectMany(x => x.PlanObjectives).Select(x => x.StructureId).ToList();
-                    ESAPIThreadContext.RunOnUIThreadAsync(() => { StructureIds = structures.Distinct().ToList(); });
+                    ESAPIThreadContext.RunOnUIThreadSync(() => { StructureIds = structures.Distinct().ToList(); });
                 }
                 else
                 {
                     planIds = new List<string>(AvailableBasePlansForOptimization);
                 }
             });
-            if (PlanTemplates.Any(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed)))
-            {
-                SelectedTemplate = PlanTemplates.First(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed));
-            }
+            SelectedTemplate = PlanTemplates.FirstOrDefault(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed));
         }
         #endregion
 
@@ -366,24 +365,47 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         /// Utility method to load a patient into the script. Attempt to read the log file from the preparation script by default
         /// </summary>
         /// <param name="patmrn"></param>
-        private async Task LoadPatientStructureSetAndPlans()
+        //private async Task LoadPatientStructureSetAndPlans()
+        //{
+        //    await ESAPIThreadContext.RunOnESAPIThreadAsync(() =>
+        //    {
+        //        if (!EclipseContext.GetInstance().IsInitialized) return;
+        //        if (ReferenceEquals(EclipseContext.GetInstance().Patient, null) ||
+        //            LogHelper.GetNumberofMatchingLogFilesForMRN(EclipseContext.GetInstance().Patient.Id) != 1)
+        //        {
+        //            PromptUserForPatientSelection();
+        //        }
+        //        else
+        //        {
+        //            LoadPatient(new RequestSelectPatient(
+        //                EclipseContext.GetInstance().Patient.Id,
+        //                _selectedPlanType,
+        //                LogHelper.GetFullLogFileFromExistingMRN(EclipseContext.GetInstance().Patient.Id)));
+        //        }
+        //    });
+        //}
+
+        private RequestSelectPatient GetSelectionOnESAPIThreadAsync()
         {
-            await ESAPIThreadContext.RunOnESAPIThreadAsync(async () =>
+            RequestSelectPatient selection = null;
+            ESAPIThreadContext.RunOnESAPIThreadSync(() =>
             {
                 if (!EclipseContext.GetInstance().IsInitialized) return;
+
                 if (ReferenceEquals(EclipseContext.GetInstance().Patient, null) ||
                     LogHelper.GetNumberofMatchingLogFilesForMRN(EclipseContext.GetInstance().Patient.Id) != 1)
                 {
-                    PromptUserForPatientSelection();
+                    PromptUserForPatientSelection(); // UI dialog
                 }
                 else
                 {
-                    await LoadPatient(new RequestSelectPatient(
+                    selection = new RequestSelectPatient(
                         EclipseContext.GetInstance().Patient.Id,
                         _selectedPlanType,
-                        LogHelper.GetFullLogFileFromExistingMRN(EclipseContext.GetInstance().Patient.Id)));
+                        LogHelper.GetFullLogFileFromExistingMRN(EclipseContext.GetInstance().Patient.Id));
                 }
             });
+            return selection;
         }
 
         private void PromptUserForPatientSelection()
@@ -392,64 +414,67 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             spv.ShowDialog();
         }
 
-        private async Task LoadPatient(RequestSelectPatient selection)
+        private void LoadPatient(RequestSelectPatient selection)
         {
-            //called from select patient view model if successful
-            if (!EclipseContext.GetInstance().IsInitialized) return;
-            if (!string.IsNullOrEmpty(selection.PatientId))
+            ESAPIThreadContext.RunOnESAPIThreadSync(() =>
             {
-                OptimizationLoopSettings.ClearSettings();
-
-                EclipseContext.GetInstance().ClearContext();
-                EclipseContext.GetInstance().Patient = EclipseContext.GetInstance().Application.OpenPatientById(selection.PatientId);
-                if(!ReferenceEquals(EclipseContext.GetInstance().Patient, null))
+                //called from select patient view model if successful
+                if (!EclipseContext.GetInstance().IsInitialized) return;
+                if (!string.IsNullOrEmpty(selection.PatientId))
                 {
-                    await ESAPIThreadContext.RunOnUIThreadAsync(() =>
-                    {
-                        SelectedPlanType = selection.PlanType;
-                        if (!string.IsNullOrEmpty(selection.FullPreparationLogPath) && !LoadLogFile(selection.FullPreparationLogPath)) OptimizationLoopSettings.PlanPreparationLogFileLoaded = true;
-                    });
-                    List<ExternalPlanSetup> thePlans = LoadPlans();
+                    OptimizationLoopSettings.ClearSettings();
 
-                    if(thePlans.Any())
+                    EclipseContext.GetInstance().ClearContext();
+                    EclipseContext.GetInstance().Patient = EclipseContext.GetInstance().Application.OpenPatientById(selection.PatientId);
+                    if (!ReferenceEquals(EclipseContext.GetInstance().Patient, null))
                     {
-                        EclipseContext.GetInstance().VMATPlans.Clear();
-                        EclipseContext.GetInstance().VMATPlans.AddRange(thePlans);
-                        EclipseContext.GetInstance().StructureSet = thePlans.First().StructureSet;
-                        EclipseContext.GetInstance().Course = thePlans.First().Course;
+                        List<ExternalPlanSetup> thePlans = LoadPlans();
 
-                        string id = EclipseContext.GetInstance().Patient.Id;
-                        List<string> sids = new List<string>(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id));
-                        List<string> normVolumeIds = new List<string>(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id).Where(x => x.ToLower().Contains("ptv")));
-                        List<string> planIds = new List<string>(EclipseContext.GetInstance().Course.ExternalPlanSetups.Where(x => !x.Id.ToLower().Contains("leg") && x.Beams.Any(y => !y.IsSetupField)).Select(x => x.Id));
-                        await ESAPIThreadContext.RunOnUIThreadAsync(() =>
+                        if (thePlans.Any())
                         {
-                            MRN = id;
-                            StructureIds = sids;
-                            UpdateNormalizationVolumes(normVolumeIds, thePlans.Count() > 1 ? true : false);
-                            UpdateAvailablePlans(planIds, thePlans.Count() > 1 ? true : false);
-                            SelectedBasePlanId = _availableBasePlansForOptimization.First(x => string.Equals(x, planIds.First()));
-                            if (_selectedPlanType == PlanType.VMAT_CSI && thePlans.Count() > 1)
+                            EclipseContext.GetInstance().VMATPlans.Clear();
+                            EclipseContext.GetInstance().VMATPlans.AddRange(thePlans);
+                            EclipseContext.GetInstance().StructureSet = thePlans.First().StructureSet;
+                            EclipseContext.GetInstance().Course = thePlans.First().Course;
+
+                            string id = EclipseContext.GetInstance().Patient.Id;
+                            List<string> sids = new List<string>(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id));
+                            List<string> normVolumeIds = new List<string>(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id).Where(x => x.ToLower().Contains("ptv")));
+                            List<string> planIds = new List<string>(EclipseContext.GetInstance().Course.ExternalPlanSetups.Where(x => !x.Id.ToLower().Contains("leg") && x.Beams.Any(y => !y.IsSetupField)).Select(x => x.Id));
+                            int planCount = thePlans.Count();
+                            ESAPIThreadContext.RunOnUIThreadAsync(() =>
                             {
-                                SelectedBoostPlanId = _availableBoostPlansForOptimization.First(x => string.Equals(x, planIds.Last()));
-                            }
-                        });
+                                MRN = id;
+                                StructureIds = sids;
+                                UpdateNormalizationVolumes(normVolumeIds, planCount > 1 ? true : false);
+                                UpdateAvailablePlans(planIds, planCount > 1 ? true : false);
+                                SelectedBasePlanId = _availableBasePlansForOptimization.First(x => string.Equals(x, planIds.First()));
+                                if (_selectedPlanType == PlanType.VMAT_CSI && thePlans.Count() > 1)
+                                {
+                                    SelectedBoostPlanId = _availableBoostPlansForOptimization.First(x => string.Equals(x, planIds.Last()));
+                                }
+                            });
+                        }
+                    }
+                    else
+                    {
+                        Logger.GetInstance().LogError($"Error! Patient {selection.PatientId} does not exist! Exiting!");
+                        return;
                     }
                 }
-                else
-                {
-                    Logger.GetInstance().LogError($"Error! Patient {selection.PatientId} does not exist! Exiting!");
-                    return;
-                }
-            }
+            });
+            
         }
 
-        public List<ExternalPlanSetup> LoadPlans()
+        private List<ExternalPlanSetup> LoadPlans()
         {
             if (OptimizationLoopSettings.PlanUIDs.Any())
             {
-                List<ExternalPlanSetup> plans = ExtractPlansBasedOnUIDsFromLogs(OptimizationLoopSettings.PlanUIDs);
-                if (plans.Any()) return plans;
+                var tmpPlans = ExtractPlansBasedOnUIDsFromLogs(OptimizationLoopSettings.PlanUIDs);
+                if (tmpPlans.Any())
+                {
+                    return tmpPlans;    
+                }
             }
             return ExtractPlansBasedOnContext();
         }
@@ -491,10 +516,16 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             }
             else if (courses.Count != 1)
             {
-                SelectItemPrompt SIP = new SelectItemPrompt("Please select a course:", courses.Select(x => x.Id).ToList());
-                SIP.ShowDialog();
-                if (!SIP.GetSelection()) return thePlans;
-                theCourse = courses.FirstOrDefault(x => string.Equals(x.Id, SIP.GetSelectedItem()));
+                string selectedCourse = string.Empty;
+                ESAPIThreadContext.RunOnUIThreadAsync(() =>
+                {
+                    SelectItemPrompt SIP = new SelectItemPrompt("Please select a course:", courses.Select(x => x.Id).ToList());
+                    SIP.Topmost = true;
+                    SIP.ShowDialog();
+                    if (SIP.GetSelection()) selectedCourse = SIP.GetSelectedItem();
+                });
+                if (string.IsNullOrEmpty(selectedCourse)) return thePlans;
+                theCourse = courses.FirstOrDefault(x => string.Equals(x.Id, selectedCourse));
             }
             else theCourse = courses.First();
 
@@ -508,11 +539,17 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             {
                 if (_selectedPlanType == PlanType.VMAT_CSI)
                 {
-                    SelectItemPrompt SequentialBoostNeeded = new SelectItemPrompt("Does this CSI case include a sequential boost?", new List<string> { "No", "Yes" });
-                    SequentialBoostNeeded.Topmost = true;
-                    SequentialBoostNeeded.ShowDialog();
-                    if (!SequentialBoostNeeded.GetSelection()) return new List<ExternalPlanSetup> { };
-                    if (string.Equals(SequentialBoostNeeded.GetSelectedItem(), "yes", StringComparison.OrdinalIgnoreCase))
+                    string boostNeeded = string.Empty;
+                    ESAPIThreadContext.RunOnESAPIThreadAsync(() =>
+                    {
+                        SelectItemPrompt SequentialBoostNeeded = new SelectItemPrompt("Does this CSI case include a sequential boost?", new List<string> { "No", "Yes" });
+                        SequentialBoostNeeded.Topmost = true;
+                        SequentialBoostNeeded.ShowDialog();
+                        if (SequentialBoostNeeded.GetSelection()) boostNeeded = SequentialBoostNeeded.GetSelectedItem();
+                    });
+                    
+                    if (string.IsNullOrEmpty(boostNeeded)) return new List<ExternalPlanSetup> { };
+                    if (string.Equals(boostNeeded, "yes", StringComparison.OrdinalIgnoreCase))
                     {
                         //update both plan Id combo boxes
                         //UpdateAvailablePlans(thePlans.Select(x => x.Id), true);
@@ -522,11 +559,16 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                     }
                 }
                 //no sequential boost --> need to select a single plan
-                SelectItemPrompt SIP = new SelectItemPrompt("Please select a plan to optimize:", thePlans.Select(x => x.Id).ToList());
-                SIP.Topmost = true;
-                SIP.ShowDialog();
-                if (!SIP.GetSelection()) return new List<ExternalPlanSetup> { };
-                ExternalPlanSetup thePlan = thePlans.First(x => string.Equals(x.Id, SIP.GetSelectedItem()));
+                string selectedPlan = string.Empty;
+                ESAPIThreadContext.RunOnUIThreadAsync(() =>
+                {
+                    SelectItemPrompt SIP = new SelectItemPrompt("Please select a plan to optimize:", thePlans.Select(x => x.Id).ToList());
+                    SIP.Topmost = true;
+                    SIP.ShowDialog();
+                    if (SIP.GetSelection()) selectedPlan = SIP.GetSelectedItem();
+                });
+                if(string.IsNullOrEmpty(selectedPlan)) return new List<ExternalPlanSetup> { };
+                ExternalPlanSetup thePlan = thePlans.First(x => string.Equals(x.Id, selectedPlan));
                 thePlans = new List<ExternalPlanSetup> { thePlan };
             }
             return thePlans;
@@ -534,10 +576,10 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         #endregion
 
         #region update UI
-        private async Task UpdateSelectedPlanId()
+        private void UpdateSelectedPlanId()
         {
             if (string.IsNullOrEmpty(_selectedBasePlanId)) return;
-            await ESAPIThreadContext.RunOnESAPIThreadAsync(async () =>
+            ESAPIThreadContext.RunOnESAPIThreadSync(() =>
             {
                 if (_selectedPlanType == PlanType.VMAT_CSI && _availableBoostPlansForOptimization.Any())
                 {
@@ -550,7 +592,12 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                     if (!EclipseContext.GetInstance().VMATPlans.All(x => string.Equals(EclipseContext.GetInstance().VMATPlans.First().StructureSet.UID, x.StructureSet.UID)))
                     {
                         EclipseContext.GetInstance().VMATPlans = new List<ExternalPlanSetup>();
-                        await ESAPIThreadContext.RunOnUIThreadAsync(() => { SelectedBasePlanId = null; SelectedBoostPlanId = null; Logger.GetInstance().LogError("Error! Base plan and boost plan do NOT share the same structure set! Update plan selection and try again"); });
+                        ESAPIThreadContext.RunOnUIThreadSync(() => 
+                        { 
+                            SelectedBasePlanId = null; 
+                            SelectedBoostPlanId = null; 
+                            Logger.GetInstance().LogError("Error! Base plan and boost plan do NOT share the same structure set! Update plan selection and try again"); 
+                        });
                         return;
                     }
                 }
@@ -567,17 +614,21 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                     List<string> sids = new List<string>(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id));
                     List<string> normVolumeIds = new List<string>(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id).Where(x => x.ToLower().Contains("ptv")));
 
-                    await ESAPIThreadContext.RunOnUIThreadAsync(() => { StructureIds = sids; UpdateNormalizationVolumes(normVolumeIds, _availableBasePlansForOptimization.Any()); });
+                    ESAPIThreadContext.RunOnUIThreadSync(() => 
+                    { 
+                        StructureIds = sids; 
+                        UpdateNormalizationVolumes(normVolumeIds, _availableBasePlansForOptimization.Any()); 
+                    });
                 }
             });
-            await UpdateUIWithPlanPrescriptionInfo();
-            WeakReferenceMessenger.Default.Send(new RequestPlanSelectionChanged(await GetOptimizationConstraintsFromPlans()));
+            UpdateUIWithPlanPrescriptionInfo();
+            WeakReferenceMessenger.Default.Send(new RequestPlanSelectionChanged());
         }
 
-        private async Task<List<PlanOptimizationSetupModel>> GetOptimizationConstraintsFromPlans()
+        private List<PlanOptimizationSetupModel> GetOptimizationConstraintsFromPlans()
         {
             List<PlanOptimizationSetupModel> planOptimizationSetup = new List<PlanOptimizationSetupModel> { };
-            await ESAPIThreadContext.RunOnESAPIThreadAsync(() =>
+            ESAPIThreadContext.RunOnESAPIThreadSync(() =>
             {
                 foreach (ExternalPlanSetup itr in EclipseContext.GetInstance().VMATPlans)
                 {
@@ -633,15 +684,15 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             BoostPlanTotalDose = 0;
         }
 
-        private async Task UpdateUIWithPlanPrescriptionInfo()
+        private void UpdateUIWithPlanPrescriptionInfo()
         {
             ClearAllRxDoses();
 
-            await ESAPIThreadContext.RunOnESAPIThreadAsync(async () =>
+            ESAPIThreadContext.RunOnESAPIThreadAsync(() =>
             {
                 double baseDPF = EclipseContext.GetInstance().VMATPlans.First(x => string.Equals(x.Id, _selectedBasePlanId)).DosePerFraction.Dose;
                 int baseNF = (int)EclipseContext.GetInstance().VMATPlans.First(x => string.Equals(x.Id, _selectedBasePlanId)).NumberOfFractions;
-                await ESAPIThreadContext.RunOnUIThreadAsync(() =>
+                ESAPIThreadContext.RunOnUIThreadSync(() =>
                 {
                     BasePlanDosePerFraction = baseDPF;
                     BasePlanNumberOfFractions = baseNF;
@@ -651,11 +702,11 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                 {
                     double boostDPF = EclipseContext.GetInstance().VMATPlans.First(x => string.Equals(x.Id, _selectedBoostPlanId)).DosePerFraction.Dose;
                     int boostNF = (int)EclipseContext.GetInstance().VMATPlans.First(x => string.Equals(x.Id, _selectedBoostPlanId)).NumberOfFractions;
-                    await ESAPIThreadContext.RunOnUIThreadAsync(() => { BoostPlanDosePerFraction = boostDPF; BoostPlanNumberOfFractions = boostNF; });
+                    ESAPIThreadContext.RunOnUIThreadSync(() => { BoostPlanDosePerFraction = boostDPF; BoostPlanNumberOfFractions = boostNF; });
                 }
 
                 List<string> sids = new List<string>(EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id));
-                await ESAPIThreadContext.RunOnUIThreadAsync(() =>
+                ESAPIThreadContext.RunOnUIThreadSync(() =>
                 {
                     if (_availableBasePlanNormalizationVolumes.Any())
                     {
@@ -840,7 +891,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         /// Helper method to read all the plan template files from the appropriate directory depending on the plan type being considered
         /// </summary>
         /// <param name="type"></param>
-        private async Task LoadTemplatePlanChoices(PlanType type)
+        private void LoadTemplatePlanChoices(PlanType type)
         {
             int count = 1;
             SearchOption option = SearchOption.AllDirectories;
@@ -851,7 +902,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             PlanTemplates.Clear();
             try
             {
-                var files = await Task.Run(() => Directory.GetFiles(path, "*.ini", option).OrderBy(x => x).ToList());
+                var files =  Directory.GetFiles(path, "*.ini", option).OrderBy(x => x).ToList();
                 foreach (string itr in Directory.GetFiles(path, "*.ini", option).OrderBy(x => x))
                 {
                     if(_selectedPlanType == PlanType.VMAT_TBI) PlanTemplates.Add(ConfigurationHelper.ReadTBITemplatePlan(itr, count++));
@@ -963,7 +1014,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         /// <returns></returns>
         private bool LoadLogFile(string fullLogName)
         {
-            if (string.IsNullOrEmpty(fullLogName) || !File.Exists(fullLogName)) return true;
+            if (string.IsNullOrEmpty(fullLogName) || !File.Exists(fullLogName)) return false;
             try
             {
                 using (StreamReader reader = new StreamReader(fullLogName))
@@ -1048,12 +1099,12 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                         }
                     }
                 }
-                return false;
+                return true;
             }
             catch (Exception e)
             {
                 MessageBox.Show($"Error could not load log file because: {e.Message}");
-                return true;
+                return false;
             }
         }
 

@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Input;
 using AutoPlannerOptimizationLoop.Helpers;
+using System.Threading.Tasks;
 
 namespace AutoPlannerOptimizationLoop.ViewModels
 {
@@ -46,12 +47,12 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         private List<PlanOptimizationSetupModel> _tmpPlanOptSetup;
         #endregion
 
-        public OptimizationConstraintsViewModel(List<string> sIds, List<string> pids, PlanType type)
+        public OptimizationConstraintsViewModel(List<string> sIds, List<string> pids)
         {
             if (sIds.Any()) StructureIds = sIds;
             else StructureIds = new List<string> { "1", "2", "3" };
             AddOptimizationConstraintCommand = new RelayCommand(AddOptimizationObjective);
-            GetOptConstraintsFromPlanCommand = new RelayCommand(GetOptimizationConstraintsFromPlan);
+            GetOptConstraintsFromPlanCommand =  new AsyncRelayCommand(GetOptimizationConstraintsFromPlan);
             GetOptConstraintsFromLogsCommand = new RelayCommand(GetOptimizationConstraintsFromLogs);
             ClearOptimizationConstraintListCommand = new RelayCommand(ClearOptimizationConstraints);
             ClearRowCommand = new RelayCommand<OptimizationConstraintModel>(ClearRow);
@@ -68,9 +69,9 @@ namespace AutoPlannerOptimizationLoop.ViewModels
 
         private void InitializeMessengers()
         {
-            WeakReferenceMessenger.Default.Register<RequestPlanSelectionChanged>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<RequestPlanSelectionChanged>(this, async (r, m) =>
             {
-                GetOptimizationConstraintsFromPlan();
+                await GetOptimizationConstraintsFromPlan();
             });
             WeakReferenceMessenger.Default.Register<RequestUpdateStructureIds>(this, (r, m) =>
             {
@@ -108,9 +109,11 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             return new OptimizationConstraintModel(_structureIds.First(), OptimizationObjectiveType.None, 0.0, Units.None, 0.0, 0);
         }
 
-        public void GetOptimizationConstraintsFromPlan()
+        public async Task GetOptimizationConstraintsFromPlan()
         {
-            _tmpPlanOptSetup = WeakReferenceMessenger.Default.Send(new RequestOptimizationConstraintsFromPlan());
+            var msg = new RequestOptimizationConstraintsFromPlan();
+            WeakReferenceMessenger.Default.Send(msg);
+            _tmpPlanOptSetup = await msg.Tcs.Task;
             if (!_tmpPlanOptSetup.Any()) return;
             _planIds.Clear();
             _planIds = new List<string>(_tmpPlanOptSetup.Select(x => x.PlanId));

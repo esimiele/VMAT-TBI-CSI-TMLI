@@ -192,16 +192,15 @@ namespace AutoPlannerHelpers.Messengers
     #region optimization
     public class RequestPlanSelectionChanged
     {
-        public List<string> UpdatedPlanIds { get; private set; }
-        public List<PlanOptimizationSetupModel> PlanOptimizationSetup { get; private set; }
-        public RequestPlanSelectionChanged(IEnumerable<PlanOptimizationSetupModel> planOptSetup)
+        public RequestPlanSelectionChanged()
         {
-            this.UpdatedPlanIds = planOptSetup.Select(x => x.PlanId).ToList();
-            this.PlanOptimizationSetup = planOptSetup.ToList();
         }
     }
 
-    public class RequestOptimizationConstraintsFromPlan : RequestMessage<List<PlanOptimizationSetupModel>> { }
+    public class RequestOptimizationConstraintsFromPlan
+    {
+        public TaskCompletionSource<List<PlanOptimizationSetupModel>> Tcs { get; } = new TaskCompletionSource<List<PlanOptimizationSetupModel>>();
+    }
 
     public class RequestPlanObjectives : RequestMessage<List<PlanObjectiveModel>> { }
     public class RequestSelectPatient
