@@ -343,9 +343,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             });
 
             PlanObjectives = new PlanObjectivesView { DataContext = new PlanObjectivesViewModel(_structureIds) };
-
             OptimizationSetup = new OptimizationConstraintsView { DataContext = new OptimizationConstraintsViewModel(_structureIds, planIds, _selectedPlanType) };
-
             ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
 
             if (PlanTemplates.Any(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed)))
@@ -561,7 +559,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                 ESAPIThreadContext.ESAPIDispatcher.Invoke(() =>
                 {
                     UpdateUIWithPlanPrescriptionInfo();
-                    WeakReferenceMessenger.Default.Send(new RequestPlanSelectionChanged(GetOptimizationConstraintsFromPlans()));
+                    WeakReferenceMessenger.Default.Send(new RequestPlanSelectionChanged());
                 });
             });
         }
