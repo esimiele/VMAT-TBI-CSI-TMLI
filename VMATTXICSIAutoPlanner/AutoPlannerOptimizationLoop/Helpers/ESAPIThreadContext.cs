@@ -10,33 +10,25 @@ namespace AutoPlannerOptimizationLoop.Helpers
 {
     public static class ESAPIThreadContext
     {
-        private static Dispatcher _uiDispatcher;
-        public static Dispatcher UIDispatcher { get => _uiDispatcher; set => _uiDispatcher = value; }
+        private static Dispatcher _UIDispatcher;
         public static Dispatcher ESAPIDispatcher { get; private set; }
+        public static Dispatcher UIDispatcher { get => _UIDispatcher; set => _UIDispatcher = value; }
+        public static SynchronizationContext ESAPISyncContext { get; private set; }
 
-        public static void Initialize(Dispatcher dispatcher)
+        public static void Initialize(Dispatcher dispatch)
         {
-            ESAPIDispatcher = dispatcher;
+            ESAPISyncContext = SynchronizationContext.Current ?? new SynchronizationContext();
+            ESAPIDispatcher = dispatch;
         }
 
-        public static Task RunOnESAPIThreadAsync(Action action)
+        public static void RunOnESAPIThread(Action action)
         {
-            return ESAPIDispatcher.InvokeAsync(action).Task;
+            ESAPISyncContext?.Post(_ => action(), null);
         }
 
         public static void RunOnESAPIThreadSync(Action action)
         {
-            ESAPIDispatcher.Invoke(() => action());
-        }
-
-        public static Task RunOnUIThreadAsync(Action action)
-        {
-            return UIDispatcher.InvokeAsync(action).Task;
-        }
-
-        public static void RunOnUIThreadSync(Action action)
-        {
-            UIDispatcher.Invoke(() => action());
+            ESAPISyncContext?.Send(_ => action(), null);
         }
     }
 }

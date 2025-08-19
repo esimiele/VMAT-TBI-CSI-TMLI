@@ -11,8 +11,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using AutoPlannerOptimizationLoop.ViewModels;
-using AutoPlannerOptimizationLoop.Helpers;
 
 namespace AutoPlannerOptimizationLoop.Views
 {
@@ -24,21 +22,6 @@ namespace AutoPlannerOptimizationLoop.Views
         public OptimizationLoopMainView()
         {
             InitializeComponent();
-            Loaded += ViewLoaded;
-            Closed += ViewClosed;
-        }
-
-        private void ViewLoaded(object sender, RoutedEventArgs e)
-        {
-            if (DataContext is OptimizationLoopMainViewModel vm)
-            {
-                ESAPIThreadContext.UIDispatcher.BeginInvoke(() => vm.Initialize());
-            }
-        }
-
-        private void ViewClosed(object sender, EventArgs e)
-        {
-            ESAPIThreadContext.UIDispatcher.BeginInvokeShutdown(System.Windows.Threading.DispatcherPriority.Normal);
         }
     }
 }

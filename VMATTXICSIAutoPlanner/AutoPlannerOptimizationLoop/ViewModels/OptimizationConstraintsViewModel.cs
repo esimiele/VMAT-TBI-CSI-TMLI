@@ -70,12 +70,18 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         {
             WeakReferenceMessenger.Default.Register<RequestPlanSelectionChanged>(this, (r, m) =>
             {
-                GetOptimizationConstraintsFromPlan();
+                ESAPIThreadContext.UIDispatcher.BeginInvoke(() =>
+                {
+                    GetOptimizationConstraintsFromPlan();
+                });
             });
             WeakReferenceMessenger.Default.Register<RequestUpdateStructureIds>(this, (r, m) =>
             {
-                ClearOptimizationConstraints();
-                StructureIds = new List<string>(m.StructureIds);
+                ESAPIThreadContext.UIDispatcher.BeginInvoke(() =>
+                {
+                    ClearOptimizationConstraints();
+                    StructureIds = new List<string>(m.StructureIds);
+                });
             });
         }
 

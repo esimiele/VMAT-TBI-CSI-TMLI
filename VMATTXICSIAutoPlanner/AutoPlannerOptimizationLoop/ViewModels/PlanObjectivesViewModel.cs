@@ -55,8 +55,11 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             });
             WeakReferenceMessenger.Default.Register<RequestUpdateStructureIds>(this, (r, m) =>
             {
-                ClearPlanObjectives();
-                StructureIds = new List<string>(m.StructureIds);
+                ESAPIThreadContext.UIDispatcher.BeginInvoke(() =>
+                {
+                    ClearPlanObjectives();
+                    StructureIds = new List<string>(m.StructureIds);
+                });
             });
         }
 
