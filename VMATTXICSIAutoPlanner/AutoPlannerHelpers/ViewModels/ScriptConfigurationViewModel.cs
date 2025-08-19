@@ -1,4 +1,6 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using AutoPlannerHelpers.Messengers;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 using System.Text;
 
 namespace AutoPlannerHelpers.ViewModels
@@ -11,13 +13,22 @@ namespace AutoPlannerHelpers.ViewModels
         public string ScriptConfig
         {
             get { return _scriptConfig; }
-            set { _scriptConfig = value; }
+            set { SetProperty(ref _scriptConfig, value); }
         }
         #endregion
 
         public ScriptConfigurationViewModel(StringBuilder config) 
         { 
             ScriptConfig = config.ToString();
+            InitializeMessengers();
+        }
+
+        public void InitializeMessengers()
+        {
+            WeakReferenceMessenger.Default.Register<RequestUpdateScriptConfiguration>(this, (r, m) =>
+            {
+                ScriptConfig = m.ScriptConfiguration.ToString();
+            });
         }
     }
 }

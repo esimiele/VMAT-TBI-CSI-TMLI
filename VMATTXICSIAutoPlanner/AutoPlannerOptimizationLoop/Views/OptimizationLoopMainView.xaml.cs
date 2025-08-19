@@ -1,4 +1,6 @@
-﻿using System;
+﻿using AutoPlannerOptimizationLoop.Helpers;
+using AutoPlannerOptimizationLoop.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,6 +24,15 @@ namespace AutoPlannerOptimizationLoop.Views
         public OptimizationLoopMainView()
         {
             InitializeComponent();
+            Loaded += ViewLoaded;
+        }
+
+        private void ViewLoaded(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is OptimizationLoopMainViewModel vm)
+            {
+                vm.Initialize();
+            }
         }
     }
 }

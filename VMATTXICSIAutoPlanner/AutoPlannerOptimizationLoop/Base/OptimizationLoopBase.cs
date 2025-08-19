@@ -18,7 +18,7 @@ using AutoPlannerHelpers.Prompts;
 
 namespace AutoPlannerOptimizationLoop.Base
 {
-    public class OptimizationLoopBase : OptimizationLoopProgressViewModel
+    public abstract class OptimizationLoopBase : OptimizationLoopProgressViewModel
     {
         protected OptDataContainer _data;
         protected bool _checkSupportStructures = false;
@@ -179,6 +179,7 @@ namespace AutoPlannerOptimizationLoop.Base
 
             foreach (ExternalPlanSetup itr in plans)
             {
+                
                 if (!itr.Beams.Any(x => !x.IsSetupField))
                 {
                     ProvideUIUpdate($"No beams present in plan: {itr.Id}!", true);
@@ -258,7 +259,10 @@ namespace AutoPlannerOptimizationLoop.Base
             {
                 if (RunOptimizationLoopInitialPlanOnly(plans.First())) return true;
             }
-            else return true;
+            else
+            {
+                if (RunSequentialPlansOptimizationLoop(plans)) return true;
+            }
             if (ResolveRunOptions(plans)) return true;
             if (!_data.IsDemo) _data.Application.SaveModifications();
             return false;
@@ -269,10 +273,7 @@ namespace AutoPlannerOptimizationLoop.Base
         /// </summary>
         /// <param name="plans"></param>
         /// <returns></returns>
-        protected virtual bool ResolveRunOptions(List<ExternalPlanSetup> plans)
-        {
-            return true;
-        }
+        protected abstract bool ResolveRunOptions(List<ExternalPlanSetup> plans);
 
         /// <summary>
         /// Helper method to run one more optimization for each of the supplied plans in an attempt to lower the hotspots in the plan
@@ -409,6 +410,11 @@ namespace AutoPlannerOptimizationLoop.Base
                 //increment the counter, update d.optParams so it is set to the initial optimization constraints at the BEGINNING of the optimization iteration, and save the changes to the plan
                 count++;
             }
+            return false;
+        }
+
+        protected virtual bool RunSequentialPlansOptimizationLoop(List<ExternalPlanSetup> plans)
+        {
             return false;
         }
         #endregion

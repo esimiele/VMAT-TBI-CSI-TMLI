@@ -187,14 +187,18 @@ namespace AutoPlannerHelpers.Messengers
         public List<string> StructureIds { get; private set; }
         public RequestUpdateStructureIds(IEnumerable<string> structureIds) { this.StructureIds = structureIds.ToList(); }
     }
+
+    public class RequestUpdateScriptConfiguration
+    {
+        public StringBuilder ScriptConfiguration = new StringBuilder();
+        public RequestUpdateScriptConfiguration(StringBuilder config) { ScriptConfiguration = config; }
+    }
     #endregion
 
     #region optimization
     public class RequestPlanSelectionChanged
     {
-        public RequestPlanSelectionChanged()
-        {
-        }
+        public RequestPlanSelectionChanged() { }
     }
 
     public class RequestOptimizationConstraintsFromPlan : RequestMessage<List<PlanOptimizationSetupModel>> { }

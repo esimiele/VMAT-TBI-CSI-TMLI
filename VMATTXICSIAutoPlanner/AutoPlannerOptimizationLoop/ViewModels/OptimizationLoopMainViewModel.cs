@@ -41,30 +41,30 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         private double _threshold;
         private double _lowDoseLimit;
         private bool _isDemo;
-        private PlanType _selectedPlanType = PlanType.VMAT_CSI;
+        private PlanType _selectedPlanType = PlanType.None;
         private List<string> _reminders = new List<string> { };
         private string _mrn;
-        private List<string> _availableBasePlansForOptimization = new List<string> { };
+        private List<string> _availableBasePlansForOptimization;
         private string _selectedBasePlanId;
-        private List<string> _availableBoostPlansForOptimization = new List<string> { };
+        private List<string> _availableBoostPlansForOptimization;
         private string _selectedBoostPlanId;
         private AutoPlanTemplateBase _selectedTemplate;
         private double _basePlanDosePerFraction;
         private int _basePlanNumberOfFractions;
         private double _basePlanTotalDose;
-        private List<string> _availableBasePlanNormalizationVolumes = new List<string> { };
+        private List<string> _availableBasePlanNormalizationVolumes;
         private string _basePlanNormalizationVolume;
         private double _boostPlanDosePerFraction;
         private int _boostPlanNumberOfFractions;
         private double _boostPlanTotalDose;
-        private List<string> _availableBoostPlanNormalizationVolumes = new List<string> { };
+        private List<string> _availableBoostPlanNormalizationVolumes;
         private string _boostPlanNormalizationVolume;
         private bool _runCoverageCheck;
         private bool _copyAndSaveEachPlan;
         private int _maxNumberOfIterations;
         private bool _runOneAdditionalOptimization;
         private double _planNormalizationValue;
-        private List<string> _structureIds = new List<string> { };
+        private List<string> _structureIds;
 
         public string MRN
         {
@@ -259,7 +259,16 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             SelectPatientCommand = new RelayCommand(PromptUserForPatientSelection);
             ShowPlanNormalizationInfoCommand = new RelayCommand(ShowPlanNormalizationInfo);
             PlanTemplates = new ObservableCollection<AutoPlanTemplateBase> { };
-            Initialize();
+            AvailableBasePlanNormalizationVolumes = new List<string> { };
+            AvailableBoostPlanNormalizationVolumes = new List<string> { };
+            AvailableBasePlansForOptimization = new List<string> { };
+            AvailableBoostPlansForOptimization = new List<string> { };
+            _structureIds = new List<string> { };
+            AssignDefaultLogAndDocPaths();
+            InitializeMessengers();
+            PlanObjectives = new PlanObjectivesView { DataContext = new PlanObjectivesViewModel(_structureIds) };
+            OptimizationSetup = new OptimizationConstraintsView { DataContext = new OptimizationConstraintsViewModel(_structureIds, new List<string> { "1", "2" }, _selectedPlanType) };
+            ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
         }
 
         #region help and documentation
@@ -281,7 +290,6 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         #region initialize
         public void Initialize()
         {
-            AssignDefaultLogAndDocPaths();
             LoadPatientStructureSetAndPlans();
             LoadConfigurationSettingsForPlanType(_selectedPlanType);
             if (OptimizationLoopSettings.Reminders.Any(x => x.ToLower().Contains("base dose")))
@@ -292,8 +300,8 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                 }
             }
             LoadTemplatePlanChoices(_selectedPlanType);
-            InitializeMessengers();
             InitializeUI();
+            WeakReferenceMessenger.Default.Send(new RequestUpdateScriptConfiguration(BuildScriptConfigurationInfo()));
         }
 
         private void InitializeMessengers()
@@ -301,6 +309,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             WeakReferenceMessenger.Default.Register<RequestSetOptimizationConstraintsMessage>(this, (r, m) =>
             {
                 List<PlanObjectiveModel> planObjectives = WeakReferenceMessenger.Default.Send(new RequestPlanObjectives());
+                if (!planObjectives.Any()) return;
                 StartOptimization(planObjectives, m.PlanOptimizationSetup);
             });
             WeakReferenceMessenger.Default.Register<RequestOptimizationConstraintsFromPlan>(this, (r, m) =>
@@ -311,11 +320,13 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             {
                 LoadPatient(m);
                 SelectedTemplate = null;
+                LoadConfigurationSettingsForPlanType(_selectedPlanType);
                 LoadTemplatePlanChoices(_selectedPlanType);
                 if (PlanTemplates.Any(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed)))
                 {
                     SelectedTemplate = PlanTemplates.First(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed));
                 }
+                WeakReferenceMessenger.Default.Send(new RequestUpdateScriptConfiguration(BuildScriptConfigurationInfo()));
             });
         }
 
@@ -342,9 +353,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                 }
             });
 
-            PlanObjectives = new PlanObjectivesView { DataContext = new PlanObjectivesViewModel(_structureIds) };
-            OptimizationSetup = new OptimizationConstraintsView { DataContext = new OptimizationConstraintsViewModel(_structureIds, planIds, _selectedPlanType) };
-            ScriptConfiguration = new ScriptConfigurationView { DataContext = new ScriptConfigurationViewModel(BuildScriptConfigurationInfo()) };
+            
 
             if (PlanTemplates.Any(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed)))
             {
@@ -683,16 +692,6 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                     return true;
                 }
             }
-            else if (!planObj.Any())
-            {
-                Logger.GetInstance().LogError("Error! No plan objectives present! Please fix and try again");
-                return true;
-            }
-            else if (!planOpt.Any())
-            {
-                Logger.GetInstance().LogError("Error! No optimization constraints present! Please fix and try again");
-                return true;
-            }
             if (_planNormalizationValue < 0.0 || _planNormalizationValue > 100.0)
             {
                 Logger.GetInstance().LogError("Error! Target normalization is is either < 0% or > 100% \nExiting!");
@@ -708,12 +707,13 @@ namespace AutoPlannerOptimizationLoop.ViewModels
 
         public void StartOptimization(List<PlanObjectiveModel> planObj, List<PlanOptimizationSetupModel> planOptSetup)
         {
+            Logger.GetInstance().AppendLogOutput("Checking for valid constraints and objectives");
             if (CanStartOptimizationUIInput(planObj, planOptSetup)) return;
             ESAPIThreadContext.RunOnESAPIThread(() =>
             {
                 if (!EclipseContext.GetInstance().IsInitialized)
                 {
-                    Logger.GetInstance().LogError("Script is not initialized! Unable to generate AP/PA plan for TBI patient!");
+                    Logger.GetInstance().LogError("Script is not initialized! Unable to start the optimization loop!");
                     return;
                 }
                 if (ReferenceEquals(EclipseContext.GetInstance().Patient, null) || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null) || !EclipseContext.GetInstance().VMATPlans.Any())
@@ -721,7 +721,6 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                     Logger.GetInstance().LogError("Error! Patient, structure set, or plan are null! Unable to proceed!");
                     return;
                 }
-                Logger.GetInstance().AppendLogOutput("Checking for valid constraints and objectives");
 
                 //StringBuilder sb = new StringBuilder();
                 //if (PlanObjectives.Any())
@@ -799,7 +798,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                                         _runCoverageCheck,
                                         _runOneAdditionalOptimization,
                                         _copyAndSaveEachPlan,
-                                        false,
+                                        _structureIds.Any(x => x.ToLower().Contains("flash")),
                                         _threshold,
                                         _lowDoseLimit,
                                         _isDemo,
@@ -846,6 +845,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
         {
             try
             {
+                _reminders.Clear();
                 using (StreamReader reader = new StreamReader(file))
                 {
                     string line;

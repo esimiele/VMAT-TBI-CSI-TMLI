@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Input;
 using AutoPlannerOptimizationLoop.Helpers;
+using System.Text;
 
 namespace AutoPlannerOptimizationLoop.ViewModels
 {
@@ -171,6 +172,32 @@ namespace AutoPlannerOptimizationLoop.ViewModels
 
         public void StartOptimization()
         {
+            if (!PlanOptimizationConstraints.Any())
+            {
+                Logger.GetInstance().LogError("Error! No optimization constraints present! Please fix and try again");
+                return;
+            }
+            if(PlanOptimizationConstraints.Any(x => x.OptimizationConstraints.Any(y => !y.IsValidConstraint)))
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("The following constraints are not valid:");
+                foreach(PlanOptimizationSetupModel itr in PlanOptimizationConstraints)
+                {
+                    if(itr.OptimizationConstraints.Any(x => !x.IsValidConstraint))
+                    {
+                        sb.AppendLine($"Plan: {itr.PlanId}");
+                        foreach(OptimizationConstraintModel opt in itr.OptimizationConstraints.Where(x => !x.IsValidConstraint))
+                        {
+                            sb.AppendLine(opt.FriendlyName);
+                        }
+                    }
+                    sb.AppendLine("");
+                }
+                sb.AppendLine("Do you want to continue?");
+                ConfirmPrompt CP = new ConfirmPrompt(sb.ToString());
+                CP.ShowDialog();
+                if (!CP.GetSelection()) return;
+            }
             WeakReferenceMessenger.Default.Send(new RequestSetOptimizationConstraintsMessage(PlanOptimizationConstraints));
         }
     }

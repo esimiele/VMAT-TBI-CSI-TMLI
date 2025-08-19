@@ -252,9 +252,9 @@ namespace AutoPlannerOptimizationLoop.Core
             int percentComplete = 0;
             int calcItems = 4;
             List<RequestedOptimizationTSStructureModel> theList = new List<RequestedOptimizationTSStructureModel>
-                            {
-                                new TSCoolerStructureModel("TS_cooler101",107.0,101.0,100, 0.0)
-                            };
+                                                                        {
+                                                                            new TSCoolerStructureModel("TS_cooler101",107.0,101.0,100, 0.0)
+                                                                        };
             (bool fail, List<OptimizationConstraintModel> addedTSCoolerConstraint) = UpdateHeaterCoolerStructures(initialPlan, true, theList, false);
             if (fail)
             {
@@ -288,7 +288,7 @@ namespace AutoPlannerOptimizationLoop.Core
         /// </summary>
         /// <param name="plans"></param>
         /// <returns></returns>
-        protected bool RunSequentialPlansOptimizationLoop(List<ExternalPlanSetup> plans)
+        protected override bool RunSequentialPlansOptimizationLoop(List<ExternalPlanSetup> plans)
         {
             //a requirement for sequentional optimization
             Dictionary<string, string> plansTargets = TargetsHelper.GetHighestRxPlanTargetList(_data.Prescriptions);

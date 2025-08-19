@@ -6,6 +6,8 @@ namespace AutoPlannerHelpers.Models
     public class PlanObjectiveModel : IPlanConstraint
     {
         public bool IsValidObjective { get => !string.IsNullOrEmpty(StructureId) && ConstraintType != OptimizationObjectiveType.None && !double.IsNaN(QueryDose) && QueryDoseUnits != Units.None && !double.IsNaN(QueryVolume) && QueryVolumeUnits != Units.None; }
+        public string FriendlyName { get => $"{StructureId} {ConstraintType} {QueryDose} {QueryDoseUnits} {QueryVolume} {QueryVolumeUnits}"; }
+
         public string StructureId { get; set; } = string.Empty;
         public OptimizationObjectiveType ConstraintType { get; set; } = OptimizationObjectiveType.None;
         public double QueryDose { get; set; } = double.NaN;
