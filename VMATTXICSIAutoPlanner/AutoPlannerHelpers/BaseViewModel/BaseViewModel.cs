@@ -564,15 +564,22 @@ namespace AutoPlannerHelpers.BaseViewModel
         {
             foreach (TSRingStructureModel itr in rings)
             {
-                if(_prescriptions.Any(x => string.Equals(itr.TargetId, x.TargetId)))
+                string planId = string.Empty;
+                if (planConstraints.Count > 1)
                 {
-                    //grab the plan that contains this specific target
-                    string planId = _prescriptions.First(x => string.Equals(itr.TargetId, x.TargetId)).PlanId;
-                    //grab the optimization constraints that belong to this plan
-                    List<OptimizationConstraintModel> constraints = planConstraints.First(x => string.Equals(planId, x.PlanId)).OptimizationConstraints;
-                    //insert the ts ring constraint
-                    constraints.Add(new OptimizationConstraintModel(itr.RingId, OptimizationObjectiveType.Upper, itr.DoseLevel, Units.cGy, 0.0, ringPrioity));
+                    if (_prescriptions.Any(x => string.Equals(itr.TargetId, x.TargetId)))
+                    {
+                        //grab the plan that contains this specific target
+                        planId = _prescriptions.First(x => string.Equals(itr.TargetId, x.TargetId)).PlanId;
+                    }
+                    else continue;
                 }
+                else planId = _prescriptions.First().PlanId;
+
+                //grab the optimization constraints that belong to this plan
+                List<OptimizationConstraintModel> constraints = planConstraints.First(x => string.Equals(planId, x.PlanId)).OptimizationConstraints;
+                //insert the ts ring constraint
+                constraints.Add(new OptimizationConstraintModel(itr.RingId, OptimizationObjectiveType.Upper, itr.DoseLevel, Units.cGy, 0.0, ringPrioity));
             }
             return planConstraints;
         }

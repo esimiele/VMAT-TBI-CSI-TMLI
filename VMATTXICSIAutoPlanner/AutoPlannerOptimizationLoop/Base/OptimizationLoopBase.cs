@@ -846,7 +846,7 @@ namespace AutoPlannerOptimizationLoop.Base
         /// <param name="isFinalOptimization"></param>
         /// <param name="requestedTSStructures"></param>
         /// <param name="removeExistingHeaterCoolerStructures"></param>
-        /// <returns></returns>
+        /// <returns></returns>C:\Users\Eric Simiele\Documents\Github\CTStitcher
         protected virtual (bool, List<OptimizationConstraintModel>) UpdateHeaterCoolerStructures(ExternalPlanSetup plan,
                                                                                                  bool isFinalOptimization,
                                                                                                  List<RequestedOptimizationTSStructureModel> requestedTSStructures,
