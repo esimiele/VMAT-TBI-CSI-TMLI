@@ -116,9 +116,12 @@ namespace AutoPlannerHelpers.Helpers
                 {
                     //try and figure out the dcm type based on supplied structure id
                     dcmType = "CONTROL";
-                    if (id.ToLower().Contains("gtv")) dcmType = "GTV";
-                    else if (id.ToLower().Contains("ctv")) dcmType = "CTV";
-                    else if (id.ToLower().Contains("ptv")) dcmType = "PTV";
+                    if(!id.ToLower().StartsWith("ts_") && !id.ToLower().StartsWith("_"))
+                    {
+                        if (id.ToLower().Contains("gtv")) dcmType = "GTV";
+                        else if (id.ToLower().Contains("ctv")) dcmType = "CTV";
+                        else if (id.ToLower().Contains("ptv")) dcmType = "PTV";
+                    }
                 }
                 if (EclipseContext.GetInstance().StructureSet.CanAddStructure(dcmType, id))
                 {
@@ -168,7 +171,7 @@ namespace AutoPlannerHelpers.Helpers
         /// <param name="selectedSS"></param>
         /// <param name="checkIsEmpty"></param>
         /// <returns></returns>
-        public static bool DoesStructureExistInSS(List<string> ids, bool checkIsEmpty = false)
+        public static bool DoesStructureExistInSS(IEnumerable<string> ids, bool checkIsEmpty = false)
         {
             if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
             {

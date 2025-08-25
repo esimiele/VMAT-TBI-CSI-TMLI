@@ -1,6 +1,7 @@
 ﻿using AutoPlannerHelpers.Enums;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace AutoPlannerHelpers.Models
 {
@@ -14,7 +15,7 @@ namespace AutoPlannerHelpers.Models
                                               (!string.IsNullOrEmpty(StructureB) &&
                                               MarginB.IsValidMargin)); }
 
-        public List<string> StructureIdList { get => new List<string> { StructureA, StructureB, OutputStructure }; }
+        public IEnumerable<string> StructureIdList { get => new List<string> { StructureA, StructureB, OutputStructure }.Where(s => !string.IsNullOrEmpty(s)); }
         public string FriendlyName { get => IsValidOperation ? $"{StructureA} {Operation} {StructureB} -> {OutputStructure} (Is temp = {IsTemporary})" : "none"; }
         #region properties
 

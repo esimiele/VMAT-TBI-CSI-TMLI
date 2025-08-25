@@ -833,7 +833,7 @@ namespace AutoPlannerOptimizationLoop.Base
                 }
                 count++;
             }
-            ProvideUIUpdate(100, String.Format("Elapsed time: {0}", ElapsedRunTime));
+            ProvideUIUpdate(100, $"Elapsed time: {ElapsedRunTime}");
             return updatedOptimizationConstraints;
         }
         #endregion

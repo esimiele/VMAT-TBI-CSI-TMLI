@@ -72,6 +72,9 @@ namespace AutoPlannerHelpers.Helpers
                         OutputStructure.SegmentVolume = CopyStructure(StructureA, new StructureMarginModel(0));
                         OutputStructure.SegmentVolume = CutStructureSupToStructure(OutputStructure, StructureB);
                         break;
+                    case StructureDerivationOperation.CutLateralTo:
+                        OutputStructure.SegmentVolume = CutStructureLateralToStructure(StructureA, StructureB);
+                        break;
                     case StructureDerivationOperation.CopyContractExpand:
                         OutputStructure.SegmentVolume = CopyStructure(StructureA, structureOperation.MarginA);
                         break;
