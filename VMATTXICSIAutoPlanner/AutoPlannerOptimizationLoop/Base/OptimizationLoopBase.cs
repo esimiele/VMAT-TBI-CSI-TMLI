@@ -56,7 +56,7 @@ namespace AutoPlannerOptimizationLoop.Base
         {
             if (string.IsNullOrEmpty(reason))
             {
-                ProvideUIUpdate($"Error! {optorcalc} failed!" + Environment.NewLine + " Try running the {0} manually Eclipse for more information!" + Environment.NewLine + Environment.NewLine + " Exiting!", true);
+                ProvideUIUpdate($"Error! {optorcalc} failed!" + Environment.NewLine + " Try running the plan manually in Eclipse for more information!" + Environment.NewLine + Environment.NewLine + " Exiting!", true);
             }
             else
             {
