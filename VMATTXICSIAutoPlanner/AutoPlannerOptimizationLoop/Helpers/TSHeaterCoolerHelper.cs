@@ -2,6 +2,7 @@
 using AutoPlannerHelpers.EnumTypeHelpers;
 using AutoPlannerHelpers.Helpers;
 using AutoPlannerHelpers.Models;
+using System.Collections.Generic;
 using System.Text;
 using VMS.TPS.Common.Model.API;
 using VMS.TPS.Common.Model.Types;
@@ -68,11 +69,15 @@ namespace AutoPlannerOptimizationLoop.Helpers
                 dummy.ConvertDoseLevelToStructure(d, new DoseValue(ts.UpperDoseValue * plan.TotalDose.Dose / 100, DoseValue.DoseUnit.cGy));
                 //subtract the higher isodose volume from the heater structure and assign it to the heater structure. 
                 //This is the heater structure that will be used for optimization. Create a new optimization objective for this tunning structure
-                heaterStructure.SegmentVolume = ContourHelper.CropStructureFromStructure(heaterStructure, dummy, new StructureMarginModel(0.0), new StructureMarginModel(0.0));
+                List<StructureOperationModel> operations = new List<StructureOperationModel>
+                {
+                    new StructureOperationModel(ts.TSStructureId, StructureDerivationOperation.Crop, dummy.Id, ts.TSStructureId),
+                    new StructureOperationModel(ts.TSStructureId, StructureDerivationOperation.Intersection, target.Id, ts.TSStructureId),
+                };
+                //return null if the structure operations fail
+                if (ContourHelper.ExecuteStructureOperations(operations)) heaterStructure = null;
                 //clean up
                 ss.RemoveStructure(dummy);
-                //only keep the overlapping regions of the heater structure with the taget structure
-                heaterStructure.SegmentVolume = ContourHelper.ContourIntersection(target, heaterStructure, new StructureMarginModel(0.0), new StructureMarginModel(0.0));
             }
             return heaterStructure;
         }

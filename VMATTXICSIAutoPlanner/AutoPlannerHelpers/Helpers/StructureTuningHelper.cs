@@ -71,9 +71,11 @@ namespace AutoPlannerHelpers.Helpers
                 foreach (UnionStructureModel itr in structuresToUnion)
                 {
                     Structure newStructure = GetStructureFromId(itr.ProposedUnionStructureId, true);
-                    Structure L = GetStructureFromId(itr.Structure_Left);
-                    Structure R = GetStructureFromId(itr.Structure_Right);
-                    newStructure.SegmentVolume = ContourHelper.ContourUnion(L, R, new StructureMarginModel(0.0), new StructureMarginModel(0.0));
+                    if (ContourHelper.PerformStructureOperation(new StructureOperationModel(itr.Structure_Left, Enums.StructureDerivationOperation.Union, itr.Structure_Right, itr.ProposedUnionStructureId)))
+                    {
+                        ProvideUIUpdate(0,$"Error! Missing required structures for derivation or margins are not valid! Exiting!", true);
+                        return true;
+                    }
                     if (newStructure.IsEmpty)
                     {
                         ProvideUIUpdate(0, $"Error! {newStructure.Id} is empty following union of L/R structures!", true);

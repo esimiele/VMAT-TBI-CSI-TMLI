@@ -203,7 +203,8 @@ namespace CSIAutoPlanner.Core
                 }
 
                 ProvideUIUpdate($"Contouring overlap between ring and {normalId}");
-                addedStructure.SegmentVolume = ContourHelper.ContourIntersection(normal, addedStructure, new StructureMarginModel(0.0), new StructureMarginModel(0.0));
+                if (ContourHelper.PerformStructureOperation(new StructureOperationModel(normalId, AutoPlannerHelpers.Enums.StructureDerivationOperation.Intersection, addedStructure.Id, addedStructure.Id))) return true;
+
                 ProvideUIUpdate(100 * ++counter / calcItems, "Overlap Contoured!");
 
                 if (CheckTSGlobesLensesStructureIntegrity(addedStructure)) return true;
@@ -375,7 +376,7 @@ namespace CSIAutoPlanner.Core
 
             ProvideUIUpdate(100 * ++counter / calcItems, "Unioning left and right arms avoid structures together!");
             //now contour the arms avoid structure as the union of the left and right dummy boxes
-            armsAvoid.SegmentVolume = ContourHelper.ContourUnion(dummyBoxL, dummyBoxR, new StructureMarginModel(0), new StructureMarginModel(0));
+            if (ContourHelper.PerformStructureOperation(new StructureOperationModel(dummyBoxL.Id, AutoPlannerHelpers.Enums.StructureDerivationOperation.Union, dummyBoxR.Id, armsAvoid.Id))) return true;
             if (ReferenceEquals(armsAvoid, null) || armsAvoid.IsEmpty) return true;
 
             ProvideUIUpdate(100 * ++counter / calcItems, "Contouring overlap between arms avoid and body with 5mm outer margin!");
@@ -668,7 +669,7 @@ namespace CSIAutoPlanner.Core
                             }
 
                             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Cropping structure ({itr}) from target ({target.Id})");
-                            cropResult.cropStructure.SegmentVolume = ContourHelper.CropStructureFromStructure(cropResult.cropStructure, normal, new StructureMarginModel(0.0), new StructureMarginModel(0.0));
+                            if (ContourHelper.PerformStructureOperation(new StructureOperationModel(cropResult.cropStructure.Id, AutoPlannerHelpers.Enums.StructureDerivationOperation.Crop, normal.Id, cropResult.cropStructure.Id))) return true;
                         }
                         NormalizationVolumes.Add(sortedPrescriptions.ElementAt(i).PlanId, cropResult.Item2.Id);
                         TargetCropOverlapManipulations.Add(new TSTargetCropOverlapModel(sortedPrescriptions.ElementAt(i).PlanId, target.Id, cropResult.cropStructure.Id, AutoPlannerHelpers.Enums.TSManipulationType.CropTargetFromStructure));

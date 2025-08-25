@@ -20,9 +20,10 @@
         Union,
         Crop,
         XOR,
+        CopyContractExpand,
         CutInferiorTo,
         CutSuperiorTo,
-        CopyContractExpand,
+        CutLateralTo,
         None
     }
 

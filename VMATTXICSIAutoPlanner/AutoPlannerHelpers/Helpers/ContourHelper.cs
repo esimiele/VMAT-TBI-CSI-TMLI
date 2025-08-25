@@ -14,7 +14,7 @@ namespace AutoPlannerHelpers.Helpers
 {
     public static class ContourHelper
     {
-        public static bool ExecuteStructureOperations(IEnumerable<StructureOperationModel> operations, ProvideUIUpdateDelegate ProvideUIUpdate, UIUpdateMessageOnlyDelegate UIUD)
+        public static bool ExecuteStructureOperations(IEnumerable<StructureOperationModel> operations, ProvideUIUpdateDelegate ProvideUIUpdate = null, UIUpdateMessageOnlyDelegate UIUD = null)
         {
             int percentCompletion = 0;
             int calcItems = operations.Count();
@@ -22,15 +22,24 @@ namespace AutoPlannerHelpers.Helpers
             {
                 if (itr.IsValidOperation)
                 {
-                    ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Performing: {itr.FriendlyName}");
+                    if (!ReferenceEquals(ProvideUIUpdate, null))
+                    {
+                        ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Performing: {itr.FriendlyName}");
+                    }
                     if (PerformStructureOperation(itr, UIUD)) return true;
                 }
-                else ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");
+                else
+                {
+                    if (!ReferenceEquals(ProvideUIUpdate, null))
+                    {
+                        ProvideUIUpdate(100 * ++percentCompletion / calcItems, $"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");
+                    }
+                }
             }
             return false;
         }
 
-        public static bool PerformStructureOperation(StructureOperationModel structureOperation, UIUpdateMessageOnlyDelegate ProvideUIUpdate)
+        public static bool PerformStructureOperation(StructureOperationModel structureOperation, UIUpdateMessageOnlyDelegate ProvideUIUpdate = null)
         {
             if (!EclipseContext.GetInstance().IsInitialized || ReferenceEquals(EclipseContext.GetInstance().StructureSet, null))
             {
@@ -69,48 +78,60 @@ namespace AutoPlannerHelpers.Helpers
                 }
                 if (OutputStructure.IsEmpty)
                 {
-                    ProvideUIUpdate($"Warning! Output structure ({OutputStructure.Id}) is empty following {structureOperation.Operation} operation! Removing!");
+                    if(!ReferenceEquals(ProvideUIUpdate, null))
+                    {
+                        ProvideUIUpdate($"Warning! Output structure ({OutputStructure.Id}) is empty following {structureOperation.Operation} operation! Removing!");
+                    }
                     EclipseContext.GetInstance().StructureSet.RemoveStructure(OutputStructure);
                 }
             }
             else
             {
-                ProvideUIUpdate($"Error! Missing required structures for derivation or margins are not valid! Exiting!", true);
-                ProvideUIUpdate($"{structureOperation.FriendlyName}");
+                if (!ReferenceEquals(ProvideUIUpdate, null))
+                {
+                    ProvideUIUpdate($"Error! Missing required structures for derivation or margins are not valid! Exiting!", true);
+                    ProvideUIUpdate($"{structureOperation.FriendlyName}");
+                }
                 return true;
             }
             return false;
         }
 
-        public static SegmentVolume ContourIntersection(Structure a, Structure b, StructureMarginModel marginA, StructureMarginModel marginB)
+        private static SegmentVolume ContourIntersection(Structure a, Structure b, StructureMarginModel marginA, StructureMarginModel marginB)
         {
             //margin is in cm
             if (!ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return a.SegmentVolume.AsymmetricMargin(marginA.AxisAlignedMargins).And(b.SegmentVolume.AsymmetricMargin(marginB.AxisAlignedMargins));
             return null;
         }
 
-        public static SegmentVolume ContourUnion(Structure a, Structure b, StructureMarginModel marginA, StructureMarginModel marginB)
+        private static SegmentVolume ContourUnion(Structure a, Structure b, StructureMarginModel marginA, StructureMarginModel marginB)
         {
             //margin is in cm
             if (!ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return a.SegmentVolume.AsymmetricMargin(marginA.AxisAlignedMargins).Or(b.SegmentVolume.AsymmetricMargin(marginB.AxisAlignedMargins));
             return null;
         }
 
-        public static SegmentVolume CropStructureFromStructure(Structure a, Structure b, StructureMarginModel marginA, StructureMarginModel marginB)
+        private static SegmentVolume CropStructureFromStructure(Structure a, Structure b, StructureMarginModel marginA, StructureMarginModel marginB)
         {
             //margin is in cm
             if (!ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return a.SegmentVolume.AsymmetricMargin(marginA.AxisAlignedMargins).Sub(b.SegmentVolume.AsymmetricMargin(marginB.AxisAlignedMargins));
             return null;
         }
 
-        public static SegmentVolume ContourXOR(Structure a, Structure b, StructureMarginModel marginA, StructureMarginModel marginB)
+        private static SegmentVolume ContourXOR(Structure a, Structure b, StructureMarginModel marginA, StructureMarginModel marginB)
         {
             //margin is in cm
             if (!ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return a.SegmentVolume.AsymmetricMargin(marginA.AxisAlignedMargins).Xor(b.SegmentVolume.AsymmetricMargin(marginB.AxisAlignedMargins));
             return null;
         }
 
-        public static SegmentVolume CutStructureInfToStructure(Structure a, Structure b)
+        /// <summary>
+        /// Cut structure a inferior to structure b (i.e., remove all contours beyond the inferior-most slice of structure b)
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        private static SegmentVolume CutStructureInfToStructure(Structure a, Structure b)
         {
             int slice = CalculationHelper.ComputeSlice(b.MeshGeometry.Positions.Min(p => p.Z), EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes);
             for (int i = 0; i < slice; i++)
@@ -120,13 +141,13 @@ namespace AutoPlannerHelpers.Helpers
             return a.SegmentVolume;
         }
 
-        public static SegmentVolume CopyStructure(Structure a, StructureMarginModel marginA)
-        {
-            if (!ReferenceEquals(a, null)) return a.AsymmetricMargin(marginA.AxisAlignedMargins);
-            return null;
-        }
-
-        public static SegmentVolume CutStructureSupToStructure(Structure a, Structure b)
+        /// <summary>
+        /// Cut structure a superior to structure b (i.e., remove all contours beyond the superior-most slice of structure b)
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        private static SegmentVolume CutStructureSupToStructure(Structure a, Structure b)
         {
             int slice = CalculationHelper.ComputeSlice(b.MeshGeometry.Positions.Max(p => p.Z), EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes);
             for (int i = EclipseContext.GetInstance().StructureSet.Image.ZSize - 1; i > slice; i--)
@@ -134,6 +155,73 @@ namespace AutoPlannerHelpers.Helpers
                 a.ClearAllContoursOnImagePlane(i);
             }
             return a.SegmentVolume;
+        }
+
+        /// <summary>
+        /// Cut structure a laterally to structure b within the sup/inf extent of structure b (i.e., remove all contour points OUTSIDE the maximum x-lateral extent of structure b)
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        private static SegmentVolume CutStructureLateralToStructure(Structure a, Structure b)
+        {
+            VVector[] lateralBounds = GetLateralBoundingBoxForStructure(b, 0.0);
+            double xmax = lateralBounds.Max(p => p.x);
+            double xmin = lateralBounds.Min(p => p.x);
+            int startSlice = CalculationHelper.ComputeSlice(b.MeshGeometry.Positions.Min(p => p.Z), EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes);
+            int stopSlice = CalculationHelper.ComputeSlice(b.MeshGeometry.Positions.Max(p => p.Z), EclipseContext.GetInstance().StructureSet.Image.Origin.z, EclipseContext.GetInstance().StructureSet.Image.ZRes);
+            for(int i = startSlice; i <= stopSlice; i++)
+            {
+                VVector[][] apoints = a.GetContoursOnImagePlane(i);
+                a.ClearAllContoursOnImagePlane(i);
+                VVector[][] newapoints = new VVector[apoints.GetLength(0)][];
+                foreach (VVector[] itr in apoints)
+                {
+                    if(itr.Any(p => p.x >= xmin && p.x <= xmax))
+                    {
+                        //some of the contour points are contained within the lateral x bounds of structure b
+                        List<VVector> newPoints = new List<VVector> { };
+                        if (!itr.All(p => p.x >= xmin && p.x <= xmax))
+                        {
+                            //not all contour points are contained within the lateral x bounds of structure b --> truncate points outside of bounds
+                            foreach (VVector point in itr)
+                            {
+                                double newX = point.x;
+                                if (newX > xmax)
+                                {
+                                    newX = xmax;
+                                }
+                                else if (newX < xmin)
+                                {
+                                    newX = xmin;
+                                }
+                                newPoints.Add(new VVector(newX, point.y, point.z));
+                            }
+                        }
+                        else
+                        {
+                            //all contour points are contained within the lateral x bounds of structure b --> add entire array
+                            newPoints.AddRange(itr);
+                        }
+                        
+                        if(newPoints.Any(p => a.IsPointInsideSegment(p)))
+                        {
+                            a.SubtractContourOnImagePlane(newPoints.ToArray(), i);
+                        }
+                        else
+                        {
+                            a.AddContourOnImagePlane(newPoints.ToArray(), i);
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        public static SegmentVolume CopyStructure(Structure a, StructureMarginModel marginA)
+        {
+            if (!ReferenceEquals(a, null)) return a.AsymmetricMargin(marginA.AxisAlignedMargins);
+            return null;
         }
 
         /// <summary>
@@ -308,9 +396,8 @@ namespace AutoPlannerHelpers.Helpers
         /// <param name="theStructure"></param>
         /// <param name="addedMargin"></param>
         /// <returns></returns>
-        public static (VVector[], StringBuilder) GetLateralBoundingBoxForStructure(Structure theStructure, double addedMargin = 0.0)
+        public static VVector[] GetLateralBoundingBoxForStructure(Structure theStructure, double addedMargin = 0.0)
         {
-            StringBuilder sb = new StringBuilder();
             VVector[] boundingBox;
 
             Point3DCollection pts = theStructure.MeshGeometry.Positions;
@@ -318,13 +405,6 @@ namespace AutoPlannerHelpers.Helpers
             double xMin = pts.Min(p => p.X) - addedMargin * 10;
             double yMax = pts.Max(p => p.Y) + addedMargin * 10;
             double yMin = pts.Min(p => p.Y) - addedMargin * 10;
-
-            sb.AppendLine($"Lateral bounding box for structure: {theStructure.Id}");
-            sb.AppendLine($"Added margin: {addedMargin} cm");
-            sb.AppendLine($" xMax: {xMax}");
-            sb.AppendLine($" xMin: {xMin}");
-            sb.AppendLine($" yMax: {yMax}");
-            sb.AppendLine($" yMin: {yMin}");
 
             boundingBox = new[] {
                                 new VVector(xMax, yMax, 0),
@@ -336,7 +416,7 @@ namespace AutoPlannerHelpers.Helpers
                                 new VVector(xMin, yMax, 0),
                                 new VVector(0, yMax, 0)};
 
-            return (boundingBox, sb);
+            return boundingBox;
         }
 
         /// <summary>

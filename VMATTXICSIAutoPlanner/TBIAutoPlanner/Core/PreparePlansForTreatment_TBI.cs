@@ -220,7 +220,8 @@ namespace TBIAutoPlanner.Core
                 Structure humanBody = StructureTuningHelper.GetStructureFromId("human_body");
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved human_body structure: {humanBody.Id}");
 
-                body.SegmentVolume = ContourHelper.ContourIntersection(body, humanBody, new StructureMarginModel(0), new StructureMarginModel(0));
+                if (ContourHelper.PerformStructureOperation(new StructureOperationModel(body.Id, AutoPlannerHelpers.Enums.StructureDerivationOperation.Intersection, humanBody.Id, body.Id))) return true;
+
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Copied {humanBody.Id} onto {body.Id}");
 
                 if (EclipseContext.GetInstance().StructureSet.CanRemoveStructure(humanBody))

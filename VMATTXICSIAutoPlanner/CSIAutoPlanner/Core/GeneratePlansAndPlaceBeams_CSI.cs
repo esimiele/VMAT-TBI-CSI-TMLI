@@ -142,7 +142,7 @@ namespace CSIAutoPlanner.Core
             }
 
             //union TS_ArmsAvoid and body onto the body structure
-            body.SegmentVolume = ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("TS_ArmsAvoid"), body, new StructureMarginModel(0), new StructureMarginModel(0));
+            if (ContourHelper.PerformStructureOperation(new StructureOperationModel("TS_ArmsAvoid", AutoPlannerHelpers.Enums.StructureDerivationOperation.Union, body.Id, body.Id))) return true;
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Contour union betwen between TS_ArmsAvoid and body onto body");
             return false;
         }
@@ -161,7 +161,7 @@ namespace CSIAutoPlanner.Core
             Structure body = StructureTuningHelper.GetStructureFromId("body");
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Retrieved body structure: {body.Id}");
 
-            body.SegmentVolume = ContourHelper.ContourIntersection(bodyCopy, body, new StructureMarginModel(0), new StructureMarginModel(0));
+            if (ContourHelper.PerformStructureOperation(new StructureOperationModel(bodyCopy.Id, AutoPlannerHelpers.Enums.StructureDerivationOperation.Intersection, body.Id, body.Id))) return true;
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Copied structure {bodyCopy.Id} onto {body.Id}");
 
             if (EclipseContext.GetInstance().StructureSet.CanRemoveStructure(bodyCopy))

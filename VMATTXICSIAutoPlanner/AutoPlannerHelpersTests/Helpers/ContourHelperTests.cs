@@ -152,17 +152,9 @@ namespace AutoPlannerHelpers.Helpers.Tests
                 new VVector(-20,10,0),
                 new VVector(0,10,0),
             };
-            StringBuilder expectedMessage = new StringBuilder();
-            expectedMessage.AppendLine($"Lateral bounding box for structure: test");
-            expectedMessage.AppendLine($"Added margin: {0.0} cm");
-            expectedMessage.AppendLine($" xMax: {expectedPts.Max(p => p.x)}");
-            expectedMessage.AppendLine($" xMin: {expectedPts.Min(p => p.x)}");
-            expectedMessage.AppendLine($" yMax: {expectedPts.Max(p => p.y)}");
-            expectedMessage.AppendLine($" yMin: {expectedPts.Min(p => p.y)}");
 
-            (VVector[] resultPts, StringBuilder resultMessage) = ContourHelper.GetLateralBoundingBoxForStructure(target, 0.0);
+            VVector[] resultPts = ContourHelper.GetLateralBoundingBoxForStructure(target, 0.0);
             CollectionAssert.AreEqual(expectedPts, resultPts);
-            Assert.AreEqual(expectedMessage.ToString(), resultMessage.ToString());
         }
 
         [TestMethod()]
