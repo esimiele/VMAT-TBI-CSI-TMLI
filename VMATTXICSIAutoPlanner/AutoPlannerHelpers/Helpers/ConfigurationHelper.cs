@@ -106,8 +106,7 @@ namespace AutoPlannerHelpers.Helpers
                                 {
                                     if (line.Contains("="))
                                     {
-                                        string parameter = line.Substring(0, line.IndexOf("="));
-                                        string value = line.Substring(line.IndexOf("=") + 1, line.Length - line.IndexOf("=") - 1);
+                                        (string parameter, string value) = ParseParameterValuePair(line);
                                         if (parameter == "template name") tempTemplate.TemplateName = value;
                                         else if (parameter == "initial dose per fraction")
                                         {
@@ -165,8 +164,7 @@ namespace AutoPlannerHelpers.Helpers
                                 {
                                     if (line.Contains("="))
                                     {
-                                        string parameter = line.Substring(0, line.IndexOf("="));
-                                        string value = line.Substring(line.IndexOf("=") + 1, line.Length - line.IndexOf("=") - 1);
+                                        (string parameter, string value) = ParseParameterValuePair(line);
                                         if (parameter == "template name") tempTemplate.TemplateName = value;
                                         else if (parameter == "dose per fraction")
                                         {
@@ -213,8 +211,7 @@ namespace AutoPlannerHelpers.Helpers
                                 {
                                     if (line.Contains("="))
                                     {
-                                        string parameter = line.Substring(0, line.IndexOf("="));
-                                        string value = line.Substring(line.IndexOf("=") + 1, line.Length - line.IndexOf("=") - 1);
+                                        (string parameter, string value) = ParseParameterValuePair(line);
                                         if (parameter == "template name") tempTemplate.TemplateName = value;
                                         else if (parameter == "dose per fraction")
                                         {
@@ -247,6 +244,16 @@ namespace AutoPlannerHelpers.Helpers
             else if (line.Contains("add plan objective")) tempTemplate.PlanObjectives.Add(ParsePlanObjective(line));
             else if (line.Contains("add requested plan metric")) tempTemplate.RequestedPlanMetrics.Add(ParseRequestedPlanDoseInfo(line));
             else if (line.Contains("add init opt constraint") || line.Contains("add opt constraint")) tempTemplate.InitialOptimizationConstraints.Add(ParseOptimizationConstraint(line));
+            else if (line.Contains("plan normalization value"))
+            {
+                (string parameter, string value) = ParseParameterValuePair(line);
+                tempTemplate.PlanNormalizationValue = double.Parse(value);
+            }
+        }
+
+        public static (string, string) ParseParameterValuePair(string line)
+        {
+            return (line.Substring(0, line.IndexOf("=")), line.Substring(line.IndexOf("=") + 1, line.Length - line.IndexOf("=") - 1));
         }
 
         /// <summary>

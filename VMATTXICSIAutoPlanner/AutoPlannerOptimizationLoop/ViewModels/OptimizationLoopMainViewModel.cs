@@ -121,6 +121,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                 if (!ReferenceEquals(_selectedTemplate, null))
                 {
                     WeakReferenceMessenger.Default.Send(new RequestUpdatePlanObjectives(_selectedTemplate.PlanObjectives));
+                    if(!double.IsNaN(_selectedTemplate.PlanNormalizationValue)) PlanNormalizationValue = _selectedTemplate.PlanNormalizationValue;
                 }
                 else
                 {
@@ -294,7 +295,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
             LoadConfigurationSettingsForPlanType(_selectedPlanType);
             if (OptimizationLoopSettings.Reminders.Any(x => x.ToLower().Contains("base dose")))
             {
-                if (EclipseContext.GetInstance().VMATPlans.Any() && !EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Any(x => x.Id.ToLower().Contains("legs")))
+                if (EclipseContext.GetInstance().VMATPlans.Any() && !EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Any(x => x.Id.ToLower().Contains("leg")))
                 {
                     ESAPIThreadContext.ESAPIDispatcher.Invoke(() => { OptimizationLoopSettings.Reminders.Remove(OptimizationLoopSettings.Reminders.First(x => x.ToLower().Contains("base dose"))); });
                 }
@@ -352,8 +353,6 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                     planIds = new List<string>(AvailableBasePlansForOptimization);
                 }
             });
-
-            
 
             if (PlanTemplates.Any(x => string.Equals(x.TemplateName, OptimizationLoopSettings.PlanPreparationTemplateUsed)))
             {

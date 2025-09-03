@@ -6,7 +6,9 @@
              xmlns:local="clr-namespace:AutoPlannerHelpers.Views"
              xmlns:enum="clr-namespace:AutoPlannerHelpers.Enums"
              xmlns:Behaviors="clr-namespace:Microsoft.Xaml.Behaviors;assembly=Microsoft.Xaml.Behaviors"
-             mc:Ignorable="d" >
+             mc:Ignorable="d" 
+             HorizontalAlignment="Stretch"
+             VerticalAlignment="Stretch">
     <UserControl.Resources>
         <Style TargetType="TextBox">
             <Setter Property="Background" Value="White"/>
@@ -142,90 +144,168 @@
         </Style>
         <local:TupleConverter x:Key="TupleConverter" />
     </UserControl.Resources>
-    <Grid>
+    <Grid >
         <Border Margin="0" BorderThickness="1,0,0,0" BorderBrush="Black">
             <StackPanel HorizontalAlignment="Center" Margin="0">
                 <Label Content="{Binding ViewHeaderLabel, FallbackValue=Target Derivations}" FontSize="20" FontStyle="Normal" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,0,0,0"></Label>
-                <Grid Height="25" Width ="560" HorizontalAlignment="Center" Margin="0,5,0,0">
+                <Grid Height="25" MinWidth="650" HorizontalAlignment="Stretch" Margin="20,5,20,5">
                     <Button Content="Add Derivation" Width="100" HorizontalAlignment="Left" VerticalAlignment="Top" Command="{Binding AddStructureOperationCommand}"/>
                     <Button Content="Add Defaults" Width="100" HorizontalAlignment="Center" VerticalAlignment="Top" Command="{Binding AddDefaultStructureOperationsCommand}"/>
                     <Button Content="Clear List" Width="100" HorizontalAlignment="Right" VerticalAlignment="Top" Command="{Binding RemoveAllStructureOperationsCommand}"/>
                 </Grid>
-                <ScrollViewer Height="350" Width="570" Margin="0,5,0,0" HorizontalAlignment="Center" VerticalAlignment="Bottom" Style="{StaticResource ScrollViewerStyle}">
-                    <ItemsControl x:Name="StructureDerivationSP" ItemsSource="{Binding RequestedStructureOperations}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <ComboBox Grid.Column="0" HorizontalContentAlignment="Center" ItemsSource="{Binding Path=DataContext.StructureIds, ElementName=StructureDerivationSP}" SelectedItem="{Binding StructureA}" Margin="1"/>
-                                    <Button Grid.Column="1" Content="Margin A" HorizontalContentAlignment="Center" Command="{Binding DataContext.ModifyMarginCommand, ElementName=StructureDerivationSP, Mode=TwoWay}" ToolTip="{Binding MarginA.AxisAlignedMargins}" Margin="1">
-                                        <Button.CommandParameter>
-                                            <MultiBinding Converter="{StaticResource TupleConverter}">
-                                                <Binding Path="StructureA" />
-                                                <Binding Path="MarginA" />
-                                            </MultiBinding>
-                                        </Button.CommandParameter>
-                                    </Button>
-                                    <ComboBox Grid.Column="2" HorizontalContentAlignment="Center" SelectedItem="{Binding Operation}" ItemsSource="{Binding Source={local:EnumBindingSource {x:Type enum:StructureDerivationOperation}}}" Margin="1">
-                                        <Behaviors:Interaction.Triggers>
-                                            <Behaviors:EventTrigger EventName="SelectionChanged">
-                                                <Behaviors:InvokeCommandAction Command="{Binding Path=DataContext.StructureOperationChangedCommand, ElementName=StructureDerivationSP}" CommandParameter="{Binding}"/>
-                                            </Behaviors:EventTrigger>
-                                        </Behaviors:Interaction.Triggers>
-                                    </ComboBox>
-                                    <ComboBox Grid.Column="3" HorizontalContentAlignment="Center" ItemsSource="{Binding Path=DataContext.StructureIds, ElementName=StructureDerivationSP}" SelectedItem="{Binding StructureB}" Margin="1">
-                                        <ComboBox.Style>
-                                            <Style TargetType="ComboBox">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Operation}" Value="{x:Static enum:StructureDerivationOperation.CopyContractExpand}">
-                                                        <Setter Property="Visibility" Value="Hidden" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </ComboBox.Style>
-                                    </ComboBox>
-                                    <Button Grid.Column="4" Content="Margin B" HorizontalContentAlignment="Center" Command="{Binding DataContext.ModifyMarginCommand, ElementName=StructureDerivationSP, Mode=TwoWay}" ToolTip="{Binding MarginB.AxisAlignedMargins}" Margin="1">
-                                        <Button.Style>
-                                            <Style TargetType="Button">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Operation}" Value="{x:Static enum:StructureDerivationOperation.CopyContractExpand}">
-                                                        <Setter Property="Visibility" Value="Hidden" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Button.Style>
-                                        <Button.CommandParameter>
-                                            <MultiBinding Converter="{StaticResource TupleConverter}">
-                                                <Binding Path="StructureB" />
-                                                <Binding Path="MarginB" />
-                                            </MultiBinding>
-                                        </Button.CommandParameter>
-                                    </Button>
-                                    <ComboBox Grid.Column="5" HorizontalContentAlignment="Center" ItemsSource="{Binding Path=DataContext.StructureIds, ElementName=StructureDerivationSP}" SelectedItem="{Binding OutputStructure}" Margin="1">
-                                        <Behaviors:Interaction.Triggers>
-                                            <Behaviors:EventTrigger EventName="SelectionChanged">
-                                                <Behaviors:InvokeCommandAction Command="{Binding Path=DataContext.StructureSelectionChangedCommand, ElementName=StructureDerivationSP}" CommandParameter="{Binding}"/>
-                                            </Behaviors:EventTrigger>
-                                        </Behaviors:Interaction.Triggers>
-                                    </ComboBox>
-                                    <CheckBox IsChecked="{Binding IsTemporary}" Grid.Column="6" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,3,0,0"/>
-                                    <Button Content="Clear" Grid.Column="7" Command="{Binding Path=DataContext.ClearRowCommand, ElementName=StructureDerivationSP}" CommandParameter="{Binding}" Width="90" Margin="1"/>
-                                </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+                <Grid IsSharedSizeScope="True">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0" Margin="15,0,15,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col0"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col1"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col2"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col3"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col4"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col5"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col6"/>
+                            <ColumnDefinition Width="*"   SharedSizeGroup="col7"/>
+                        </Grid.ColumnDefinitions>
+                        <!-- Simple header cell style (optional) -->
+                        <Grid.Resources>
+                            <Style x:Key="HeaderBorderStyle" TargetType="Border">
+                                <Setter Property="Padding" Value="1"/>
+                            </Style>
+                            <Style x:Key="HeaderTextStyle" TargetType="TextBlock">
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="FontSize" Value="14"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                            </Style>
+                        </Grid.Resources>
+
+                        <!-- Column 0: Structure A -->
+                        <Border Grid.Column="0" Style="{StaticResource HeaderBorderStyle}">
+                            <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Structure A"/>
+                        </Border>
+
+                        <!-- Column 1: (no header) -->
+                        <Border Grid.Column="1" Style="{StaticResource HeaderBorderStyle}">
+                            <!-- intentionally blank -->
+                        </Border>
+
+                        <!-- Column 2: Operation -->
+                        <Border Grid.Column="2" Style="{StaticResource HeaderBorderStyle}">
+                            <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Operation"/>
+                        </Border>
+
+                        <!-- Column 3: Structure B -->
+                        <Border Grid.Column="3" Style="{StaticResource HeaderBorderStyle}">
+                            <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Structure B"/>
+                        </Border>
+
+                        <!-- Column 4: (no header) -->
+                        <Border Grid.Column="4" Style="{StaticResource HeaderBorderStyle}">
+                            <!-- intentionally blank -->
+                        </Border>
+
+                        <!-- Column 5: Output Structure -->
+                        <Border Grid.Column="5" Style="{StaticResource HeaderBorderStyle}">
+                            <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Output Structure"/>
+                        </Border>
+
+                        <!-- Column 6: Is Temporary -->
+                        <Border Grid.Column="6" Style="{StaticResource HeaderBorderStyle}">
+                            <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Is Temp"/>
+                        </Border>
+
+                        <!-- Column 7: (no header / flexible filler) -->
+                        <Border Grid.Column="7" Style="{StaticResource HeaderBorderStyle}">
+                            <!-- intentionally blank -->
+                        </Border>
+                    </Grid>
+                    
+                    <ScrollViewer Grid.Row="1" MaxHeight="350" Margin="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" VerticalScrollBarVisibility="Auto" Style="{StaticResource ScrollViewerStyle}">
+                        <ItemsControl x:Name="StructureDerivationSP" ItemsSource="{Binding RequestedStructureOperations}" Margin="15,0,15,0">
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="ContentPresenter">
+                                    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,2,0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <!-- Use Auto widths with SharedSizeGroup so each column matches the widest item across all rows -->
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="col0"/>
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="col1"/>
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="col2"/>
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="col3"/>
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="col4"/>
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="col5"/>
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="col6"/>
+                                            <!-- Let the last column be flexible so things don’t cram -->
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="col7"/>
+                                        </Grid.ColumnDefinitions>
+                                        <ComboBox Grid.Column="0" MinWidth="120" HorizontalContentAlignment="Center" ItemsSource="{Binding Path=DataContext.StructureIds, ElementName=StructureDerivationSP}" SelectedItem="{Binding StructureA}" Margin="1"/>
+                                        <Button Grid.Column="1" MinWidth="70" Content="Margin A" HorizontalContentAlignment="Center" Command="{Binding DataContext.ModifyMarginCommand, ElementName=StructureDerivationSP, Mode=TwoWay}" ToolTip="{Binding MarginA.AxisAlignedMargins}" Margin="1">
+                                            <Button.CommandParameter>
+                                                <MultiBinding Converter="{StaticResource TupleConverter}">
+                                                    <Binding Path="StructureA" />
+                                                    <Binding Path="MarginA" />
+                                                </MultiBinding>
+                                            </Button.CommandParameter>
+                                        </Button>
+                                        <ComboBox Grid.Column="2" MinWidth="120" HorizontalContentAlignment="Center" SelectedItem="{Binding Operation}" ItemsSource="{Binding Source={local:EnumBindingSource {x:Type enum:StructureDerivationOperation}}}" Margin="1">
+                                            <Behaviors:Interaction.Triggers>
+                                                <Behaviors:EventTrigger EventName="SelectionChanged">
+                                                    <Behaviors:InvokeCommandAction Command="{Binding Path=DataContext.StructureOperationChangedCommand, ElementName=StructureDerivationSP}" CommandParameter="{Binding}"/>
+                                                </Behaviors:EventTrigger>
+                                            </Behaviors:Interaction.Triggers>
+                                        </ComboBox>
+                                        <ComboBox Grid.Column="3" MinWidth="120" HorizontalContentAlignment="Center" ItemsSource="{Binding Path=DataContext.StructureIds, ElementName=StructureDerivationSP}" SelectedItem="{Binding StructureB}" Margin="1">
+                                            <ComboBox.Style>
+                                                <Style TargetType="ComboBox">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Operation}" Value="{x:Static enum:StructureDerivationOperation.CopyContractExpand}">
+                                                            <Setter Property="Visibility" Value="Hidden" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </ComboBox.Style>
+                                        </ComboBox>
+                                        <Button Grid.Column="4" MinWidth="70" Content="Margin B" HorizontalContentAlignment="Center" Command="{Binding DataContext.ModifyMarginCommand, ElementName=StructureDerivationSP, Mode=TwoWay}" ToolTip="{Binding MarginB.AxisAlignedMargins}" Margin="1">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Operation}" Value="{x:Static enum:StructureDerivationOperation.CopyContractExpand}">
+                                                            <Setter Property="Visibility" Value="Hidden" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                            <Button.CommandParameter>
+                                                <MultiBinding Converter="{StaticResource TupleConverter}">
+                                                    <Binding Path="StructureB" />
+                                                    <Binding Path="MarginB" />
+                                                </MultiBinding>
+                                            </Button.CommandParameter>
+                                        </Button>
+                                        <ComboBox Grid.Column="5" MinWidth="120" HorizontalContentAlignment="Center" ItemsSource="{Binding Path=DataContext.StructureIds, ElementName=StructureDerivationSP}" SelectedItem="{Binding OutputStructure}" Margin="1">
+                                            <Behaviors:Interaction.Triggers>
+                                                <Behaviors:EventTrigger EventName="SelectionChanged">
+                                                    <Behaviors:InvokeCommandAction Command="{Binding Path=DataContext.StructureSelectionChangedCommand, ElementName=StructureDerivationSP}" CommandParameter="{Binding}"/>
+                                                </Behaviors:EventTrigger>
+                                            </Behaviors:Interaction.Triggers>
+                                        </ComboBox>
+                                        <CheckBox IsChecked="{Binding IsTemporary}" Grid.Column="6" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,3,0,0"/>
+                                        <Button Content="Clear" MinWidth="50" Grid.Column="7" Command="{Binding Path=DataContext.ClearRowCommand, ElementName=StructureDerivationSP}" CommandParameter="{Binding}" Width="90" Margin="1"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
                 <Button Content="Perform Structure Derivations" FontWeight="Bold" Width="240" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,5,0,0" Command="{Binding PerformTSGenerationManipulationCommand}"/>
             </StackPanel>
         </Border>

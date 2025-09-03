@@ -18,6 +18,7 @@ namespace AutoPlannerHelpers.PlanTemplateModels
         public List<PlanObjectiveModel> PlanObjectives { get; set; } = new List<PlanObjectiveModel> { };
         public List<RequestedPlanMetricModel> RequestedPlanMetrics { get; set; } = new List<RequestedPlanMetricModel> { };
         public List<RequestedOptimizationTSStructureModel> RequestedOptimizationTSStructures { get; set; } = new List<RequestedOptimizationTSStructureModel> { };
+        public double PlanNormalizationValue { get; set; } = double.NaN;
 
         public List<string> GenerateStructureIdList()
         {
