@@ -214,7 +214,7 @@
 
                         <!-- Column 6: Is Temporary -->
                         <Border Grid.Column="6" Style="{StaticResource HeaderBorderStyle}">
-                            <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Is Temp"/>
+                            <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Temp?"/>
                         </Border>
 
                         <!-- Column 7: (no header / flexible filler) -->
@@ -298,7 +298,7 @@
                                                 </Behaviors:EventTrigger>
                                             </Behaviors:Interaction.Triggers>
                                         </ComboBox>
-                                        <CheckBox IsChecked="{Binding IsTemporary}" Grid.Column="6" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,3,0,0"/>
+                                        <CheckBox IsChecked="{Binding IsTemporary}" Grid.Column="6" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,3,0,0"/>
                                         <Button Content="Clear" MinWidth="50" Grid.Column="7" Command="{Binding Path=DataContext.ClearRowCommand, ElementName=StructureDerivationSP}" CommandParameter="{Binding}" Width="90" Margin="1"/>
                                     </Grid>
                                 </DataTemplate>
