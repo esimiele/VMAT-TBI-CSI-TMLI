@@ -264,7 +264,7 @@ namespace AutoPlannerHelpers.BaseViewModel
             else
             {
                 TargetStructureDerivationsBackground = Brushes.LightGray;
-                SetTargetsTabBackground = Brushes.LightGray;
+                SetTargetsTabBackground = Brushes.PaleVioletRed;
                 List<ExportCTModel> models = new List<ExportCTModel>
                 {
                     new ExportCTModel("1", "CT 1", 100, DateTime.Now.ToString("yyyy-mm-dd")),
