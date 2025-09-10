@@ -14,134 +14,6 @@
             <i:InvokeCommandAction Command="{Binding WindowClosingCommand}" />
         </i:EventTrigger>
     </i:Interaction.Triggers>
-    <Window.Resources>
-        <Style TargetType="TextBox">
-            <Setter Property="Background" Value="White"/>
-        </Style>
-        <Style TargetType="Button">
-            <Setter Property="Background" Value="LightGray"/>
-        </Style>
-        <Style TargetType="CheckBox">
-            <Setter Property="Background" Value="White"/>
-        </Style>
-        <Style TargetType="Label">
-            <Setter Property="Foreground" Value="Black"/>
-        </Style>
-
-        <!-- ========== SUBTABS: Top header, equal widths ========== -->
-        <Style x:Key="TopEqualHeaderTabControlStyle" TargetType="TabControl">
-            <Setter Property="TabStripPlacement" Value="Top"/>
-            <Setter Property="Background" Value="DarkGray"/>
-            <Setter Property="HorizontalAlignment" Value="Stretch"/>
-            <Setter Property="VerticalAlignment" Value="Stretch"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type TabControl}">
-                        <Grid KeyboardNavigation.TabNavigation="Local">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <!-- headers -->
-                                <RowDefinition Height="*"/>
-                                <!-- content -->
-                            </Grid.RowDefinitions>
-
-                            <!-- Equal-width header strip -->
-                            <Border Grid.Row="0" Background="{TemplateBinding Background}" BorderBrush="Black" BorderThickness="0,0,0,1">
-                                <UniformGrid Rows="1" IsItemsHost="True"/>
-                            </Border>
-
-                            <!-- Selected tab content -->
-                            <Border Grid.Row="1" Background="{TemplateBinding Background}">
-                                <ContentPresenter ContentSource="SelectedContent" Margin="{TemplateBinding Padding}"/>
-                            </Border>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-
-            <!-- Subtab header look -->
-            <Setter Property="ItemContainerStyle">
-                <Setter.Value>
-                    <Style TargetType="TabItem">
-                        <Setter Property="HorizontalAlignment" Value="Stretch"/>
-                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                        <Setter Property="MinWidth" Value="120"/>
-                        <Setter Property="Background" Value="LightGray"/>
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="{x:Type TabItem}">
-                                    <Border x:Name="Border"
-                                        Background="{TemplateBinding Background}"
-                                        BorderBrush="Black"
-                                        BorderThickness="{TemplateBinding BorderThickness}"
-                                        CornerRadius="2,2,0,0"
-                                        Padding="6,3">
-                                        <ContentPresenter x:Name="ContentSite"
-                                                      ContentSource="Header"
-                                                      HorizontalAlignment="Center"
-                                                      VerticalAlignment="Center"/>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsSelected" Value="True">
-                                            <Setter TargetName="ContentSite" Property="TextElement.FontWeight" Value="Bold"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- ========== MAIN TABS: Left header, equal heights ========== -->
-        <Style x:Key="LeftEqualHeaderTabControlStyle" TargetType="TabControl">
-            <Setter Property="TabStripPlacement" Value="Left"/>
-            <Setter Property="Background" Value="DarkGray"/>
-            <Setter Property="HorizontalAlignment" Value="Stretch"/>
-            <Setter Property="VerticalAlignment" Value="Stretch"/>
-            <!-- Optional: how wide your left tab strip should be -->
-            <Setter Property="Tag" Value="180"/>
-            <!-- treat Tag as 'TabStripWidth' -->
-
-            <!-- Main tab header look (vertical list, no rotation) -->
-            <Setter Property="ItemContainerStyle">
-                <Setter.Value>
-                    <Style TargetType="TabItem">
-                        <Setter Property="HorizontalAlignment" Value="Stretch"/>
-                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                        <Setter Property="MinHeight" Value="24"/>
-                        <Setter Property="Background" Value="LightGray"/>
-                        <!-- equal height baseline -->
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="{x:Type TabItem}">
-                                    <Border x:Name="Border"
-                                        BorderBrush="Black"
-                                        BorderThickness="{TemplateBinding BorderThickness}"
-                                        CornerRadius="2,0,0,2"
-                                        Padding="10,6"
-                                        Background="{TemplateBinding Background}"
-                                        SnapsToDevicePixels="True">
-                                        <ContentPresenter x:Name="ContentSite"
-                                                      ContentSource="Header"
-                                                      HorizontalAlignment="Center"
-                                                      VerticalAlignment="Center"/>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsSelected" Value="True">
-                                            <Setter TargetName="ContentSite" Property="TextElement.FontWeight" Value="Bold"/>
-                                        </Trigger>
-
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </Window.Resources>
     <Grid Width="auto">
         <StackPanel>
             <Grid>
@@ -213,7 +85,7 @@
 
             <Grid Background="DarkGray">
                 <TabControl SelectedIndex="{Binding InitialTabSelected}" Style="{StaticResource LeftEqualHeaderTabControlStyle}">
-                    <TabItem Header="Stitch CT" Content="{Binding StitchCT}" Background="{Binding StitchCTTabBackground}" BorderThickness="0,1,1,0" Visibility="{Binding StitchCTTabVisible, FallbackValue=Visible}">
+                    <TabItem Header="Stitch CT" Content="{Binding StitchCT}" Background="{Binding StitchCTTabBackground,FallbackValue=LightGray}" BorderThickness="0,1,1,0" Visibility="{Binding StitchCTTabVisible, FallbackValue=Visible}">
                     </TabItem>
                     <TabItem Header="Export/Import" BorderThickness="0,1,1,0">
                         <TabControl Style="{StaticResource TopEqualHeaderTabControlStyle}">
@@ -222,31 +94,31 @@
                             <TabItem Header="Import Structure Set" Content="{Binding ImportSS}" BorderThickness="1,1,1,1"/>
                         </TabControl>
                     </TabItem>
-                    <TabItem Header="Specify Targets" Background="{Binding SpecifyTargetsTabBackground}" BorderThickness="0,1,1,0">
+                    <TabItem Header="Specify Targets" Background="{Binding SpecifyTargetsTabBackground,FallbackValue=LightGray}" BorderThickness="0,1,1,0">
                         <TabControl Style="{StaticResource TopEqualHeaderTabControlStyle}">
-                            <TabItem Content="{Binding TargetStructureDerivations}" Background="{Binding TargetStructureDerivationsBackground}" Header="Derive Targets" BorderThickness="1,1,1,1">
+                            <TabItem Content="{Binding TargetStructureDerivations}" Background="{Binding TargetStructureDerivationsBackground,FallbackValue=LightGray}" Header="Derive Targets" BorderThickness="1,1,1,1">
                             </TabItem>
-                            <TabItem Header="Set Targets" BorderThickness="0,1,1,1" Content="{Binding SpecifyTargets}" Background="{Binding SetTargetsTabBackground}">
+                            <TabItem Header="Set Targets" BorderThickness="0,1,1,1" Content="{Binding SpecifyTargets}" Background="{Binding SetTargetsTabBackground,FallbackValue=LightGray}">
                             </TabItem>
                         </TabControl>
                     </TabItem>
-                    <TabItem Header="Structure Tuning" Background="{Binding StructureTuningTabBackground}" BorderThickness="0,1,1,0" Margin="0,0,1,1">
+                    <TabItem Header="Structure Tuning" Background="{Binding StructureTuningTabBackground,FallbackValue=LightGray}" BorderThickness="0,1,1,0">
                         <TabControl Style="{StaticResource TopEqualHeaderTabControlStyle}">
                             <TabItem Header="Special Opt Structures" Content="{Binding SpecialOptimizationStructures}" BorderThickness="1,1,1,1" >
                             </TabItem>
                             <TabItem Header="Ring Generation" Content="{Binding RingGeneration}" BorderThickness="0,1,1,1" >
                             </TabItem>
-                            <TabItem Header="Structure Derivations" Content="{Binding OptimizationStructureDerivations}" Background="{Binding OptimizationStructureDerivationBackground}" BorderThickness="0,1,1,1">
+                            <TabItem Header="Structure Derivations" Content="{Binding OptimizationStructureDerivations}" Background="{Binding OptimizationStructureDerivationBackground,FallbackValue=LightGray}" BorderThickness="0,1,1,1">
                             </TabItem>
                         </TabControl>
                     </TabItem>
-                    <TabItem Header="Beam Placement" Content="{Binding BeamPlacement}" Background="{Binding BeamPlacementTabBackground}" BorderThickness="0,1,1,0">
+                    <TabItem Header="Beam Placement" Content="{Binding BeamPlacement}" Background="{Binding BeamPlacementTabBackground,FallbackValue=LightGray}" BorderThickness="0,1,1,0">
                     </TabItem>
-                    <TabItem Header="Optimization Setup" Content="{Binding OptimizationSetup}" Background="{Binding OptimizationSetupTabBackground}" BorderThickness="0,1,1,0">
+                    <TabItem Header="Optimization Setup" Content="{Binding OptimizationSetup}" Background="{Binding OptimizationSetupTabBackground,FallbackValue=LightGray}" BorderThickness="0,1,1,0">
                     </TabItem>
                     <TabItem Header="Plan Preparation" Content="{Binding PlanPreparation}" BorderThickness="0,1,1,1">
                     </TabItem>
-                    <TabItem Header="Script Configuration" Content="{Binding ScriptConfiguration}" HorizontalContentAlignment="Center" VerticalAlignment="Bottom" BorderThickness="0,1,1,1">
+                    <TabItem Header="Script Configuration" Content="{Binding ScriptConfiguration}" BorderThickness="0,1,1,1">
                     </TabItem>
                 </TabControl>
             </Grid>

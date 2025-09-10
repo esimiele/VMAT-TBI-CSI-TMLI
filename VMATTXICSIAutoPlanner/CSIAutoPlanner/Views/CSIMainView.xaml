@@ -15,139 +15,6 @@
             <i:InvokeCommandAction Command="{Binding WindowClosingCommand}" />
         </i:EventTrigger>
     </i:Interaction.Triggers>
-    <Window.Resources>
-        <Style TargetType="TextBox">
-            <Setter Property="Background" Value="White"/>
-        </Style>
-        <Style TargetType="Button">
-            <Setter Property="Background" Value="LightGray"/>
-        </Style>
-        <Style TargetType="CheckBox">
-            <Setter Property="Background" Value="White"/>
-        </Style>
-        <Style TargetType="Label">
-            <Setter Property="Foreground" Value="Black"/>
-        </Style>
-        <!--Scrollbar Thumbs-->
-        <Style x:Key="ScrollThumbs" TargetType="{x:Type Thumb}">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type Thumb}">
-                        <Grid x:Name="Grid">
-                            <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="Auto" Height="Auto" Fill="Transparent"/>
-                            <Border x:Name="Rectangle1" CornerRadius="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="Auto" Height="Auto" Background="{TemplateBinding Background}"/>
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="Tag" Value="Horizontal">
-                                <Setter TargetName="Rectangle1" Property="Width" Value="Auto"/>
-                                <Setter TargetName="Rectangle1" Property="Height" Value="7"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!--ScrollBars-->
-        <Style x:Key="ScrollBarStyle" TargetType="{x:Type ScrollBar}">
-            <Setter Property="Foreground" Value="GhostWhite"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Width" Value="8"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type ScrollBar}">
-                        <Grid x:Name="GridRoot" Width="8" Background="{TemplateBinding Background}">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="0.00001*"/>
-                            </Grid.RowDefinitions>
-
-                            <Track x:Name="PART_Track" Grid.Row="0" IsDirectionReversed="true" Focusable="false">
-                                <Track.Thumb>
-                                    <Thumb x:Name="Thumb" Background="{TemplateBinding Foreground}" Style="{StaticResource ScrollThumbs}"/>
-                                </Track.Thumb>
-                                <Track.IncreaseRepeatButton>
-                                    <RepeatButton x:Name="PageUp" Command="ScrollBar.PageDownCommand" Opacity="0" Focusable="false"/>
-                                </Track.IncreaseRepeatButton>
-                                <Track.DecreaseRepeatButton>
-                                    <RepeatButton x:Name="PageDown" Command="ScrollBar.PageUpCommand" Opacity="0" Focusable="false"/>
-                                </Track.DecreaseRepeatButton>
-                            </Track>
-                        </Grid>
-
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsEnabled" Value="false">
-                                <Setter TargetName="Thumb" Property="Visibility" Value="Collapsed"/>
-                            </Trigger>
-                            <Trigger Property="Orientation" Value="Horizontal">
-                                <Setter TargetName="GridRoot" Property="LayoutTransform">
-                                    <Setter.Value>
-                                        <RotateTransform Angle="-90"/>
-                                    </Setter.Value>
-                                </Setter>
-                                <Setter TargetName="PART_Track" Property="LayoutTransform">
-                                    <Setter.Value>
-                                        <RotateTransform Angle="-90"/>
-                                    </Setter.Value>
-                                </Setter>
-                                <Setter Property="Width" Value="Auto"/>
-                                <Setter Property="Height" Value="8"/>
-                                <Setter TargetName="Thumb" Property="Tag" Value="Horizontal"/>
-                                <Setter TargetName="PageDown" Property="Command" Value="ScrollBar.PageLeftCommand"/>
-                                <Setter TargetName="PageUp" Property="Command" Value="ScrollBar.PageRightCommand"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- ScrollViewer -->
-        <Style x:Key="ScrollViewerStyle" TargetType="{x:Type ScrollViewer}">
-            <Setter Property="OverridesDefaultStyle" Value="True"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type ScrollViewer}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="16"/>
-                                <ColumnDefinition />
-                                <ColumnDefinition Width="16"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition />
-                            </Grid.RowDefinitions>
-                            <ScrollContentPresenter Grid.ColumnSpan="3" />
-                            <ScrollBar x:Name="PART_VerticalScrollBar" Grid.Column="2" Value="{TemplateBinding VerticalOffset}" Maximum="{TemplateBinding ScrollableHeight}" ViewportSize="{TemplateBinding ViewportHeight}" Style="{DynamicResource ScrollBarStyle}" Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"/>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style TargetType="TabItem">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type TabItem}">
-                        <Border x:Name="PART_Border" Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="Black" Margin="0,0,0,0" CornerRadius="2,2,0,0" Padding="5,1,5,1">
-                            <ContentPresenter x:Name="ContentSite" ContentSource="Header" Margin="5" HorizontalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="LightGray"/>
-                                <Setter Property="Foreground" Value="Black"/>
-                                <Setter Property="TextElement.FontWeight" TargetName="ContentSite" Value="Bold"/>
-                            </Trigger>
-
-                            <Trigger Property="IsSelected" Value="false">
-                                <Setter Property="Background" Value="LightGray"/>
-                                <Setter Property="Foreground" Value="Black"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </Window.Resources>
     <Grid Width="Auto">
         <StackPanel>
             <Grid>
@@ -225,32 +92,32 @@
                 </Grid>
             </Grid>
 
-            <Grid Background="DarkGray"  HorizontalAlignment="Left" Height="Auto" VerticalAlignment="Bottom" Width="730" Margin="0,10,0,0">
-                <TabControl Background="DarkGray"  HorizontalAlignment="Left" Height="Auto" Margin="-2,0,0,0" Width="730" TabStripPlacement="Left" >
+            <Grid Background="DarkGray">
+                <TabControl Style="{StaticResource LeftEqualHeaderTabControlStyle}">
                     <TabItem Header="Export/Import" BorderThickness="0,1,1,0">
-                        <TabControl TabStripPlacement="Top" Background="DarkGray">
+                        <TabControl Style="{StaticResource TopEqualHeaderTabControlStyle}">
                             <TabItem Header="Export CT" Content="{Binding ExportCT}" BorderThickness="1,1,1,1">
                             </TabItem>
                             <TabItem Header="Import Structure Set" Content="{Binding ImportSS}" BorderThickness="1,1,1,1"/>
                         </TabControl>
                     </TabItem>
                     <TabItem Header="Specify Targets" BorderThickness="0,1,1,0" Background="{Binding SpecifyTargetsTabBackground, FallbackValue=LightGray}">
-                        <TabControl TabStripPlacement="Top" Background="DarkGray">
-                            <TabItem Content="{Binding TargetStructureDerivations}" Background="{Binding TargetStructureDerivationsBackground, FallbackValue=LightGray}" Header="Derive Targets" Width="294" BorderThickness="1,1,1,1">
+                        <TabControl Style="{StaticResource TopEqualHeaderTabControlStyle}">
+                            <TabItem Content="{Binding TargetStructureDerivations}" Background="{Binding TargetStructureDerivationsBackground, FallbackValue=LightGray}" Header="Derive Targets" BorderThickness="1,1,1,1">
                             </TabItem>
-                            <TabItem Header="Set Targets" Width="294" BorderThickness="0,1,1,1" Content="{Binding SpecifyTargets}" Background="{Binding SetTargetsTabBackground, FallbackValue=LightGray}">
+                            <TabItem Header="Set Targets" BorderThickness="0,1,1,1" Content="{Binding SpecifyTargets}" Background="{Binding SetTargetsTabBackground, FallbackValue=LightGray}">
                             </TabItem>
                         </TabControl>
                     </TabItem>
-                    <TabItem Header="Structure Tuning" Background="{Binding StructureTuningTabBackground, FallbackValue=LightGray}" BorderThickness="0,1,1,0" x:Name="structureTuningTabItem" Margin="0,0,1,1">
-                        <TabControl Background="DarkGray">
-                            <TabItem Header="Special Opt Structures" Content="{Binding SpecialOptimizationStructures}" BorderThickness="1,1,1,1" Width="Auto">
+                    <TabItem Header="Structure Tuning" Background="{Binding StructureTuningTabBackground, FallbackValue=LightGray}" BorderThickness="0,1,1,0">
+                        <TabControl Style="{StaticResource TopEqualHeaderTabControlStyle}">
+                            <TabItem Header="Special Opt Structures" Content="{Binding SpecialOptimizationStructures}" BorderThickness="1,1,1,1" >
                             </TabItem>
-                            <TabItem Header="Ring Generation" Content="{Binding RingGeneration}" BorderThickness="0,1,1,1" Width="Auto">
+                            <TabItem Header="Ring Generation" Content="{Binding RingGeneration}" BorderThickness="0,1,1,1">
                             </TabItem>
-                            <TabItem Header="Crop/Contour Overlap" Content="{Binding StructureCropOverlap}" Width="Auto" BorderThickness="0,1,1,1">
+                            <TabItem Header="Crop/Contour Overlap" Content="{Binding StructureCropOverlap}" BorderThickness="0,1,1,1">
                             </TabItem>
-                            <TabItem Header="Structure Derivations" Content="{Binding OptimizationStructureDerivations}" Background="{Binding OptimizationStructureDerivationBackground, FallbackValue=LightGray}"  BorderThickness="0,1,1,1" Width="Auto" x:Name="TSManipulationTabItem">
+                            <TabItem Header="Structure Derivations" Content="{Binding OptimizationStructureDerivations}" Background="{Binding OptimizationStructureDerivationBackground, FallbackValue=LightGray}"  BorderThickness="0,1,1,1">
                             </TabItem>
                         </TabControl>
                     </TabItem>
@@ -260,9 +127,7 @@
                     </TabItem>
                     <TabItem Header="Plan Preparation" Content="{Binding PlanPreparation}" BorderThickness="0,1,1,1">
                     </TabItem>
-                    <TabItem Header="Template Builder" VerticalAlignment="Bottom" BorderThickness="0,1,1,0">
-                    </TabItem>
-                    <TabItem Header="Script Configuration" Content="{Binding ScriptConfiguration}" HorizontalContentAlignment="Center" VerticalAlignment="Bottom" BorderThickness="0,1,1,1">
+                    <TabItem Header="Script Configuration" Content="{Binding ScriptConfiguration}" BorderThickness="0,1,1,1">
                     </TabItem>
                 </TabControl>
             </Grid>
