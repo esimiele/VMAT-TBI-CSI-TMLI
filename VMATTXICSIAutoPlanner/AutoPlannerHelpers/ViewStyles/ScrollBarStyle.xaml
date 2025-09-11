@@ -1,21 +1,23 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!--ScrollBars-->
-    <Style x:Key="ScrollBarStyle" TargetType="{x:Type ScrollBar}">
+    <Style TargetType="{x:Type ScrollBar}">
         <Setter Property="Foreground" Value="GhostWhite"/>
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Width" Value="8"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ScrollBar}">
+                    <!-- can now resolve ScrollThumbs within the same dictionary -->
                     <Grid x:Name="GridRoot" Width="8" Background="{TemplateBinding Background}">
+                        
                         <Grid.RowDefinitions>
                             <RowDefinition Height="0.00001*"/>
                         </Grid.RowDefinitions>
 
                         <Track x:Name="PART_Track" Grid.Row="0" IsDirectionReversed="true" Focusable="false">
                             <Track.Thumb>
-                                <Thumb x:Name="Thumb" Background="{TemplateBinding Foreground}" Style="{StaticResource ScrollThumbs}"/>
+                                <Thumb x:Name="Thumb" Background="{TemplateBinding Foreground}"/>
                             </Track.Thumb>
                             <Track.IncreaseRepeatButton>
                                 <RepeatButton x:Name="PageUp" Command="ScrollBar.PageDownCommand" Opacity="0" Focusable="false"/>

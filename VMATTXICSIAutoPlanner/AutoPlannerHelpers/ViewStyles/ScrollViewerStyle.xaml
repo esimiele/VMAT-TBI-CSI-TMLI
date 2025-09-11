@@ -1,7 +1,7 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!-- ScrollViewer -->
-    <Style x:Key="ScrollViewerStyle" TargetType="{x:Type ScrollViewer}">
+    <Style TargetType="{x:Type ScrollViewer}">
         <Setter Property="OverridesDefaultStyle" Value="True"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -16,7 +16,7 @@
                             <RowDefinition />
                         </Grid.RowDefinitions>
                         <ScrollContentPresenter Grid.ColumnSpan="3" />
-                        <ScrollBar x:Name="PART_VerticalScrollBar" Grid.Column="2" Value="{TemplateBinding VerticalOffset}" Maximum="{TemplateBinding ScrollableHeight}" ViewportSize="{TemplateBinding ViewportHeight}" Style="{DynamicResource ScrollBarStyle}" Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"/>
+                        <ScrollBar x:Name="PART_VerticalScrollBar" Grid.Column="2" Value="{TemplateBinding VerticalOffset}" Maximum="{TemplateBinding ScrollableHeight}" ViewportSize="{TemplateBinding ViewportHeight}" Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"/>
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>

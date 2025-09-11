@@ -15,7 +15,6 @@
         <!-- The rest -->
         <ResourceDictionary Source="./ButtonStyle.xaml" />
         <ResourceDictionary Source="./CheckBoxStyle.xaml" />
-        <ResourceDictionary Source="./LabelStyle.xaml" />
         <ResourceDictionary Source="./TextBoxStyle.xaml" />
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

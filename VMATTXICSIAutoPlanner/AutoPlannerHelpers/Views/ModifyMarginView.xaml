@@ -8,199 +8,96 @@
         xmlns:Behaviors="clr-namespace:Microsoft.Xaml.Behaviors;assembly=Microsoft.Xaml.Behaviors"
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight" Background="DarkGray">
-    <Window.Resources>
-        <Style TargetType="TextBox">
-            <Setter Property="Background" Value="White"/>
-        </Style>
-        <Style TargetType="Button">
-            <Setter Property="Background" Value="LightGray"/>
-        </Style>
-        <Style TargetType="CheckBox">
-            <Setter Property="Background" Value="White"/>
-        </Style>
-        <Style TargetType="Label">
-            <Setter Property="Foreground" Value="Black"/>
-        </Style>
-
-        <!--Scrollbar Thumbs-->
-        <Style x:Key="ScrollThumbs" TargetType="{x:Type Thumb}">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type Thumb}">
-                        <Grid x:Name="Grid">
-                            <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="Auto" Height="Auto" Fill="Transparent"/>
-                            <Border x:Name="Rectangle1" CornerRadius="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="Auto" Height="Auto" Background="{TemplateBinding Background}"/>
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="Tag" Value="Horizontal">
-                                <Setter TargetName="Rectangle1" Property="Width" Value="Auto"/>
-                                <Setter TargetName="Rectangle1" Property="Height" Value="7"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!--ScrollBars-->
-        <Style x:Key="ScrollBarStyle" TargetType="{x:Type ScrollBar}">
-            <Setter Property="Foreground" Value="GhostWhite"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Width" Value="8"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type ScrollBar}">
-                        <Grid x:Name="GridRoot" Width="8" Background="{TemplateBinding Background}">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="0.00001*"/>
-                            </Grid.RowDefinitions>
-
-                            <Track x:Name="PART_Track" Grid.Row="0" IsDirectionReversed="true" Focusable="false">
-                                <Track.Thumb>
-                                    <Thumb x:Name="Thumb" Background="{TemplateBinding Foreground}" Style="{StaticResource ScrollThumbs}"/>
-                                </Track.Thumb>
-                                <Track.IncreaseRepeatButton>
-                                    <RepeatButton x:Name="PageUp" Command="ScrollBar.PageDownCommand" Opacity="0" Focusable="false"/>
-                                </Track.IncreaseRepeatButton>
-                                <Track.DecreaseRepeatButton>
-                                    <RepeatButton x:Name="PageDown" Command="ScrollBar.PageUpCommand" Opacity="0" Focusable="false"/>
-                                </Track.DecreaseRepeatButton>
-                            </Track>
-                        </Grid>
-
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsEnabled" Value="false">
-                                <Setter TargetName="Thumb" Property="Visibility" Value="Collapsed"/>
-                            </Trigger>
-                            <Trigger Property="Orientation" Value="Horizontal">
-                                <Setter TargetName="GridRoot" Property="LayoutTransform">
-                                    <Setter.Value>
-                                        <RotateTransform Angle="-90"/>
-                                    </Setter.Value>
-                                </Setter>
-                                <Setter TargetName="PART_Track" Property="LayoutTransform">
-                                    <Setter.Value>
-                                        <RotateTransform Angle="-90"/>
-                                    </Setter.Value>
-                                </Setter>
-                                <Setter Property="Width" Value="Auto"/>
-                                <Setter Property="Height" Value="8"/>
-                                <Setter TargetName="Thumb" Property="Tag" Value="Horizontal"/>
-                                <Setter TargetName="PageDown" Property="Command" Value="ScrollBar.PageLeftCommand"/>
-                                <Setter TargetName="PageUp" Property="Command" Value="ScrollBar.PageRightCommand"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- ScrollViewer -->
-        <Style x:Key="ScrollViewerStyle" TargetType="{x:Type ScrollViewer}">
-            <Setter Property="OverridesDefaultStyle" Value="True"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type ScrollViewer}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="16"/>
-                                <ColumnDefinition />
-                                <ColumnDefinition Width="16"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition />
-                            </Grid.RowDefinitions>
-                            <ScrollContentPresenter Grid.ColumnSpan="3" />
-                            <ScrollBar x:Name="PART_VerticalScrollBar" Grid.Column="2" Value="{TemplateBinding VerticalOffset}" Maximum="{TemplateBinding ScrollableHeight}" ViewportSize="{TemplateBinding ViewportHeight}" Style="{DynamicResource ScrollBarStyle}" Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"/>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <!--ScrollBars-->
-        <Style TargetType="TabItem">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type TabItem}">
-                        <Border x:Name="PART_Border" Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="Black" Margin="0,0,0,0" CornerRadius="2,2,0,0" Padding="5,1,5,1">
-                            <ContentPresenter x:Name="ContentSite" ContentSource="Header" Margin="5" HorizontalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="LightGray"/>
-                                <Setter Property="Foreground" Value="Black"/>
-                                <Setter Property="TextElement.FontWeight" TargetName="ContentSite" Value="Bold"/>
-                            </Trigger>
-
-                            <Trigger Property="IsSelected" Value="false">
-                                <Setter Property="Background" Value="LightGray"/>
-                                <Setter Property="Foreground" Value="Black"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </Window.Resources>
     <Grid>
         <Border Margin="0" BorderThickness="1,0,0,0" BorderBrush="Black">
             <StackPanel HorizontalAlignment="Center" Margin="0">
-                <Label Content="Adjust structure operation margin" HorizontalContentAlignment="Center"></Label>
-                <Grid>
+                <Label Content="Adjust structure operation margin" FontSize="20" FontStyle="Normal" FontWeight="SemiBold" HorizontalContentAlignment="Center" Margin="5"></Label>
+                <Grid HorizontalAlignment="Center">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <Label Content="Structure:" Grid.Column="0" HorizontalAlignment="Center"/>
-                    <TextBox Text="{Binding StructureId}" Grid.Column="1" HorizontalContentAlignment="Center" Width="120" IsReadOnly="True"/>
+                    <Label Content="Structure:" Grid.Column="0" HorizontalAlignment="Right"/>
+                    <Label Content="{Binding StructureId, FallbackValue=None}" Grid.Column="1" Background="White" HorizontalContentAlignment="Center" MinWidth="120"/>
                 </Grid>
-                <Grid>
+                <Grid DataContext="{Binding StructureMargin}" IsSharedSizeScope="True" Margin="5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="col0"/>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="col1"/>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="col2"/>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="col3"/>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="col4"/>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="col5"/>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="col6"/>
+                        <ColumnDefinition Width="*"   SharedSizeGroup="col7"/>
                     </Grid.ColumnDefinitions>
-                    <Label Content="Margin Type" Grid.Column="0"/>
-                    <Label Content="Geometry Type" Grid.Column="1"/>
-                    <Label Content="x1 (cm)" Grid.Column="2"/>
-                    <Label Content="y1 (cm)" Grid.Column="3"/>
-                    <Label Content="z1 (cm)" Grid.Column="4"/>
-                    <Label Content="x2 (cm)" Grid.Column="5"/>
-                    <Label Content="y2 (cm)" Grid.Column="6"/>
-                    <Label Content="z2 (cm)" Grid.Column="7"/>
-                </Grid>
-                <Grid DataContext="{Binding StructureMargin}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <ComboBox Grid.Column="0" HorizontalContentAlignment="Center" SelectedItem="{Binding MarginType}" ItemsSource="{Binding Source={local:EnumBindingSource {x:Type enum:StructureMarginType}}}" Margin="1">
+                    <!-- Simple header cell style (optional) -->
+                    <Grid.Resources>
+                        <Style x:Key="HeaderBorderStyle" TargetType="Border">
+                            <Setter Property="Padding" Value="1"/>
+                        </Style>
+                        <Style x:Key="HeaderTextStyle" TargetType="TextBlock">
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="FontSize" Value="14"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                        </Style>
+                    </Grid.Resources>
+
+                    <!-- Column 0: Structure A -->
+                    <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource HeaderBorderStyle}">
+                        <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Margin Type"/>
+                    </Border>
+
+                    <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource HeaderBorderStyle}">
+                        <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Geometry Type"/>
+                    </Border>
+
+                    <Border Grid.Row="0" Grid.Column="2" Style="{StaticResource HeaderBorderStyle}">
+                        <TextBlock Style="{StaticResource HeaderTextStyle}" Text="x1 (cm)"/>
+                    </Border>
+
+                    <Border Grid.Row="0" Grid.Column="3" Style="{StaticResource HeaderBorderStyle}">
+                        <TextBlock Style="{StaticResource HeaderTextStyle}" Text="y1 (cm)"/>
+                    </Border>
+
+                    <Border Grid.Row="0" Grid.Column="4" Style="{StaticResource HeaderBorderStyle}">
+                        <TextBlock Style="{StaticResource HeaderTextStyle}" Text="z1 (cm)"/>
+                    </Border>
+
+                    <Border Grid.Row="0" Grid.Column="5" Style="{StaticResource HeaderBorderStyle}">
+                        <TextBlock Style="{StaticResource HeaderTextStyle}" Text="x2 (cm)"/>
+                    </Border>
+
+                    <Border Grid.Row="0" Grid.Column="6" Style="{StaticResource HeaderBorderStyle}">
+                        <TextBlock Style="{StaticResource HeaderTextStyle}" Text="y2 (cm)"/>
+                    </Border>
+
+                    <Border Grid.Row="0" Grid.Column="7" Style="{StaticResource HeaderBorderStyle}">
+                        <TextBlock Style="{StaticResource HeaderTextStyle}" Text="z2 (cm)"/>
+                    </Border>
+
+                    <ComboBox Grid.Row="1" Grid.Column="0" HorizontalContentAlignment="Center" SelectedItem="{Binding MarginType}" ItemsSource="{Binding Source={local:EnumBindingSource {x:Type enum:StructureMarginType}}}" MinWidth="120" Margin="2">
                         <Behaviors:Interaction.Triggers>
                             <Behaviors:EventTrigger EventName="SelectionChanged">
                                 <Behaviors:InvokeCommandAction Command="{Binding Path=DataContext.MarginTypeChangedCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding MarginType}"/>
                             </Behaviors:EventTrigger>
                         </Behaviors:Interaction.Triggers>
                     </ComboBox>
-                    <ComboBox Grid.Column="1" HorizontalContentAlignment="Center" SelectedItem="{Binding GeometryType}" ItemsSource="{Binding Source={local:EnumBindingSource {x:Type enum:MarginGeometryType}}}" Margin="1"/>
-                    <TextBox Grid.Column="2" HorizontalContentAlignment="Center" Text="{Binding x1}" Margin="1"/>
-                    <TextBox Grid.Column="3" HorizontalContentAlignment="Center" Text="{Binding y1}" Margin="1" Visibility="{Binding DataContext.AsymItemsVisible, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                    <TextBox Grid.Column="4" HorizontalContentAlignment="Center" Text="{Binding z1}" Margin="1" Visibility="{Binding DataContext.AsymItemsVisible, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                    <TextBox Grid.Column="5" HorizontalContentAlignment="Center" Text="{Binding x2}" Margin="1" Visibility="{Binding DataContext.AsymItemsVisible, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                    <TextBox Grid.Column="6" HorizontalContentAlignment="Center" Text="{Binding y2}" Margin="1" Visibility="{Binding DataContext.AsymItemsVisible, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                    <TextBox Grid.Column="7" HorizontalContentAlignment="Center" Text="{Binding z2}" Margin="1" Visibility="{Binding DataContext.AsymItemsVisible, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                    <ComboBox Grid.Row="1" Grid.Column="1" HorizontalContentAlignment="Center" SelectedItem="{Binding GeometryType}" ItemsSource="{Binding Source={local:EnumBindingSource {x:Type enum:MarginGeometryType}}}" MinWidth="120" Margin="2"/>
+                    <TextBox Grid.Row="1" Grid.Column="2" HorizontalContentAlignment="Center" Text="{Binding x1}" MinWidth="70" Margin="2"/>
+                    <TextBox Grid.Row="1" Grid.Column="3" HorizontalContentAlignment="Center" Text="{Binding y1}" MinWidth="70" Margin="2" Visibility="{Binding DataContext.AsymItemsVisible, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                    <TextBox Grid.Row="1" Grid.Column="4" HorizontalContentAlignment="Center" Text="{Binding z1}" MinWidth="70" Margin="2" Visibility="{Binding DataContext.AsymItemsVisible, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                    <TextBox Grid.Row="1" Grid.Column="5" HorizontalContentAlignment="Center" Text="{Binding x2}" MinWidth="70" Margin="2" Visibility="{Binding DataContext.AsymItemsVisible, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                    <TextBox Grid.Row="1" Grid.Column="6" HorizontalContentAlignment="Center" Text="{Binding y2}" MinWidth="70" Margin="2" Visibility="{Binding DataContext.AsymItemsVisible, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                    <TextBox Grid.Row="1" Grid.Column="7" HorizontalContentAlignment="Center" Text="{Binding z2}" MinWidth="70" Margin="2" Visibility="{Binding DataContext.AsymItemsVisible, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                    <Button Grid.Row="2" Grid.ColumnSpan="8" Content="Set Margin" FontWeight="Bold" MinWidth="120" HorizontalAlignment="Center" Margin="5" Command="{Binding Path=DataContext.SetMarginCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
                 </Grid>
-                <Button Content="Set Margin" FontWeight="Bold" Width="120" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="5" Command="{Binding SetMarginCommand}"/>
             </StackPanel>
         </Border> 
     </Grid>
