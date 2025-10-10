@@ -1,10 +1,16 @@
-﻿using AutoPlannerOptimizationLoop.Base;
+﻿using AutoPlannerHelpers.Enums;
+using AutoPlannerHelpers.Helpers;
+using AutoPlannerHelpers.Models;
+using AutoPlannerOptimizationLoop.Base;
 using AutoPlannerOptimizationLoop.DataContainers;
+using AutoPlannerOptimizationLoop.Helpers;
+using AutoPlannerOptimizationLoop.Models;
+using AutoPlannerOptimizationLoop.UIHelpers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System;
 using VMS.TPS.Common.Model.API;
-using AutoPlannerHelpers.Helpers;
+using VMS.TPS.Common.Model.Types;
 
 namespace AutoPlannerOptimizationLoop.Core
 {
@@ -73,6 +79,79 @@ namespace AutoPlannerOptimizationLoop.Core
             }
             return false;
         }
-        #endregion
+
+        protected override List<OptimizationConstraintModel> DetermineNewOptimizationObjectives(ExternalPlanSetup plan, List<PlanOptConstraintsDeviationModel> diffPlanOpt, double totalCostOptimizationConstraints, List<OptimizationConstraintModel> optParams)
+        {
+            List<OptimizationConstraintModel> updatedConstraints = base.DetermineNewOptimizationObjectives(plan, diffPlanOpt, totalCostOptimizationConstraints, optParams);
+            if (_data.Prescriptions.Any(x => CalculationHelper.AreEqual(x.CumulativeDoseToTarget, 2000)))
+            {
+                ProvideUIUpdate("TMLI plan is using the 20 Gy template");
+                ProvideUIUpdate("Attempting to update 12 Gy target constraints depending on achieved coverage");
+                //this is the 20 Gy plan template
+                //grab 12 Gy target Id
+                string lowerDoseTargetId = _data.Prescriptions.First(x => CalculationHelper.AreEqual(x.CumulativeDoseToTarget, 1200.0)).TargetId;
+                ProvideUIUpdate($"Lower dose 12 Gy target: {lowerDoseTargetId}");
+
+                if (StructureTuningHelper.DoesStructureExistInSS(lowerDoseTargetId))
+                {
+                    ProvideUIUpdate($"{lowerDoseTargetId} exists in the structure set");
+
+                    Structure lowerDoseTarget = StructureTuningHelper.GetStructureFromId(lowerDoseTargetId);
+                    if (_data.PlanObjectives.Any(x => string.Equals(x.StructureId, lowerDoseTargetId, StringComparison.OrdinalIgnoreCase) && x.ConstraintType == OptimizationObjectiveType.Lower))
+                    {
+
+                        PlanObjectiveModel model = _data.PlanObjectives.First(x => string.Equals(x.StructureId, lowerDoseTargetId, StringComparison.OrdinalIgnoreCase));
+                        ProvideUIUpdate($"Corresponding plan objective found for: {lowerDoseTargetId}");
+                        ProvideUIUpdate($"{model.FriendlyName}");
+
+                        ProvideUIUpdate($"Extracting lower dose objective for: {lowerDoseTargetId}");
+
+                        double doseAtVolumeFromPlan = plan.GetDoseAtVolume(lowerDoseTarget, model.QueryVolume, VolumePresentation.Relative, model.QueryDoseUnits == Units.Percent ? DoseValuePresentation.Relative : DoseValuePresentation.Absolute).Dose;
+                        if (!double.IsNaN(doseAtVolumeFromPlan))
+                        {
+                            ProvideUIUpdate($"Dose at volume for {lowerDoseTargetId}: {doseAtVolumeFromPlan:0.0} cGy");
+
+                            double relativeDiff = model.QueryDose / doseAtVolumeFromPlan;
+                            ProvideUIUpdate($"Calculated relative difference from plan objective: {relativeDiff:0.0}");
+
+                            foreach (OptimizationConstraintModel itr in updatedConstraints.Where(x => string.Equals(x.StructureId, "ts_" + lowerDoseTargetId, StringComparison.OrdinalIgnoreCase)))
+                            {
+                                ProvideUIUpdate($"Rescaling optimization objective: {itr.FriendlyName}");
+                                ProvideUIUpdate($"Old query dose: {itr.QueryDose:0.0} cGy");
+                                itr.QueryDose *= relativeDiff;
+                                ProvideUIUpdate($"New query dose: {itr.QueryDose:0.0} cGy");
+                            }
+                        }
+                    }
+                }
+
+            }
+            return updatedConstraints;
+        }
+
+        protected override (bool, List<OptimizationConstraintModel>) UpdateHeaterCoolerStructures(ExternalPlanSetup plan, bool isFinalOptimization, List<RequestedOptimizationTSStructureModel> requestedTSStructures, bool removeExistingHeaterCoolerStructures = true)
+        {
+            (bool wasKilled, List<OptimizationConstraintModel> updatedConstraints) = base.UpdateHeaterCoolerStructures(plan, isFinalOptimization, requestedTSStructures, removeExistingHeaterCoolerStructures);
+            //return immediately if the process was killed by the user OR if this is the final optimization. The reason for the final optimization is because the optimization continues using the current dose as 
+            //intermediate with the plan normalization applied. If we then try to scale the cooler structures by ~20% with the normalization applied, it will screw up the plan terribly. Only apply this during the normal
+            //optimization loop
+            if (wasKilled || isFinalOptimization) return (wasKilled, updatedConstraints);
+            if (_data.Prescriptions.Any(x => CalculationHelper.AreEqual(x.CumulativeDoseToTarget, 2000)))
+            {
+                ProvideUIUpdate("TMLI plan is using the 20 Gy template");
+                ProvideUIUpdate("Attempting to update TS cooler structures");
+
+                foreach (OptimizationConstraintModel itr in updatedConstraints.Where(x => x.StructureId.ToLower().Contains("cooler")))
+                {
+                    //only operate on cooler structures
+                    ProvideUIUpdate($"Rescaling optimization objective: {itr.FriendlyName}");
+                    ProvideUIUpdate($"Old query dose: {itr.QueryDose:0.0} cGy");
+                    itr.QueryDose *= plan.PlanNormalizationValue / 100.0;
+                    ProvideUIUpdate($"New query dose: {itr.QueryDose:0.0} cGy");
+                }
+            }
+            return (wasKilled, updatedConstraints);
+            #endregion
+        }
     }
 }
