@@ -616,7 +616,7 @@ namespace AutoPlannerHelpers.BaseViewModel
                 if (EclipseContext.GetInstance().VMATPlans.Any(x => string.Equals(x.Id, itr.PlanId)))
                 {
                     ExternalPlanSetup plan = EclipseContext.GetInstance().VMATPlans.First(x => string.Equals(x.Id, itr.PlanId));
-                    OptimizationSetupHelper.AssignOptConstraints(itr.OptimizationConstraints, plan, false, 0.0);
+                    OptimizationSetupHelper.AssignOptConstraints(itr.OptimizationConstraints, plan, true, 0.0);
                     constraintsAssigned = true;
                 }
                 else Logger.GetInstance().LogError($"{itr.PlanId} not found!");

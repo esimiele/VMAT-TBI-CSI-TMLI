@@ -83,13 +83,16 @@ namespace AutoPlannerOptimizationLoop.Core
         protected override List<OptimizationConstraintModel> DetermineNewOptimizationObjectives(ExternalPlanSetup plan, List<PlanOptConstraintsDeviationModel> diffPlanOpt, double totalCostOptimizationConstraints, List<OptimizationConstraintModel> optParams)
         {
             List<OptimizationConstraintModel> updatedConstraints = base.DetermineNewOptimizationObjectives(plan, diffPlanOpt, totalCostOptimizationConstraints, optParams);
-            if (_data.Prescriptions.Any(x => CalculationHelper.AreEqual(x.CumulativeDoseToTarget, 2000)))
+            if (_data.Prescriptions.Any(x => CalculationHelper.AreEqual(x.CumulativeDoseToTarget, 2000)) || updatedConstraints.Any(x => x.ConstraintType == OptimizationObjectiveType.Lower && x.QueryDose >= 2000.0))
             {
                 ProvideUIUpdate("TMLI plan is using the 20 Gy template");
                 ProvideUIUpdate("Attempting to update 12 Gy target constraints depending on achieved coverage");
                 //this is the 20 Gy plan template
                 //grab 12 Gy target Id
-                string lowerDoseTargetId = _data.Prescriptions.First(x => CalculationHelper.AreEqual(x.CumulativeDoseToTarget, 1200.0)).TargetId;
+                string lowerDoseTargetId = string.Empty;
+                if (_data.Prescriptions.Any()) lowerDoseTargetId = _data.Prescriptions.First(x => CalculationHelper.AreEqual(x.CumulativeDoseToTarget, 1200.0)).TargetId;
+                else if (_data.PlanObjectives.Any(x => x.ConstraintType == OptimizationObjectiveType.Lower && CalculationHelper.AreEqual(x.QueryDose, 1200.0))) lowerDoseTargetId = _data.PlanObjectives.First(x => x.ConstraintType == OptimizationObjectiveType.Lower && CalculationHelper.AreEqual(x.QueryDose, 1200.0)).StructureId;
+                
                 ProvideUIUpdate($"Lower dose 12 Gy target: {lowerDoseTargetId}");
 
                 if (StructureTuningHelper.DoesStructureExistInSS(lowerDoseTargetId))
@@ -135,8 +138,13 @@ namespace AutoPlannerOptimizationLoop.Core
             //return immediately if the process was killed by the user OR if this is the final optimization. The reason for the final optimization is because the optimization continues using the current dose as 
             //intermediate with the plan normalization applied. If we then try to scale the cooler structures by ~20% with the normalization applied, it will screw up the plan terribly. Only apply this during the normal
             //optimization loop
-            if (wasKilled || isFinalOptimization) return (wasKilled, updatedConstraints);
-            if (_data.Prescriptions.Any(x => CalculationHelper.AreEqual(x.CumulativeDoseToTarget, 2000)))
+            if (wasKilled) return (wasKilled, updatedConstraints);
+            else if (isFinalOptimization)
+            {
+                ProvideUIUpdate("Final iteration of the optimization loop! Skipping scaling of cooler optimization structures");
+                return (wasKilled, updatedConstraints);
+            }
+            if (_data.Prescriptions.Any(x => CalculationHelper.AreEqual(x.CumulativeDoseToTarget, 2000)) || updatedConstraints.Any(x => x.ConstraintType == OptimizationObjectiveType.Lower && x.QueryDose >= 2000.0))
             {
                 ProvideUIUpdate("TMLI plan is using the 20 Gy template");
                 ProvideUIUpdate("Attempting to update TS cooler structures");
@@ -145,9 +153,9 @@ namespace AutoPlannerOptimizationLoop.Core
                 {
                     //only operate on cooler structures
                     ProvideUIUpdate($"Rescaling optimization objective: {itr.FriendlyName}");
-                    ProvideUIUpdate($"Old query dose: {itr.QueryDose:0.0} cGy");
+                    ProvideUIUpdate($"Old query dose: {itr.QueryDose:0.0} {itr.QueryDoseUnits}");
                     itr.QueryDose *= plan.PlanNormalizationValue / 100.0;
-                    ProvideUIUpdate($"New query dose: {itr.QueryDose:0.0} cGy");
+                    ProvideUIUpdate($"New query dose: {itr.QueryDose:0.0} {itr.QueryDoseUnits}");
                 }
             }
             return (wasKilled, updatedConstraints);

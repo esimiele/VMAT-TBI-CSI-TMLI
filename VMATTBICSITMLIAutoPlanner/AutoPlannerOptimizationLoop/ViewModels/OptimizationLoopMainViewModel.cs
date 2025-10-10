@@ -752,7 +752,7 @@ namespace AutoPlannerOptimizationLoop.ViewModels
                     {
                         ExternalPlanSetup plan = EclipseContext.GetInstance().VMATPlans.First(x => string.Equals(x.Id, itr.PlanId));
                         OptimizationSetupHelper.RemoveOptimizationConstraintsFromPLan(plan);
-                        OptimizationSetupHelper.AssignOptConstraints(itr.OptimizationConstraints.Where(x => x.IsValidConstraint).ToList(), plan, false, 0.0);
+                        OptimizationSetupHelper.AssignOptConstraints(itr.OptimizationConstraints.Where(x => x.IsValidConstraint).ToList(), plan, true, 0.0);
                     }
                 }
 
