@@ -922,7 +922,7 @@ namespace AutoPlannerOptimizationLoop.Base
                     else
                     {
                         ProvideUIUpdate($"{itr.TSStructureId} structure generated successfully. Adding optimization constraints now");
-                        heaterCoolerOptConstraints.AddRange(itr.Constraints);
+                        heaterCoolerOptConstraints.AddRange(itr.Constraints.ConvertAll(x => new OptimizationConstraintModel(x)));
                     }
                 }
                 else ProvideUIUpdate($"All conditions NOT met for: {itr.TSStructureId}! Skipping!");
