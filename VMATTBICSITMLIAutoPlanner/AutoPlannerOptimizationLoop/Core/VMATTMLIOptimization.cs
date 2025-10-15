@@ -156,7 +156,7 @@ namespace AutoPlannerOptimizationLoop.Core
                     ProvideUIUpdate($"Old query dose: {itr.QueryDose:0.0} {itr.QueryDoseUnits}");
                     itr.QueryDose *= plan.PlanNormalizationValue / 100.0;
                     ProvideUIUpdate($"New query dose: {itr.QueryDose:0.0} {itr.QueryDoseUnits}");
-                    if((itr.QueryDoseUnits == Units.Percent && itr.QueryDose < 100.0) || (itr.QueryDoseUnits == Units.cGy && itr.QueryDose <= 2040.0))
+                    if ((itr.QueryDoseUnits == Units.Percent && itr.QueryDose < 100.0) || (itr.QueryDoseUnits == Units.cGy && itr.QueryDose <= 2040.0))
                     {
                         ProvideUIUpdate("Warning cooler structure upper objective adjusted below prescription dose. Truncating to 102% of 20 Gy");
                         itr.QueryDose = 102;
