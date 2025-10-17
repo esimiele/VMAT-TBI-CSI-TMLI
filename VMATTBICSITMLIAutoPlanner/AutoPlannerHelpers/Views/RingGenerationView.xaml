@@ -11,35 +11,91 @@
         <Border Margin="0" BorderThickness="1,0,0,0" BorderBrush="Black">
             <StackPanel HorizontalAlignment="Center" Margin="0">
                 <Label Content="Create Ring Structures" FontSize="20" FontStyle="Normal" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,0,0,0"></Label>
-                <Grid Height="25" Width ="560" HorizontalAlignment="Center" Margin="0,5,0,0">
+                <Grid Height="25" MinWidth ="560" HorizontalAlignment="Stretch" Margin="20,5,20,15">
                     <Button Content="Add Ring" Width="100" HorizontalAlignment="Left" VerticalAlignment="Top" Command="{Binding AddRingCommand}"/>
                     <Button Content="Add Defaults" Width="100" HorizontalAlignment="Center" VerticalAlignment="Top" Command="{Binding AddDefaultRingsCommand}"/>
                     <Button Content="Clear List" Width="100" HorizontalAlignment="Right" VerticalAlignment="Top" Command="{Binding ClearRingListCommand}"/>
                 </Grid>
-                <ScrollViewer Height="360" Width="515" Margin="0,5,0,0" HorizontalAlignment="Center" VerticalAlignment="Bottom">
-                    <ItemsControl x:Name="RingStructuresSP" ItemsSource="{Binding RequestedRingStructures}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="1.2*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <ComboBox Grid.Column="0" HorizontalAlignment="Center" HorizontalContentAlignment="Center" ItemsSource="{Binding DataContext.StructureIdsPostUnion, ElementName=RingStructuresSP}" SelectedItem="{Binding TargetId}" MinWidth="120"/>
-                                    <TextBox Grid.Column="1" HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Text="{Binding MarginFromTargetInCM}" MinWidth="80"/>
-                                    <TextBox Grid.Column="2" HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Text="{Binding RingThicknessInCM}" MinWidth="80"/>
-                                    <TextBox Grid.Column="3" HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Text="{Binding DoseLevel}" MinWidth="80"/>
-                                    <Button Content="Additional Operation" Grid.Column="4" ToolTip="{Binding AdditionalStructureOperation.FriendlyName}" Command="{Binding Path=DataContext.SpecifyAdditionalOperationCommand, ElementName=RingStructuresSP}" CommandParameter="{Binding}" Width="90" Margin="1"/>
-                                    <Button Content="Clear" Grid.Column="5" Command="{Binding Path=DataContext.ClearRowCommand, ElementName=RingStructuresSP}" CommandParameter="{Binding}" Width="90" Margin="1"/>
-                                </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+                <Grid IsSharedSizeScope="True">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0" Margin="15,0,15,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col0"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col1"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col2"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col3"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col4"/>
+                            <ColumnDefinition Width="*"   SharedSizeGroup="col5"/>
+                        </Grid.ColumnDefinitions>
+                        <!-- Simple header cell style (optional) -->
+                        <Grid.Resources>
+                            <Style x:Key="HeaderBorderStyle" TargetType="Border">
+                                <Setter Property="Padding" Value="1"/>
+                            </Style>
+                            <Style x:Key="HeaderTextStyle" TargetType="TextBlock">
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="FontSize" Value="14"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="Margin" Value="1"/>
+                            </Style>
+                        </Grid.Resources>
+
+                        <Border Grid.Column="0" Style="{StaticResource HeaderBorderStyle}">
+                            <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Target Id"/>
+                        </Border>
+
+                        <Border Grid.Column="1" Style="{StaticResource HeaderBorderStyle}">
+                            <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Margin (cm)"/>
+                        </Border>
+
+                        <Border Grid.Column="2" Style="{StaticResource HeaderBorderStyle}">
+                            <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Thickness (cm)"/>
+                        </Border>
+
+                        <Border Grid.Column="3" Style="{StaticResource HeaderBorderStyle}">
+                            <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Dose (cGy)"/>
+                        </Border>
+
+                        <Border Grid.Column="4" Style="{StaticResource HeaderBorderStyle}">
+                        </Border>
+
+                        <!-- Column 7: (no header / flexible filler) -->
+                        <Border Grid.Column="5" Style="{StaticResource HeaderBorderStyle}">
+                            <!-- intentionally blank -->
+                        </Border>
+                    </Grid>
+                    <ScrollViewer Grid.Row="1" MaxHeight="360" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="RingStructuresSP" ItemsSource="{Binding RequestedRingStructures}" Margin="15,0,15,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <!-- Use Auto widths with SharedSizeGroup so each column matches the widest item across all rows -->
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="col0"/>
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="col1"/>
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="col2"/>
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="col3"/>
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="col4"/>
+                                            <!-- Let the last column be flexible so things don’t cram -->
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="col5"/>
+                                        </Grid.ColumnDefinitions>
+                                        <ComboBox Grid.Column="0" HorizontalAlignment="Center" HorizontalContentAlignment="Center" ItemsSource="{Binding DataContext.StructureIdsPostUnion, ElementName=RingStructuresSP}" SelectedItem="{Binding TargetId}" MinWidth="120" Margin="1"/>
+                                        <TextBox Grid.Column="1" HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Text="{Binding MarginFromTargetInCM}" MinWidth="90" Margin="1"/>
+                                        <TextBox Grid.Column="2" HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Text="{Binding RingThicknessInCM}" MinWidth="90" Margin="1"/>
+                                        <TextBox Grid.Column="3" HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Text="{Binding DoseLevel}" MinWidth="90" Margin="1"/>
+                                        <Button Content="Additional Operation" MinWidth="120" Grid.Column="4" ToolTip="{Binding AdditionalStructureOperation.FriendlyName}" Command="{Binding Path=DataContext.SpecifyAdditionalOperationCommand, ElementName=RingStructuresSP}" CommandParameter="{Binding}" Margin="1"/>
+                                        <Button Content="Clear" Grid.Column="5" Command="{Binding Path=DataContext.ClearRowCommand, ElementName=RingStructuresSP}" CommandParameter="{Binding}" Width="75" Margin="1"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+                
             </StackPanel>
         </Border>
     </Grid>

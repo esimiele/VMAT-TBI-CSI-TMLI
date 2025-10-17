@@ -5,49 +5,99 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:AutoPlannerHelpers.Views"
              xmlns:Behaviors="clr-namespace:Microsoft.Xaml.Behaviors;assembly=Microsoft.Xaml.Behaviors"
-             mc:Ignorable="d">
+             mc:Ignorable="d"
+             HorizontalAlignment="Stretch"
+             VerticalAlignment="Stretch">
     <Grid>
         <Border Margin="0" BorderThickness="1,0,0,0" BorderBrush="Black">
-            <StackPanel>
-                <Grid>
+            <StackPanel HorizontalAlignment="Center" Margin="0">
+                <Grid MinWidth="500" Margin="5,5,5,10">
                     <Label Content="Specify CT Image to Export" FontSize="20" FontStyle="Normal" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,0,0,0"/>
                     <Button Content="?" HorizontalAlignment="Right" Width="24" Height="20" Margin="0,0,10,0" Command="{Binding ShowExportCTInfoCommand}"></Button>
                 </Grid>
-                <Grid Margin="25,5,0,0">
-                    <Label Content="Series ID" Margin="15,0,0,0"></Label>
-                    <Label Content="CT ID" Margin="165,0,0,0"></Label>
-                    <Label Content="No of images" Margin="270,0,0,0"></Label>
-                    <Label Content="Creation date" Margin="365,0,0,0"></Label>
-                    <Label Content="Select?" Margin="470,0,0,0"></Label>
+                <Grid HorizontalAlignment="Center" IsSharedSizeScope="True">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0" Margin="15,0,15,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col0"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col1"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col2"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col3"/>
+                            <ColumnDefinition Width="*" SharedSizeGroup="col4"/>
+                        </Grid.ColumnDefinitions>
+                        <!-- Simple header cell style (optional) -->
+                        <Grid.Resources>
+                            <Style x:Key="HeaderBorderStyle" TargetType="Border">
+                                <Setter Property="Padding" Value="1"/>
+                            </Style>
+                            <Style x:Key="HeaderTextStyle" TargetType="TextBlock">
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="FontSize" Value="14"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="Margin" Value="5"/>
+                            </Style>
+                        </Grid.Resources>
+
+                        <Border Grid.Column="0" Style="{StaticResource HeaderBorderStyle}">
+                            <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Series Id"/>
+                        </Border>
+
+                        <Border Grid.Column="1" Style="{StaticResource HeaderBorderStyle}">
+                            <TextBlock Style="{StaticResource HeaderTextStyle}" Text="CT Id"/>
+                        </Border>
+
+                        <Border Grid.Column="2" Style="{StaticResource HeaderBorderStyle}">
+                            <TextBlock Style="{StaticResource HeaderTextStyle}" Text="# of Images"/>
+                        </Border>
+
+                        <Border Grid.Column="3" Style="{StaticResource HeaderBorderStyle}">
+                            <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Creation Date"/>
+                        </Border>
+
+                        <Border Grid.Column="4" Style="{StaticResource HeaderBorderStyle}">
+                            <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Select?"/>
+                        </Border>
+                    </Grid>
+                    <ScrollViewer Grid.Row="1" MaxHeight="350" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="ExportCTSP" ItemsSource="{Binding CTImageList}" Margin="15,0,15,0">
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="ContentPresenter">
+                                    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="col0"/>
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="col1"/>
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="col2"/>
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="col3"/>
+                                            <ColumnDefinition Width="*" SharedSizeGroup="col4"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Grid.Column="0" Text="{Binding SeriesId}" HorizontalContentAlignment="Center" IsReadOnly="True" MinWidth="75" Background="DarkGray" Margin="5"/>
+                                        <TextBox Grid.Column="1" Text="{Binding CTId}" HorizontalContentAlignment="Center" IsReadOnly="True" MinWidth="75" Background="DarkGray" Margin="5"/>
+                                        <TextBox Grid.Column="2" Text="{Binding NumberOfSlices}" HorizontalContentAlignment="Center" IsReadOnly="True" MinWidth="75" Background="DarkGray" Margin="5"/>
+                                        <TextBox Grid.Column="3" Text="{Binding CreationDate}" HorizontalContentAlignment="Center" IsReadOnly="True" MinWidth="75" Background="DarkGray" Margin="5"/>
+                                        <CheckBox Grid.Column="4" HorizontalAlignment="Center" IsChecked="{Binding SelectedForExport}" Margin="5">
+                                            <Behaviors:Interaction.Triggers>
+                                                <Behaviors:EventTrigger EventName="Checked">
+                                                    <Behaviors:InvokeCommandAction Command="{Binding Path=DataContext.CTImageSelectionChangedCommand, ElementName=ExportCTSP}" CommandParameter="{Binding}"/>
+                                                </Behaviors:EventTrigger>
+                                            </Behaviors:Interaction.Triggers>
+                                        </CheckBox>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
                 </Grid>
-                <ScrollViewer Height="334" Width="585" Margin="0,5,0,0" HorizontalAlignment="Center" VerticalAlignment="Bottom">
-                    <ItemsControl x:Name="ExportCTSP" ItemsSource="{Binding CTImageList}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBox Grid.Column="0" Text="{Binding SeriesId}" HorizontalContentAlignment="Center" IsReadOnly="True" Margin="5"/>
-                                    <TextBox Grid.Column="1" Text="{Binding CTId}" HorizontalContentAlignment="Center" IsReadOnly="True" Margin="5"/>
-                                    <TextBox Grid.Column="2" Text="{Binding NumberOfSlices}" HorizontalContentAlignment="Center" IsReadOnly="True" Margin="5"/>
-                                    <TextBox Grid.Column="3" Text="{Binding CreationDate}" HorizontalContentAlignment="Center" IsReadOnly="True" Margin="5"/>
-                                    <CheckBox Grid.Column="4" IsChecked="{Binding SelectedForExport}" Margin="5">
-                                        <Behaviors:Interaction.Triggers>
-                                            <Behaviors:EventTrigger EventName="Checked">
-                                                <Behaviors:InvokeCommandAction Command="{Binding Path=DataContext.CTImageSelectionChangedCommand, ElementName=ExportCTSP}" CommandParameter="{Binding}"/>
-                                            </Behaviors:EventTrigger>
-                                        </Behaviors:Interaction.Triggers>
-                                    </CheckBox>
-                                </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+
+                
                 <Button Content="Export CT Data" FontWeight="Bold" Width="170" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,9,0,0" Command="{Binding ExportCTCommand}"></Button>
             </StackPanel>
         </Border>

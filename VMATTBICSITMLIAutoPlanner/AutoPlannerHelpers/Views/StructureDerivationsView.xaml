@@ -16,7 +16,7 @@
         <Border Margin="0" BorderThickness="1,0,0,0" BorderBrush="Black">
             <StackPanel HorizontalAlignment="Center" Margin="0">
                 <Label Content="{Binding ViewHeaderLabel, FallbackValue=Target Derivations}" FontSize="20" FontStyle="Normal" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,0,0,0"></Label>
-                <Grid Height="25" MinWidth="650" HorizontalAlignment="Stretch" Margin="20,5,20,5">
+                <Grid Height="25" MinWidth="650" HorizontalAlignment="Stretch" Margin="20,5,20,10">
                     <Button Content="Add Derivation" Width="100" HorizontalAlignment="Left" VerticalAlignment="Top" Command="{Binding AddStructureOperationCommand}"/>
                     <Button Content="Add Defaults" Width="100" HorizontalAlignment="Center" VerticalAlignment="Top" Command="{Binding AddDefaultStructureOperationsCommand}"/>
                     <Button Content="Clear List" Width="100" HorizontalAlignment="Right" VerticalAlignment="Top" Command="{Binding RemoveAllStructureOperationsCommand}"/>

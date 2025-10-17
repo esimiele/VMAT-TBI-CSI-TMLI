@@ -18,7 +18,7 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <Label Content="Structure:" Grid.Column="0" HorizontalAlignment="Right"/>
-                    <Label Content="{Binding StructureId, FallbackValue=None}" Grid.Column="1" Background="White" HorizontalContentAlignment="Center" MinWidth="120"/>
+                    <Label Content="{Binding StructureId, FallbackValue=None}" Grid.Column="1" Background="DarkGray" HorizontalContentAlignment="Center" MinWidth="120"/>
                 </Grid>
                 <Grid DataContext="{Binding StructureMargin}" IsSharedSizeScope="True" Margin="5">
                     <Grid.RowDefinitions>

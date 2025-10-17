@@ -13,49 +13,121 @@
     </Window.Resources>
     <Grid>
         <Border Margin="0" BorderThickness="1,0,0,0" BorderBrush="Black">
-            <StackPanel HorizontalAlignment="Center" Margin="0">
-                <Label Content="Additional Structure Operation for TS Ring" HorizontalContentAlignment="Center"></Label>
-                <Grid>
+            <StackPanel HorizontalAlignment="Center" Margin="5">
+                <Grid HorizontalAlignment="Center" Margin="5">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <Label Content="Ring Structure:" Grid.Column="0" HorizontalAlignment="Center"/>
-                    <TextBox Text="{Binding RingId}" Grid.Column="1" HorizontalContentAlignment="Center" Width="120" IsReadOnly="True"/>
+                    <Label Grid.Column="0" FontSize="14" Content="Additional Structure Operation for Ring:" HorizontalAlignment="Right"></Label>
+                    <TextBox Text="{Binding RingId}" Background="DarkGray"  Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center" MinHeight="20" MinWidth="100" IsReadOnly="True"/>
                 </Grid>
-                <Grid DataContext="{Binding AdditionalRingOperation}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBox Grid.Column="0" HorizontalContentAlignment="Center" Text="{Binding StructureA}" IsReadOnly="True" Margin="1"/>
-                    <Button Grid.Column="1" Content="Margin A" HorizontalContentAlignment="Center" Command="{Binding DataContext.ModifyMarginCommand, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}" ToolTip="{Binding MarginA.AxisAlignedMargins}" Margin="1">
-                        <Button.CommandParameter>
-                            <MultiBinding Converter="{StaticResource TupleConverter}">
-                                <Binding Path="StructureA" />
-                                <Binding Path="MarginA" />
-                            </MultiBinding>
-                        </Button.CommandParameter>
-                    </Button>
-                    <ComboBox Grid.Column="2" HorizontalContentAlignment="Center" SelectedItem="{Binding Operation}" ItemsSource="{Binding Source={local:EnumBindingSource {x:Type enum:StructureDerivationOperation}}}" Margin="1"/>
-                    <ComboBox Grid.Column="3" HorizontalContentAlignment="Center" ItemsSource="{Binding Path=DataContext.StructureIds, RelativeSource={RelativeSource AncestorType=Window}}" SelectedItem="{Binding StructureB}" Margin="1"/>
-                    <Button Grid.Column="4" Content="Margin B" HorizontalContentAlignment="Center" Command="{Binding DataContext.ModifyMarginCommand, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}" ToolTip="{Binding MarginB.AxisAlignedMargins}" Margin="1">
-                        <Button.CommandParameter>
-                            <MultiBinding Converter="{StaticResource TupleConverter}">
-                                <Binding Path="StructureB" />
-                                <Binding Path="MarginB" />
-                            </MultiBinding>
-                        </Button.CommandParameter>
-                    </Button>
-                    <TextBox Grid.Column="5" HorizontalContentAlignment="Center" Text="{Binding OutputStructure}" IsReadOnly="True" Margin="1"/>
-                    <CheckBox IsChecked="{Binding IsTemporary}" Grid.Column="6" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,3,0,0"/>
+                <Grid IsSharedSizeScope="True">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0" Margin="15,0,15,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col0"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col1"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col2"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col3"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col4"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col5"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col6"/>
+                            <ColumnDefinition Width="*"   SharedSizeGroup="col7"/>
+                        </Grid.ColumnDefinitions>
+                        <!-- Simple header cell style (optional) -->
+                        <Grid.Resources>
+                            <Style x:Key="HeaderBorderStyle" TargetType="Border">
+                                <Setter Property="Padding" Value="1"/>
+                            </Style>
+                            <Style x:Key="HeaderTextStyle" TargetType="TextBlock">
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="FontSize" Value="14"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                            </Style>
+                        </Grid.Resources>
+
+                        <!-- Column 0: Structure A -->
+                        <Border Grid.Column="0" Style="{StaticResource HeaderBorderStyle}">
+                            <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Structure A"/>
+                        </Border>
+
+                        <!-- Column 1: (no header) -->
+                        <Border Grid.Column="1" Style="{StaticResource HeaderBorderStyle}">
+                            <!-- intentionally blank -->
+                        </Border>
+
+                        <!-- Column 2: Operation -->
+                        <Border Grid.Column="2" Style="{StaticResource HeaderBorderStyle}">
+                            <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Operation"/>
+                        </Border>
+
+                        <!-- Column 3: Structure B -->
+                        <Border Grid.Column="3" Style="{StaticResource HeaderBorderStyle}">
+                            <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Structure B"/>
+                        </Border>
+
+                        <!-- Column 4: (no header) -->
+                        <Border Grid.Column="4" Style="{StaticResource HeaderBorderStyle}">
+                            <!-- intentionally blank -->
+                        </Border>
+
+                        <!-- Column 5: Output Structure -->
+                        <Border Grid.Column="5" Style="{StaticResource HeaderBorderStyle}">
+                            <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Output Structure"/>
+                        </Border>
+
+                        <!-- Column 6: Is Temporary -->
+                        <Border Grid.Column="6" Style="{StaticResource HeaderBorderStyle}">
+                            <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Temp?"/>
+                        </Border>
+
+                        <!-- Column 7: (no header / flexible filler) -->
+                        <Border Grid.Column="7" Style="{StaticResource HeaderBorderStyle}">
+                            <!-- intentionally blank -->
+                        </Border>
+                    </Grid>
+
+                    <Grid Grid.Row="1" DataContext="{Binding AdditionalRingOperation}" Margin="15,0,15,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col0"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col1"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col2"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col3"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col4"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col5"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col6"/>
+                            <ColumnDefinition Width="*"   SharedSizeGroup="col7"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" Background="DarkGray" HorizontalContentAlignment="Center" Text="{Binding StructureA}" IsReadOnly="True" MinWidth="100" Margin="1"/>
+                        <Button Grid.Column="1" Content="Margin A" HorizontalContentAlignment="Center" Command="{Binding DataContext.ModifyMarginCommand, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}" ToolTip="{Binding MarginA.AxisAlignedMargins}" MinWidth="70" Margin="1">
+                            <Button.CommandParameter>
+                                <MultiBinding Converter="{StaticResource TupleConverter}">
+                                    <Binding Path="StructureA" />
+                                    <Binding Path="MarginA" />
+                                </MultiBinding>
+                            </Button.CommandParameter>
+                        </Button>
+                        <ComboBox Grid.Column="2" MinWidth="120"  HorizontalContentAlignment="Center" SelectedItem="{Binding Operation}" ItemsSource="{Binding Source={local:EnumBindingSource {x:Type enum:StructureDerivationOperation}}}" Margin="1"/>
+                        <ComboBox Grid.Column="3" MinWidth="120"  HorizontalContentAlignment="Center" ItemsSource="{Binding Path=DataContext.StructureIds, RelativeSource={RelativeSource AncestorType=Window}}" SelectedItem="{Binding StructureB}" Margin="1"/>
+                        <Button Grid.Column="4" Content="Margin B" HorizontalContentAlignment="Center" Command="{Binding DataContext.ModifyMarginCommand, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}" ToolTip="{Binding MarginB.AxisAlignedMargins}" MinWidth="70"  Margin="1">
+                            <Button.CommandParameter>
+                                <MultiBinding Converter="{StaticResource TupleConverter}">
+                                    <Binding Path="StructureB" />
+                                    <Binding Path="MarginB" />
+                                </MultiBinding>
+                            </Button.CommandParameter>
+                        </Button>
+                        <TextBox Background="DarkGray" Grid.Column="5" MinWidth="120" HorizontalContentAlignment="Center" Text="{Binding OutputStructure}" IsReadOnly="True" Margin="1"/>
+                        <CheckBox IsChecked="{Binding IsTemporary}" Grid.Column="6" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,3,0,0"/>
+                    </Grid>
                 </Grid>
-                <Button Content="Set Structure Operation" FontWeight="Bold" Width="180" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="5" Command="{Binding SetAdditionalRingOperationCommand}"/>
+                
+                <Button Content="Set Structure Operation" FontWeight="Bold" Width="180" HorizontalAlignment="Center" Margin="5,10,5,5" Command="{Binding SetAdditionalRingOperationCommand}"/>
             </StackPanel>
         </Border> 
     </Grid>

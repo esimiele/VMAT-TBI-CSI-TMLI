@@ -4,41 +4,82 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:AutoPlannerHelpers.Views"
-             mc:Ignorable="d">
+             mc:Ignorable="d"
+             HorizontalAlignment="Stretch"
+             VerticalAlignment="Stretch">
     <Grid>
         <Border BorderBrush="Black" BorderThickness="1,0,0,0">
-            <StackPanel HorizontalAlignment="Center">
-                <Grid Width="490" HorizontalAlignment="Center">
-                    <Label Grid.Column="0" Content="Special Optimization Structures" FontSize="20" FontStyle="Normal" HorizontalAlignment="Center" ></Label>
-                    <Button Grid.Column="1" Content="?" Width="20" Height="24" HorizontalAlignment="Right" Command="{Binding DisplayInfoCommand}"/>
+            <StackPanel HorizontalAlignment="Center" MinWidth="500">
+                <Grid Margin="5">
+                    <Label Content="Special Optimization Structures" FontSize="20" HorizontalAlignment="Center" Margin="5"/>
+                    <Button Content="?" Width="20" MaxHeight="24" HorizontalAlignment="Right" Margin="5" Command="{Binding DisplayInfoCommand}"/>
                 </Grid>
-                <Grid Height="25" Width ="500" HorizontalAlignment="Center" Margin="5">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="1.5*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Button Grid.Column="0" Content="Add Defaults" Width="120" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding AddDefaultSpecialOptStructuresCommand}"/>
-                    <Button Grid.Column="2" Content="Clear List" Width="100" HorizontalAlignment="Center" VerticalAlignment="Top" Command="{Binding RemoveAllSpecialOptStructuresCommand}"/>
+                <Grid Margin="5,5,5,10">
+                    <Button Content="Add Defaults" Width="120" HorizontalAlignment="Left" Margin="5" Command="{Binding AddDefaultSpecialOptStructuresCommand}"/>
+                    <Button Content="Clear List" Width="100" HorizontalAlignment="Right" Margin="5" Command="{Binding RemoveAllSpecialOptStructuresCommand}"/>
                 </Grid>
-                <ScrollViewer Height="320" Width="400" Margin="5,5,0,0" HorizontalAlignment="Center" VerticalAlignment="Bottom">
-                    <ItemsControl x:Name="TSStructureSP" ItemsSource="{Binding RequestedSpecialOptimizationStructures}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Label Grid.Column="0" HorizontalAlignment="Center" Content="{Binding DICOMType}"/>
-                                    <TextBlock Grid.Column="1" HorizontalAlignment="Center" Text="{Binding StructureId}" Margin="0,5,0,0"/>
-                                    <Button Content="Clear" Grid.Column="3" Command="{Binding Path=DataContext.ClearRowCommand, ElementName=TSStructureSP}" CommandParameter="{Binding}" Width="90" Margin="1"/>
-                                </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+
+                <Grid HorizontalAlignment="Center" IsSharedSizeScope="True">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0" Margin="15,0,15,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col0"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col1"/>
+                            <ColumnDefinition Width="*"   SharedSizeGroup="col2"/>
+                        </Grid.ColumnDefinitions>
+                        <!-- Simple header cell style (optional) -->
+                        <Grid.Resources>
+                            <Style x:Key="HeaderBorderStyle" TargetType="Border">
+                                <Setter Property="Padding" Value="1"/>
+                            </Style>
+                            <Style x:Key="HeaderTextStyle" TargetType="TextBlock">
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="FontSize" Value="14"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="Margin" Value="15,2,15,2"/>
+                            </Style>
+                        </Grid.Resources>
+
+                        <Border Grid.Column="0" Style="{StaticResource HeaderBorderStyle}">
+                            <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Dicom Type"/>
+                        </Border>
+
+                        <Border Grid.Column="1" Style="{StaticResource HeaderBorderStyle}">
+                            <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Structure Id"/>
+                        </Border>
+
+                        <Border Grid.Column="2" Style="{StaticResource HeaderBorderStyle}">
+                        </Border>
+                    </Grid>
+                    <ScrollViewer Grid.Row="1" MaxHeight="350" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="TSStructureSP" ItemsSource="{Binding RequestedSpecialOptimizationStructures}" Margin="15,0,15,0">
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="ContentPresenter">
+                                    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="col0"/>
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="col1"/>
+                                            <ColumnDefinition Width="*"   SharedSizeGroup="col2"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Label Grid.Column="0" HorizontalAlignment="Center" Content="{Binding DICOMType}" Margin="15,2,15,2"/>
+                                        <TextBlock Grid.Column="1" HorizontalAlignment="Center" Text="{Binding StructureId}" Margin="15,2,15,2"/>
+                                        <Button Content="Clear" Grid.Column="2" Command="{Binding Path=DataContext.ClearRowCommand, ElementName=TSStructureSP}" CommandParameter="{Binding}" Height="20" MinWidth="90" Margin="15,2,15,2"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+                
             </StackPanel>
         </Border>
     </Grid>

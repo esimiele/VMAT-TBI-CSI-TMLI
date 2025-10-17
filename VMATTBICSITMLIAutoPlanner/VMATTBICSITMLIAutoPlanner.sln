@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.33529.622
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36603.0 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoPlannerHelpers", "AutoPlannerHelpers\AutoPlannerHelpers.csproj", "{75860997-C5F3-4D38-A945-F63771FE5625}"
 EndProject
@@ -29,8 +29,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoPlannerOptimizationLoop
 	ProjectSection(ProjectDependencies) = postProject
 		{75860997-C5F3-4D38-A945-F63771FE5625} = {75860997-C5F3-4D38-A945-F63771FE5625}
 	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{E9417E46-1D19-431A-BB8C-5DA43FF325DC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoPlannerHelpersTests", "AutoPlannerHelpersTests\AutoPlannerHelpersTests.csproj", "{0D2B571A-FCDE-4A2C-A8CD-5E7045B03AB7}"
 EndProject

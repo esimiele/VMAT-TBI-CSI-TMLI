@@ -12,7 +12,7 @@
         <Border Margin="0" BorderThickness="1,0,0,0" BorderBrush="Black">
             <StackPanel HorizontalAlignment="Center" Margin="0">
                 <Label Content="Select Targets" FontSize="20" FontStyle="Normal" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-                <Grid Height="25" MinWidth ="300" HorizontalAlignment="Stretch" Margin="20,5,20,5">
+                <Grid Height="25" MinWidth ="300" HorizontalAlignment="Stretch" Margin="20,5,20,10">
                     <Button Content="Add Target" Width="100" Grid.Column="0" VerticalAlignment="Top" HorizontalAlignment="Left" Command="{Binding AddTargetCommand}"/>
                     <Button Content="Add Defaults" Width="120" Grid.Column="1" VerticalAlignment="Top" HorizontalAlignment="Center" Command="{Binding AddDefaultTargetsCommand}"/>
                     <Button Content="Clear List" Width="100" Grid.Column="3"  VerticalAlignment="Top" HorizontalAlignment="Right" Command="{Binding RemoveAllTargetsCommand}"/>

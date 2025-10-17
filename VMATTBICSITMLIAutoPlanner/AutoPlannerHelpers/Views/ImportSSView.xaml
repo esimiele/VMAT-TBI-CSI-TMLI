@@ -6,22 +6,20 @@
              xmlns:local="clr-namespace:AutoPlannerHelpers.Views"
              mc:Ignorable="d">
     <Grid>
-        <Border Margin="0" Height="370" BorderThickness="1,0,0,0" BorderBrush="Black">
-            <Grid>
+        <Border Margin="0" BorderThickness="1,0,0,0" BorderBrush="Black">
+            <Grid HorizontalAlignment="Stretch" MinWidth="500" MaxHeight="370" >
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                <Label Content="Import Auto-Contoured Structure Set" Grid.Row="0" Grid.Column="0" FontSize="20" FontStyle="Normal" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="5"/>
-                <Button Content="?" Grid.Row="0" Grid.Column="1" Width="24" Height="20" VerticalAlignment="top" HorizontalAlignment="Center" Margin="0,15,0,0" Command="{Binding ShowImportSSInfoCommand}"></Button>
+                <Label Content="Import Auto-countours" Grid.Row="0" Grid.Column="0" FontSize="20" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="5"/>
+                <Button Content="?" Grid.Row="0" Grid.Column="1" MinWidth="20" MinHeight="20" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding ShowImportSSInfoCommand}"></Button>
                 <Button Content="Import Structure Set" FontWeight="Bold" Grid.Row="1" Grid.ColumnSpan="2" Width="170" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="5" Command="{Binding ImportSSCommand}"></Button>
-
             </Grid>
-
         </Border>
     </Grid>
 </UserControl>

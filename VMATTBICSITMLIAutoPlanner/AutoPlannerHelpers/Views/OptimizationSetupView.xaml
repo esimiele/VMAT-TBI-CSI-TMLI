@@ -10,7 +10,7 @@
         <Border Margin="0" BorderThickness="1,0,0,0" BorderBrush="Black">
             <StackPanel Name="OPT" HorizontalAlignment="Center" Margin="0">
                 <Label Content="Optimization Parameters" FontSize="20" FontStyle="Normal" HorizontalAlignment="Center" VerticalAlignment="Top"></Label>
-                <Grid Height="25" Width ="560" HorizontalAlignment="Center" Margin="0,5,0,0">
+                <Grid Height="25" Width ="560" HorizontalAlignment="Center" Margin="0,5,0,6">
                     <Button Content="Add Constraint" Width="100" HorizontalAlignment="Left" VerticalAlignment="Top" Command="{Binding AddOptimizationConstraintCommand}"/>
                     <Button Content="Add Defaults" Width="120" HorizontalAlignment="Center" VerticalAlignment="Top" Command="{Binding AddDefaultOptimizationConstraintsCommand}"/>
                     <Button Content="Clear List" Width="100" HorizontalAlignment="Right" VerticalAlignment="Top" Command="{Binding ClearOptimizationConstraintListCommand}"/>

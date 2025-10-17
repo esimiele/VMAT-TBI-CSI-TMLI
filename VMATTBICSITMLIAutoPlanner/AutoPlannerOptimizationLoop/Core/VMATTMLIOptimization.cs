@@ -135,15 +135,8 @@ namespace AutoPlannerOptimizationLoop.Core
         protected override (bool, List<OptimizationConstraintModel>) UpdateHeaterCoolerStructures(ExternalPlanSetup plan, bool isFinalOptimization, List<RequestedOptimizationTSStructureModel> requestedTSStructures, bool removeExistingHeaterCoolerStructures = true)
         {
             (bool wasKilled, List<OptimizationConstraintModel> updatedConstraints) = base.UpdateHeaterCoolerStructures(plan, isFinalOptimization, requestedTSStructures, removeExistingHeaterCoolerStructures);
-            //return immediately if the process was killed by the user OR if this is the final optimization. The reason for the final optimization is because the optimization continues using the current dose as 
-            //intermediate with the plan normalization applied. If we then try to scale the cooler structures by ~20% with the normalization applied, it will screw up the plan terribly. Only apply this during the normal
-            //optimization loop
+            //return immediately if the process was killed by the user
             if (wasKilled) return (wasKilled, updatedConstraints);
-            else if (isFinalOptimization)
-            {
-                ProvideUIUpdate("Final iteration of the optimization loop! Skipping scaling of cooler optimization structures");
-                return (wasKilled, updatedConstraints);
-            }
             if (_data.Prescriptions.Any(x => CalculationHelper.AreEqual(x.CumulativeDoseToTarget, 2000)) || updatedConstraints.Any(x => x.ConstraintType == OptimizationObjectiveType.Lower && x.QueryDose >= 2000.0))
             {
                 ProvideUIUpdate("TMLI plan is using the 20 Gy template");

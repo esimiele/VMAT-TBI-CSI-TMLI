@@ -4,35 +4,70 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:AutoPlannerHelpers.Views"
-             mc:Ignorable="d">
+             mc:Ignorable="d"
+             HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch">
     <Grid>
         <Border Margin="0" BorderThickness="1,0,0,0" BorderBrush="Black">
-            <StackPanel HorizontalAlignment="Center" Margin="0">
-                <Grid Width="580" HorizontalAlignment="Center" Margin="0,0,0,0">
+            <StackPanel HorizontalAlignment="Center" MinWidth="500">
+                <Grid Margin="5">
                     <Label Content="Crop/Contour Overlap With Targets" FontSize="20" FontStyle="Normal" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,0,0,0"></Label>
                     <Button Content="?" Width="20" Height="24" HorizontalAlignment="Right"/>
                 </Grid>
-                <Grid Height="25" Width ="560" HorizontalAlignment="Center" Margin="0,5,0,0">
+                <Grid Margin="5,5,5,10">
                     <Button Content="Add OAR" Width="100" HorizontalAlignment="Left" VerticalAlignment="Top" Command="{Binding AddCropOverlapStructureCommand}"/>
                     <Button Content="Add Defaults" Width="100" HorizontalAlignment="Center" VerticalAlignment="Top" Command="{Binding AddDefaultCropOverlapStructuresCommand}"/>
                     <Button Content="Clear List" Width="100" HorizontalAlignment="Right" VerticalAlignment="Top" Command="{Binding ClearCropOverlapStructureListCommand}"/>
                 </Grid>
-                <ScrollViewer Height="360" Width="585" Margin="0,5,0,0" HorizontalAlignment="Center" VerticalAlignment="Bottom">
-                    <ItemsControl x:Name="CropOverlapStructuresSP" ItemsSource="{Binding CropOverlapStructures}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <ComboBox Grid.Column="0" Width="120" HorizontalContentAlignment="Center" ItemsSource="{Binding Path=DataContext.StructureIdsPostUnion, ElementName=CropOverlapStructuresSP}" SelectedItem="{Binding .}" Margin="1"/>
-                                    <Button Content="Clear" Grid.Column="1" Command="{Binding Path=DataContext.RemoveCropOverlapStructureCommand, ElementName=CropOverlapStructuresSP}" CommandParameter="{Binding}" Width="90" Margin="1"/>
-                                </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+                <Grid HorizontalAlignment="Center" IsSharedSizeScope="True">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0" Margin="15,0,15,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="col0"/>
+                            <ColumnDefinition Width="*"   SharedSizeGroup="col1"/>
+                        </Grid.ColumnDefinitions>
+                        <!-- Simple header cell style (optional) -->
+                        <Grid.Resources>
+                            <Style x:Key="HeaderBorderStyle" TargetType="Border">
+                                <Setter Property="Padding" Value="1"/>
+                            </Style>
+                            <Style x:Key="HeaderTextStyle" TargetType="TextBlock">
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="FontSize" Value="14"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="Margin" Value="15,2,15,2"/>
+                            </Style>
+                        </Grid.Resources>
+
+                        <Border Grid.Column="0" Style="{StaticResource HeaderBorderStyle}">
+                            <TextBlock Style="{StaticResource HeaderTextStyle}" Text="Structure Id"/>
+                        </Border>
+
+                        <Border Grid.Column="2" Style="{StaticResource HeaderBorderStyle}">
+                        </Border>
+                    </Grid>
+
+                    <ScrollViewer Grid.Row="1" MaxHeight="350" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="CropOverlapStructuresSP" ItemsSource="{Binding CropOverlapStructures}" Margin="15,0,15,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="col0"/>
+                                            <ColumnDefinition Width="*"   SharedSizeGroup="col1"/>
+                                        </Grid.ColumnDefinitions>
+                                        <ComboBox Grid.Column="0" MinWidth="120" HorizontalContentAlignment="Center" ItemsSource="{Binding Path=DataContext.StructureIdsPostUnion, ElementName=CropOverlapStructuresSP}" SelectedItem="{Binding .}" Margin="15,2,15,2"/>
+                                        <Button Content="Clear" Grid.Column="1" Command="{Binding Path=DataContext.RemoveCropOverlapStructureCommand, ElementName=CropOverlapStructuresSP}" CommandParameter="{Binding}" MinWidth="90" Margin="15,2,15,2"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
             </StackPanel>
         </Border>
     </Grid>
