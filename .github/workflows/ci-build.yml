@@ -19,6 +19,7 @@ jobs:
 
        # Create a nuget config that excludes private sources
       - name: Create public-only NuGet config
+        working-directory: VMATTBICSITMLIAutoPlanner
         shell: pwsh
         run: |
           @"
@@ -29,7 +30,7 @@ jobs:
               <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
             </packageSources>
           </configuration>
-          "@ | Set-Content -Path "$env:GITHUB_WORKSPACE\nuget.public.config" -Encoding UTF8
+          "@ | Set-Content -Path "nuget.public.config" -Encoding UTF8
 
       - name: Debug list solutions
         shell: pwsh
