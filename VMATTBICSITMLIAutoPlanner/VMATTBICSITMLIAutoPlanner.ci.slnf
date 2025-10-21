@@ -1,0 +1,14 @@
+{
+  "solution": {
+    "path": "VMATTBICSITMLIAutoPlanner/VMATTBICSITMLIAutoPlanner.sln",
+    "projects": [
+      "VMATTBICSITMLIAutoPlanner/AutoPlannerHelpers.csproj",
+      "VMATTBICSITMLIAutoPlanner/AutoPlannerLauncher.csproj",
+      "VMATTBICSITMLIAutoPlanner/AutoPlannerOptimizationLoop.csproj",
+      "VMATTBICSITMLIAutoPlanner/CSIAutoPlanner.csproj",
+      "VMATTBICSITMLIAutoPlanner/ImportListener.csproj",
+      "VMATTBICSITMLIAutoPlanner/TBIAutoPlanner.csproj",
+      "VMATTBICSITMLIAutoPlanner/TMLIAutoPlanner.csproj",
+    ]
+  }
+}

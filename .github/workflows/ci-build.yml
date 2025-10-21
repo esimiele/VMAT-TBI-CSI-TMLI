@@ -13,18 +13,29 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup NuGet
-        uses: NuGet/setup-nuget@v2
-
-      - name: Restore NuGet packages
-        run: nuget restore "VMATTBICSITMLIAutoPlanner/VMATTBICSITMLIAutoPlanner.sln"
-
+        
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      - name: Build (x64 Release)
-        run: msbuild "VMATTBICSITMLIAutoPlanner/VMATTBICSITMLIAutoPlanner.sln" /p:Configuration=Release /p:Platform="x64" /m
+       # Create a nuget config that excludes private sources
+      - name: Create public-only NuGet config
+        shell: pwsh
+        run: |
+          @"
+          <?xml version="1.0" encoding="utf-8"?>
+          <configuration>
+            <packageSources>
+              <clear />
+              <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+            </packageSources>
+          </configuration>
+          "@ | Set-Content -Path "$env:GITHUB_WORKSPACE\nuget.public.config" -Encoding UTF8
+
+      - name: Restore (slnf)
+        run: msbuild "VMATTBICSITMLIAutoPlanner/VMATTBICSITMLIAutoPlanner.ci.slnf" -t:Restore -p:RestoreConfigFile=nuget.public.config
+
+      - name: Build (x64 Release, slnf)
+        run: msbuild "VMATTBICSITMLIAutoPlanner/VMATTBICSITMLIAutoPlanner.ci.slnf" /p:Configuration=Release /p:Platform="x64" /m
 
       - name: Locate build output (bin/VMAT-TBI-CSI-TMLI)
         shell: pwsh
