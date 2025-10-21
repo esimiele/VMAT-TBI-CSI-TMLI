@@ -31,7 +31,7 @@ jobs:
           </configuration>
           "@ | Set-Content -Path "$env:GITHUB_WORKSPACE\nuget.public.config" -Encoding UTF8
 
-      - name: Debug: list solutions
+      - name: Debug list solutions
         shell: pwsh
         run: |
           Write-Host "Workspace: $env:GITHUB_WORKSPACE"
