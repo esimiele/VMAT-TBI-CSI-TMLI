@@ -39,10 +39,12 @@ jobs:
           Get-ChildItem $env:GITHUB_WORKSPACE -Recurse -Filter *.slnf | Select-Object FullName
 
       - name: Restore (slnf)
-        run: msbuild "VMATTBICSITMLIAutoPlanner/VMATTBICSITMLIAutoPlanner.ci.slnf" -t:Restore -p:RestoreConfigFile=nuget.public.config
+        working-directory: VMATTBICSITMLIAutoPlanner
+        run: msbuild "VMATTBICSITMLIAutoPlanner.ci.slnf" -t:Restore -p:RestoreConfigFile=nuget.public.config
 
       - name: Build (x64 Release, slnf)
-        run: msbuild "VMATTBICSITMLIAutoPlanner/VMATTBICSITMLIAutoPlanner.ci.slnf" /p:Configuration=Release /p:Platform="x64" /m
+        working-directory: VMATTBICSITMLIAutoPlanner
+        run: msbuild "VMATTBICSITMLIAutoPlanner.ci.slnf" /p:Configuration=Release /p:Platform="x64" /m
 
       - name: Locate build output (bin/VMAT-TBI-CSI-TMLI)
         shell: pwsh

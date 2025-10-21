@@ -8,7 +8,7 @@
       "CSIAutoPlanner/CSIAutoPlanner.csproj",
       "ImportListener/ImportListener.csproj",
       "TBIAutoPlanner/TBIAutoPlanner.csproj",
-      "TMLIAutoPlanner/TMLIAutoPlanner.csproj",
+      "TMLIAutoPlanner/TMLIAutoPlanner.csproj"
     ]
   }
 }
