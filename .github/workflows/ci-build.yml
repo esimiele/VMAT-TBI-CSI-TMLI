@@ -41,7 +41,7 @@ jobs:
 
       - name: Restore (slnf)
         working-directory: VMATTBICSITMLIAutoPlanner
-        run: msbuild "VMATTBICSITMLIAutoPlanner.ci.slnf" -t:Restore -p:RestoreConfigFile=nuget.public.config
+        run: msbuild "VMATTBICSITMLIAutoPlanner.ci.slnf" -t:Restore -p:RestoreConfigFile=nuget.public.config -p:Configuration=Release -p:Platform=x64
 
       - name: Build (x64 Release, slnf)
         working-directory: VMATTBICSITMLIAutoPlanner
