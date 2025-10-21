@@ -31,6 +31,13 @@ jobs:
           </configuration>
           "@ | Set-Content -Path "$env:GITHUB_WORKSPACE\nuget.public.config" -Encoding UTF8
 
+      - name: Debug: list solutions
+        shell: pwsh
+        run: |
+          Write-Host "Workspace: $env:GITHUB_WORKSPACE"
+          Get-ChildItem $env:GITHUB_WORKSPACE -Recurse -Filter *.sln | Select-Object FullName
+          Get-ChildItem $env:GITHUB_WORKSPACE -Recurse -Filter *.slnf | Select-Object FullName
+
       - name: Restore (slnf)
         run: msbuild "VMATTBICSITMLIAutoPlanner/VMATTBICSITMLIAutoPlanner.ci.slnf" -t:Restore -p:RestoreConfigFile=nuget.public.config
 
