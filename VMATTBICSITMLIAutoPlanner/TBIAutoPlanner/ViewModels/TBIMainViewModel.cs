@@ -234,7 +234,7 @@ namespace TBIAutoPlanner.ViewModels
             EclipseContext.GetInstance().Patient.BeginModifications();
             _planPrep = new PreparePlansForTreatment_TBI(removeFlash);
             bool result = _planPrep.Execute();
-            Logger.GetInstance().AppendLogOutput("Plan preparation:", _planPrep.GetLogOutput());
+            Logger.GetInstance().AppendLogOutput("Plan preparation:", _planPrep.LogOutput);
             if (result) return true;
             return false;
         }
@@ -243,7 +243,7 @@ namespace TBIAutoPlanner.ViewModels
         {
             _planPrep.RecalculateDoseOnly = true;
             bool result = _planPrep.Execute();
-            Logger.GetInstance().AppendLogOutput("Plan prep dose recalculation:", _planPrep.GetLogOutput());
+            Logger.GetInstance().AppendLogOutput("Plan prep dose recalculation:", _planPrep.LogOutput);
             if (result) return true;
             return false;
         }

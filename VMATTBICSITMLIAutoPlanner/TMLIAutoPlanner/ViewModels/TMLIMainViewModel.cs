@@ -109,7 +109,7 @@ namespace TMLIAutoPlanner.ViewModels
                                                           PlanType.VMAT_TMLI,
                                                           TMLIAutoPlannerSettings.CloseProgressWindowOnFinish);
             bool result = imageExport.Execute();
-            Logger.GetInstance().AppendLogOutput("Export CT data:", imageExport.GetLogOutput());
+            Logger.GetInstance().AppendLogOutput("Export CT data:", imageExport.LogOutput);
             Logger.GetInstance().OpType = ScriptOperationType.ExportCT;
             if (result) return;
             Application.Current.MainWindow.Close();
@@ -234,7 +234,7 @@ namespace TMLIAutoPlanner.ViewModels
             EclipseContext.GetInstance().Patient.BeginModifications();
             _planPrep = new PreparePlansForTreatment_TMLI();
             bool result = _planPrep.Execute();
-            Logger.GetInstance().AppendLogOutput("Plan preparation:", _planPrep.GetLogOutput());
+            Logger.GetInstance().AppendLogOutput("Plan preparation:", _planPrep.LogOutput);
             if (result) return true;
             return false;
         }
@@ -243,7 +243,7 @@ namespace TMLIAutoPlanner.ViewModels
         {
             _planPrep.RecalculateDoseOnly = true;
             bool result = _planPrep.Execute();
-            Logger.GetInstance().AppendLogOutput("Plan prep dose recalculation:", _planPrep.GetLogOutput());
+            Logger.GetInstance().AppendLogOutput("Plan prep dose recalculation:", _planPrep.LogOutput);
             if (result) return true;
             return false;
         }

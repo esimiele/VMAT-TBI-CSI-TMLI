@@ -3,7 +3,7 @@
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
     <ProjectGuid>{FE053833-E174-49C0-B875-2DD1852E63D2}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>CSIAutoPlanner</RootNamespace>
@@ -26,33 +26,13 @@
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <OutputPath>..\..\bin\VMAT-TXI-CSI\</OutputPath>
+    <OutputPath>..\..\bin\VMAT-TBI-CSI-TMLI\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x64</PlatformTarget>
     <LangVersion>preview</LangVersion>
     <ErrorReport>prompt</ErrorReport>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug-v16|x64'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\..\bin\VMAT-TXI-CSI\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug-v15|x64'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\..\bin\VMAT-TXI-CSI\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <LangVersion>preview</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -70,22 +50,16 @@
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
     <Reference Include="VMS.TPS.Common.Model.API">
-      <HintPath>..\..\..\VMS_TPS_resources\15.6\VMS.TPS.Common.Model.API.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\Varian\RTM\15.6\esapi\API\VMS.TPS.Common.Model.API.dll</HintPath>
+      <HintPath>..\Resources\15.6\VMS.TPS.Common.Model.API.dll</HintPath>
     </Reference>
     <Reference Include="VMS.TPS.Common.Model.Types">
-      <HintPath>..\..\..\VMS_TPS_resources\15.6\VMS.TPS.Common.Model.Types.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\Varian\RTM\15.6\esapi\API\VMS.TPS.Common.Model.Types.dll</HintPath>
+      <HintPath>..\Resources\15.6\VMS.TPS.Common.Model.Types.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(Configuration)' == 'Debug-v15'">
-    <Reference Include="VMS.TPS.Common.Model.API">
-      <HintPath>..\..\..\VMS_TPS_resources\15.6\VMS.TPS.Common.Model.API.dll</HintPath>
-    </Reference>
-    <Reference Include="VMS.TPS.Common.Model.Types">
-      <HintPath>..\..\..\VMS_TPS_resources\15.6\VMS.TPS.Common.Model.Types.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">

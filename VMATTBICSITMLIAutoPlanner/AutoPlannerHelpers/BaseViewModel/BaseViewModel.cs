@@ -488,7 +488,7 @@ namespace AutoPlannerHelpers.BaseViewModel
             _planIsocenters = PlanIsocenters;
             GeneratePlansAndPlaceBeamsBase placeBeams = GetBeamPlacementClassInstanceForPlanType(linac, energy, contourOverlap, overlapMargin, PlanIsocenters);
             bool failed = placeBeams.Execute();
-            Logger.GetInstance().AppendLogOutput("Generate plans and place beams output:", placeBeams.GetLogOutput());
+            Logger.GetInstance().AppendLogOutput("Generate plans and place beams output:", placeBeams.LogOutput);
             if (failed) return;
             if (placeBeams.VMATPlans.Any())
             {

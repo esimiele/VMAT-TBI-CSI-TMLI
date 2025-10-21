@@ -84,7 +84,7 @@ namespace TBIAutoPlanner.Core
         /// </summary>
         /// <returns></returns>
         [HandleProcessCorruptedStateExceptions]
-        public override bool Run()
+        protected override bool Run()
         {
             try
             {
@@ -450,7 +450,7 @@ namespace TBIAutoPlanner.Core
                 }
                 isoCount++;
             }
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
 
@@ -507,7 +507,7 @@ namespace TBIAutoPlanner.Core
             ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Added PA beam to iso: {planIso.Isocenters.First().IsocenterId}");
 
 
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
 

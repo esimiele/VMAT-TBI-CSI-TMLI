@@ -67,7 +67,7 @@ namespace CSIAutoPlanner.Core
         /// <returns></returns>
         //to handle system access exception violation
         [HandleProcessCorruptedStateExceptions]
-        public override bool Run()
+        protected override bool Run()
         {
             try
             {
@@ -349,7 +349,7 @@ namespace CSIAutoPlanner.Core
 
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Finished retrieving isocenters for plan: {itr.PlanId}");
             }
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return allIsocenters;
         }
 
@@ -523,7 +523,7 @@ namespace CSIAutoPlanner.Core
                 }
                 isoCount++;
             }
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
 

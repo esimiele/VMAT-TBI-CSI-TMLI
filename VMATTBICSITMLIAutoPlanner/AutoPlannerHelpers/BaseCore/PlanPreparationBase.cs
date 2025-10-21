@@ -1,5 +1,5 @@
 ﻿using AutoPlannerHelpers.Models;
-using SimpleProgressWindow;
+using AutoPlannerHelpers.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +9,7 @@ using VMS.TPS.Common.Model.Types;
 
 namespace AutoPlannerHelpers.BaseCore
 {
-    public class PlanPreparationBase : SimpleMTbase
+    public class PlanPreparationBase : SimpleProgressWindowViewModel
     {
         protected ExternalPlanSetup VMATPlan = null;
         protected int numVMATIsos = 0;

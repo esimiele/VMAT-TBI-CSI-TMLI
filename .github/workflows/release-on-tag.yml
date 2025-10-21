@@ -1,0 +1,88 @@
+name: Release on Tag (Windows)
+
+on:
+  push:
+    tags:
+      - 'v*'   # e.g., v1.2.3
+      
+permissions:
+  contents: write   # <-- allow creating releases & uploading assets
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # release notes & changelog generation are better with history
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
+
+      - name: Restore NuGet packages
+        run: nuget restore "VMATTBICSITMLIAutoPlanner/VMATTBICSITMLIAutoPlanner.sln"
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      # If you ever want to FORCE the out dir from CI, uncomment OutDir:
+      # /p:OutDir="${{ github.workspace }}\bin\VMAT-TBI-CSI-TMLI\"
+      - name: Build (x64 Release)
+        run: msbuild "VMATTBICSITMLIAutoPlanner/VMATTBICSITMLIAutoPlanner.sln" /p:Configuration=Release /p:Platform="x64" /m
+
+      - name: Package compiled app (bin/VMAT-TBI-CSI-TMLI)
+        shell: pwsh
+        run: |
+          $binRoot = Join-Path $env:GITHUB_WORKSPACE "bin\VMAT-TBI-CSI-TMLI"
+          if (-not (Test-Path $binRoot)) {
+            throw "Expected build output folder not found: $binRoot"
+          }
+
+          # Find the main exe (ignore test hosts, etc.)
+          $exe = Get-ChildItem -Path $binRoot -Recurse -File -Include *.exe |
+            Where-Object { $_.Name -notmatch 'vstest|testhost|vshost' } |
+            Select-Object -First 1
+
+          if (-not $exe) {
+            throw "No application .exe found under $binRoot"
+          }
+
+          $version = "${{ github.ref_name }}"  # e.g. v1.2.3
+          # Step up one level from bin\VMATTBICSITMLIAutoPlanner
+          $appDir   = $exe.DirectoryName
+          $parentDir = Split-Path $appDir -Parent   # this is bin\
+          $zipPath = Join-Path $env:RUNNER_TEMP ("VMATTBICSITMLIAutoPlanner-" + $version.Replace('/','_') + ".zip")
+
+          # Grab everything under bin\ (so VMAT-TBI-CSI-TMLI\ plus any sibling files like your extra file)
+          $paths = @("$parentDir\*")
+
+          # Optionally still add Resources
+          $repoResources = Join-Path $env:GITHUB_WORKSPACE "Resources"
+          if (Test-Path $repoResources) { $paths += "$repoResources\**\*" }
+
+          # (Optional) include a version.txt inside the zip
+          $verFile = Join-Path $appDir "version.txt"
+          "@($version)`nCommit: $env:GITHUB_SHA" | Out-File -FilePath $verFile -Encoding utf8
+
+          Compress-Archive -Path $paths -DestinationPath $zipPath -Force
+
+          # Generate SHA256
+          $sha = (Get-FileHash -Algorithm SHA256 $zipPath).Hash
+          $sumFile = Join-Path $env:RUNNER_TEMP "SHA256SUMS.txt"
+          "$sha  $(Split-Path $zipPath -Leaf)" | Out-File -FilePath $sumFile -Encoding ascii
+
+          "ZIP=$zipPath"      | Out-File -FilePath $env:GITHUB_ENV -Append
+          "SHA256=$sumFile"   | Out-File -FilePath $env:GITHUB_ENV -Append
+          Write-Host "Packaged binary zip: $zipPath"
+          Write-Host "SHA256 written to:   $sumFile"
+
+      - name: Create GitHub Release and upload assets
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: false
+          generate_release_notes: true
+          files: |
+            ${{ env.ZIP }}
+            ${{ env.SHA256 }}

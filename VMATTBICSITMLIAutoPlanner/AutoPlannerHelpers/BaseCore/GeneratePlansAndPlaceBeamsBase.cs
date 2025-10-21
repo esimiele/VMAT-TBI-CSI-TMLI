@@ -6,13 +6,13 @@ using System;
 using VMS.TPS.Common.Model.API;
 using VMS.TPS.Common.Model.Types;
 using System.Linq;
-using SimpleProgressWindow;
 using AutoPlannerHelpers.Prompts;
 using AutoPlannerHelpers.Context;
+using AutoPlannerHelpers.ViewModels;
 
 namespace AutoPlannerHelpers.BaseCore
 {
-    public class GeneratePlansAndPlaceBeamsBase : SimpleMTbase
+    public class GeneratePlansAndPlaceBeamsBase : SimpleProgressWindowViewModel
     {
         //get methods
         public List<ExternalPlanSetup> VMATPlans { get; protected set; } = new List<ExternalPlanSetup>();
@@ -59,7 +59,7 @@ namespace AutoPlannerHelpers.BaseCore
                 return true;
             }
             else ProvideUIUpdate(100, $"No plans currently exist in course {courseId}!");
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
 
@@ -112,7 +112,7 @@ namespace AutoPlannerHelpers.BaseCore
                 return true;
             }
             ProvideUIUpdate(100, $"Course {courseId} retrieved!");
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
 
@@ -190,7 +190,7 @@ namespace AutoPlannerHelpers.BaseCore
                 ProvideUIUpdate(100 * ++counter / calcItems, $"Added plan {itr.PlanId} to stack!");
             }
             ProvideUIUpdate(100, "Finished creating and initializing plans!");
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
 
@@ -354,7 +354,7 @@ namespace AutoPlannerHelpers.BaseCore
                     count++;
                 }
             }
-            ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+            ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             return false;
         }
 

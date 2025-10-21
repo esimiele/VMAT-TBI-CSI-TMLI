@@ -28,7 +28,7 @@ namespace TMLIAutoPlanner.Core
         /// Run control
         /// </summary>
         /// <returns></returns>
-        public override bool Run()
+        protected override bool Run()
         {
             UpdateUILabel("Running:");
             if (_recalculateDoseOnly)
@@ -36,7 +36,7 @@ namespace TMLIAutoPlanner.Core
                 if (DoseRecalcNeeded && ReCalculateDose()) return true;
                 UpdateUILabel("Finished!");
                 ProvideUIUpdate(100, "Finished calculating dose!");
-                ProvideUIUpdate($"Run time: {GetElapsedTime()} (mm:ss)");
+                ProvideUIUpdate($"Run time: {ElapsedRunTime} (mm:ss)");
             }
             else
             {
@@ -45,7 +45,7 @@ namespace TMLIAutoPlanner.Core
                 if (TMLIAutoPlannerSettings.AutoDoseRecalculationDuringPlanPrep && DoseRecalcNeeded && ReCalculateDose()) return true;
                 UpdateUILabel("Finished!");
                 ProvideUIUpdate(100, "Finished separating plans!");
-                ProvideUIUpdate($"Run time: {GetElapsedTime()} (mm:ss)");
+                ProvideUIUpdate($"Run time: {ElapsedRunTime} (mm:ss)");
             }
             return false;
         }

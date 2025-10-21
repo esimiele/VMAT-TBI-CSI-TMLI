@@ -3,7 +3,7 @@
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
     <ProjectGuid>{75860997-C5F3-4D38-A945-F63771FE5625}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -27,7 +27,7 @@
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <OutputPath>..\..\bin\VMAT-TXI-CSI\</OutputPath>
+    <OutputPath>..\..\bin\VMAT-TBI-CSI-TMLI\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
@@ -35,43 +35,16 @@
     <LangVersion>preview</LangVersion>
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug-v16|x64'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\..\bin\VMAT-TXI-CSI\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-    <LangVersion>preview</LangVersion>
-    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug-v15|x64'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\..\bin\VMAT-TXI-CSI\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <LangVersion>preview</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
-  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="PresentationCore">
-      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\PresentationCore.dll</HintPath>
-    </Reference>
-    <Reference Include="PresentationFramework">
-      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\PresentationFramework.dll</HintPath>
-    </Reference>
+    <Reference Include="PresentationCore"/>
+    <Reference Include="PresentationFramework"/>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xaml">
-      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Xaml.dll</HintPath>
-    </Reference>
+    <Reference Include="System.Xaml"/>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -79,22 +52,14 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="VMS.TPS.Common.Model.API">
-      <HintPath>..\..\..\VMS_TPS_resources\15.6\VMS.TPS.Common.Model.API.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\Varian\RTM\15.6\esapi\API\VMS.TPS.Common.Model.API.dll</HintPath>
+      <HintPath>..\Resources\15.6\VMS.TPS.Common.Model.API.dll</HintPath>
     </Reference>
     <Reference Include="VMS.TPS.Common.Model.Types">
-      <HintPath>..\..\..\VMS_TPS_resources\15.6\VMS.TPS.Common.Model.Types.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\Varian\RTM\15.6\esapi\API\VMS.TPS.Common.Model.Types.dll</HintPath>
+      <HintPath>..\Resources\15.6\VMS.TPS.Common.Model.Types.dll</HintPath>
     </Reference>
-    <Reference Include="WindowsBase">
-      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\WindowsBase.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup Condition="'$(Configuration)' == 'Debug-v15'">
-    <Reference Include="VMS.TPS.Common.Model.API">
-      <HintPath>..\..\..\VMS_TPS_resources\15.6\VMS.TPS.Common.Model.API.dll</HintPath>
-    </Reference>
-    <Reference Include="VMS.TPS.Common.Model.Types">
-      <HintPath>..\..\..\VMS_TPS_resources\15.6\VMS.TPS.Common.Model.Types.dll</HintPath>
-    </Reference>
+    <Reference Include="WindowsBase"/>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseCore\GeneratePlansAndPlaceBeamsBase.cs" />
@@ -371,9 +336,6 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf">
       <Version>1.1.135</Version>
-    </PackageReference>
-    <PackageReference Include="SimpleProgressWindow">
-      <Version>1.2.8594.18064</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

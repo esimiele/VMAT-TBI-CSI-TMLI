@@ -1,0 +1,72 @@
+name: CI - Build (Windows)
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
+
+      - name: Restore NuGet packages
+        run: nuget restore "VMATTBICSITMLIAutoPlanner/VMATTBICSITMLIAutoPlanner.sln"
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build (x64 Release)
+        run: msbuild "VMATTBICSITMLIAutoPlanner/VMATTBICSITMLIAutoPlanner.sln" /p:Configuration=Release /p:Platform="x64" /m
+
+      - name: Locate build output (bin/VMAT-TBI-CSI-TMLI)
+        shell: pwsh
+        run: |
+          $binRoot = Join-Path $env:GITHUB_WORKSPACE "bin\VMAT-TBI-CSI-TMLI"
+          if (-not (Test-Path $binRoot)) {
+            throw "Expected build output folder not found: $binRoot"
+          }
+
+          # Pick your app exe (ignore test hosts, vshost, etc.)
+          $exe = Get-ChildItem -Path $binRoot -Recurse -File -Include *.exe |
+            Where-Object { $_.Name -notmatch 'vstest|testhost|vshost' } |
+            Select-Object -First 1
+
+          if (-not $exe) {
+            throw "No application .exe found under $binRoot"
+          }
+
+          "APP_EXE=$($exe.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "APP_DIR=$($exe.DirectoryName)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Write-Host "Found EXE: $($exe.FullName)"
+
+      - name: Package artifact
+        shell: pwsh
+        run: |
+          $pkg = Join-Path $env:RUNNER_TEMP "VMATTBICSITMLIAutoPlanner_build.zip"
+
+          # Include everything next to the EXE (DLLs, configs, etc.)
+          $paths = @("$env:APP_DIR\*")
+
+          # If you keep runtime assets in a repo-level Resources folder, include them too
+          $repoResources = Join-Path $env:GITHUB_WORKSPACE "Resources"
+          if (Test-Path $repoResources) {
+            $paths += "$repoResources\**\*"
+          }
+
+          Compress-Archive -Path $paths -DestinationPath $pkg -Force
+          "PKG=$pkg" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Write-Host "Packaged: $pkg"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VMATTBICSITMLIAutoPlanner-build
+          path: ${{ env.PKG }}

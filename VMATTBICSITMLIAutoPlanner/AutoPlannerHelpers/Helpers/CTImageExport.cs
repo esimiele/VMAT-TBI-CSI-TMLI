@@ -1,6 +1,5 @@
 ﻿using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.Models;
-using SimpleProgressWindow;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -14,10 +13,11 @@ using EvilDICOM.Core.Helpers;
 using AutoPlannerHelpers.Helpers;
 using EvilDICOM.Network.Enums;
 using System.Drawing.Imaging;
+using AutoPlannerHelpers.ViewModels;
 
 namespace AutoPlannerHelpers.Helpers
 {
-    public class CTImageExport : SimpleMTbase
+    public class CTImageExport : SimpleProgressWindowViewModel
     {
         //data members
         private VMS.TPS.Common.Model.API.Image _image;
@@ -49,7 +49,7 @@ namespace AutoPlannerHelpers.Helpers
         /// Run control
         /// </summary>
         /// <returns></returns>
-        public override bool Run()
+        protected override bool Run()
         {
             try
             {
@@ -70,7 +70,7 @@ namespace AutoPlannerHelpers.Helpers
                 }
                 UpdateUILabel("Finished:");
                 ProvideUIUpdate($"{_image.Id} has been exported successfully!");
-                ProvideUIUpdate($"Elapsed time: {GetElapsedTime()}");
+                ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
             }
             catch (Exception e)
             {
