@@ -15,22 +15,41 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # release notes & changelog generation are better with history
-
-      - name: Setup NuGet
-        uses: NuGet/setup-nuget@v2
-
-      - name: Restore NuGet packages
-        run: nuget restore "VMATTBICSITMLIAutoPlanner/VMATTBICSITMLIAutoPlanner.sln"
-
+        
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
+       # Create a nuget config that excludes private sources
+      - name: Create public-only NuGet config
+        working-directory: VMATTBICSITMLIAutoPlanner
+        shell: pwsh
+        run: |
+          @"
+          <?xml version="1.0" encoding="utf-8"?>
+          <configuration>
+            <packageSources>
+              <clear />
+              <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+            </packageSources>
+          </configuration>
+          "@ | Set-Content -Path "nuget.public.config" -Encoding UTF8
+
+      - name: Debug list solutions
+        shell: pwsh
+        run: |
+          Write-Host "Workspace: $env:GITHUB_WORKSPACE"
+          Get-ChildItem $env:GITHUB_WORKSPACE -Recurse -Filter *.sln | Select-Object FullName
+          Get-ChildItem $env:GITHUB_WORKSPACE -Recurse -Filter *.slnf | Select-Object FullName
+
       # If you ever want to FORCE the out dir from CI, uncomment OutDir:
       # /p:OutDir="${{ github.workspace }}\bin\VMAT-TBI-CSI-TMLI\"
-      - name: Build (x64 Release)
-        run: msbuild "VMATTBICSITMLIAutoPlanner/VMATTBICSITMLIAutoPlanner.sln" /p:Configuration=Release /p:Platform="x64" /m
+      - name: Restore (slnf)
+        working-directory: VMATTBICSITMLIAutoPlanner
+        run: msbuild "VMATTBICSITMLIAutoPlanner.ci.slnf" -t:Restore -p:RestoreConfigFile=nuget.public.config -p:Configuration=Release -p:Platform=x64
+
+      - name: Build (x64 Release, slnf)
+        working-directory: VMATTBICSITMLIAutoPlanner
+        run: msbuild "VMATTBICSITMLIAutoPlanner.ci.slnf" /p:Configuration=Release /p:Platform="x64" /m
 
       - name: Package compiled app (bin/VMAT-TBI-CSI-TMLI)
         shell: pwsh
@@ -50,7 +69,7 @@ jobs:
           }
 
           $version = "${{ github.ref_name }}"  # e.g. v1.2.3
-          # Step up one level from bin\VMATTBICSITMLIAutoPlanner
+          # Step up one level from bin\VMAT-TBI-CSI-TMLI
           $appDir   = $exe.DirectoryName
           $parentDir = Split-Path $appDir -Parent   # this is bin\
           $zipPath = Join-Path $env:RUNNER_TEMP ("VMATTBICSITMLIAutoPlanner-" + $version.Replace('/','_') + ".zip")
