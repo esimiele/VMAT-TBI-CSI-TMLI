@@ -339,7 +339,11 @@ namespace AutoPlannerHelpers.BaseViewModel
             //grab the log output regardless if it passes or fails
             Logger.GetInstance().AppendLogOutput("Preliminary target generation output:", generateTargets.LogOutput);
             Logger.GetInstance().OpType = ScriptOperationType.GeneratePrelimTargets;
-            if (result) return;
+            if (result)
+            {
+                if(!string.IsNullOrEmpty(generateTargets.ErrorStackTrace)) Logger.GetInstance().LogError(generateTargets.ErrorStackTrace);
+                return;
+            }
             Logger.GetInstance().AddedPrelimTargetsStructures = generateTargets.AddedTargetstructures;
             TargetStructureDerivationsBackground = Brushes.ForestGreen;
             StructureIdsPostUnion = EclipseContext.GetInstance().StructureSet.Structures.Select(x => x.Id).ToList();
@@ -452,7 +456,11 @@ namespace AutoPlannerHelpers.BaseViewModel
             EclipseContext.GetInstance().Patient.BeginModifications();
             bool failed = generateTS.Execute();
             Logger.GetInstance().AppendLogOutput("TS Generation and manipulation output:", generateTS.LogOutput);
-            if (failed) return;
+            if(failed)
+            {
+                if (!string.IsNullOrEmpty(generateTS.StrackTraceError)) Logger.GetInstance().LogError(generateTS.StrackTraceError);
+                return;
+            }
 
             _planIsocenters = generateTS.PlanIsocentersList;
 
@@ -489,7 +497,11 @@ namespace AutoPlannerHelpers.BaseViewModel
             GeneratePlansAndPlaceBeamsBase placeBeams = GetBeamPlacementClassInstanceForPlanType(linac, energy, contourOverlap, overlapMargin, PlanIsocenters);
             bool failed = placeBeams.Execute();
             Logger.GetInstance().AppendLogOutput("Generate plans and place beams output:", placeBeams.LogOutput);
-            if (failed) return;
+            if (failed)
+            {
+                if (!string.IsNullOrEmpty(placeBeams.StackTraceError)) Logger.GetInstance().LogError(placeBeams.StackTraceError);
+                return;
+            }
             if (placeBeams.VMATPlans.Any())
             {
                 EclipseContext.GetInstance().VMATPlans = placeBeams.VMATPlans;

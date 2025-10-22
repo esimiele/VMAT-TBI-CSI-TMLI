@@ -22,72 +22,6 @@ namespace TMLIAutoPlanner.Core
         }
 
         #region Target Creation
-        /// <summary>
-        /// Contour the preliminary targets according to the standard practice rules for ctv_brain, ptv_brain, ctv_spine, ptv_spine, and ptv_csi
-        /// </summary>
-        /// <returns></returns>
-        //protected override bool DeriveTargetStructures()
-        //{
-        //    if (StructureTuningHelper.UnionLRStructures(PUUD)) return true;
-        //    UpdateUILabel("Contouring targets now:");
-        //    int counter = 0;
-        //    int calcItems = _targetsToDerive.Count + 2;
-        //    foreach(StructureOperationModel itr in _targetsToDerive)
-        //    {
-        //        if (itr.IsValidOperation)
-        //        {
-        //            ProvideUIUpdate(100 * ++counter / calcItems, $"Contouring target: {itr}");
-        //            if(ContourHelper.PerformStructureOperation(itr, UIUD)) return true;
-        //        }
-        //        else ProvideUIUpdate($"Warning! {itr.FriendlyName} is not a valid operation! Skipping!");
-        //    }
-            //foreach (string itr in _addedTargetIds.OrderBy(x => x.ElementAt(0)))
-            //{
-            //    Structure theTarget = StructureTuningHelper.GetStructureFromId(itr, EclipseContext.GetInstance().StructureSet);
-            //    if(string.Equals(itr, "ptv_tmli_12", StringComparison.OrdinalIgnoreCase))
-            //    {
-            //        GeneratePTV1200(theTarget);
-
-            //    }
-            //    else if (string.Equals(itr,  "ptv_tmli_20",StringComparison.OrdinalIgnoreCase) || string.Equals(itr, "ptv_tmli", StringComparison.OrdinalIgnoreCase))
-            //    {
-            //        GeneratePTVTMLI(theTarget);
-            //        ManipulatePTVTMLI(theTarget);
-            //    }
-            //}
-            
-        //    ProvideUIUpdate(100, "Targets added and contoured!");
-        //    ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
-        //    return false;
-        //}
-
-        //private bool GeneratePTVTMLI(Structure ptv)
-        //{
-        //    ContourHelper.CopyStructureOntoStructure(StructureTuningHelper.GetStructureFromId("bones_trunk"), ptv);
-        //    ProvideUIUpdate($"Unioned bones_trunk with PTV_TMLI");
-        //    ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("bones_face"), 0.0);
-        //    ProvideUIUpdate($"Cropped bones_face from PTV_TMLI");
-
-        //    List<Structure> structures = new List<Structure>
-        //    {
-        //        StructureTuningHelper.GetStructureFromId("lymphnodes"),
-        //        StructureTuningHelper.GetStructureFromId("spinalcanal"),
-        //        StructureTuningHelper.GetStructureFromId("spleen"),
-        //    };
-        //    //need to know target dosing
-        //    if (StructureTuningHelper.DoesStructureExistInSS("testes", true)) structures.Add(StructureTuningHelper.GetStructureFromId("testes"));
-
-        //    ContourHelper.ContourUnion(structures, ptv, 0.0);
-        //    foreach (string itr in structures.Select(x => x.Id)) ProvideUIUpdate($"Unioned {itr} with PTV_TMLI");
-        //    ptv.SegmentVolume = ptv.Margin(5.0);
-        //    ProvideUIUpdate("Expanded PTV_TMLI with uniform 5mm margin");
-
-        //    //ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("bones_extrem", ss).Margin(10.0), ptv, 0.0);
-        //    ProvideUIUpdate($"Unioned bones_extrem with PTV_TMLI with 10 mm outer margin");
-        //    //PostProcessPTVTMLI(ptv);
-        //    return false;
-        //}
-
         protected override bool TargetPostProcessing()
         {
             Structure expandedBrain = StructureTuningHelper.GetStructureFromId("brain+1.0cm", true);
@@ -134,19 +68,6 @@ namespace TMLIAutoPlanner.Core
             
             return false;
         }
-
-        //private bool GeneratePTV1200(Structure ptv)
-        //{
-        //    StructureSet ss = EclipseContext.GetInstance().StructureSet;
-        //    ContourHelper.CopyStructureOntoStructure(StructureTuningHelper.GetStructureFromId("brain"), ptv, 0.5);
-        //    //ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("liver", ss), ptv, 0.5);
-        //    //ContourHelper.ContourUnion(StructureTuningHelper.GetStructureFromId("Rib", ss), ptv, 0.7);
-        //    ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("Lungs"), 0.5);
-        //    ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("Heart"), 0.5);
-        //    ContourHelper.CropStructureFromStructure(ptv, StructureTuningHelper.GetStructureFromId("Kidneys"), 0.5);
-        //    ContourHelper.CropStructureFromBody(ptv, -0.3);
-        //    return false;
-        //}
         #endregion
     }
 }
