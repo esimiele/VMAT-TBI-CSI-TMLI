@@ -225,7 +225,7 @@ namespace TMLIAutoPlanner.ViewModels
                 }
             }
 
-            Clipboard.SetText(PlanPrepHelper.GetTBITMLIShiftNote(EclipseContext.GetInstance().VMATPlans.First(), EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("leg") && x.ApprovalStatus != PlanSetupApprovalStatus.Rejected).ToList()).ToString());
+            Clipboard.SetText(PlanPrepHelper.GetTMLIShiftNote(EclipseContext.GetInstance().VMATPlans.First(), EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("leg") && x.ApprovalStatus != PlanSetupApprovalStatus.Rejected).ToList()).ToString());
             return false;
         }
         protected override bool SeparatePlans()

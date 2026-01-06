@@ -100,13 +100,23 @@ namespace AutoPlannerHelpers.Helpers
             return false;
         }
 
+        public static StringBuilder GetTBIShiftNote(ExternalPlanSetup vmatPlan, List<ExternalPlanSetup> appaPlans)
+        {
+            return GetTBITMLIShiftNote(vmatPlan, appaPlans, "TBI");
+        }
+
+        public static StringBuilder GetTMLIShiftNote(ExternalPlanSetup vmatPlan, List<ExternalPlanSetup> appaPlans)
+        {
+            return GetTBITMLIShiftNote(vmatPlan, appaPlans, "TMLI");
+        }
+
         /// <summary>
         /// Helper method to gather the relevant information that should be put in the TBI shift note
         /// </summary>
         /// <param name="vmatPlan"></param>
         /// <param name="appaPlans"></param>
         /// <returns></returns>
-        public static StringBuilder GetTBITMLIShiftNote(ExternalPlanSetup vmatPlan, List<ExternalPlanSetup> appaPlans)
+        private static StringBuilder GetTBITMLIShiftNote(ExternalPlanSetup vmatPlan, List<ExternalPlanSetup> appaPlans, string planType)
         {
             StringBuilder sb = new StringBuilder();
             List<VVector> isoPositions = ExtractIsoPositions(vmatPlan);
@@ -125,7 +135,7 @@ namespace AutoPlannerHelpers.Helpers
             if (appaPlans.Any()) isoNames.AddRange(IsoNameHelper.GetTBIAPPAIsoNames(numVMATIsos, numIsos));
 
             //vector to hold the x,y,z shifts from CT ref and the shifts between each adjacent iso for each axis (LR, AntPost, SupInf)
-            List<VVector> shifts = CalculateShifts(isoPositions);
+            List<VVector> shifts = CalculateShifts(isoPositions, vmatPlan.StructureSet.Image.UserOrigin);
 
             //create the message
             double TT = -1;
@@ -136,7 +146,7 @@ namespace AutoPlannerHelpers.Helpers
                 TT = (vmatPlan.Beams.First(x => !x.IsSetupField).IsocenterPosition.y - couchSurface.MeshGeometry.Positions.Min(p => p.Y)) / 10;
             }
 
-            sb.Append(BuildTBITMLIShiftNote(TT, isoNames, shifts, numVMATIsos, numIsos));
+            sb.Append(BuildTBITMLIShiftNote(planType, TT, isoNames, shifts, numVMATIsos, numIsos));
             return sb;
         }
 
@@ -149,7 +159,7 @@ namespace AutoPlannerHelpers.Helpers
         /// <param name="numVMATIsos"></param>
         /// <param name="numIsos"></param>
         /// <returns></returns>
-        private static StringBuilder BuildTBITMLIShiftNote(double TT, List<IsocenterModel> isoNames, List<VVector> shifts, int numVMATIsos, int numIsos)
+        private static StringBuilder BuildTBITMLIShiftNote(string planType, double TT, List<IsocenterModel> isoNames, List<VVector> shifts, int numVMATIsos, int numIsos)
         {
             StringBuilder sb = new StringBuilder();
             if (TT != -1)
@@ -158,8 +168,8 @@ namespace AutoPlannerHelpers.Helpers
             }
             else sb.AppendLine("No couch surface structure found in plan!");
 
-            if (numIsos > numVMATIsos) sb.AppendLine("VMAT TBI setup per procedure. Please ensure the matchline on Spinning Manny and the bag matches");
-            else sb.AppendLine("VMAT TBI setup per procedure. No Spinning Manny.");
+            if (numIsos > numVMATIsos) sb.AppendLine($"VMAT {planType} setup per procedure. Please ensure the matchline on Spinning Manny and the bag matches");
+            else sb.AppendLine($"VMAT {planType} setup per procedure. No Spinning Manny.");
             if (TT != -1) sb.AppendLine($"TT = {TT:0.0} cm for all plans");
             sb.AppendLine("Dosimetric shifts SUP to INF:");
 
@@ -205,7 +215,7 @@ namespace AutoPlannerHelpers.Helpers
             List<VVector> isoPositions = ExtractIsoPositions(vmatPlan);
 
             //vector to hold the isocenter name, the x,y,z shifts from CT ref, and the shifts between each adjacent iso for each axis (LR, AntPost, SupInf)
-            List<VVector> shifts = CalculateShifts(isoPositions);
+            List<VVector> shifts = CalculateShifts(isoPositions, vmatPlan.StructureSet.Image.UserOrigin);
 
             //create the message
             double TT = -1;
@@ -320,16 +330,16 @@ namespace AutoPlannerHelpers.Helpers
         /// </summary>
         /// <param name="isoPositions"></param>
         /// <returns></returns>
-        public static List<VVector> CalculateShifts(List<VVector> isoPositions)
+        public static List<VVector> CalculateShifts(List<VVector> isoPositions, VVector uOrigin)
         {
             List<VVector> shifts = new List<VVector> { };
 
             double SupInfShifts;
             double AntPostShifts;
             double LRShifts;
-            double priorSupInfPos = 0.0;
-            double priorAntPostPos = 0.0;
-            double priorLRPos = 0.0;
+            double priorSupInfPos = uOrigin.z;
+            double priorAntPostPos = uOrigin.y;
+            double priorLRPos = uOrigin.x;
             int count = 0;
             foreach (VVector pos in isoPositions)
             {
