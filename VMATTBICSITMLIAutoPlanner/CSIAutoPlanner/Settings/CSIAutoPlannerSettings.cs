@@ -23,6 +23,8 @@ namespace CSIAutoPlanner.Settings
             new VRect<double>(-200.0, -200.0, 0.0, 200.0),
             new VRect<double>(0.0, -200.0, 200.0, 200.0),
         };
+        internal static double MaxFieldYExtent = 400.0; //in mm
+        internal static double MinFieldOverlap = 50.0; //in mm
         internal static string DoseCalculationAlgorithm { get; set; } = "AAA_15605";
         internal static bool UseGPUForDosecalculation { get; set; } = false;
         internal static string OptimizationAlorithm { get; set; } = "PO_15605";

@@ -424,6 +424,8 @@ namespace CSIAutoPlanner.ViewModels
                                 //other parameters that should be updated
                                 else if (parameter == "calculation model") { if (value != "") CSIAutoPlannerSettings.DoseCalculationAlgorithm = value; }
                                 else if (parameter == "optimization model") { if (value != "") CSIAutoPlannerSettings.OptimizationAlorithm = value; }
+                                else if (parameter == "max Y-jaw field extent") CSIAutoPlannerSettings.MaxFieldYExtent = double.Parse(value);
+                                else if (parameter == "minimum field overlap") CSIAutoPlannerSettings.MinFieldOverlap = double.Parse(value);
                                 else if (parameter == "contour field overlap") { if (value != "") CSIAutoPlannerSettings.ContourFieldOverlap = bool.Parse(value); }
                                 else if (parameter == "contour field overlap margin") { if (value != "") CSIAutoPlannerSettings.ContourFieldOverlapMarginInCM = double.Parse(value); }
                                 else if (parameter == "auto dose recalculation") CSIAutoPlannerSettings.AutoDoseRecalculationDuringPlanPrep = bool.Parse(value);
