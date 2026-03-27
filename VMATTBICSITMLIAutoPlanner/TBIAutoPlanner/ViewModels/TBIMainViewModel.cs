@@ -337,7 +337,6 @@ namespace TBIAutoPlanner.ViewModels
                                 else if (parameter == "optimization model") { if (value != "") TBIAutoPlannerSettings.OptimizationAlorithm = value; }
                                 else if (parameter == "contour field overlap") { if (value != "") TBIAutoPlannerSettings.ContourFieldOverlap = bool.Parse(value); }
                                 else if (parameter == "contour field overlap margin") { if (value != "") TBIAutoPlannerSettings.ContourFieldOverlapMarginInCM = double.Parse(value); }
-                                else if (parameter == "max Y-jaw field extent") TBIAutoPlannerSettings.MaxFieldYExtent = double.Parse(value);
                                 else if (parameter == "minimum field overlap") TBIAutoPlannerSettings.MinFieldOverlap = double.Parse(value);
                                 else if (parameter == "all beams VMAT") TBIAutoPlannerSettings.AllBeamsVMAT = bool.Parse(value);
                             }
@@ -366,6 +365,7 @@ namespace TBIAutoPlanner.ViewModels
                     {
                         TBIAutoPlannerSettings.JawPositions.Clear();
                         TBIAutoPlannerSettings.JawPositions = new List<VRect<double>>(jawPos_temp);
+                        TBIAutoPlannerSettings.MaxFieldYExtent = jawPos_temp.First().Y2 - jawPos_temp.First().Y1;
                     }
                 }
             }
@@ -438,6 +438,8 @@ namespace TBIAutoPlanner.ViewModels
             sb.AppendLine("Field jaw position (cm) order: ");
             sb.AppendLine(" (x1,y1,x2,y2)");
             foreach (VRect<double> j in TBIAutoPlannerSettings.JawPositions) sb.AppendLine($"({j.X1 / 10:0.0},{j.Y1 / 10:0.0},{j.X2 / 10:0.0},{j.Y2 / 10:0.0})");
+            sb.AppendLine($"Maximum Y field extent: {TBIAutoPlannerSettings.MaxFieldYExtent / 10.0} cm");
+            sb.AppendLine($"Minimum overlap between fields in adjacent isoecenters: {TBIAutoPlannerSettings.MinFieldOverlap / 10.0} cm");
             sb.AppendLine($"Photon dose calculation model: {TBIAutoPlannerSettings.DoseCalculationAlgorithm}");
             sb.AppendLine($"Use GPU for dose calculation: {TBIAutoPlannerSettings.UseGPUForDosecalculation}");
             sb.AppendLine($"Photon optimization model: {TBIAutoPlannerSettings.OptimizationAlorithm}");

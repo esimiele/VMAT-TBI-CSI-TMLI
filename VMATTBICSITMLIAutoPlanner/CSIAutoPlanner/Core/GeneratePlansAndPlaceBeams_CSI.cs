@@ -373,7 +373,7 @@ namespace CSIAutoPlanner.Core
 
             //maximum separation between isocenters (35 cm for 5 cm overlap). May remove this since it's not used with the updated
             //iso placement algorithm
-            isoSeparation = 350.0;
+            isoSeparation = CSIAutoPlannerSettings.MaxFieldYExtent - CSIAutoPlannerSettings.MinFieldOverlap;
             int isoCount = 0;
             foreach (IsocenterModel itr in isos)
             {
@@ -387,20 +387,20 @@ namespace CSIAutoPlanner.Core
                 if (isoCount == 0) v.z = brainZCenter;
                 else
                 {
-                    v.z = spineZMin + (numIsos - isoCount - 1) * isoSeparation + 180.0;
+                    v.z = spineZMin + (numIsos - isoCount - 1) * isoSeparation + 180.0; //2cm margin covering inf aspect of spine
                     if (isoCount == 1 && numIsos > 2)
                     {
                         //if this is iso 2 and the total number of isos is 3, apply this special logic to balance field
                         //overlap between brain iso and lower spine iso
                         //inf field superior edge.ptv spine + 18 cm = iso position + 20 cm Y field extent)
-                        double infIsoFieldSupEdge = spineZMin + 180.0 + 200.0;
+                        double infIsoFieldSupEdge = spineZMin + 180.0 + CSIAutoPlannerSettings.MaxFieldYExtent / 2;
                         Structure brainTarget = StructureTuningHelper.GetStructureFromId("_Brain");
                         //brain field inferior extent (ptv brain inf extent - 5 cm margin)
-                        double supFieldInfExtent = brainTarget.MeshGeometry.Positions.Min(p => p.Z) - 50.0;
+                        double supFieldInfExtent = brainTarget.MeshGeometry.Positions.Min(p => p.Z) - CSIAutoPlannerSettings.MinFieldOverlap;
                         //place the iso at the midpoint between the brain field inf extent and low spine file sup extent
                         v.z = CalculationHelper.ComputeAverage(infIsoFieldSupEdge, supFieldInfExtent);
                         // Check to ensure calculated iso position is not too close to brain iso, If so, push it inf
-                        if (v.z + 200.0 > isos.ElementAt(0).IsocenterPosition.z) v.z = isos.ElementAt(0).IsocenterPosition.z - 200.0;
+                        if (v.z + CSIAutoPlannerSettings.MaxFieldYExtent / 2 > isos.ElementAt(0).IsocenterPosition.z) v.z = isos.ElementAt(0).IsocenterPosition.z - CSIAutoPlannerSettings.MaxFieldYExtent / 2;
                     }
                 }
 
@@ -580,14 +580,14 @@ namespace CSIAutoPlanner.Core
                     Structure spine = StructureTuningHelper.GetStructureFromId("_Spine");
                     double infSpineIso = spine.MeshGeometry.Positions.Min(p => p.Z) + 180.0;
                     ProvideUIUpdate($"Inferior spine location: {infSpineIso:0.0} mm");
-                    if (iso.z - infSpineIso >= 200.0)
+                    if (iso.z - infSpineIso >= CSIAutoPlannerSettings.MaxFieldYExtent / 2)
                     {
-                        ProvideUIUpdate($"Separation between brain and spines isos is >= 20cm: {iso.z - infSpineIso:0.0} mm");
+                        ProvideUIUpdate($"Separation between brain and spines isos is >= {CSIAutoPlannerSettings.MaxFieldYExtent / 2}cm: {iso.z - infSpineIso:0.0} mm");
                         //spine iso field should have y2 maxed at 20 cm. spatial location of that field extent
-                        double infSpineIsoSupFieldExtent = infSpineIso + 200;
+                        double infSpineIsoSupFieldExtent = infSpineIso + CSIAutoPlannerSettings.MaxFieldYExtent / 2;
                         //take the max margin of the existing calculated margin and the difference between _Brain z min
                         //and inf spine iso field extent + 5 cm overlap
-                        InfMargin = Math.Max(InfMargin, brain.MeshGeometry.Positions.Min(p => p.Z) - infSpineIsoSupFieldExtent + 50.0);
+                        InfMargin = Math.Max(InfMargin, brain.MeshGeometry.Positions.Min(p => p.Z) - infSpineIsoSupFieldExtent + CSIAutoPlannerSettings.MinFieldOverlap);
                         ProvideUIUpdate($"Max of current inf margin and (brain zmin - spineIsoFieldExtent + 5cm): {InfMargin:0.0} cm");
                     }
                 }
@@ -654,9 +654,9 @@ namespace CSIAutoPlanner.Core
         /// <returns></returns>
         private VRect<double> VerifyProposedJawPositions(double x1, double y1, double x2, double y2)
         {
-            if (y2 > 200.0) y2 = 200.0;
+            if (y2 > CSIAutoPlannerSettings.MaxFieldYExtent / 2) y2 = CSIAutoPlannerSettings.MaxFieldYExtent / 2;
             if (x2 > 150.0) x2 = 150.0;
-            if (y1 < -200.0) y1 = -200.0;
+            if (y1 < -CSIAutoPlannerSettings.MaxFieldYExtent / 2) y1 = -CSIAutoPlannerSettings.MaxFieldYExtent / 2;
             if (x1 < -150.0) x1 = -150.0;
             return new VRect<double>(x1, y1, x2, y2);
         }

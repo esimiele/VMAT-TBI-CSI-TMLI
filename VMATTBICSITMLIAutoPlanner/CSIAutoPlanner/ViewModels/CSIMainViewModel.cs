@@ -424,6 +424,8 @@ namespace CSIAutoPlanner.ViewModels
                                 //other parameters that should be updated
                                 else if (parameter == "calculation model") { if (value != "") CSIAutoPlannerSettings.DoseCalculationAlgorithm = value; }
                                 else if (parameter == "optimization model") { if (value != "") CSIAutoPlannerSettings.OptimizationAlorithm = value; }
+                                else if (parameter == "max Y-jaw field extent") CSIAutoPlannerSettings.MaxFieldYExtent = double.Parse(value);
+                                else if (parameter == "minimum field overlap") CSIAutoPlannerSettings.MinFieldOverlap = double.Parse(value);
                                 else if (parameter == "contour field overlap") { if (value != "") CSIAutoPlannerSettings.ContourFieldOverlap = bool.Parse(value); }
                                 else if (parameter == "contour field overlap margin") { if (value != "") CSIAutoPlannerSettings.ContourFieldOverlapMarginInCM = double.Parse(value); }
                                 else if (parameter == "auto dose recalculation") CSIAutoPlannerSettings.AutoDoseRecalculationDuringPlanPrep = bool.Parse(value);
@@ -440,19 +442,7 @@ namespace CSIAutoPlanner.ViewModels
                                 line = ConfigurationHelper.CropLine(line, "{");
                                 CSIAutoPlannerSettings.AvailableEnergies.Add(line.Substring(0, line.IndexOf("}")));
                             }
-                            else if (line.Contains("add jaw position"))
-                            {
-                                //parse the default requested number of beams per isocenter
-                                VRect<double> parsedPositions = ConfigurationHelper.ParseJawPositions(line);
-                                if (parsedPositions.X1 != parsedPositions.X2) jawPos_temp.Add(parsedPositions);
-                            }
                         }
-                    }
-                    //anything that is an array needs to be updated AFTER the while loop.
-                    if (jawPos_temp.Count == 4)
-                    {
-                        CSIAutoPlannerSettings.JawPositions.Clear();
-                        CSIAutoPlannerSettings.JawPositions = new List<VRect<double>>(jawPos_temp);
                     }
                 }
             }
@@ -546,9 +536,9 @@ namespace CSIAutoPlanner.ViewModels
             }
 
             sb.AppendLine("");
-            sb.AppendLine("Field jaw position (cm) order: ");
-            sb.AppendLine(" (x1,y1,x2,y2)");
-            foreach (VRect<double> j in CSIAutoPlannerSettings.JawPositions) sb.AppendLine($"({j.X1 / 10:0.0},{j.Y1 / 10:0.0},{j.X2 / 10:0.0},{j.Y2 / 10:0.0})");
+            sb.AppendLine($"Jaws are automatically fit to target structure");
+            sb.AppendLine($"Maximum Y field extent: {CSIAutoPlannerSettings.MaxFieldYExtent / 10.0} cm");
+            sb.AppendLine($"Minimum overlap between fields in adjacent isoecenters: {CSIAutoPlannerSettings.MinFieldOverlap / 10.0} cm");
             sb.AppendLine($"Photon dose calculation model: {CSIAutoPlannerSettings.DoseCalculationAlgorithm}");
             sb.AppendLine($"Use GPU for dose calculation: {CSIAutoPlannerSettings.UseGPUForDosecalculation}");
             sb.AppendLine($"Photon optimization model: {CSIAutoPlannerSettings.OptimizationAlorithm}");

@@ -876,9 +876,6 @@ namespace CSIAutoPlanner.Core
                 counter = 0;
                 calcItems = 3;
 
-                //Minimum requested field overlap.
-                double minFieldOverlap = 50.0;
-                double maxFieldExtent = 400.0;
                 //subtract 50 mm from the numerator as the brain fields have a 50 mm inferior margin on the _Brain 
                 double brainInfMargin = 50.0;
 
@@ -894,12 +891,12 @@ namespace CSIAutoPlanner.Core
                     if (isFail) return true;
                     ProvideUIUpdate(100 * ++counter / calcItems);
 
-                    NumberofVMATIsocenters = CalculateNumberofVMATIsocentersForPTVCSI(spineTargetExtent, brainInfMargin, maxFieldExtent, minFieldOverlap);
+                    NumberofVMATIsocenters = CalculateNumberofVMATIsocentersForPTVCSI(spineTargetExtent, brainInfMargin, CSIAutoPlannerSettings.MaxFieldYExtent, CSIAutoPlannerSettings.MinFieldOverlap);
                     ProvideUIUpdate(100 * ++counter / calcItems, $"Final calculated number of VMAT isocenters: {NumberofVMATIsocenters}");
                 }
                 else
                 {
-                    NumberofVMATIsocenters = (int)Math.Ceiling(maxTargetLength / (maxFieldExtent - minFieldOverlap));
+                    NumberofVMATIsocenters = (int)Math.Ceiling(maxTargetLength / (CSIAutoPlannerSettings.MaxFieldYExtent - CSIAutoPlannerSettings.MinFieldOverlap));
                     ProvideUIUpdate(100 * ++counter / calcItems, $"{NumberofVMATIsocenters}");
                 }
                 if (NumberofVMATIsocenters > 3) NumberofVMATIsocenters = 3;

@@ -335,11 +335,17 @@ namespace TMLIAutoPlanner.Core
             if (!TMLIAutoPlannerSettings.AllBeamsVMAT && StructureTuningHelper.DoesStructureExistInSS("matchline", true))
             {
                 Structure matchline = StructureTuningHelper.GetStructureFromId("matchline");
-                allIsocenters.Add(new PlanIsocenterModel(vmatPlan.Id, CalculateVMATIsoPositions(targetSupExtent, matchline.CenterPoint.z, 10.0, 400.0, 20.0, offsetY, planIsocenters.First().Isocenters)));
+                allIsocenters.Add(new PlanIsocenterModel(vmatPlan.Id, CalculateVMATIsoPositions(targetSupExtent,
+                                                                                                matchline.CenterPoint.z,
+                                                                                                10.0,
+                                                                                                TMLIAutoPlannerSettings.MaxFieldYExtent,
+                                                                                                TMLIAutoPlannerSettings.MinFieldOverlap,
+                                                                                                offsetY,
+                                                                                                planIsocenters.First().Isocenters)));
                 List<IsocenterModel> legsIsoModels = CalculateAPPAIsoPositions(matchline.CenterPoint.z,
                                                                                                 targetInfExtent,
-                                                                                                400.0,
-                                                                                                20.0,
+                                                                                                400.0, //fixed at 40cm since AP/PA fields have a coll rotation of 90 deg
+                                                                                                TMLIAutoPlannerSettings.MinFieldOverlap,
                                                                                                 allIsocenters.First().Isocenters.OrderByDescending(x => x.IsocenterPosition.z).Last().IsocenterPosition.z,
                                                                                                 offsetY,
                                                                                                 planIsocenters.Where(x => x.PlanId.Contains("legs")).SelectMany(x => x.Isocenters).ToList());
@@ -351,15 +357,21 @@ namespace TMLIAutoPlanner.Core
             }
             else
             {
-                allIsocenters.Add(new PlanIsocenterModel(vmatPlan.Id, CalculateVMATIsoPositions(targetSupExtent, targetInfExtent, 10.0, 400.0, 20.0, offsetY, planIsocenters.First().Isocenters)));
+                allIsocenters.Add(new PlanIsocenterModel(vmatPlan.Id, CalculateVMATIsoPositions(targetSupExtent,
+                                                                                                targetInfExtent,
+                                                                                                10.0,
+                                                                                                TMLIAutoPlannerSettings.MaxFieldYExtent,
+                                                                                                TMLIAutoPlannerSettings.MinFieldOverlap,
+                                                                                                offsetY,
+                                                                                                planIsocenters.First().Isocenters)));
             }
 
             VVector firstIso = allIsocenters.SelectMany(x => x.Isocenters).OrderByDescending(x => x.IsocenterPosition.z).First().IsocenterPosition;
             VVector lastIso = allIsocenters.SelectMany(x => x.Isocenters).OrderByDescending(x => x.IsocenterPosition.z).Last().IsocenterPosition;
             //if the most superior isocenter + 20 cm - most superior extent of target is < limit or
             //if the most inferior target extent - (most superior isocenter position - 20 cm) < limit, notify the user that the target may not be fully covered
-            if ((firstIso.z + 200.0 - targetSupExtent < checkIsoPlacementLimit) ||
-                (targetInfExtent - (lastIso.z - 200.0) < checkIsoPlacementLimit)) checkIsoPlacement = true;
+            if ((firstIso.z + TMLIAutoPlannerSettings.MaxFieldYExtent / 2 - targetSupExtent < checkIsoPlacementLimit) ||
+                (targetInfExtent - (lastIso.z - TMLIAutoPlannerSettings.MaxFieldYExtent / 2) < checkIsoPlacementLimit)) checkIsoPlacement = true;
 
             return allIsocenters;
         }

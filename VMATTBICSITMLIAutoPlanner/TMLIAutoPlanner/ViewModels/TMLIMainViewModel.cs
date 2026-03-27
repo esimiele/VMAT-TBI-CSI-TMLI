@@ -358,7 +358,6 @@ namespace TMLIAutoPlanner.ViewModels
                                 else if (parameter == "optimization model") { if (value != "") TMLIAutoPlannerSettings.OptimizationAlorithm = value; }
                                 else if (parameter == "contour field overlap") { if (value != "") TMLIAutoPlannerSettings.ContourFieldOverlap = bool.Parse(value); }
                                 else if (parameter == "contour field overlap margin") { if (value != "") TMLIAutoPlannerSettings.ContourFieldOverlapMarginInCM = double.Parse(value); }
-                                else if (parameter == "max Y-jaw field extent") TMLIAutoPlannerSettings.MaxFieldYExtent = double.Parse(value);
                                 else if (parameter == "minimum field overlap") TMLIAutoPlannerSettings.MinFieldOverlap = double.Parse(value);
                                 else if (parameter == "all beams VMAT") TMLIAutoPlannerSettings.AllBeamsVMAT = bool.Parse(value);
                                 else if (parameter == "auto dose recalculation") TMLIAutoPlannerSettings.AutoDoseRecalculationDuringPlanPrep = bool.Parse(value);
@@ -388,6 +387,7 @@ namespace TMLIAutoPlanner.ViewModels
                     {
                         TMLIAutoPlannerSettings.JawPositions.Clear();
                         TMLIAutoPlannerSettings.JawPositions = new List<VRect<double>>(jawPos_temp);
+                        TMLIAutoPlannerSettings.MaxFieldYExtent = jawPos_temp.First().Y2 - jawPos_temp.First().Y1;
                     }
                 }
             }
@@ -484,6 +484,8 @@ namespace TMLIAutoPlanner.ViewModels
             sb.AppendLine("Field jaw position (cm) order: ");
             sb.AppendLine(" (x1,y1,x2,y2)");
             foreach (VRect<double> j in TMLIAutoPlannerSettings.JawPositions) sb.AppendLine($"({j.X1 / 10:0.0},{j.Y1 / 10:0.0},{j.X2 / 10:0.0},{j.Y2 / 10:0.0})");
+            sb.AppendLine($"Maximum Y field extent: {TMLIAutoPlannerSettings.MaxFieldYExtent / 10.0} cm");
+            sb.AppendLine($"Minimum overlap between fields in adjacent isoecenters: {TMLIAutoPlannerSettings.MinFieldOverlap / 10.0} cm");
             sb.AppendLine($"Photon dose calculation model: {TMLIAutoPlannerSettings.DoseCalculationAlgorithm}");
             sb.AppendLine($"Use GPU for dose calculation: {TMLIAutoPlannerSettings.UseGPUForDosecalculation}");
             sb.AppendLine($"Photon optimization model: {TMLIAutoPlannerSettings.OptimizationAlorithm}");

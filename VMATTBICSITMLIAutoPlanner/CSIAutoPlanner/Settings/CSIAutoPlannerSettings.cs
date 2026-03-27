@@ -16,13 +16,8 @@ namespace CSIAutoPlanner.Settings
         internal static List<string> AvailableEnergies { get; set; } = new List<string>();
         internal static List<int> BeamsPerIsocenter { get; set; } = new List<int> { 4, 3, 3, 2, 2, 2, 2 };
         internal static List<double> CollimatorRotations { get; set; } = new List<double> { 3.0, 357.0, 90.0, 90.0 };
-        internal static List<VRect<double>> JawPositions { get; set; } = new List<VRect<double>>
-        {
-            new VRect<double>(-20.0, -200.0, 200.0, 200.0),
-            new VRect<double>(-200.0, -200.0, 20.0, 200.0),
-            new VRect<double>(-200.0, -200.0, 0.0, 200.0),
-            new VRect<double>(0.0, -200.0, 200.0, 200.0),
-        };
+        internal static double MaxFieldYExtent = 400.0; //in mm
+        internal static double MinFieldOverlap = 50.0; //in mm
         internal static string DoseCalculationAlgorithm { get; set; } = "AAA_15605";
         internal static bool UseGPUForDosecalculation { get; set; } = false;
         internal static string OptimizationAlorithm { get; set; } = "PO_15605";
