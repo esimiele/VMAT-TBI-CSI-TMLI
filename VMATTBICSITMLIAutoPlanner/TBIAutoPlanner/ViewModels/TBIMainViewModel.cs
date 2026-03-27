@@ -337,7 +337,6 @@ namespace TBIAutoPlanner.ViewModels
                                 else if (parameter == "optimization model") { if (value != "") TBIAutoPlannerSettings.OptimizationAlorithm = value; }
                                 else if (parameter == "contour field overlap") { if (value != "") TBIAutoPlannerSettings.ContourFieldOverlap = bool.Parse(value); }
                                 else if (parameter == "contour field overlap margin") { if (value != "") TBIAutoPlannerSettings.ContourFieldOverlapMarginInCM = double.Parse(value); }
-                                else if (parameter == "max Y-jaw field extent") TBIAutoPlannerSettings.MaxFieldYExtent = double.Parse(value);
                                 else if (parameter == "minimum field overlap") TBIAutoPlannerSettings.MinFieldOverlap = double.Parse(value);
                                 else if (parameter == "all beams VMAT") TBIAutoPlannerSettings.AllBeamsVMAT = bool.Parse(value);
                             }

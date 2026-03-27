@@ -358,7 +358,6 @@ namespace TMLIAutoPlanner.ViewModels
                                 else if (parameter == "optimization model") { if (value != "") TMLIAutoPlannerSettings.OptimizationAlorithm = value; }
                                 else if (parameter == "contour field overlap") { if (value != "") TMLIAutoPlannerSettings.ContourFieldOverlap = bool.Parse(value); }
                                 else if (parameter == "contour field overlap margin") { if (value != "") TMLIAutoPlannerSettings.ContourFieldOverlapMarginInCM = double.Parse(value); }
-                                else if (parameter == "max Y-jaw field extent") TMLIAutoPlannerSettings.MaxFieldYExtent = double.Parse(value);
                                 else if (parameter == "minimum field overlap") TMLIAutoPlannerSettings.MinFieldOverlap = double.Parse(value);
                                 else if (parameter == "all beams VMAT") TMLIAutoPlannerSettings.AllBeamsVMAT = bool.Parse(value);
                                 else if (parameter == "auto dose recalculation") TMLIAutoPlannerSettings.AutoDoseRecalculationDuringPlanPrep = bool.Parse(value);
