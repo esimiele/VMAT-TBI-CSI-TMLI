@@ -63,8 +63,12 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Base\OptimizationLoopBaseTests.cs" />
+    <Compile Include="EqualityComparers\JawPositionComparer.cs" />
     <Compile Include="EqualityComparers\OptimizationConstraintComparer.cs" />
     <Compile Include="Helpers\PlanEvaluationHelperTests.cs" />
+    <Compile Include="Helpers\BeamHelperTests.cs" />
+    <Compile Include="Helpers\TestBeamBuilder.cs" />
+    <Compile Include="Helpers\TestPlanBuilder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReminderPromptTests.cs" />
   </ItemGroup>

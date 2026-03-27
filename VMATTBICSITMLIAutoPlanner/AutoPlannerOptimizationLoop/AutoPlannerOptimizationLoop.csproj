@@ -72,6 +72,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Helpers\BeamHelper.cs" />
     <Compile Include="Helpers\ESAPIThreadContext.cs" />
     <Compile Include="Prompts\ReminderPrompt.xaml.cs">
       <DependentUpon>ReminderPrompt.xaml</DependentUpon>

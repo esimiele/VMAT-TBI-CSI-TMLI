@@ -275,5 +275,23 @@ namespace AutoPlannerOptimizationLoop.UIHelpers
             }
             return sb.ToString();
         }
+
+        /// <summary>
+        /// Helper method to print the jaw positions for each beam in a given plan
+        /// </summary>
+        /// <param name="jawPos"></param>
+        /// <returns></returns>
+        public static string PrintJawPositions(List<Tuple<Beam, VRect<double>>> jawPos)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            foreach (Tuple<Beam, VRect<double>> itr in jawPos)
+            {
+                sb.AppendLine($"Beam: {itr.Item1.Id}");
+                sb.AppendLine($"X1: {itr.Item2.X1} mm, Y1: {itr.Item2.Y1} mm, X2: {itr.Item2.X2} mm, Y2: {itr.Item2.Y2} mm");
+            }
+
+            return sb.ToString();
+        }
     }
 }

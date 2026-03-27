@@ -7,6 +7,7 @@ using AutoPlannerOptimizationLoop.UIHelpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using VMS.TPS.Common.Model.API;
@@ -322,6 +323,9 @@ namespace AutoPlannerOptimizationLoop.Core
                     ProvideUIUpdate(100 * ++percentComplete / calcItems, $"Optimizing plan: {itr.Id}!");
                     if (OptimizePlan(_data.IsDemo, new OptimizationOptionsVMAT(OptimizationIntermediateDoseOption.NoIntermediateDose, ""), itr, _data.Application)) return true;
                     ProvideUIUpdate(100 * ++percentComplete / calcItems, "Optimization finished! Calculating dose!");
+
+                    CheckStaticMLCsInFieldAndAdjustJaws(itr);
+
                     if (CalculateDose(_data.IsDemo, itr, _data.Application)) return true;
                     ProvideUIUpdate(100 * ++percentComplete / calcItems, "Dose calculated, normalizing plan!");
                     //normalize

@@ -9,6 +9,7 @@ using AutoPlannerHelpers.Enums;
 using AutoPlannerHelpers.Models;
 using Telerik.JustMock;
 using VMS.TPS.Common.Model.API;
+using AutoPlannerHelpers.Context;
 
 namespace AutoPlannerHelpers.Helpers.Tests
 {
@@ -100,6 +101,9 @@ namespace AutoPlannerHelpers.Helpers.Tests
             Structure kidneyR = Mock.Create<Structure>();
             Mock.Arrange(() => kidneyR.Id).Returns("Kidney_R");
             Mock.Arrange(() => ss.Structures).Returns(new List<Structure> { lensL, lensR, liver, lungL, lungR, bowel, kidneyL, kidneyR });
+            EclipseContext context = EclipseContext.GetInstance();
+            context.Application = Mock.Create<Application>();
+            context.StructureSet = ss;
             return ss;
         }
 
