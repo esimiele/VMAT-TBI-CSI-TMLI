@@ -25,68 +25,27 @@ namespace AutoPlannerHelpersTests.BaseViewModel
             _selectedTemplate = template; 
         }
 
-        public DummyVM(PlanType type, string[] args) : base(type, args) { }
-        protected override StringBuilder BuildScriptConfigurationInfo()
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override void LoadScriptConfigurationSettings(string file)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override bool GenerateShiftNote()
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override bool SeparatePlans()
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override bool RecalculateDoseForSeparatePlans()
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override void LaunchQuickStartGuide()
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override void LaunchHelpGuide()
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override GeneratePreliminaryTargetsBase GetTargetDerivationClassInstanceForPlanType(List<StructureOperationModel> preliminaryTargets)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override TSGenerationManipulationBase GetOptStructureDerivationClassInstanceForPlanType(List<StructureOperationModel> operations, List<SpecialOptimizationStructureModel> specialOps)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override GeneratePlansAndPlaceBeamsBase GetBeamPlacementClassInstanceForPlanType(string linac, string energy, bool contourOverlap, double overlapMargin, List<PlanIsocenterModel> PlanIsocenters)
-        {
-            throw new NotImplementedException();
-        }
-
         protected override void PerformPlanTypeSpecificInitialization()
         {
-            throw new NotImplementedException();
+            return;
         }
 
         protected override void InitializePlanTypeSpecificMessengers()
         {
-            throw new NotImplementedException();
+            return;
         }
 
-        protected override bool PhysicianTargetApprovalRequired()
+        protected override void LaunchQuickStartGuide()
+        {
+            return;
+        }
+
+        protected override void LaunchHelpGuide()
+        {
+            return;
+        }
+
+        protected override GeneratePreliminaryTargetsBase GetTargetDerivationClassInstanceForPlanType(List<StructureOperationModel> preliminaryTargets)
         {
             throw new NotImplementedException();
         }
@@ -96,14 +55,59 @@ namespace AutoPlannerHelpersTests.BaseViewModel
             throw new NotImplementedException();
         }
 
+
         protected override void UpdatePlanTypeSpecificStructureOperationViews()
         {
+            return;
+        }
+
+        protected override bool PhysicianTargetApprovalRequired()
+        {
+            return false;
+        }
+
+        protected override TSGenerationManipulationBase GetOptStructureDerivationClassInstanceForPlanType(List<StructureOperationModel> operations, List<SpecialOptimizationStructureModel> specialOps)
+        {
             throw new NotImplementedException();
+
+        }
+
+        protected override GeneratePlansAndPlaceBeamsBase GetBeamPlacementClassInstanceForPlanType(string linac, string energy, bool contourOverlap, double overlapMargin, List<PlanIsocenterModel> PlanIsocenters)
+        {
+            throw new NotImplementedException();
+
+        }
+
+        protected override bool GenerateShiftNote()
+        {
+            return false;
+        }
+
+        protected override bool SeparatePlans()
+        {
+            return false;
+        }
+
+        protected override bool RecalculateDoseForSeparatePlans()
+        {
+            return false;
         }
 
         protected override void UpdatePlanTypeSpecificUIWithPlanTemplate()
         {
-            throw new NotImplementedException();
+            return;
         }
+
+        protected override void LoadScriptConfigurationSettings(string file)
+        {
+            return;
+        }
+
+        protected override StringBuilder BuildScriptConfigurationInfo()
+        {
+            return new StringBuilder();
+        }
+
+        public DummyVM(PlanType type, string[] args) : base(type, args) { }
     }
 }

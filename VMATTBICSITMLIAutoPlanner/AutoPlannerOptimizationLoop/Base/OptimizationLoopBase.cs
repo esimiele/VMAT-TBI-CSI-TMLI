@@ -2,19 +2,20 @@
 using AutoPlannerHelpers.EnumTypeHelpers;
 using AutoPlannerHelpers.Helpers;
 using AutoPlannerHelpers.Models;
+using AutoPlannerHelpers.Prompts;
 using AutoPlannerOptimizationLoop.DataContainers;
+using AutoPlannerOptimizationLoop.Helpers;
+using AutoPlannerOptimizationLoop.Models;
+using AutoPlannerOptimizationLoop.UIHelpers;
+using AutoPlannerOptimizationLoop.Utilities;
+using AutoPlannerOptimizationLoop.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Threading;
 using VMS.TPS.Common.Model.API;
 using VMS.TPS.Common.Model.Types;
-using AutoPlannerOptimizationLoop.UIHelpers;
-using AutoPlannerOptimizationLoop.Utilities;
-using AutoPlannerOptimizationLoop.Models;
-using AutoPlannerOptimizationLoop.Helpers;
-using AutoPlannerOptimizationLoop.ViewModels;
-using AutoPlannerHelpers.Prompts;
 
 namespace AutoPlannerOptimizationLoop.Base
 {
@@ -296,6 +297,8 @@ namespace AutoPlannerOptimizationLoop.Base
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, "Optimization finished! Calculating dose!");
                 ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
 
+                CheckStaticMLCsInFieldAndAdjustJaws(itr);
+
                 if (CalculateDose(_data.IsDemo, itr, _data.Application)) return true;
                 UpdateOverallProgress(100 * ++overallPercentCompletion / overallCalcItems);
                 ProvideUIUpdate(100 * ++percentComplete / calcItems, "Dose calculated, normalizing plan!");
@@ -353,6 +356,14 @@ namespace AutoPlannerOptimizationLoop.Base
                 ProvideUIUpdate(100 * (++percentComplete) / calcItems, "Optimization finished! Calculating intermediate dose!");
                 ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
 
+                List<Tuple<Beam, VRect<double>>> originalJawPos = BeamHelper.ExtractJawPositionsFromPlan(plan);
+                bool jawPositionsUpdatedInitial = CheckStaticMLCsInFieldAndAdjustJaws(plan);
+                if (jawPositionsUpdatedInitial)
+                {
+                    ProvideUIUpdate("Static closed MLCs found inside field. Original jaw positions:");
+                    ProvideUIUpdate(OptimizationLoopUIHelper.PrintJawPositions(originalJawPos));
+                }
+
                 if (CalculateDose(_data.IsDemo, plan, _data.Application)) return true;
                 ProvideUIUpdate(100 * (++percentComplete) / calcItems, "Dose calculated! Continuing optimization!");
                 ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
@@ -360,6 +371,9 @@ namespace AutoPlannerOptimizationLoop.Base
                 if (OptimizePlan(_data.IsDemo, new OptimizationOptionsVMAT(OptimizationOption.ContinueOptimizationWithPlanDoseAsIntermediateDose, ""), plan, _data.Application)) return true;
                 ProvideUIUpdate(100 * (++percentComplete) / calcItems, "Optimization finished! Calculating dose!");
                 ProvideUIUpdate($"Elapsed time: {ElapsedRunTime}");
+
+                bool jawPositionsUpdatedIntermediate = CheckStaticMLCsInFieldAndAdjustJaws(plan);
+                if (jawPositionsUpdatedIntermediate) ProvideUIUpdate("Static closed MLCs found inside field following intermediate optimization. Jaw positions adjusted");
 
                 if (CalculateDose(_data.IsDemo, plan, _data.Application)) return true;
                 ProvideUIUpdate(100 * (++percentComplete) / calcItems, "Dose calculated, normalizing plan!");
@@ -406,6 +420,13 @@ namespace AutoPlannerOptimizationLoop.Base
 
                 //update the optimization constraints in the plan
                 UpdateConstraints(e.UpdatedOptimizationObjectives, plan);
+
+                if ((jawPositionsUpdatedInitial || jawPositionsUpdatedIntermediate) && ((count + 1) != _data.NumberOfIterations))
+                {
+                    ProvideUIUpdate($"Resetting jaws to original positions for next optimization iteration");
+                    //reset jaw positions
+                    BeamHelper.AdjustJawPositionsForBeams(originalJawPos);
+                }
 
                 //increment the counter, update d.optParams so it is set to the initial optimization constraints at the BEGINNING of the optimization iteration, and save the changes to the plan
                 count++;
@@ -487,6 +508,31 @@ namespace AutoPlannerOptimizationLoop.Base
                 return true;
             }
             return false;
+        }
+
+        protected bool CheckStaticMLCsInFieldAndAdjustJaws(ExternalPlanSetup plan)
+        {
+            bool jawPositionsUpdated = false;
+            if (!_data.IsDemo && !plan.OptimizationSetup.UseJawTracking)
+            {
+                ProvideUIUpdate("Checking for static closed MLC pairs inside field...");
+                //if jaw tracking was NOT used, determine if there are any closed MLCs inside the field
+                List<Tuple<Beam, List<int>>> closedMLCs = BeamHelper.GetStaticMLCsInField(plan);
+                if (closedMLCs.Any())
+                {
+                    //determine how to adjust the y1/y2 jaws to ensure that there are no static closed MLCs inside the field
+                    List<Tuple<Beam, VRect<double>>> updatedJaws = BeamHelper.ConvertMLCIndexesToJawPos(closedMLCs);
+                    ProvideUIUpdate($"Beams with static MLCs in field and adjusted jaw positions:");
+                    ProvideUIUpdate(OptimizationLoopUIHelper.PrintJawPositions(updatedJaws));
+                    ProvideUIUpdate("Updating field jaw positions in plan");
+                    //adjust jaw positions
+                    BeamHelper.AdjustJawPositionsForBeams(updatedJaws);
+                    jawPositionsUpdated = true;
+                }
+                else ProvideUIUpdate("No static closed MLCs inside field --> nothing to adjust");
+                //no closed MLCs inside field --> do not update jaws
+            }
+            return jawPositionsUpdated;
         }
 
         protected bool CopyAndSavePlan(ExternalPlanSetup plan, int count)

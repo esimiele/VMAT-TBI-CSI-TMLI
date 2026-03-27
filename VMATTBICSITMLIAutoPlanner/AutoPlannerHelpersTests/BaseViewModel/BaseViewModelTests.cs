@@ -130,9 +130,9 @@ namespace AutoPlannerHelpers.BaseViewModel.Tests
 
             OptimizationConstraintComparer comparer = new OptimizationConstraintComparer();
             List<OptimizationConstraintModel> exepctedInitial = SetupDummyInitialOptObjList();
-            exepctedInitial.Insert(0, new OptimizationConstraintModel("TS_ring1800", OptimizationObjectiveType.Upper, 1800, Units.cGy, 0.0, 80));
+            exepctedInitial.Add(new OptimizationConstraintModel("TS_ring1800", OptimizationObjectiveType.Upper, 1800, Units.cGy, 0.0, 80));
             List<OptimizationConstraintModel> exepctedBoost = SetupDummyBoostOptObjList();
-            exepctedBoost.Insert(0, new OptimizationConstraintModel("TS_ring900", OptimizationObjectiveType.Upper, 900, Units.cGy, 0.0, 80));
+            exepctedBoost.Add(new OptimizationConstraintModel("TS_ring900", OptimizationObjectiveType.Upper, 900, Units.cGy, 0.0, 80));
             List<PlanOptimizationSetupModel> expectedPlanOptimizationSetup = new List<PlanOptimizationSetupModel>
             {
                 new PlanOptimizationSetupModel("CSI-init", exepctedInitial),
@@ -181,10 +181,10 @@ namespace AutoPlannerHelpers.BaseViewModel.Tests
 
             OptimizationConstraintComparer comparer = new OptimizationConstraintComparer();
             List<OptimizationConstraintModel> exepctedInitial = SetupDummyInitialOptObjList();
-            exepctedInitial.Insert(0, new OptimizationConstraintModel("TS_jnx2", OptimizationObjectiveType.Lower, 3600, Units.cGy, 100.0, 100));
-            exepctedInitial.Insert(1, new OptimizationConstraintModel("TS_jnx2", OptimizationObjectiveType.Upper, 1.02 * 3600, Units.cGy, 0.0, 100));
-            exepctedInitial.Insert(2, new OptimizationConstraintModel("TS_jnx1", OptimizationObjectiveType.Lower, 3600, Units.cGy, 100.0, 100));
-            exepctedInitial.Insert(3, new OptimizationConstraintModel("TS_jnx1", OptimizationObjectiveType.Upper, 1.02 * 3600, Units.cGy, 0.0, 100));
+            exepctedInitial.Add(new OptimizationConstraintModel("TS_jnx1", OptimizationObjectiveType.Lower, 3600, Units.cGy, 100.0, 100));
+            exepctedInitial.Add(new OptimizationConstraintModel("TS_jnx1", OptimizationObjectiveType.Upper, 1.02 * 3600, Units.cGy, 0.0, 100));
+            exepctedInitial.Add(new OptimizationConstraintModel("TS_jnx2", OptimizationObjectiveType.Lower, 3600, Units.cGy, 100.0, 100));
+            exepctedInitial.Add(new OptimizationConstraintModel("TS_jnx2", OptimizationObjectiveType.Upper, 1.02 * 3600, Units.cGy, 0.0, 100));
 
             List<OptimizationConstraintModel> exepctedBoost = SetupDummyBoostOptObjList();
             List<PlanOptimizationSetupModel> expectedPlanOptimizationSetup = new List<PlanOptimizationSetupModel>
@@ -277,12 +277,6 @@ namespace AutoPlannerHelpers.BaseViewModel.Tests
                 }
                 Console.WriteLine("");
             }
-        }
-
-        [TestMethod()]
-        public void UpdateOptimizationConstraintsWithCropOverlapStructuresTest()
-        {
-            Assert.Fail();
         }
     }
 }

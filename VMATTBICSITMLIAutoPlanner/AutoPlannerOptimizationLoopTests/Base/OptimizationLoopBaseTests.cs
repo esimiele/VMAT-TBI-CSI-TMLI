@@ -9,6 +9,7 @@ using AutoPlannerOptimizationLoopTests.EqualityComparers;
 using System.Collections.Generic;
 using System;
 using System.Linq;
+using AutoPlannerHelpers.Context;
 
 namespace AutoPlannerOptimizationLoop.Base.Tests
 {
@@ -24,6 +25,10 @@ namespace AutoPlannerOptimizationLoop.Base.Tests
             Mock.Arrange(() => series.ImagingDeviceId).Returns("");
             Mock.Arrange(() => img.Series).Returns(series);
             Mock.Arrange(() => ss.Image).Returns(img);
+
+            EclipseContext context = EclipseContext.GetInstance();
+            context.Application = Mock.Create<Application>();
+            context.StructureSet = ss;
 
             bool expected = true;
             VMATTBIOptimization opt = new VMATTBIOptimization(new DataContainers.OptDataContainer());
@@ -225,13 +230,6 @@ namespace AutoPlannerOptimizationLoop.Base.Tests
             Mock.Arrange(() => p.StructureSet).Returns(ss);
 
             return p;
-        }
-
-        [TestMethod()]
-        public void EvaluateResultVsOptimizationConstraintsTest()
-        {
-            List<PlanObjectiveModel> obj = GenerateDummyPlanObjectiveList(5);
-            ExternalPlanSetup p = GenerateDummyPlan(obj);
         }
     }
 }
