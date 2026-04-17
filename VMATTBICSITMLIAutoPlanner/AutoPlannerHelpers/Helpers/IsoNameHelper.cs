@@ -58,10 +58,14 @@ namespace AutoPlannerHelpers.Helpers
                     if (numVMATIsos == 2) isoNames.Add(new IsocenterModel("Pelvis"));
                     else
                     {
-                        isoNames.Add(new IsocenterModel("Chest"));
-                        if (numVMATIsos == 3) isoNames.Add(new IsocenterModel("Legs"));
+                        if (numVMATIsos == 3)
+                        {
+                            isoNames.Add(new IsocenterModel("Pelvis"));
+                            isoNames.Add(new IsocenterModel("Legs"));
+                        }
                         else if (numVMATIsos == 4)
                         {
+                            isoNames.Add(new IsocenterModel("Chest"));
                             isoNames.Add(new IsocenterModel("Pelvis"));
                             isoNames.Add(new IsocenterModel("Legs"));
                         }
