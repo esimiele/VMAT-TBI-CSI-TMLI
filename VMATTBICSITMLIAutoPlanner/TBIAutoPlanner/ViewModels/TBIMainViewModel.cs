@@ -200,6 +200,18 @@ namespace TBIAutoPlanner.ViewModels
                 else return true;
             }
 
+            if(EclipseContext.GetInstance().VMATPlans.First().TreatmentOrientation != PatientOrientation.HeadFirstSupine)
+            {
+                //verify the loaded vmat plan is ACTUALLY a vmat plan and not a leg plan
+                ConfirmPrompt cp = new ConfirmPrompt($"I think this might be a leg plan rather than the vmat plan. Plan Id: {EclipseContext.GetInstance().VMATPlans.First().Id}\r\n Please confirm this is the vmat plan.");
+                cp.ShowDialog();
+                if (!cp.GetSelection())
+                {
+                    MessageBox.Show("Since this is not the vmat plan, please close the script, load the vmat plan into the Eclipse window, re-launch the script and try again");
+                    return true;
+                }
+            }
+
             if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Any(x => x.Id.ToLower().Contains("leg") && x.ApprovalStatus != PlanSetupApprovalStatus.Rejected))
             {
                 if (EclipseContext.GetInstance().VMATPlans.First().Course.ExternalPlanSetups.Where(x => x.Id.ToLower().Contains("leg") && x.ApprovalStatus != PlanSetupApprovalStatus.Rejected).Any(x => x.TreatmentOrientation != PatientOrientation.FeetFirstSupine))
